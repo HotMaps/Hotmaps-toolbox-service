@@ -2,13 +2,15 @@ import logging
 
 from flask import request
 from flask_restplus import Resource
-from main_api.api.main.serializers import population_density, total_density_for_nuts_area
+from main_api.api.main.serializers import population_density, total_density_for_nuts_area, \
+    total_density_for_nuts_area_input, density_featurecollection
 from main_api.api.restplus import api
 from main_api.models.population_density import PopulationDensity
 from main_api.models.nuts import Nuts
 from sqlalchemy import func, BigInteger, TypeDecorator
 from main_api.models import db
 import datetime
+import shapely.geometry as shapely_geom
 
 log = logging.getLogger(__name__)
 
@@ -57,8 +59,50 @@ class PopDensityInArea(Resource):
             filter(PopulationDensity.date == datetime.datetime.strptime(str(year), '%Y')).\
             filter(Nuts.stat_levl_ == nuts_level).\
             filter(func.ST_Within(Nuts.geom, func.ST_GeomFromEWKT(geometry))).first()
-        #print(density[0])
         output = {
+            'sum_density': density[0],
+            'geometries': density[1]
+        }
+        return output
+
+
+@ns.route('/density/area/')
+@api.response(404, 'Density not found for that specific area.')
+class PopDensityInArea(Resource):
+
+    @api.marshal_with(total_density_for_nuts_area)
+    @api.expect(total_density_for_nuts_area_input)
+    def post(self):
+        """
+        Returns the total density for specific area and year
+        :return:
+        """
+        year = api.payload['year']
+        nuts_level = api.payload['nuts_level']
+        points = api.payload['points']
+        poly = shapely_geom.Polygon([[p['lng'], p['lat']] for p in points])
+        geom = "SRID=4326;{}".format(poly.wkt)
+        density = db.session.query(func.sum(PopulationDensity.value, type_=CoerceToInt), \
+                                   func.ST_AsGeoJSON(func.ST_Collect(Nuts.geom))). \
+            join(Nuts, PopulationDensity.nuts). \
+            filter(PopulationDensity.date == datetime.datetime.strptime(str(year), '%Y')). \
+            filter(Nuts.stat_levl_ == nuts_level). \
+            filter(func.ST_Within(Nuts.geom, func.ST_Transform(func.ST_GeomFromEWKT(geom), 4258))).first()
+
+        """featureCollection = {
+            'features': [{
+                'properties': {
+                    'density': density[0],
+                    'year': year,
+                    'nuts_level': nuts_level
+                },
+                'geometry': density[1]
+            }]
+        }"""
+
+        output = {
+            'year': year,
+            'nuts_level': nuts_level,
             'sum_density': density[0],
             'geometries': density[1]
         }
