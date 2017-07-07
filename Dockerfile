@@ -66,12 +66,17 @@ RUN ln -s /usr/bin/python3.6 /usr/local/bin/python
 #ADD . /home/docker/settings/
 
 
-# Setup app
+# Setup app server
 RUN mkdir -p /data
 COPY gunicorn-config.py /data/gunicorn-config.py
-COPY app /data
 RUN pip3 install gunicorn
+
+# Install required python modules
+COPY requirements.txt /data/requirements.txt
 RUN pip3 install -r /data/requirements.txt
+
+# Copy app source code
+COPY app /data
 
 WORKDIR /data
 
