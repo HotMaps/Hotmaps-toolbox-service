@@ -1,7 +1,7 @@
 import traceback
 import logging
 
-from flask_restplus import Api, cors
+from flask_restplus import Api
 from main_api import settings
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -10,12 +10,8 @@ log = logging.getLogger(__name__)
 
 api = Api(version='1.0',
           title='HotMaps Main API',
-          description='HotMaps main API that serves data and computations to the app.',
-          decorators=[cors.crossdomain(
-              origin=settings.CORS_ORIGIN,
-              credentials=settings.CORS_CREDENTIALS,
-              headers=settings.CORS_HEADERS
-          )])
+          description='HotMaps main API that serves data and computations to the app.'
+)
 
 @api.errorhandler
 def default_error_handler(e):

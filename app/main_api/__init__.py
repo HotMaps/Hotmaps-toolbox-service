@@ -5,6 +5,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from flask import Flask, Blueprint
+from flask_cors import CORS
 from main_api import settings
 from main_api.api.main.endpoints.population import ns as main_population_namespace
 from main_api.api.restplus import api
@@ -13,6 +14,7 @@ from main_api.models import db
 log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'logging.conf')
 logging.config.fileConfig(log_file_path)
 log = logging.getLogger(__name__)
+logging.getLogger('flask_cors').level = logging.DEBUG
 
 # methods
 def configure_app(flask_app):
@@ -47,5 +49,7 @@ def create_app():
     app = Flask(__name__)
     
     initialize_app(app)
+
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     return app
