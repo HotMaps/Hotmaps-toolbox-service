@@ -50,6 +50,6 @@ def create_app():
     
     initialize_app(app)
 
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    CORS(app, resources={r"/api/*": {"origins": "http://hotmaps.hevs.ch"}})
 
     return app
