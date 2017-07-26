@@ -3,7 +3,7 @@ import logging
 from flask import request
 from flask_restplus import Resource
 from main_api.api.main.serializers import population_density, total_density_for_nuts_area, \
-    total_density_for_nuts_area_input, density_featurecollection
+    total_density_for_nuts_area_input
 from main_api.api.restplus import api
 from main_api.models.population_density import PopulationDensity
 from main_api.models.nuts import Nuts
