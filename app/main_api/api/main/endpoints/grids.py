@@ -40,11 +40,9 @@ class Grid1KmFromArea(Resource):
         points = api.payload['points']
         poly = shapely_geom.Polygon([[p['lng'], p['lat']] for p in points])
         geom = "SRID=4326;{}".format(poly.wkt)
-        #grid = db.session.query(Grid1Km)#. \
-            #filter(func.ST_Within(Grid1Km.geom, func.ST_Transform(func.ST_GeomFromEWKT(geom), 4258))).all()
 
         grid = db.session.query(Grid1Km). \
-            filter(func.ST_Within(Grid1Km.geom, func.ST_Transform(func.ST_GeomFromEWKT(geom), 3035))).all()
+            filter(func.ST_Within(Grid1Km.geom, func.ST_Transform(func.ST_GeomFromEWKT(geom), Grid1Km.CRS))).all()
 
         features = []
         for row in grid:
@@ -61,4 +59,11 @@ class Grid1KmFromArea(Resource):
             )
             features.append(feature)
 
-        return FeatureCollection(features)
+        crs = {
+            "type": "name",
+            "properties": {
+                "name": "EPSG:%d" % Grid1Km.CRS
+            }
+        }
+
+        return FeatureCollection(features, crs=crs)

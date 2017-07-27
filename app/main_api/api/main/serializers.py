@@ -37,6 +37,13 @@ multipolygon_geometry = api.model('MultiPolygon', {
     'type': fields.String(),
     'coordinates': fields.List(fields.List(fields.List(fields.List(fields.Float))))
 })
+crs_properties = api.model('properties', {
+    'name': fields.String
+})
+feature_collection_crs = api.model('crs', {
+    'type': fields.String,
+    'properties': fields.Nested(crs_properties)
+})
 grid_feature = api.model('Feature', {
     'type': fields.String(),
     'id': fields.Float(desciption='id'),
@@ -46,6 +53,7 @@ grid_feature = api.model('Feature', {
 
 grid_feature_collection = api.model('FeatureCollection', {
     'type': fields.String(),
+    'crs': fields.Nested(feature_collection_crs),
     'features': fields.List(fields.Nested(grid_feature))
 })
 
