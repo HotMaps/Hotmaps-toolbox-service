@@ -10,6 +10,8 @@ class Nuts(db.Model):
         {"schema": 'geo'}
     )
 
+    CRS = 4258
+
     gid = db.Column(db.Integer, primary_key=True)
     nuts_id = db.Column(db.String(14))
     name = db.Column(db.String(255))
