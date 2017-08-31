@@ -93,3 +93,7 @@ total_density_for_nuts_area_input = api.model('Input for population density for 
     'points': fields.List(fields.Nested(point))
 })
 
+raster_for_area_input = api.model('Input for population density for area', {
+    'year': fields.Integer(description='Year'),
+    'points': fields.List(fields.Nested(point))
+})
