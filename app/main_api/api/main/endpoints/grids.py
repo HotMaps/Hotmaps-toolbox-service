@@ -27,6 +27,7 @@ class CoerceToInt(TypeDecorator):
 
 
 @ns.route('/1km/area/')
+@ns.deprecated
 @api.response(404, 'Grid not found for that specific area.')
 class Grid1KmFromArea(Resource):
 
@@ -34,7 +35,8 @@ class Grid1KmFromArea(Resource):
     @api.expect(area)
     def post(self):
         """
-        Returns the total density for specific area and year
+        Returns the reference grid for 1kmx1km
+        This method has been deprecated and will be removed in the next release
         :return:
         """
         points = api.payload['points']

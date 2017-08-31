@@ -31,6 +31,7 @@ class CoerceToInt(TypeDecorator):
 
 
 @ns.route('/density/nuts/<string:nuts_id>')
+@ns.deprecated
 @api.response(404, 'Density not found for that specific nuts id.')
 class PopulationDensityByNuts(Resource):
 
@@ -38,6 +39,7 @@ class PopulationDensityByNuts(Resource):
     def get(self, nuts_id):
         """
         Returns a population density for specific nuts
+        This method has been deprecated and will be removed in the next release
         :param nuts_id:
         :return:
         """
@@ -45,6 +47,7 @@ class PopulationDensityByNuts(Resource):
 
 
 @ns.route('/density/area/<string:geometry>/<int:nuts_level>/<int:year>')
+@ns.deprecated
 @api.response(404, 'Density not found for that specific area.')
 class PopDensityInArea(Resource):
 
@@ -52,6 +55,7 @@ class PopDensityInArea(Resource):
     def get(self, geometry, nuts_level, year):
         """
         Returns the total density for specific area and year
+        This method has been deprecated and will be removed in the next release
         :param geometry:
         :param nuts_level:
         :param year:
@@ -80,6 +84,7 @@ class PopDensityInArea(Resource):
     def post(self):
         """
         Returns the total density for specific area and year
+        This method has been deprecated and will be removed in the next release
         :return:
         """
         year = api.payload['year']
@@ -93,17 +98,6 @@ class PopDensityInArea(Resource):
             filter(PopulationDensity.date == datetime.datetime.strptime(str(year), '%Y')). \
             filter(Nuts.stat_levl_ == nuts_level). \
             filter(func.ST_Within(Nuts.geom, func.ST_Transform(func.ST_GeomFromEWKT(geom), 4258))).first()
-
-        """featureCollection = {
-            'features': [{
-                'properties': {
-                    'density': density[0],
-                    'year': year,
-                    'nuts_level': nuts_level
-                },
-                'geometry': density[1]
-            }]
-        }"""
 
         output = {
             'year': year,
