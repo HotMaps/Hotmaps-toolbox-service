@@ -8,8 +8,8 @@ from flask import Flask, Blueprint
 from flask_cors import CORS
 from main_api import settings
 from main_api.api.main.endpoints.population import ns as main_population_namespace
-from main_api.api.main.endpoints.grids import ns as main_grids_namespace
-from main_api.api.main.endpoints.heat_density_map import ns as main_heat_density_map
+from main_api.api.main.endpoints.heat_density_map import ns as main_heat_density_map_namespace
+from main_api.api.main.endpoints.stats import ns as main_stats_namespace
 from main_api.api.restplus import api
 from main_api.models import db
 
@@ -37,8 +37,8 @@ def initialize_app(flask_app):
     blueprint = Blueprint('api', __name__, url_prefix='/api')
     api.init_app(blueprint)
     api.add_namespace(main_population_namespace)
-    api.add_namespace(main_grids_namespace)
-    api.add_namespace(main_heat_density_map)
+    api.add_namespace(main_heat_density_map_namespace)
+    api.add_namespace(main_stats_namespace)
     flask_app.register_blueprint(blueprint)
 
     db.init_app(flask_app)
