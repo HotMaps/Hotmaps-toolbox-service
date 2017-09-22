@@ -97,3 +97,24 @@ raster_for_area_input = api.model('Input for population density for area', {
     'year': fields.Integer(description='Year'),
     'points': fields.List(fields.Nested(point))
 })
+
+stats_layers_area_input = api.model('Input for statistics on layers, area and year', {
+    'layers': fields.List(fields.String(description='Layer')),
+    'year': fields.Integer(description='Year'),
+    'points': fields.List(fields.Nested(point))
+})
+
+stats_layer_aggregation_values = api.model('Layer aggregation values', {
+    'name': fields.String(description='Name'),
+    'value': fields.Float(description='Value'),
+    'unit': fields.String(description='Unit')
+})
+
+stats_layer_aggregation = api.model('Layer aggregation', {
+    'name': fields.String(description='Name'),
+    'values': fields.List(fields.Nested(stats_layer_aggregation_values))
+})
+
+stats_layers_area = api.model('Stats for selected layers, year and area', {
+    'layers': fields.List(fields.Nested(stats_layer_aggregation))
+})
