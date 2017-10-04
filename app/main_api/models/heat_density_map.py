@@ -27,7 +27,7 @@ class HeatDensityMap(db.Model):
         # filter(HeatDensityMap.date == datetime.datetime.strptime(str(year), '%Y')). \
         # Custom query
         # todo: add support for year selection
-        sql_query = "SELECT (stats).sum FROM (" + \
+        sql_query = "SELECT (stats).sum, (stats).mean FROM (" + \
             "SELECT ST_SummaryStatsAgg(raster_clip, 1, TRUE, 1) AS stats FROM (" + \
             "SELECT ST_Union(ST_Clip(rast, 1, buf.geom, FALSE)) AS raster_clip " + \
             "FROM " + HeatDensityMap.__table_args__['schema'] + "." + \
@@ -39,7 +39,11 @@ class HeatDensityMap(db.Model):
         query = db.session.execute(sql_query).first()
 
         return [{
+            'name': 'heat_consumption',
+            'value': query[0]/100,
+            'unit': 'GWh'
+        },{
             'name': 'heat_density',
-            'value': query[0],
+            'value': query[1],
             'unit': 'GWh/km2'
         }]
