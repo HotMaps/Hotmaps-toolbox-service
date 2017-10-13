@@ -5,8 +5,8 @@ from flask_restplus import Resource
 from main_api.api.main.serializers import stats_layers_area_input, stats_layers_area
 from main_api.api.restplus import api
 from main_api.models.wwtp import Wwtp
-from main_api.models.heat_density_map import HeatDensityMap
-from main_api.models.population_density import PopulationDensity
+from main_api.models.heat_density_map import HeatDensityMap, HeatDensityHa
+from main_api.models.population_density import PopulationDensity, PopulationDensityHa
 from sqlalchemy import func, BigInteger, TypeDecorator
 from main_api.models import db
 import datetime
@@ -24,7 +24,9 @@ ns = api.namespace('stats', description='Operations related to statistics')
 layers_ref = {
     'wwtp': Wwtp,
     'population': PopulationDensity,
-    'heat_density_map': HeatDensityMap
+    'population_density_ha': PopulationDensityHa,
+    'heat_density_map': HeatDensityMap,
+    'heat_density_ha': HeatDensityHa
 }
 
 @ns.route('/layers/area/')
@@ -46,13 +48,45 @@ class StatsLayersInArea(Resource):
 
         output = []
 
+        # for each layer,
+        # try to match layer name with layer class
+        # run aggregate_for_selection method
         for layer in layers:
-            a = layers_ref[layer]()
+            try:
+                a = layers_ref[layer]()
+            except KeyError:
+                continue
+
             output.append({
                 'name': layer,
                 'values': a.aggregate_for_selection(geometry=geom, year=year)
             })
 
+        pop1ha_name = 'pop_tot_curr_density'
+        hdm_name = 'heat_density_map'
+        if pop1ha_name in layers and hdm_name in layers:
+            hdm = None
+            heat_cons = None
+            population = None
+
+            for l in output:
+                if l.get('name') == hdm_name:
+                    hdm = l
+                    for v in l.get('values', []):
+                        if v.get('name') == 'heat_consumption':
+                            heat_cons = v
+                if l.get('name') == pop1ha_name:
+                    for v in l.get('values', []):
+                        if v.get('name') == 'population_density_sum':
+                            population = v
+
+            v = {
+                'name': 'consumption_per_citizen',
+                'value': heat_cons.get('value', 0) / population.get('value', 1),
+                'unit': heat_cons.get('unit') + '/' + population.get('unit')
+            }
+
+            hdm.get('values').append(v)
 
         return {"layers": output}
 
