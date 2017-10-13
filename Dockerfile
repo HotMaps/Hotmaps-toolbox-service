@@ -23,18 +23,6 @@ RUN apt-get install -y \
 RUN add-apt-repository ppa:jonathonf/python-3.6
 
 RUN apt-get update && apt-get install -y \
-	#curl \
-	#build-essential \
-	#zlib1g-dev \
-	#checkinstall \
-	#libreadline-gplv2-dev \
-	#libncursesw5-dev \
-	#libssl-dev \
-	#libsqlite3-dev \
-	#tk-dev \
-	#libgdbm-dev \
-	#libc6-dev \
-	#libbz2-dev \
 	python3.6 \
 	python3.6-dev \
 	python3.6-venv \
@@ -44,27 +32,9 @@ RUN apt-get update && apt-get install -y \
 RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python3.6 get-pip.py
 RUN ln -s /usr/bin/python3.6 /usr/local/bin/python3
-#RUN ln -s /usr/local/bin/pip /usr/local/bin/pip3
-
-
-# Install Python 3.6 as python3
-#WORKDIR /usr/src
-#RUN wget https://www.python.org/ftp/python/3.6.0/Python-3.6.0.tgz
-#RUN tar xzf Python-3.6.0.tgz
-#WORKDIR /usr/src/Python-3.6.0
-#RUN ./configure
-#RUN make install
-#WORKDIR /usr/src
-#RUN rm -r Python-3.6.0.tgz
-
-
 
 # Make Python3.6 default
 RUN ln -s /usr/bin/python3.6 /usr/local/bin/python
-
-# Install our settings
-#ADD . /home/docker/settings/
-
 
 # Setup app server
 RUN mkdir -p /data
