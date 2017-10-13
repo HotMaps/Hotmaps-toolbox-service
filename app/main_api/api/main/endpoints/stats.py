@@ -62,8 +62,8 @@ class StatsLayersInArea(Resource):
                 'values': a.aggregate_for_selection(geometry=geom, year=year)
             })
 
-        pop1ha_name = 'pop_tot_curr_density'
-        hdm_name = 'heat_density_map'
+        pop1ha_name = 'population_density_ha'
+        hdm_name = 'heat_density_ha'
         if pop1ha_name in layers and hdm_name in layers:
             hdm = None
             heat_cons = None
