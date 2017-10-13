@@ -33,6 +33,9 @@ class Wwtp(db.Model):
             filter(func.ST_Within(Wwtp.geom, func.ST_Transform(func.ST_GeomFromEWKT(geometry), Wwtp.CRS))). \
             group_by(Wwtp.unit).first()
 
+        if query == None or len(query) < 3:
+            return []
+
         return [{
             'name': 'power',
             'value': query[0],
