@@ -88,7 +88,7 @@ class HeatDensityHa(db.Model):
 
         query = db.session.execute(sql_query).first()
 
-        if query == None:
+        if query == None and len(query) >= 2:
             return []
 
         return [{
