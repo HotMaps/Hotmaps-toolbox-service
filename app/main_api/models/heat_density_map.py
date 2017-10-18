@@ -73,14 +73,13 @@ class HeatDensityHa(db.Model):
 
         # filter(HeatDensityMap.date == datetime.datetime.strptime(str(year), '%Y')). \
         # Custom query
-        # todo: add support for year selection
-        sql_query = "SELECT (stats).sum, (stats).mean FROM (" + \
-            "SELECT ST_SummaryStatsAgg(raster_clip, 1, TRUE, 1) AS stats FROM (" + \
-                "SELECT ST_Union(ST_Clip(rast, 1, buf.geom, FALSE)) AS raster_clip " + \
+        sql_query = "SELECT (stats).sum, (stats).mean, (stats).count FROM (" + \
+            "SELECT ST_SummaryStatsAgg(raster_clip, 1, FALSE, 1) AS stats FROM (" + \
+                "SELECT ST_Union(ST_Clip(rast, 1, buf.geom, TRUE)) AS raster_clip " + \
                 "FROM " + HeatDensityHa.__table_args__['schema'] + "." + \
                     HeatDensityHa.__tablename__ + " " + \
                 "INNER JOIN (SELECT ST_Buffer(ST_Transform(ST_GeomFromText('" + geometry + "'), " + \
-                        str(HeatDensityHa.CRS) + "), 100) AS geom) AS buf " + \
+                        str(HeatDensityHa.CRS) + "), 0) AS geom) AS buf " + \
                 "ON ST_Intersects(rast, buf.geom) " + \
                 "WHERE date = to_date('" + str(year) + "', 'YYYY') " + \
             ") AS foo) bar ;"
