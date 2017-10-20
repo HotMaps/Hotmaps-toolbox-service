@@ -1,5 +1,10 @@
+import datetime
+
 from main_api.models import db
 from geoalchemy2 import Geometry
+from sqlalchemy import func
+from geojson import FeatureCollection, Feature
+from geoalchemy2.shape import to_shape
 
 
 
@@ -23,4 +28,74 @@ class Nuts(db.Model):
     def __repr__(self):
         return "<Nuts(nuts_id='%s', name='%s', level='%s')>" % (
             self.nuts_id, self.name, self.stat_levl_)
+
+    @staticmethod
+    def nuts_in_geometry(geometry, year, nuts_level):
+        query = db.session.query(
+                Nuts
+            ). \
+            filter(Nuts.stat_levl_ == nuts_level). \
+            filter(func.ST_Within(Nuts.geom,
+                                  func.ST_Transform(func.ST_GeomFromEWKT(geometry), Nuts.CRS))).all()
+
+            #filter(Nuts.date == datetime.datetime.strptime(str(year), '%Y')). \
+
+        if query == None or len(query) < 1:
+            return []
+
+        sum_area = 0.0
+        sum_len = 0.0
+        features = []
+        for nuts in query:
+            # sum area
+            sum_area += float(nuts.shape_area)
+            sum_len += float(nuts.shape_len)
+
+            # create feature
+            geometry = to_shape(nuts.geom)
+            feature = Feature(
+                id=nuts.gid,
+                geometry=geometry,
+                properties= {
+                    'values': [{
+                        'name': 'area',
+                        'value': nuts.shape_area,
+                        'unit': 'm'
+                    }, {
+                        'name': 'name',
+                        'value': nuts.name,
+                        'unit': None
+                    }, {
+                        'name': 'nuts_id',
+                        'value': nuts.nuts_id,
+                        'unit': None
+                    }]
+                }
+            )
+            features.append(feature)
+
+        properties = {
+            'values': [{
+            'name': 'year',
+            'value': year,
+            'unit': 'year'
+            }, {
+                'name': 'nuts_level',
+                'value': nuts_level,
+                'unit': None
+            }, {
+                'name': 'area',
+                'value': sum_area,
+                'unit': 'd'
+            }]
+        }
+
+        crs = {
+            "type": "name",
+            "properties": {
+                "name": "EPSG:%d" % Nuts.CRS
+            }
+        }
+
+        return FeatureCollection(features, properties=properties, crs=crs)
 
