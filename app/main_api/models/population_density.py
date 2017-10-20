@@ -47,15 +47,15 @@ class PopulationDensityHa(db.Model):
 
         return [{
             'name': 'population',
-            'value': str(query[0]),
+            'value': str(query[0] or 0),
             'unit': 'person'
         },{
             'name': 'population_density',
-            'value': str(query[1]),
+            'value': str(query[1] or 0),
             'unit': 'person/ha'
         },{
             'name': 'count',
-            'value': str(query[2]),
+            'value': str(query[2] or 0),
             'unit': 'cell'
         }]
 
@@ -100,15 +100,15 @@ class PopulationDensityNuts(db.Model):
 
         return [{
             'name': 'population',
-            'value': str(query[0]),
+            'value': str(query[0] or 0),
             'unit': 'person'
         }, {
             'name': 'population_density',
-            'value': str(query[1]),
+            'value': str(query[1] or 0),
             'unit': 'person'
         }, {
             'name': 'count',
-            'value': str(query[2]),
+            'value': str(query[2] or 0),
             'unit': 'nuts'
         }]
 

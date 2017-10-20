@@ -45,11 +45,11 @@ class HeatDensityMap(db.Model):
 
         return [{
             'name': 'heat_consumption',
-            'value': query[0],
+            'value': str(query[0] or 0),
             'unit': 'GWh'
         },{
             'name': 'heat_density',
-            'value': query[1],
+            'value': str(query[1] or 0),
             'unit': 'GWh/ha'
         }]
 
@@ -95,16 +95,16 @@ class HeatDensityHa(db.Model):
 
         return [{
             'name': 'heat_consumption',
-            'value': str(query[0]),
+            'value': str(query[0] or 0),
             'unit': 'MWh'
         },{
             'name': 'heat_density',
-            'value': str(query[1]),
+            'value': str(query[1] or 0),
             'unit': 'MWh/ha'
         },{
             'name': 'count',
-            'value': str(query[2]),
-            'unit': 'nuts'
+            'value': str(query[2] or 0),
+            'unit': 'cell'
         }]
 
 class HeatDensityNuts(db.Model):
@@ -156,15 +156,15 @@ class HeatDensityNuts(db.Model):
 
         return [{
             'name': 'heat_consumption',
-            'value': str(query[0]),
+            'value': str(query[0] or 0),
             'unit': 'MWh'
         },{
             'name': 'heat_density',
-            'value': str(query[1]),
+            'value': str(query[1] or 0),
             'unit': 'MWh/ha'
         },{
             'name': 'count',
-            'value': str(query[2]),
+            'value': str(query[2] or 0),
             'unit': 'nuts'
         }]
 

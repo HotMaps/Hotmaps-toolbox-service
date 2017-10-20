@@ -39,10 +39,10 @@ class Wwtp(db.Model):
 
         return [{
             'name': 'power',
-            'value': query[0],
-            'unit': query[2]
+            'value': str(query[0] or 0),
+            'unit': str(query[2])
         }, {
             'name': 'capacity',
-            'value': query[1],
+            'value': str(query[1] or 0),
             'unit': 'Person equivalent'
         }]

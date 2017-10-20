@@ -84,9 +84,13 @@ class StatsLayersInArea(Resource):
                             population = v
 
             if heat_cons != None and population != None:
+                pop_val = float(population.get('value', 1))
+                pop_val = pop_val if pop_val > 0 else 1
+                hea_val = float(heat_cons.get('value', 0))
+
                 v = {
                     'name': 'consumption_per_citizen',
-                    'value': float(heat_cons.get('value', 0)) / float(population.get('value', 1)),
+                    'value': hea_val / pop_val,
                     'unit': heat_cons.get('unit') + '/' + population.get('unit')
                 }
 
@@ -112,9 +116,13 @@ class StatsLayersInArea(Resource):
                             population = v
 
             if heat_cons != None and population != None:
+                pop_val = float(population.get('value', 1))
+                pop_val = pop_val if pop_val > 0 else 1
+                hea_val = float(heat_cons.get('value', 0))
+
                 v = {
                     'name': 'consumption_per_citizen',
-                    'value': float(heat_cons.get('value', 0)) / float(population.get('value', 1)),
+                    'value': hea_val / pop_val,
                     'unit': heat_cons.get('unit') + '/' + population.get('unit')
                 }
 
