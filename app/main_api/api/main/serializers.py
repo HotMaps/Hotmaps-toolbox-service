@@ -104,17 +104,43 @@ stats_layers_area_input = api.model('Input for statistics on layers, area and ye
     'points': fields.List(fields.Nested(point))
 })
 
-stats_layer_aggregation_values = api.model('Layer aggregation values', {
+aggregation_value = api.model('Layer aggregation values', {
     'name': fields.String(description='Name'),
-    'value': fields.Float(description='Value'),
+    'value': fields.String(description='Value'),
     'unit': fields.String(description='Unit')
 })
 
 stats_layer_aggregation = api.model('Layer aggregation', {
     'name': fields.String(description='Name'),
-    'values': fields.List(fields.Nested(stats_layer_aggregation_values))
+    'values': fields.List(fields.Nested(aggregation_value))
+})
+
+vector_feature_properties = api.model('Feature properties', {
+    'values': fields.List(fields.Nested(aggregation_value)),
+})
+
+vector_feature = api.model('Feature', {
+    'type': fields.String(),
+    'id': fields.Float(desciption='id'),
+    'geometry': fields.Nested(multipolygon_geometry),
+    'properties': fields.List(fields.Nested(vector_feature_properties))
+})
+
+vector_feature_collection = api.model('Feature collection', {
+    'type': fields.String(),
+    'crs': fields.Nested(feature_collection_crs),
+    'features': fields.List(fields.Nested(vector_feature)),
+    'properties': fields.List(fields.Nested(vector_feature_properties))
 })
 
 stats_layers_area = api.model('Stats for selected layers, year and area', {
-    'layers': fields.List(fields.Nested(stats_layer_aggregation))
+    'layers': fields.List(fields.Nested(stats_layer_aggregation)),
+    'feature_collection': fields.Nested(vector_feature_collection)
+})
+
+stats_layers_area_nuts_input = api.model('Input for statistics on layers, area and year', {
+    'layers': fields.List(fields.String(description='Layer')),
+    'nuts_level': fields.String(description='Nuts level'),
+    'year': fields.Integer(description='Year'),
+    'points': fields.List(fields.Nested(point))
 })

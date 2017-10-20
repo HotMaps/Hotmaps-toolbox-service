@@ -26,7 +26,8 @@ class Wwtp(db.Model):
         return "<Wwtp(gid= '%d', date='%s', capacity='%d', power='%d', unit='%s', geom='%s')>" % (
             self.gid, str_date, self.capacity, self.power, self.unit, self.geom)
 
-    def aggregate_for_selection(self, geometry, year):
+    @staticmethod
+    def aggregate_for_selection(geometry, year):
 
         query = db.session.query(func.sum(Wwtp.power), func.sum(Wwtp.capacity), Wwtp.unit). \
             filter(Wwtp.date == datetime.datetime.strptime(str(year), '%Y')). \
