@@ -8,9 +8,10 @@ from sqlalchemy.orm.exc import NoResultFound
 
 log = logging.getLogger(__name__)
 
-api = Api(version='1.0', title='HotMaps Main API',
-          description='HotMaps main API that serves data and computations to the app.')
-
+api = Api(version='1.0',
+          title='HotMaps Main API',
+          description='HotMaps main API that serves data and computations to the app.'
+)
 
 @api.errorhandler
 def default_error_handler(e):
