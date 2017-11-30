@@ -1,6 +1,6 @@
 import datetime
 from main_api.models import db
-from main_api.models.nuts import Nuts
+from main_api.models.nuts import NutsRG01M
 from sqlalchemy import func
 from geoalchemy2 import Raster
 
@@ -29,16 +29,21 @@ class PopulationDensityHa(db.Model):
     def aggregate_for_selection(geometry, year):
 
         # Custom query
-        sql_query = "SELECT (stats).sum, (stats).mean, (stats).count FROM (" + \
-            "SELECT ST_SummaryStatsAgg(raster_clip, 1, FALSE, 1) AS stats FROM (" + \
-                "SELECT ST_Union(ST_Clip(rast, 1, buf.geom, TRUE)) AS raster_clip " + \
+        sql_query = \
+            "WITH buffer AS (SELECT ST_Buffer(ST_Transform(ST_GeomFromText('" + \
+                            geometry + "'), " + \
+                            str(PopulationDensityHa.CRS) + "), 0) AS buffer_geom " + \
+            ") " + \
+            "SELECT (stats).sum, (stats).mean, (stats).count " + \
+            "FROM ( " + \
+                "SELECT ST_SummaryStats(ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE))) AS stats " + \
                 "FROM " + PopulationDensityHa.__table_args__['schema'] + "." + \
-                    PopulationDensityHa.__tablename__ + " " + \
-                "INNER JOIN (SELECT ST_Buffer(ST_Transform(ST_GeomFromText('" + geometry + "'), " + \
-                        str(PopulationDensityHa.CRS) + "), 0) AS geom) AS buf " + \
-                "ON ST_Intersects(rast, buf.geom) " + \
-                "WHERE date = to_date('" + str(year) + "', 'YYYY') " + \
-            ") AS foo) bar ;"
+                PopulationDensityHa.__tablename__ + ", buffer " + \
+                "WHERE ST_Intersects(rast, buffer_geom) " + \
+                "AND date = to_date('" + str(year) + "', 'YYYY') " + \
+            ") AS foo " + \
+            ";"
+
 
         query = db.session.execute(sql_query).first()
 
@@ -76,7 +81,7 @@ class PopulationDensityNuts(db.Model):
     date = db.Column(db.Date)
     value = db.Column(db.BigInteger)
 
-    nuts = db.relationship("Nuts")
+    nuts = db.relationship("NutsRG01M")
 
     def __repr__(self):
         str_date = self.date.strftime("%Y-%m-%d")
@@ -90,10 +95,10 @@ class PopulationDensityNuts(db.Model):
                 func.avg(PopulationDensityNuts.value),
                 func.count(PopulationDensityNuts.value)
             ). \
-            join(Nuts, PopulationDensityNuts.nuts). \
+            join(NutsRG01M, PopulationDensityNuts.nuts). \
             filter(PopulationDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
-            filter(Nuts.stat_levl_ == nuts_level). \
-            filter(func.ST_Within(Nuts.geom, func.ST_Transform(func.ST_GeomFromEWKT(geometry), PopulationDensityNuts.CRS))).first()
+            filter(NutsRG01M.stat_levl_ == nuts_level). \
+            filter(func.ST_Within(NutsRG01M.geom, func.ST_Transform(func.ST_GeomFromEWKT(geometry), PopulationDensityNuts.CRS))).first()
 
         if query == None or len(query) < 3:
             return []
