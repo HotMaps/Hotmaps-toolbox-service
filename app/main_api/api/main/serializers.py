@@ -17,11 +17,11 @@ point = api.model('Point', {
 
 grid = api.model('Grid', {
     'gid': fields.Integer(readOnly=True, description='ID of the grid geometry'),
-    'id': fields.Float(desciption='id'),
+    'id': fields.Integer(desciption='id'),
     'xmin': fields.String(description='Xmin'),
     'xmax': fields.String(description='Xmax'),
-    'ymin': fields.Integer(description='Ymin'),
-    'ymax': fields.Float(description='Ymax'),
+    'ymin': fields.String(description='Ymin'),
+    'ymax': fields.String(description='Ymax'),
     'geom': Geometry(attribute='geom', description='Geometry')
 })
 
@@ -133,7 +133,7 @@ vector_feature_collection = api.model('Feature collection', {
     'properties': fields.List(fields.Nested(vector_feature_properties))
 })
 
-stats_layers_area = api.model('Stats for selected layers, year and area', {
+stats_layers_output = api.model('Stats for selected layers, year and area', {
     'layers': fields.List(fields.Nested(stats_layer_aggregation)),
     'feature_collection': fields.Nested(vector_feature_collection)
 })
@@ -143,4 +143,31 @@ stats_layers_area_nuts_input = api.model('Input for statistics on layers, area a
     'nuts_level': fields.String(description='Nuts level'),
     'year': fields.Integer(description='Year'),
     'points': fields.List(fields.Nested(point))
+})
+
+stats_layer_point_input = api.model('Input for statistics on layers, year, point', {
+    'layers': fields.List(fields.String(description='Layer')),
+    'nuts_level': fields.String(description='Nuts level'),
+    'year': fields.Integer(description='Year'),
+    'point': fields.Nested(point)
+})
+
+load_profile_aggregation_month_row = api.model('Output row for load profile', {
+    'value': fields.Float(description='Average value per month'),
+    'unit': fields.String(descriptsion='Unit'),
+    'month': fields.Integer(description='Month'),
+    'year': fields.Integer(description='Year'),
+    'granularity': fields.String(description='Granularity'),
+    'nuts_id': fields.String(description='Nuts ID'),
+    'nuts_name': fields.String(description='Nuts name'),
+    'nuts_level': fields.String(description='Nuts level')
+})
+load_profile_aggregation_month = api.model('Output for load profile', {
+    'values': fields.List(fields.Nested(load_profile_aggregation_month_row))
+})
+
+load_profile_aggregation_input = api.model('Input for load profile', {
+    'year': fields.Integer(description='Year'),
+    'nuts_id': fields.String(description='Nuts ID'),
+    'nuts_level': fields.String(description='Nuts level')
 })
