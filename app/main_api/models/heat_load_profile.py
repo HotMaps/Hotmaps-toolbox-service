@@ -52,7 +52,7 @@ class HeatLoadProfileNuts(db.Model):
             ). \
             join(Nuts, HeatLoadProfileNuts.nuts). \
             join(Time, HeatLoadProfileNuts.time). \
-            filter(Time.date == datetime.datetime.strptime(str(year), '%Y')). \
+            filter(Time.year == year). \
             filter(Nuts.nuts_id == nuts_id). \
             group_by(Time.month, HeatLoadProfileNuts.unit, Time.year, Nuts.nuts_id, Nuts.name, Nuts.stat_levl_). \
             order_by(Time.month.asc()).all()
