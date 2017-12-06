@@ -28,8 +28,8 @@ class HeatLoadProfileNuts(db.Model):
     process = db.Column(db.String())
     unit = db.Column(db.String())
     value = db.Column(db.Numeric(precision=30, scale=10))
-    fk_nuts_gid = db.Column(db.Integer)
-    fk_time_id = db.Column(db.Integer)
+    fk_nuts_gid = db.Column(db.BigInteger)
+    fk_time_id = db.Column(db.BigInteger)
 
     nuts = db.relationship("Nuts")
     time = db.relationship("Time")

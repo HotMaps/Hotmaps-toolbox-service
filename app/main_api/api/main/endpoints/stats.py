@@ -5,9 +5,10 @@ from flask_restplus import Resource
 from main_api.api.main.serializers import stats_layers_area_input, stats_layers_output, stats_layer_point_input, stats_layers_area_nuts_input
 from main_api.api.restplus import api
 from main_api.models.wwtp import Wwtp
-from main_api.models.heat_density_map import HeatDensityMap, HeatDensityHa, HeatDensityNuts3
+from main_api.models.heat_density_map import HeatDensityMap, HeatDensityHa, HeatDensityNuts3, HeatDensityLau2
 from main_api.models.population_density import PopulationDensityHa, PopulationDensityNuts3
 from main_api.models.nuts import Nuts, NutsRG01M
+from main_api.models.lau import Lau
 from sqlalchemy import func, BigInteger, TypeDecorator
 from main_api.models import db
 import datetime
@@ -29,7 +30,8 @@ layers_ref = {
     'population_density_ha': PopulationDensityHa,
     'heat_density_map': HeatDensityMap,
     'heat_density_ha': HeatDensityHa,
-    'heat_density_nuts3': HeatDensityNuts3
+    'heat_density_nuts3': HeatDensityNuts3,
+    'heat_density_lau2': HeatDensityLau2,
 }
 
 @ns.route('/layer/point')
@@ -244,6 +246,9 @@ class StatsLayersInArea(Resource):
 
                 hdm.get('values').append(v)
 
+        # return feature collection
+        # priority lau higher level first
+        # then nuts higher level first
         nuts = None
         r = re.compile("^.*_nuts[0-3]$")
         nuts_layers = list(filter(r.match, layers))
@@ -256,6 +261,18 @@ class StatsLayersInArea(Resource):
                     pass
 
             nuts = NutsRG01M.nuts_in_geometry(geometry=geom, year=year, nuts_level=max(nuts_levels))
+
+        r = re.compile("^.*_lau[0-3]$")
+        lau_layers = list(filter(r.match, layers))
+        if lau_layers != None and hasattr(lau_layers, '__len__') and len(lau_layers) > 0:
+            levels = []
+            for l in lau_layers:
+                try:
+                    levels.append(int(re.search("^.*lau([0-3])$", l).group(1)))
+                except (AttributeError, ValueError):
+                    pass
+
+            nuts = Lau.nuts_in_geometry(geometry=geom, year=2013, level=max(levels))
 
         return {
             "layers": output,

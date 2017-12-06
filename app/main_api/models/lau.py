@@ -13,7 +13,7 @@ class Lau(db.Model):
         {"schema": 'geo'}
     )
 
-    CRS = 4258
+    CRS = 3035
 
     gid = db.Column(db.Integer, primary_key=True)
     comm_id = db.Column(db.String(14))
@@ -86,7 +86,7 @@ class Lau(db.Model):
             }, {
                 'name': 'area',
                 'value': sum_area,
-                'unit': 'd'
+                'unit': 'm'
             }]
         }
 
