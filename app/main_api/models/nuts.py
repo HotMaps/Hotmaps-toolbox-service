@@ -153,7 +153,7 @@ class NutsRG01M(db.Model):
                     'values': [{
                         'name': 'area',
                         'value': nuts.shape_area,
-                        'unit': 'm'
+                        'unit': 'd'
                     }, {
                         'name': 'name',
                         'value': nuts.name,
