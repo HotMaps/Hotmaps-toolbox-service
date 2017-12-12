@@ -2,4 +2,5 @@
 __pycache__/
 *.py[cod]
 .idea
-settings.py
+
+app/main_api/secrets\.py
