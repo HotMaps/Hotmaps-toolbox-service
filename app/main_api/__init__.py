@@ -61,10 +61,9 @@ def create_app():
         r"/api/*": {"origins": {
             "http://hotmaps.hevs.ch",
             "http://hotmaps.hevs.ch:8080",
-            "http://213.221.142.10",
-            "http://213.221.142.10:8080",
-            "http://213.221.142.37",
-            "http://213.221.142.37:8080"
+            "http://lesly-hotmaps:4200",
+            "http://albain-hotmaps:4200",
+            "http://dany-hotmaps:4200"
         }
     }})
 
