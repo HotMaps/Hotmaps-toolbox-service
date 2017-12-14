@@ -165,9 +165,30 @@ load_profile_aggregation_month_row = api.model('Output row for load profile', {
 load_profile_aggregation_month = api.model('Output for load profile', {
     'values': fields.List(fields.Nested(load_profile_aggregation_month_row))
 })
-
 load_profile_aggregation_input = api.model('Input for load profile', {
     'year': fields.Integer(description='Year'),
+    'nuts_id': fields.String(description='Nuts ID'),
+    'nuts_level': fields.String(description='Nuts level')
+})
+
+load_profile_aggregation_hour_row = api.model('Output row for load profile (hour per day)', {
+    'value': fields.Float(description='Average value per hour'),
+    'unit': fields.String(descriptsion='Unit'),
+    'hour_of_day': fields.Integer(description='Hour'),
+    'month': fields.Integer(description='Month'),
+    'year': fields.Integer(description='Year'),
+    'granularity': fields.String(description='Granularity'),
+    'nuts_id': fields.String(description='Nuts ID'),
+    'nuts_name': fields.String(description='Nuts name'),
+    'nuts_level': fields.String(description='Nuts level')
+})
+load_profile_aggregation_hour = api.model('Output for load profile (hour per day)', {
+    'values': fields.List(fields.Nested(load_profile_aggregation_hour_row))
+})
+
+load_profile_aggregation_hour_input = api.model('Input for load profile (hour per day)', {
+    'year': fields.Integer(description='Year'),
+    'month': fields.Integer(description='Month'),
     'nuts_id': fields.String(description='Nuts ID'),
     'nuts_level': fields.String(description='Nuts level')
 })
