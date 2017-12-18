@@ -146,8 +146,8 @@ class HeatDensityLau(db.Model):
     time = db.relationship("Time")
 
     def __repr__(self):
-        return "<HeatDensityNuts(comm_id='%s', year='%s', sum='%d', lau='%s')>" % (
-        self.comm_id, self.time.year, self.sum, str(self.lau))
+        return "<HeatDensityLau(comm_id='%s', year='%s', sum='%d', lau='%s')>" % \
+               (self.comm_id, self.time.year, self.sum, str(self.lau))
 
     @staticmethod
     def aggregate_for_selection(geometry, year, level):
