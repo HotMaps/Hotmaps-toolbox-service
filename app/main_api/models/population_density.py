@@ -132,6 +132,37 @@ class PopulationDensityLau(db.Model):
             'unit': 'lau'
         }]
 
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year, level):
+        query = db.session.query(
+                func.sum(PopulationDensityLau.sum),
+                func.avg(PopulationDensityLau.sum),
+                func.count(PopulationDensityLau.sum)
+            ). \
+            join(Lau, PopulationDensityLau.lau). \
+            join(Time, PopulationDensityLau.time). \
+            filter(Time.year == year). \
+            filter(Time.granularity == 'year'). \
+            filter(Lau.stat_levl_ == level). \
+            filter(Lau.comm_id.in_(nuts)).first()
+
+        if query == None or len(query) < 3:
+                return []
+
+        return [{
+            'name': 'population',
+            'value': str(query[0] or 0),
+            'unit': 'person'
+        }, {
+            'name': 'population_density',
+            'value': str(query[1] or 0),
+            'unit': 'person'
+        }, {
+            'name': 'count',
+            'value': str(query[2] or 0),
+            'unit': 'nuts'
+        }]
+
 
 """
     Population Density layer as nuts
@@ -158,7 +189,6 @@ class PopulationDensityNuts(db.Model):
 
     @staticmethod
     def aggregate_for_selection(geometry, year, nuts_level):
-
         query = db.session.query(
                 func.sum(PopulationDensityNuts.value),
                 func.avg(PopulationDensityNuts.value),
@@ -186,6 +216,35 @@ class PopulationDensityNuts(db.Model):
             'unit': 'nuts'
         }]
 
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year, nuts_level):
+        query = db.session.query(
+            func.sum(PopulationDensityNuts.value),
+            func.avg(PopulationDensityNuts.value),
+            func.count(PopulationDensityNuts.value)
+        ). \
+            join(NutsRG01M, PopulationDensityNuts.nuts). \
+            filter(PopulationDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
+            filter(NutsRG01M.stat_levl_ == nuts_level). \
+            filter(NutsRG01M.nuts_id.in_(nuts)).first()
+
+        if query == None or len(query) < 3:
+                return []
+
+        return [{
+            'name': 'population',
+            'value': str(query[0] or 0),
+            'unit': 'person'
+        }, {
+            'name': 'population_density',
+            'value': str(query[1] or 0),
+            'unit': 'person'
+        }, {
+            'name': 'count',
+            'value': str(query[2] or 0),
+            'unit': 'nuts'
+        }]
+
 """
     PopulationDensityNuts classes for each nuts/lau level
 """
@@ -193,24 +252,38 @@ class PopulationDensityLau2():
     @staticmethod
     def aggregate_for_selection(geometry, year):
         return PopulationDensityLau.aggregate_for_selection(geometry=geometry, year=year, level=2)
-
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year):
+        return PopulationDensityLau.aggregate_for_nuts_selection(nuts=nuts, year=year, level=2)
 
 class PopulationDensityNuts3():
     @staticmethod
     def aggregate_for_selection(geometry, year):
         return PopulationDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=3)
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year):
+        return PopulationDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=3)
 
 class PopulationDensityNuts2():
     @staticmethod
     def aggregate_for_selection(geometry, year):
         return PopulationDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=2)
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year):
+        return PopulationDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=2)
 
 class PopulationDensityNuts1():
     @staticmethod
     def aggregate_for_selection(geometry, year):
         return PopulationDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=1)
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year):
+        return PopulationDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=1)
 
 class PopulationDensityNuts0():
     @staticmethod
     def aggregate_for_selection(geometry, year):
         return PopulationDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=0)
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year):
+        return PopulationDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=0)
