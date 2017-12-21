@@ -192,3 +192,13 @@ load_profile_aggregation_hour_input = api.model('Input for load profile (hour pe
     'nuts_id': fields.String(description='Nuts ID'),
     'nuts_level': fields.String(description='Nuts level')
 })
+
+stats_layers_nuts_output = api.model('Stats for selected layers, year and area', {
+    'layers': fields.List(fields.Nested(stats_layer_aggregation)),
+})
+
+stats_layers_nuts_input = api.model('Input for statistics on layers, list of nuts and year', {
+    'layers': fields.List(fields.String(description='Layer')),
+    'nuts': fields.List(fields.String(descriptions='Nuts')),
+    'year': fields.Integer(description='Year'),
+})
