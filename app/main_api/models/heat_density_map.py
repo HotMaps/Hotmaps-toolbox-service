@@ -197,17 +197,17 @@ class HeatDensityLau(db.Model):
                 return []
 
         return [{
-            'name': 'population',
+            'name': 'heat_consumption',
             'value': str(query[0] or 0),
-            'unit': 'person'
+            'unit': 'MWh'
         }, {
-            'name': 'population_density',
+            'name': 'heat_density',
             'value': str(query[1] or 0),
-            'unit': 'person'
+            'unit': 'MWh/ha'
         }, {
             'name': 'count',
             'value': str(query[2] or 0),
-            'unit': 'nuts'
+            'unit': 'lau'
         }]
 
 
