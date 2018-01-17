@@ -305,8 +305,13 @@ class StatsLayersNutsInArea(Resource):
         # get load profile avg per month
         load_profile_month = {}
         if nuts_level >= 2:
-            load_profile_month = HeatLoadProfileNuts.aggregate_for_month(nuts=nuts, year=2010)
+            list_nuts_id = []
+            for nuts_id in nuts:
+                nuts_id = nuts_id[:4]
+                if nuts_id not in list_nuts_id:
+                    list_nuts_id.append(nuts_id)
 
+            load_profile_month = HeatLoadProfileNuts.aggregate_for_month(nuts=list_nuts_id, year=2010)
 
         # output
         return {
