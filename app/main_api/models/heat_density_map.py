@@ -30,7 +30,6 @@ class HeatDensityMap(db.Model):
             self.rid, self.rast, self.filename, str_date)
 
     def aggregate_for_selection(self, geometry, year):
-
         # filter(HeatDensityMap.date == datetime.datetime.strptime(str(year), '%Y')). \
         # Custom query
         # todo: add support for year selection
@@ -78,7 +77,6 @@ class HeatDensityHa(db.Model):
 
     @staticmethod
     def aggregate_for_selection(geometry, year):
-
         # filter(HeatDensityMap.date == datetime.datetime.strptime(str(year), '%Y')). \
         # Custom query
         sql_query = \
@@ -146,8 +144,8 @@ class HeatDensityLau(db.Model):
     time = db.relationship("Time")
 
     def __repr__(self):
-        return "<HeatDensityNuts(comm_id='%s', year='%s', sum='%d', lau='%s')>" % (
-        self.comm_id, self.time.year, self.sum, str(self.lau))
+        return "<HeatDensityLau(comm_id='%s', year='%s', sum='%d', lau='%s')>" % \
+               (self.comm_id, self.time.year, self.sum, str(self.lau))
 
     @staticmethod
     def aggregate_for_selection(geometry, year, level):
@@ -176,6 +174,37 @@ class HeatDensityLau(db.Model):
             'value': str(query[1] or 0),
             'unit': 'MWh/ha'
         },{
+            'name': 'count',
+            'value': str(query[2] or 0),
+            'unit': 'lau'
+        }]
+
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year, level):
+        query = db.session.query(
+                func.sum(HeatDensityLau.sum),
+                func.avg(HeatDensityLau.sum),
+                func.count(HeatDensityLau.sum)
+            ). \
+            join(Lau, HeatDensityLau.lau). \
+            join(Time, HeatDensityLau.time). \
+            filter(Time.year == year). \
+            filter(Time.granularity == 'year'). \
+            filter(Lau.stat_levl_ == level). \
+            filter(Lau.comm_id.in_(nuts)).first()
+
+        if query == None or len(query) < 3:
+                return []
+
+        return [{
+            'name': 'heat_consumption',
+            'value': str(query[0] or 0),
+            'unit': 'MWh'
+        }, {
+            'name': 'heat_density',
+            'value': str(query[1] or 0),
+            'unit': 'MWh/ha'
+        }, {
             'name': 'count',
             'value': str(query[2] or 0),
             'unit': 'lau'
@@ -244,30 +273,74 @@ class HeatDensityNuts(db.Model):
             'unit': 'nuts'
         }]
 
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year, nuts_level):
+        query = db.session.query(
+                func.sum(HeatDensityNuts.sum),
+                func.avg(HeatDensityNuts.sum),
+                func.count(HeatDensityNuts.sum)
+            ). \
+            join(NutsRG01M, HeatDensityNuts.nuts). \
+            filter(HeatDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
+            filter(NutsRG01M.stat_levl_ == nuts_level). \
+            filter(NutsRG01M.nuts_id.in_(nuts)).first()
+
+        if query == None or len(query) < 3:
+            return []
+
+        return [{
+            'name': 'heat_consumption',
+            'value': str(query[0] or 0),
+            'unit': 'MWh'
+        },{
+            'name': 'heat_density',
+            'value': str(query[1] or 0),
+            'unit': 'MWh/ha'
+        },{
+            'name': 'count',
+            'value': str(query[2] or 0),
+            'unit': 'nuts'
+        }]
 
 """
     HeatDensityNuts classes for each nuts/lau level
 """
-
 class HeatDensityLau2():
     @staticmethod
     def aggregate_for_selection(geometry, year):
         return HeatDensityLau.aggregate_for_selection(geometry=geometry, year=year, level=2)
-
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year):
+        return HeatDensityLau.aggregate_for_nuts_selection(nuts=nuts, year=year, level=2)
 
 class HeatDensityNuts3():
     @staticmethod
     def aggregate_for_selection(geometry, year):
         return HeatDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=3)
-
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year):
+        return HeatDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=3)
 
 class HeatDensityNuts2():
     @staticmethod
     def aggregate_for_selection(geometry, year):
         return HeatDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=2)
-
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year):
+        return HeatDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=2)
 
 class HeatDensityNuts1():
     @staticmethod
     def aggregate_for_selection(geometry, year):
         return HeatDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=1)
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year):
+        return HeatDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=1)
+
+class HeatDensityNuts0():
+    @staticmethod
+    def aggregate_for_selection(geometry, year):
+        return HeatDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=0)
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year):
+        return HeatDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=0)

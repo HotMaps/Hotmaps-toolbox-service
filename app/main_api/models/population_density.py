@@ -3,7 +3,8 @@ from main_api.models import db
 from main_api.models.nuts import NutsRG01M
 from sqlalchemy import func
 from geoalchemy2 import Raster
-
+from main_api.models.lau import Lau
+from main_api.models.time import Time
 
 """
     Population Density layer as ha
@@ -65,6 +66,105 @@ class PopulationDensityHa(db.Model):
         }]
 
 """
+    Population Density layer as lau
+"""
+class PopulationDensityLau(db.Model):
+    __tablename__ = 'pop_density_lau'
+    __table_args__ = (
+        db.ForeignKeyConstraint(['fk_lau_gid'], ['geo.lau.gid']),
+        db.ForeignKeyConstraint(['fk_time_id'], ['stat.time.id']),
+        {"schema": 'stat'}
+    )
+
+    CRS = 3035
+
+    id = db.Column(db.Integer, primary_key=True)
+    comm_id = db.Column(db.String(14))
+    count = db.Column(db.BigInteger)
+    sum = db.Column(db.Numeric(precision=30, scale=10))
+    mean = db.Column(db.Numeric(precision=30, scale=10))
+    median = db.Column(db.Numeric(precision=30, scale=10))
+    min = db.Column(db.Numeric(precision=30, scale=10))
+    max = db.Column(db.Numeric(precision=30, scale=10))
+    std = db.Column(db.Numeric(precision=30, scale=10))
+    variance = db.Column(db.Numeric(precision=30, scale=10))
+    range = db.Column(db.Numeric(precision=30, scale=10))
+    fk_lau_gid = db.Column(db.BigInteger)
+    fk_time_id = db.Column(db.BigInteger)
+
+    lau = db.relationship("Lau")
+    time = db.relationship("Time")
+
+    def __repr__(self):
+        return "<PopDensityLau(comm_id='%s', year='%s', sum='%d', lau='%s')>" % \
+               (self.comm_id, self.time.year, self.sum, str(self.lau))
+
+    @staticmethod
+    def aggregate_for_selection(geometry, year, level):
+
+        query = db.session.query(
+                func.sum(PopulationDensityLau.sum),
+                func.avg(PopulationDensityLau.sum),
+                func.count(PopulationDensityLau.sum)
+            ). \
+            join(Lau, PopulationDensityLau.lau). \
+            join(Time, PopulationDensityLau.time). \
+            filter(Time.year == year). \
+            filter(Time.granularity == 'year'). \
+            filter(Lau.stat_levl_ == level). \
+            filter(func.ST_Within(Lau.geom,
+                                  func.ST_Transform(func.ST_GeomFromEWKT(geometry), PopulationDensityLau.CRS))).first()
+
+        if query == None or len(query) < 3:
+            return []
+
+        return [{
+            'name': 'population',
+            'value': str(query[0] or 0),
+            'unit': 'person'
+        }, {
+            'name': 'population_density',
+            'value': str(query[1] or 0),
+            'unit': 'person'
+        }, {
+            'name': 'count',
+            'value': str(query[2] or 0),
+            'unit': 'lau'
+        }]
+
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year, level):
+        query = db.session.query(
+                func.sum(PopulationDensityLau.sum),
+                func.avg(PopulationDensityLau.sum),
+                func.count(PopulationDensityLau.sum)
+            ). \
+            join(Lau, PopulationDensityLau.lau). \
+            join(Time, PopulationDensityLau.time). \
+            filter(Time.year == year). \
+            filter(Time.granularity == 'year'). \
+            filter(Lau.stat_levl_ == level). \
+            filter(Lau.comm_id.in_(nuts)).first()
+
+        if query == None or len(query) < 3:
+                return []
+
+        return [{
+            'name': 'population',
+            'value': str(query[0] or 0),
+            'unit': 'person'
+        }, {
+            'name': 'population_density',
+            'value': str(query[1] or 0),
+            'unit': 'person'
+        }, {
+            'name': 'count',
+            'value': str(query[2] or 0),
+            'unit': 'nuts'
+        }]
+
+
+"""
     Population Density layer as nuts
 """
 class PopulationDensityNuts(db.Model):
@@ -89,7 +189,6 @@ class PopulationDensityNuts(db.Model):
 
     @staticmethod
     def aggregate_for_selection(geometry, year, nuts_level):
-
         query = db.session.query(
                 func.sum(PopulationDensityNuts.value),
                 func.avg(PopulationDensityNuts.value),
@@ -117,26 +216,74 @@ class PopulationDensityNuts(db.Model):
             'unit': 'nuts'
         }]
 
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year, nuts_level):
+        query = db.session.query(
+            func.sum(PopulationDensityNuts.value),
+            func.avg(PopulationDensityNuts.value),
+            func.count(PopulationDensityNuts.value)
+        ). \
+            join(NutsRG01M, PopulationDensityNuts.nuts). \
+            filter(PopulationDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
+            filter(NutsRG01M.stat_levl_ == nuts_level). \
+            filter(NutsRG01M.nuts_id.in_(nuts)).first()
+
+        if query == None or len(query) < 3:
+                return []
+
+        return [{
+            'name': 'population',
+            'value': str(query[0] or 0),
+            'unit': 'person'
+        }, {
+            'name': 'population_density',
+            'value': str(query[1] or 0),
+            'unit': 'person'
+        }, {
+            'name': 'count',
+            'value': str(query[2] or 0),
+            'unit': 'nuts'
+        }]
+
 """
-    PopulationDensityNuts classes for each nuts level
+    PopulationDensityNuts classes for each nuts/lau level
 """
+class PopulationDensityLau2():
+    @staticmethod
+    def aggregate_for_selection(geometry, year):
+        return PopulationDensityLau.aggregate_for_selection(geometry=geometry, year=year, level=2)
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year):
+        return PopulationDensityLau.aggregate_for_nuts_selection(nuts=nuts, year=year, level=2)
 
 class PopulationDensityNuts3():
     @staticmethod
     def aggregate_for_selection(geometry, year):
         return PopulationDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=3)
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year):
+        return PopulationDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=3)
 
 class PopulationDensityNuts2():
     @staticmethod
     def aggregate_for_selection(geometry, year):
         return PopulationDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=2)
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year):
+        return PopulationDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=2)
 
 class PopulationDensityNuts1():
     @staticmethod
     def aggregate_for_selection(geometry, year):
         return PopulationDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=1)
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year):
+        return PopulationDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=1)
 
 class PopulationDensityNuts0():
     @staticmethod
     def aggregate_for_selection(geometry, year):
         return PopulationDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=0)
+    @staticmethod
+    def aggregate_for_nuts_selection(nuts, year):
+        return PopulationDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=0)
