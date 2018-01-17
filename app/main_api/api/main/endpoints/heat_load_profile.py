@@ -20,9 +20,18 @@ log = logging.getLogger(__name__)
 ns = api.namespace('load-profile', description='Operations related to heat load profile')
 
 
+class HeatLoadProfileResource(Resource):
+    def normalize_nuts(self, nuts):
+        list_nuts_id = []
+        for nuts_id in nuts:
+            nuts_id = nuts_id[:4]
+            if nuts_id not in list_nuts_id:
+                list_nuts_id.append(nuts_id)
+        return list_nuts_id
+
 @ns.route('/aggregate/month')
 @api.response(404, 'No data found')
-class HeatLoadProfileAggregationMonth(Resource):
+class HeatLoadProfileAggregationMonth(HeatLoadProfileResource):
     @api.marshal_with(load_profile_aggregation_month)
     @api.expect(load_profile_aggregation_month_input)
     def post(self):
@@ -32,15 +41,20 @@ class HeatLoadProfileAggregationMonth(Resource):
         """
         year = api.payload['year']
         nuts = api.payload['nuts']
-        nuts_level = api.payload['nuts_level']
+        try:
+            nuts_level = int(api.payload['nuts_level'])
+        except ValueError:
+            nuts_level = 2
 
-        output = HeatLoadProfileNuts.aggregate_for_month(nuts=nuts, year=year)
+        output = {}
+        if nuts_level >= 2:
+            output = HeatLoadProfileNuts.aggregate_for_month(nuts=self.normalize_nuts(nuts), year=2010)
 
         return output
 
 @ns.route('/aggregate/hour')
 @api.response(404, 'No data found')
-class HeatLoadProfileAggregationHour(Resource):
+class HeatLoadProfileAggregationHour(HeatLoadProfileResource):
     @api.marshal_with(load_profile_aggregation_hour)
     @api.expect(load_profile_aggregation_hour_input)
     def post(self):
@@ -51,9 +65,15 @@ class HeatLoadProfileAggregationHour(Resource):
         year = api.payload['year']
         month = api.payload['month']
         nuts = api.payload['nuts']
-        nuts_level = api.payload['nuts_level']
+        try:
+            nuts_level = int(api.payload['nuts_level'])
+        except ValueError:
+            nuts_level = 2
 
-        output = HeatLoadProfileNuts.aggregate_for_hour(nuts=nuts, year=year, month=month)
+        output = {}
+        if nuts_level >= 2:
+            output = HeatLoadProfileNuts.aggregate_for_hour(nuts=self.normalize_nuts(nuts), year=2010, month=month)
 
         return output
+
 

@@ -60,7 +60,6 @@ class HeatLoadProfileNuts(db.Model):
 
         if query == None or len(query) < 1:
             return []
-
         output = []
         nuts_level = -1
         for row in query:
@@ -102,7 +101,7 @@ class HeatLoadProfileNuts(db.Model):
             filter(Time.year == year). \
             filter(Time.month == month). \
             filter(Nuts.nuts_id.in_(nuts)). \
-            group_by(Time.hour_of_day, Time.month, HeatLoadProfileNuts.unit, Time.year, Nuts.nuts_id, Nuts.name, Nuts.stat_levl_). \
+            group_by(Time.hour_of_day, Time.month, HeatLoadProfileNuts.unit, Time.year, Nuts.stat_levl_). \
             order_by(Time.hour_of_day.asc()).all()
 
 

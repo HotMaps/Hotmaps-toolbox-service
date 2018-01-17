@@ -173,7 +173,7 @@ load_profile_aggregation_month_input = api.model('Input for load profile', {
 })
 
 load_profile_aggregation_hour_row = api.model('Output row for load profile (hour per day)', {
-    'value': fields.Float(description='Average value per hour'),
+    'average': fields.Float(description='Average value per hour'),
     'min': fields.Float(description='Minimum value per hour'),
     'max': fields.Float(description='Maximum value per hour'),
     'unit': fields.String(descriptsion='Unit'),
