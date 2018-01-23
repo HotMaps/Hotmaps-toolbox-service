@@ -39,7 +39,7 @@ class HeatLoadProfileNuts(db.Model):
         self.nuts_id, str(self.time), self.value, self.unit)
 
     @staticmethod
-    def aggregate_for_month(nuts, year):
+    def aggregate_for_year(nuts, year):
         query = db.session.query(
                 func.avg(HeatLoadProfileNuts.value),
                 func.min(HeatLoadProfileNuts.value),
@@ -82,18 +82,17 @@ class HeatLoadProfileNuts(db.Model):
             "nuts_level": nuts_level,
         }
 
-
     @staticmethod
-    def aggregate_for_hour(nuts, year, month):
+    def aggregate_for_month(nuts, year, month):
         query = db.session.query(
                 func.avg(HeatLoadProfileNuts.value),
                 func.min(HeatLoadProfileNuts.value),
                 func.max(HeatLoadProfileNuts.value),
                 HeatLoadProfileNuts.unit,
-                Time.hour_of_day,
+                Time.day,
                 Time.month,
                 Time.year,
-                literal("hour", type_=Unicode).label('granularity'),
+                literal("day", type_=Unicode).label('granularity'),
                 Nuts.stat_levl_
             ). \
             join(Nuts, HeatLoadProfileNuts.nuts). \
@@ -101,8 +100,8 @@ class HeatLoadProfileNuts(db.Model):
             filter(Time.year == year). \
             filter(Time.month == month). \
             filter(Nuts.nuts_id.in_(nuts)). \
-            group_by(Time.hour_of_day, Time.month, HeatLoadProfileNuts.unit, Time.year, Nuts.stat_levl_). \
-            order_by(Time.hour_of_day.asc()).all()
+            group_by(Time.day, Time.month, HeatLoadProfileNuts.unit, Time.year, Nuts.stat_levl_). \
+            order_by(Time.day.asc()).all()
 
 
         if query == None or len(query) < 1:
@@ -118,7 +117,7 @@ class HeatLoadProfileNuts(db.Model):
                     "min": row[1],
                     "max": row[2],
                     "unit": row[3],
-                    "hour_of_day": row[4],
+                    "day": row[4],
                     "month": row[5],
                     "year": row[6],
                     "granularity": row[7],
@@ -130,7 +129,54 @@ class HeatLoadProfileNuts(db.Model):
             "nuts_level": nuts_level,
         }
 
+
     @staticmethod
+    def aggregate_for_day(nuts, year, month, day):
+        query = db.session.query(
+                HeatLoadProfileNuts.value,
+                HeatLoadProfileNuts.unit,
+                Time.hour_of_day,
+                Time.day,
+                Time.month,
+                Time.year,
+                literal("hour", type_=Unicode).label('granularity'),
+                Nuts.stat_levl_
+            ). \
+            join(Nuts, HeatLoadProfileNuts.nuts). \
+            join(Time, HeatLoadProfileNuts.time). \
+            filter(Time.year == year). \
+            filter(Time.month == month). \
+            filter(Time.day == day). \
+            filter(Nuts.nuts_id.in_(nuts)). \
+            group_by(HeatLoadProfileNuts.value, Time.hour_of_day, Time.day, Time.month, HeatLoadProfileNuts.unit, Time.year, Nuts.stat_levl_). \
+            order_by(Time.hour_of_day.asc()).all()
+
+
+        if query == None or len(query) < 1:
+            return []
+
+        output = []
+        nuts_level = -1
+        for row in query:
+            if (len(row) >= 8):
+                nuts_level = row[7]
+                output.append({
+                    "value": row[0],
+                    "unit": row[1],
+                    "hour_of_day": row[2],
+                    "day": row[3],
+                    "month": row[4],
+                    "year": row[5],
+                    "granularity": row[6],
+                })
+
+        return {
+            "values": output,
+            "nuts": [nuts,],
+            "nuts_level": nuts_level,
+        }
+
+"""    @staticmethod
     def aggregate_for_month_hdm(nuts, year):
         query = db.session.query(
                 func.avg(HeatLoadProfileNuts.value),
@@ -175,3 +221,4 @@ class HeatLoadProfileNuts(db.Model):
             "nuts_level": nuts_level,
         }
 
+"""

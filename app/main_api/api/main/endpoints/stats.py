@@ -9,7 +9,6 @@ from main_api.models.heat_density_map import HeatDensityMap, HeatDensityHa, Heat
 from main_api.models.population_density import PopulationDensityHa, PopulationDensityNuts3, PopulationDensityLau2
 from main_api.models.nuts import Nuts, NutsRG01M
 from main_api.models.lau import Lau
-from main_api.models.heat_load_profile import HeatLoadProfileNuts
 from sqlalchemy import func, BigInteger, TypeDecorator
 from main_api.models import db
 import datetime
@@ -302,19 +301,7 @@ class StatsLayersNutsInArea(Resource):
 
                 hdm.get('values').append(v)
 
-        # get load profile avg per month
-        load_profile_month = {}
-        if nuts_level >= 2:
-            list_nuts_id = []
-            for nuts_id in nuts:
-                nuts_id = nuts_id[:4]
-                if nuts_id not in list_nuts_id:
-                    list_nuts_id.append(nuts_id)
-
-            load_profile_month = HeatLoadProfileNuts.aggregate_for_month(nuts=list_nuts_id, year=2010)
-
         # output
         return {
             "layers": output,
-            "load_profile_month": load_profile_month,
         }
