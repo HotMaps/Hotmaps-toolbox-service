@@ -2,8 +2,8 @@ import logging
 import re
 from flask import request
 from flask_restplus import Resource
-from main_api.api.main.serializers import load_profile_aggregation_month, load_profile_aggregation_month_input, \
-    load_profile_aggregation_hour, load_profile_aggregation_hour_input
+from main_api.api.main.serializers import load_profile_aggregation_year, load_profile_aggregation_year_input, \
+    load_profile_aggregation_month, load_profile_aggregation_month_input, load_profile_aggregation_day, load_profile_aggregation_day_input
 from main_api.api.restplus import api
 from main_api.models.nuts import Nuts
 from main_api.models.heat_load_profile import HeatLoadProfileNuts
@@ -29,11 +29,11 @@ class HeatLoadProfileResource(Resource):
                 list_nuts_id.append(nuts_id)
         return list_nuts_id
 
-@ns.route('/aggregate/month')
+@ns.route('/aggregate/year')
 @api.response(404, 'No data found')
-class HeatLoadProfileAggregationMonth(HeatLoadProfileResource):
-    @api.marshal_with(load_profile_aggregation_month)
-    @api.expect(load_profile_aggregation_month_input)
+class HeatLoadProfileAggregationYear(HeatLoadProfileResource):
+    @api.marshal_with(load_profile_aggregation_year)
+    @api.expect(load_profile_aggregation_year_input)
     def post(self):
         """
         Returns the statistics for specific layers, point and year
@@ -48,15 +48,15 @@ class HeatLoadProfileAggregationMonth(HeatLoadProfileResource):
 
         output = {}
         if nuts_level >= 2:
-            output = HeatLoadProfileNuts.aggregate_for_month(nuts=self.normalize_nuts(nuts), year=2010)
+            output = HeatLoadProfileNuts.aggregate_for_year(nuts=self.normalize_nuts(nuts), year=2010)
 
         return output
 
-@ns.route('/aggregate/hour')
+@ns.route('/aggregate/month')
 @api.response(404, 'No data found')
-class HeatLoadProfileAggregationHour(HeatLoadProfileResource):
-    @api.marshal_with(load_profile_aggregation_hour)
-    @api.expect(load_profile_aggregation_hour_input)
+class HeatLoadProfileAggregationMonth(HeatLoadProfileResource):
+    @api.marshal_with(load_profile_aggregation_month)
+    @api.expect(load_profile_aggregation_month_input)
     def post(self):
         """
         Returns the statistics for specific layers, point and year
@@ -72,7 +72,33 @@ class HeatLoadProfileAggregationHour(HeatLoadProfileResource):
 
         output = {}
         if nuts_level >= 2:
-            output = HeatLoadProfileNuts.aggregate_for_hour(nuts=self.normalize_nuts(nuts), year=2010, month=month)
+            output = HeatLoadProfileNuts.aggregate_for_month(nuts=self.normalize_nuts(nuts), year=2010, month=month)
+
+        return output
+
+
+@ns.route('/aggregate/day')
+@api.response(404, 'No data found')
+class HeatLoadProfileAggregationDay(HeatLoadProfileResource):
+    @api.marshal_with(load_profile_aggregation_day)
+    @api.expect(load_profile_aggregation_day_input)
+    def post(self):
+        """
+        Returns the statistics for specific layers, point and year
+        :return:
+        """
+        year = api.payload['year']
+        month = api.payload['month']
+        day = api.payload['day']
+        nuts = api.payload['nuts']
+        try:
+            nuts_level = int(api.payload['nuts_level'])
+        except ValueError:
+            nuts_level = 2
+
+        output = {}
+        if nuts_level >= 2:
+            output = HeatLoadProfileNuts.aggregate_for_day(nuts=self.normalize_nuts(nuts), year=2010, month=month, day=day)
 
         return output
 
