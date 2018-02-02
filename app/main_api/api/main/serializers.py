@@ -15,6 +15,8 @@ point = api.model('Point', {
     'lng': fields.Float(description='Longitude')
 })
 
+
+
 grid = api.model('Grid', {
     'gid': fields.Integer(readOnly=True, description='ID of the grid geometry'),
     'id': fields.Integer(desciption='id'),
@@ -138,6 +140,10 @@ stats_layers_output = api.model('Stats for selected layers, year and area', {
     'feature_collection': fields.Nested(vector_feature_collection)
 })
 
+stats_layers_hectares_output = api.model('Stats for selected layers, year and area', {
+    'layers': fields.List(fields.Nested(stats_layer_aggregation))
+})
+
 stats_layers_area_nuts_input = api.model('Input for statistics on layers, area and year', {
     'layers': fields.List(fields.String(description='Layer')),
     'nuts_level': fields.String(description='Nuts level'),
@@ -225,5 +231,11 @@ stats_layers_nuts_output = api.model('Stats for selected layers, year and area',
 stats_layers_nuts_input = api.model('Input for statistics on layers, list of nuts and year', {
     'layers': fields.List(fields.String(description='Layer')),
     'nuts': fields.List(fields.String(descriptions='List of NUTS')),
+    'year': fields.Integer(description='Year'),
+})
+
+stats_layers_hectares_input = api.model('Input for statistics on layers, hectares and year', {
+    'layers': fields.List(fields.String(description='Layer')),
+    'areas': fields.List(fields.Nested(area)),
     'year': fields.Integer(description='Year'),
 })

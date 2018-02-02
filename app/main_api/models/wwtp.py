@@ -29,7 +29,7 @@ class Wwtp(db.Model):
 
     @staticmethod
     def aggregate_for_selection(geometry, year):
-
+        
         query = db.session.query(func.sum(Wwtp.power), func.sum(Wwtp.capacity), Wwtp.unit). \
             filter(Wwtp.date == datetime.datetime.strptime(str(year), '%Y')). \
             filter(func.ST_Within(Wwtp.geom, func.ST_Transform(func.ST_GeomFromEWKT(geometry), Wwtp.CRS))). \
