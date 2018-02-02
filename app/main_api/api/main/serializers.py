@@ -37,6 +37,14 @@ multipolygon_geometry = api.model('MultiPolygon', {
     'type': fields.String(),
     'coordinates': fields.List(fields.List(fields.List(fields.List(fields.Float))))
 })
+points_geometry = api.model('Points', {
+    'type': fields.String(),
+    'coordinates': fields.List(fields.List(fields.List(fields.List(fields.Float))))
+})
+points_in_area = api.model('Point in area', {
+    'geometry': fields.List(fields.Nested(points_geometry))
+})
+
 crs_properties = api.model('properties', {
     'name': fields.String
 })

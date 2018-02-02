@@ -10,10 +10,13 @@ from main_api.models import db
 import shapely.geometry as shapely_geom
 from geoalchemy2.shape import to_shape
 from geojson import FeatureCollection, Feature
-
+from main_api.api.main.serializers import stats_layers_area_input, stats_layers_output, stats_layers_nuts_input, stats_layers_nuts_output, stats_layer_point_input, stats_layers_area_nuts_input,points_geometry
+from main_api.models.heat_density_map import HeatDensityHa
+import sys
+import json
 log = logging.getLogger(__name__)
 
-ns = api.namespace('heat-density-map', description='Heat density map')
+ns = api.namespace('raster', description='raster request')
 
 
 class CoerceToInt(TypeDecorator):
@@ -47,4 +50,60 @@ class Grid1KmFromArea(Resource):
 
 
         return query
+
+
+@ns.route('/layers/area/centroids')
+
+@api.response(404, 'No data found for that specific hectare.')
+
+class CentroidsLayersInArea(Resource):
+    @api.expect(stats_layers_nuts_input)
+    def post(self):
+        """
+        Returns the centroid of the hectares selected
+        :return:
+        """
+        geometry = api.payload['centroids']
+
+
+
+        result = HeatDensityHa.centroid_for_selection(geometry)
+        response = []
+        for x in result:
+            response.append(   json.loads(x['geojson']))
+
+        print >> sys.stderr, response
+
+        # output
+        return {
+            "centroids": response,
+        }
+
+@ns.route('/layers/hectare/centroid')
+
+@api.response(404, 'No data found for that specific hectare.')
+
+class CentroidLayersInHectare(Resource):
+    @api.expect(stats_layers_nuts_input)
+    def post(self):
+        """
+        Returns the centroid of the hectares selected
+        :return:
+        """
+        point = api.payload['point']
+        print >> sys.stderr, point
+        result = HeatDensityHa.centroid_for_hectare(point)
+        response = []
+        for x in result:
+            response.append(   json.loads(x['geojson']))
+
+        print >> sys.stderr, response
+
+        # output
+        return {
+            "point": response,
+        }
+
+
+
 

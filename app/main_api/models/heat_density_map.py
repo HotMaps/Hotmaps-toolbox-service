@@ -5,6 +5,10 @@ from main_api.models.lau import Lau
 from main_api.models.time import Time
 from geoalchemy2 import Geometry, Raster
 from sqlalchemy import func
+import json
+from flask import jsonify
+import sys
+from collections import OrderedDict
 #import logging
 #logging.basicConfig()
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
@@ -113,6 +117,35 @@ class HeatDensityHa(db.Model):
             'value': str(query[2] or 0),
             'unit': 'cell'
         }]
+    @staticmethod
+    def centroid_for_selection(geometry):
+        sql_query = \
+            "SELECT ST_AsGeoJSON(st_transform((st_pixelascentroids(ST_Clip(heat_tot_curr_density.rast, 1, st_transform(st_geomfromtext( 'Polygon (("+ geometry +"))'::text, 4326),3035), true), 1, true)).geom ,4326)) AS geoJson " + \
+            "FROM geo.heat_tot_curr_density " + \
+            "WHERE " +  "st_intersects(heat_tot_curr_density.rast,st_transform(st_geomfromtext( 'Polygon(("+ geometry +"))'::text, 4326),3035));"
+        query = db.session.execute(sql_query)
+        print >> sys.stderr, query
+        result = json.dumps([dict(r) for r in query])
+        result = json.loads(result)
+        print >> sys.stderr, result
+        return result
+
+
+
+    @staticmethod
+    def centroid_for_hectare(point):
+        sql_query = \
+            "SELECT ST_AsGeoJSON(st_transform((st_pixelascentroids(heat_tot_curr_density.rast, 1, false)).geom ,4326)) AS geoJson," +\
+            " ST_Distance((st_pixelascentroids(heat_tot_curr_density.rast, 1, false)).geom, " + \
+            "st_transform(st_geomfromtext('POINT("+ point +")'::text, 4326),3035)) as distance " + \
+            "FROM geo.heat_tot_curr_density " + \
+            "WHERE " +  "st_intersects(heat_tot_curr_density.rast,st_transform(st_geomfromtext('POINT("+ point +")'::text, 4326),3035)) ORDER BY distance ASC limit 1;"
+        query = db.session.execute(sql_query)
+        print >> sys.stderr, query
+        result = json.dumps([dict(r) for r in query])
+        result = json.loads(result)
+        print >> sys.stderr, result
+        return result
 
 
 class HeatDensityLau(db.Model):
