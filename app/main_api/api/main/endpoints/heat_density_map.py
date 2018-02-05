@@ -1,19 +1,21 @@
 import logging
-
+from main_api.api.main.serializers import number_of_centroid_area_output, stats_layers_nuts_input
 import datetime
 from flask_restplus import Resource
 from main_api.api.main.serializers import raster_for_area_input
 from main_api.api.restplus import api
-from main_api.models.heat_density_map import HeatDensityMap
+from main_api.models.heat_density_map import HeatDensityMap,HeatDensityHa
 from sqlalchemy import func, BigInteger, TypeDecorator
 from main_api.models import db
 import shapely.geometry as shapely_geom
 from geoalchemy2.shape import to_shape
 from geojson import FeatureCollection, Feature
+import json, sys
+
 
 log = logging.getLogger(__name__)
 
-ns = api.namespace('heat-density-map', description='Heat density map')
+ns = api.namespace('raster', description='Heat density map')
 
 
 class CoerceToInt(TypeDecorator):
@@ -47,4 +49,67 @@ class Grid1KmFromArea(Resource):
 
 
         return query
+
+@ns.route('/layers/area/centroids')
+@api.response(404, 'No data found for that specific hectare.')
+class CentroidsLayersInArea(Resource):
+    @api.expect(stats_layers_nuts_input)
+    def post(self):
+        """
+        Returns the centroid of the hectares selected
+        :return:
+        """
+        geometry = api.payload['centroids']
+        result = HeatDensityHa.centroid_for_selection(geometry)
+        response = []
+        for x in result:
+            response.append(   json.loads(x['geojson']))
+        print >> sys.stderr, len(response)
+        # output
+        return {
+            "centroids": len(response),
+        }
+@ns.route('/layers/hectare/centroid')
+@api.response(404, 'No data found for that specific hectare.')
+class CentroidLayersInHectare(Resource):
+    @api.expect(stats_layers_nuts_input)
+    def post(self):
+        """
+        Returns the centroid of the hectares selected
+        :return:
+        """
+        point = api.payload['point']
+        print >> sys.stderr, point
+        result = HeatDensityHa.centroid_for_hectare(point)
+        response = []
+        for x in result:
+            response.append(   json.loads(x['geojson']))
+        print >> sys.stderr, response
+        # output
+        return {
+            "point": response,
+        }
+
+
+@ns.route('/layers/hectare/count')
+
+@api.response(404, 'No data found for that specific hectare.')
+class CentroidLayersInHectare(Resource):
+    @api.marshal_with(number_of_centroid_area_output)
+    @api.expect(stats_layers_nuts_input)
+    def post(self):
+        """
+        Returns the centroid of the hectares selected
+        :return:
+        """
+        geometry = api.payload['centroids']
+        result = HeatDensityHa.number_of_centroid_for_hectare(geometry)
+        output = result
+        # output
+        return {
+            "count": output,
+        };
+
+
+
 

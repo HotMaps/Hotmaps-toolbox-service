@@ -62,6 +62,13 @@ grid_feature_collection = api.model('FeatureCollection', {
 area = api.model('Input area', {
     'points': fields.List(fields.Nested(point))
 })
+value_of_centroid_area_output = api.model('Number of Centroid', {
+    'value': fields.String()
+})
+number_of_centroid_area_output = api.model('Number of Centroid', {
+    'count': fields.Integer()
+})
+
 
 
 nuts = api.model('Nuts', {
