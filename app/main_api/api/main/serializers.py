@@ -39,6 +39,14 @@ multipolygon_geometry = api.model('MultiPolygon', {
     'type': fields.String(),
     'coordinates': fields.List(fields.List(fields.List(fields.List(fields.Float))))
 })
+points_geometry = api.model('Points', {
+    'type': fields.String(),
+    'coordinates': fields.List(fields.List(fields.List(fields.List(fields.Float))))
+})
+points_in_area = api.model('Point in area', {
+    'geometry': fields.List(fields.Nested(points_geometry))
+})
+
 crs_properties = api.model('properties', {
     'name': fields.String
 })
@@ -239,6 +247,11 @@ stats_layers_nuts_input = api.model('Input for statistics on layers, list of nut
     'layers': fields.List(fields.String(description='Layer')),
     'nuts': fields.List(fields.String(descriptions='List of NUTS')),
     'year': fields.Integer(description='Year'),
+})
+
+centroid_from_polygon_input = api.model('get polygon in order to retrieve the centroid', {
+    'centroids': fields.String(description='coordinates'),
+
 })
 
 stats_layers_hectares_input = api.model('Input for statistics on layers, hectares and year', {

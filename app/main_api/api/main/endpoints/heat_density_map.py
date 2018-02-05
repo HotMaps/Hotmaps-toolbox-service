@@ -2,7 +2,7 @@ import logging
 from main_api.api.main.serializers import number_of_centroid_area_output, stats_layers_nuts_input
 import datetime
 from flask_restplus import Resource
-from main_api.api.main.serializers import raster_for_area_input
+from main_api.api.main.serializers import raster_for_area_input,centroid_from_polygon_input
 from main_api.api.restplus import api
 from main_api.models.heat_density_map import HeatDensityMap,HeatDensityHa
 from sqlalchemy import func, BigInteger, TypeDecorator
@@ -96,7 +96,7 @@ class CentroidLayersInHectare(Resource):
 @api.response(404, 'No data found for that specific hectare.')
 class CentroidLayersInHectare(Resource):
     @api.marshal_with(number_of_centroid_area_output)
-    @api.expect(stats_layers_nuts_input)
+    @api.expect(centroid_from_polygon_input)
     def post(self):
         """
         Returns the centroid of the hectares selected

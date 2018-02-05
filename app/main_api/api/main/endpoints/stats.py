@@ -219,7 +219,6 @@ class StatsLayersHectareMulti(Resource):
 
 		res = LayersHectare.aggregate_for_selection(geometry=geom, year=year, layers=layers)
 		output = res
-		print(output)
 
 		# compute heat consumption/person if both layers are selected
 		pop1ha_name = 'population_density_ha'
