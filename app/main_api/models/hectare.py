@@ -14,7 +14,7 @@ class LayersHectare():
 	def aggregate_for_selection(geometry, year, layers):
 		popDeHa = 'population_density_ha'
 		heatDeHa = 'heat_density_ha'
-		wwtpHa = 'wwtp'
+		wwtpHa = 'wwtp_ha'
 
 		result = []
 
@@ -124,7 +124,7 @@ class LayersHectare():
 				
 			sql_query += ';'
 
-
+			print (sql_query)
 			# Execution of the query
 			query = db.session.execute(sql_query).first()
 

@@ -105,7 +105,7 @@ class PopulationDensityLau(db.Model):
         query = db.session.query(
                 func.sum(PopulationDensityLau.sum),
                 func.avg(PopulationDensityLau.sum),
-                func.count(PopulationDensityLau.sum)
+                func.sum(PopulationDensityLau.count)
             ). \
             join(Lau, PopulationDensityLau.lau). \
             join(Time, PopulationDensityLau.time). \
@@ -129,7 +129,7 @@ class PopulationDensityLau(db.Model):
         }, {
             'name': 'count',
             'value': str(query[2] or 0),
-            'unit': 'lau'
+            'unit': 'cell'
         }]
 
     @staticmethod
@@ -137,7 +137,7 @@ class PopulationDensityLau(db.Model):
         query = db.session.query(
                 func.sum(PopulationDensityLau.sum),
                 func.avg(PopulationDensityLau.sum),
-                func.count(PopulationDensityLau.sum)
+                func.sum(PopulationDensityLau.count)
             ). \
             join(Lau, PopulationDensityLau.lau). \
             join(Time, PopulationDensityLau.time). \
@@ -160,7 +160,7 @@ class PopulationDensityLau(db.Model):
         }, {
             'name': 'count',
             'value': str(query[2] or 0),
-            'unit': 'nuts'
+            'unit': 'cell'
         }]
 
 
@@ -168,7 +168,7 @@ class PopulationDensityLau(db.Model):
     Population Density layer as nuts
 """
 class PopulationDensityNuts(db.Model):
-    __tablename__ = 'pop_density'
+    __tablename__ = 'pop_density_nuts'
     __table_args__ = (
         db.ForeignKeyConstraint(['nuts_id'], ['geo.nuts_rg_01m.nuts_id']),
         {"schema": 'stat'}
@@ -179,8 +179,15 @@ class PopulationDensityNuts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nuts_id = db.Column(db.String(14))
     date = db.Column(db.Date)
-    value = db.Column(db.BigInteger)
-
+    count = db.Column(db.BigInteger, name ='_count')
+    sum = db.Column(db.Numeric(precision=30, scale=10), name ='_sum' )
+    mean = db.Column(db.Numeric(precision=30, scale=10), name ='_mean')
+    median = db.Column(db.Numeric(precision=30, scale=10), name ='_median')
+    min = db.Column(db.Numeric(precision=30, scale=10), name ='_min')
+    max = db.Column(db.Numeric(precision=30, scale=10), name ='_max')
+    std = db.Column(db.Numeric(precision=30, scale=10), name ='_std')
+    variance = db.Column(db.Numeric(precision=30, scale=10), name ='_variance')
+    range = db.Column(db.Numeric(precision=30, scale=10), name ='_range')
     nuts = db.relationship("NutsRG01M")
 
     def __repr__(self):
@@ -190,9 +197,9 @@ class PopulationDensityNuts(db.Model):
     @staticmethod
     def aggregate_for_selection(geometry, year, nuts_level):
         query = db.session.query(
-                func.sum(PopulationDensityNuts.value),
-                func.avg(PopulationDensityNuts.value),
-                func.count(PopulationDensityNuts.value)
+                func.sum(PopulationDensityNuts.sum),
+                func.avg(PopulationDensityNuts.sum),
+                func.count(PopulationDensityNuts.sum)
             ). \
             join(NutsRG01M, PopulationDensityNuts.nuts). \
             filter(PopulationDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
@@ -219,9 +226,9 @@ class PopulationDensityNuts(db.Model):
     @staticmethod
     def aggregate_for_nuts_selection(nuts, year, nuts_level):
         query = db.session.query(
-            func.sum(PopulationDensityNuts.value),
-            func.avg(PopulationDensityNuts.value),
-            func.count(PopulationDensityNuts.value)
+            func.sum(PopulationDensityNuts.sum),
+            func.avg(PopulationDensityNuts.sum),
+            func.sum(PopulationDensityNuts.count)
         ). \
             join(NutsRG01M, PopulationDensityNuts.nuts). \
             filter(PopulationDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
@@ -242,7 +249,7 @@ class PopulationDensityNuts(db.Model):
         }, {
             'name': 'count',
             'value': str(query[2] or 0),
-            'unit': 'nuts'
+            'unit': 'cell'
         }]
 
 """

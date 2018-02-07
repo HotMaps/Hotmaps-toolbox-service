@@ -189,7 +189,7 @@ class HeatDensityLau(db.Model):
         query = db.session.query(
                 func.sum(HeatDensityLau.sum),
                 func.avg(HeatDensityLau.sum),
-                func.count(HeatDensityLau.sum)
+                func.sum(HeatDensityLau.count)
             ). \
             join(Lau, HeatDensityLau.lau). \
             join(Time, HeatDensityLau.time). \
@@ -213,7 +213,7 @@ class HeatDensityLau(db.Model):
         },{
             'name': 'count',
             'value': str(query[2] or 0),
-            'unit': 'lau'
+            'unit': 'cell'
         }]
 
     @staticmethod
@@ -221,7 +221,7 @@ class HeatDensityLau(db.Model):
         query = db.session.query(
                 func.sum(HeatDensityLau.sum),
                 func.avg(HeatDensityLau.sum),
-                func.count(HeatDensityLau.sum)
+                func.sum(HeatDensityLau.count)
             ). \
             join(Lau, HeatDensityLau.lau). \
             join(Time, HeatDensityLau.time). \
@@ -244,7 +244,7 @@ class HeatDensityLau(db.Model):
         }, {
             'name': 'count',
             'value': str(query[2] or 0),
-            'unit': 'lau'
+            'unit': 'cell'
         }]
 
 
@@ -315,7 +315,7 @@ class HeatDensityNuts(db.Model):
         query = db.session.query(
                 func.sum(HeatDensityNuts.sum),
                 func.avg(HeatDensityNuts.sum),
-                func.count(HeatDensityNuts.sum)
+                func.sum(HeatDensityNuts.count)
             ). \
             join(NutsRG01M, HeatDensityNuts.nuts). \
             filter(HeatDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
@@ -336,7 +336,7 @@ class HeatDensityNuts(db.Model):
         },{
             'name': 'count',
             'value': str(query[2] or 0),
-            'unit': 'nuts'
+            'unit': 'cell'
         }]
 
 """
