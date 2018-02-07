@@ -5,7 +5,7 @@ from sqlalchemy import func
 from geoalchemy2 import Raster
 from main_api.models.lau import Lau
 from main_api.models.time import Time
-
+from decimal import *
 """
     Population Density layer as ha
 """
@@ -124,7 +124,7 @@ class PopulationDensityLau(db.Model):
             'unit': 'person'
         }, {
             'name': 'population_density',
-            'value': str(query[1] or 0),
+            'value': str(query[1]/query[2] or 0),
             'unit': 'person'
         }, {
             'name': 'count',
@@ -136,7 +136,7 @@ class PopulationDensityLau(db.Model):
     def aggregate_for_nuts_selection(nuts, year, level):
         query = db.session.query(
                 func.sum(PopulationDensityLau.sum),
-                func.avg(PopulationDensityLau.sum),
+                func.sum(PopulationDensityLau.sum),
                 func.sum(PopulationDensityLau.count)
             ). \
             join(Lau, PopulationDensityLau.lau). \
@@ -148,15 +148,15 @@ class PopulationDensityLau(db.Model):
 
         if query == None or len(query) < 3:
                 return []
-
+        average_ha =  Decimal(query[1])/Decimal(query[2])
         return [{
             'name': 'population',
             'value': str(query[0] or 0),
             'unit': 'person'
         }, {
             'name': 'population_density',
-            'value': str(query[1] or 0),
-            'unit': 'person'
+            'value': str(average_ha or 0),
+            'unit': 'person/ha'
         }, {
             'name': 'count',
             'value': str(query[2] or 0),
@@ -227,7 +227,7 @@ class PopulationDensityNuts(db.Model):
     def aggregate_for_nuts_selection(nuts, year, nuts_level):
         query = db.session.query(
             func.sum(PopulationDensityNuts.sum),
-            func.avg(PopulationDensityNuts.sum),
+            func.sum(PopulationDensityNuts.sum),
             func.sum(PopulationDensityNuts.count)
         ). \
             join(NutsRG01M, PopulationDensityNuts.nuts). \
@@ -237,15 +237,15 @@ class PopulationDensityNuts(db.Model):
 
         if query == None or len(query) < 3:
                 return []
-
+        average_ha =  Decimal(query[1])/Decimal(query[2])
         return [{
             'name': 'population',
             'value': str(query[0] or 0),
             'unit': 'person'
         }, {
             'name': 'population_density',
-            'value': str(query[1] or 0),
-            'unit': 'person'
+            'value': str(average_ha or 0),
+            'unit': 'person/ha'
         }, {
             'name': 'count',
             'value': str(query[2] or 0),

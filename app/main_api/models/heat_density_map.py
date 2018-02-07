@@ -7,6 +7,7 @@ from geoalchemy2 import Geometry, Raster
 from sqlalchemy import func
 import json
 import sys
+from decimal import *
 #import logging
 #logging.basicConfig()
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
@@ -208,7 +209,7 @@ class HeatDensityLau(db.Model):
             'unit': 'MWh'
         },{
             'name': 'heat_density',
-            'value': str(query[1] or 0),
+            'value': str(query[1]/query[2] or 0),
             'unit': 'MWh/ha'
         },{
             'name': 'count',
@@ -220,7 +221,7 @@ class HeatDensityLau(db.Model):
     def aggregate_for_nuts_selection(nuts, year, level):
         query = db.session.query(
                 func.sum(HeatDensityLau.sum),
-                func.avg(HeatDensityLau.sum),
+                func.sum(HeatDensityLau.sum),
                 func.sum(HeatDensityLau.count)
             ). \
             join(Lau, HeatDensityLau.lau). \
@@ -232,14 +233,14 @@ class HeatDensityLau(db.Model):
 
         if query == None or len(query) < 3:
                 return []
-
+        average_ha =  Decimal(query[1])/Decimal(query[2])
         return [{
             'name': 'heat_consumption',
             'value': str(query[0] or 0),
             'unit': 'MWh'
         }, {
             'name': 'heat_density',
-            'value': str(query[1] or 0),
+            'value': str(average_ha or 0),
             'unit': 'MWh/ha'
         }, {
             'name': 'count',
@@ -314,7 +315,7 @@ class HeatDensityNuts(db.Model):
     def aggregate_for_nuts_selection(nuts, year, nuts_level):
         query = db.session.query(
                 func.sum(HeatDensityNuts.sum),
-                func.avg(HeatDensityNuts.sum),
+                func.sum(HeatDensityNuts.sum),
                 func.sum(HeatDensityNuts.count)
             ). \
             join(NutsRG01M, HeatDensityNuts.nuts). \
@@ -324,6 +325,7 @@ class HeatDensityNuts(db.Model):
 
         if query == None or len(query) < 3:
             return []
+        average_ha =  Decimal(query[1])/Decimal(query[2])
 
         return [{
             'name': 'heat_consumption',
@@ -331,7 +333,7 @@ class HeatDensityNuts(db.Model):
             'unit': 'MWh'
         },{
             'name': 'heat_density',
-            'value': str(query[1] or 0),
+            'value': str(average_ha or 0),
             'unit': 'MWh/ha'
         },{
             'name': 'count',
