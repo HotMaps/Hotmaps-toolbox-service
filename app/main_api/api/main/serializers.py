@@ -15,6 +15,8 @@ point = api.model('Point', {
     'lng': fields.Float(description='Longitude')
 })
 
+
+
 grid = api.model('Grid', {
     'gid': fields.Integer(readOnly=True, description='ID of the grid geometry'),
     'id': fields.Integer(desciption='id'),
@@ -37,6 +39,14 @@ multipolygon_geometry = api.model('MultiPolygon', {
     'type': fields.String(),
     'coordinates': fields.List(fields.List(fields.List(fields.List(fields.Float))))
 })
+points_geometry = api.model('Points', {
+    'type': fields.String(),
+    'coordinates': fields.List(fields.List(fields.List(fields.List(fields.Float))))
+})
+points_in_area = api.model('Point in area', {
+    'geometry': fields.List(fields.Nested(points_geometry))
+})
+
 crs_properties = api.model('properties', {
     'name': fields.String
 })
@@ -60,6 +70,13 @@ grid_feature_collection = api.model('FeatureCollection', {
 area = api.model('Input area', {
     'points': fields.List(fields.Nested(point))
 })
+value_of_centroid_area_output = api.model('Number of Centroid', {
+    'value': fields.String()
+})
+number_of_centroid_area_output = api.model('Number of Centroid', {
+    'count': fields.Integer()
+})
+
 
 
 nuts = api.model('Nuts', {
@@ -138,6 +155,10 @@ stats_layers_output = api.model('Stats for selected layers, year and area', {
     'feature_collection': fields.Nested(vector_feature_collection)
 })
 
+stats_layers_hectares_output = api.model('Stats for selected layers, year and area', {
+    'layers': fields.List(fields.Nested(stats_layer_aggregation))
+})
+
 stats_layers_area_nuts_input = api.model('Input for statistics on layers, area and year', {
     'layers': fields.List(fields.String(description='Layer')),
     'nuts_level': fields.String(description='Nuts level'),
@@ -152,7 +173,7 @@ stats_layer_point_input = api.model('Input for statistics on layers, year, point
     'point': fields.Nested(point)
 })
 
-load_profile_aggregation_month_row = api.model('Output row for load profile', {
+load_profile_aggregation_year_row = api.model('Output row for load profile (for year)', {
     'average': fields.Float(description='Average value per month'),
     'min': fields.Float(description='Minimum value per month'),
     'max': fields.Float(description='Maximum value per month'),
@@ -161,47 +182,80 @@ load_profile_aggregation_month_row = api.model('Output row for load profile', {
     'year': fields.Integer(description='Year'),
     'granularity': fields.String(description='Granularity'),
 })
-load_profile_aggregation_month = api.model('Output for load profile', {
-    'values': fields.List(fields.Nested(load_profile_aggregation_month_row)),
+load_profile_aggregation_year = api.model('Output for load profile', {
+    'values': fields.List(fields.Nested(load_profile_aggregation_year_row)),
     'nuts': fields.String(description='List of NUTS'),
     'nuts_level': fields.String(descriptions='Nuts level')
 })
-load_profile_aggregation_month_input = api.model('Input for load profile', {
+load_profile_aggregation_year_input = api.model('Input for load profile', {
     'year': fields.Integer(description='Year'),
     'nuts': fields.List(fields.String(descriptions='List of NUTS')),
     'nuts_level': fields.String(description='Nuts level')
 })
 
-load_profile_aggregation_hour_row = api.model('Output row for load profile (hour per day)', {
-    'average': fields.Float(description='Average value per hour'),
-    'min': fields.Float(description='Minimum value per hour'),
-    'max': fields.Float(description='Maximum value per hour'),
+load_profile_aggregation_month_row = api.model('Output row for load profile (for month)', {
+    'average': fields.Float(description='Average value per day'),
+    'min': fields.Float(description='Minimum value per day'),
+    'max': fields.Float(description='Maximum value per day'),
     'unit': fields.String(descriptsion='Unit'),
-    'hour_of_day': fields.Integer(description='Hour'),
+    'day': fields.Integer(description='Hour'),
     'month': fields.Integer(description='Month'),
     'year': fields.Integer(description='Year'),
     'granularity': fields.String(description='Granularity'),
 })
-load_profile_aggregation_hour = api.model('Output for load profile (hour per day)', {
-    'values': fields.List(fields.Nested(load_profile_aggregation_hour_row)),
+load_profile_aggregation_month = api.model('Output for load profile (for month)', {
+    'values': fields.List(fields.Nested(load_profile_aggregation_month_row)),
     'nuts': fields.String(description='List of NUTS'),
     'nuts_level': fields.String(descriptions='Nuts level')
 })
 
-load_profile_aggregation_hour_input = api.model('Input for load profile (hour per day)', {
+load_profile_aggregation_month_input = api.model('Input for load profile (for month)', {
     'year': fields.Integer(description='Year'),
     'month': fields.Integer(description='Month'),
+    'nuts': fields.List(fields.String(descriptions='List of NUTS')),
+    'nuts_level': fields.String(description='Nuts level')
+})
+
+load_profile_aggregation_day_row = api.model('Output row for load profile (for day)', {
+    'value': fields.Float(description='Value per hour'),
+    'unit': fields.String(descriptsion='Unit'),
+    'hour_of_day': fields.Integer(description='Hour'),
+    'day': fields.Integer(description='Day'),
+    'month': fields.Integer(description='Month'),
+    'year': fields.Integer(description='Year'),
+    'granularity': fields.String(description='Granularity'),
+})
+load_profile_aggregation_day = api.model('Output for load profile (for day)', {
+    'values': fields.List(fields.Nested(load_profile_aggregation_day_row)),
+    'nuts': fields.String(description='List of NUTS'),
+    'nuts_level': fields.String(descriptions='Nuts level')
+})
+load_profile_aggregation_day_input = api.model('Input for load profile (for day)', {
+    'year': fields.Integer(description='Year'),
+    'month': fields.Integer(description='Month'),
+    'day': fields.Integer(description='Day'),
     'nuts': fields.List(fields.String(descriptions='List of NUTS')),
     'nuts_level': fields.String(description='Nuts level')
 })
 
 stats_layers_nuts_output = api.model('Stats for selected layers, year and area', {
     'layers': fields.List(fields.Nested(stats_layer_aggregation)),
-    'load_profile_month': fields.Nested(load_profile_aggregation_month),
+    #'load_profile_month': fields.Nested(load_profile_aggregation_year),
 })
 
 stats_layers_nuts_input = api.model('Input for statistics on layers, list of nuts and year', {
     'layers': fields.List(fields.String(description='Layer')),
     'nuts': fields.List(fields.String(descriptions='List of NUTS')),
+    'year': fields.Integer(description='Year'),
+})
+
+centroid_from_polygon_input = api.model('get polygon in order to retrieve the centroid', {
+    'centroids': fields.String(description='coordinates'),
+
+})
+
+stats_layers_hectares_input = api.model('Input for statistics on layers, hectares and year', {
+    'layers': fields.List(fields.String(description='Layer')),
+    'areas': fields.List(fields.Nested(area)),
     'year': fields.Integer(description='Year'),
 })

@@ -5,6 +5,9 @@ from main_api.models.lau import Lau
 from main_api.models.time import Time
 from geoalchemy2 import Geometry, Raster
 from sqlalchemy import func
+import json
+import sys
+from decimal import *
 #import logging
 #logging.basicConfig()
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
@@ -62,44 +65,36 @@ class HeatDensityHa(db.Model):
     __table_args__ = (
         {"schema": 'geo'}
     )
-
     CRS = 3035
-
     rid = db.Column(db.Integer, primary_key=True)
     rast = db.Column(Raster)
     filename = db.Column(db.String)
     date = db.Column(db.Date)
-
     def __repr__(self):
         str_date = self.date.strftime("%Y-%m-%d")
         return "<HeatDensityHa(rid= '%d', rast='%s', filename='%s', date='%s')>" % (
             self.rid, self.rast, self.filename, str_date)
-
     @staticmethod
     def aggregate_for_selection(geometry, year):
         # filter(HeatDensityMap.date == datetime.datetime.strptime(str(year), '%Y')). \
         # Custom query
         sql_query = \
             "WITH buffer AS (SELECT ST_Buffer(ST_Transform(ST_GeomFromText('" + \
-                            geometry + "'), " + \
-                            str(HeatDensityHa.CRS) + "), 0) AS buffer_geom " + \
+            geometry + "'), " + \
+            str(HeatDensityHa.CRS) + "), 0) AS buffer_geom " + \
             ") " + \
             "SELECT (stats).sum, (stats).mean, (stats).count " + \
             "FROM ( " + \
-                "SELECT ST_SummaryStats(ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE))) AS stats " + \
-                "FROM " + HeatDensityHa.__table_args__['schema'] + "." + \
-                    HeatDensityHa.__tablename__ + ", buffer " + \
-                "WHERE ST_Intersects(rast, buffer_geom) " + \
-                "AND date = to_date('" + str(year) + "', 'YYYY') " + \
+            "SELECT ST_SummaryStats(ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE))) AS stats " + \
+            "FROM " + HeatDensityHa.__table_args__['schema'] + "." + \
+            HeatDensityHa.__tablename__ + ", buffer " + \
+            "WHERE ST_Intersects(rast, buffer_geom) " + \
+            "AND date = to_date('" + str(year) + "', 'YYYY') " + \
             ") AS foo " + \
             ";"
-
-
         query = db.session.execute(sql_query).first()
-
         if query == None or len(query) < 3:
             return []
-
         return [{
             'name': 'heat_consumption',
             'value': str(query[0] or 0),
@@ -113,6 +108,49 @@ class HeatDensityHa(db.Model):
             'value': str(query[2] or 0),
             'unit': 'cell'
         }]
+    @staticmethod
+    def centroid_for_selection(geometry):
+        sql_query = \
+            "SELECT ST_AsGeoJSON(st_transform((st_pixelascentroids(ST_Clip(heat_tot_curr_density.rast, 1, st_transform(st_geomfromtext( 'Polygon (("+ geometry +"))'::text, 4326),3035), true), 1, true)).geom ,4326)) AS geoJson " + \
+            "FROM geo.heat_tot_curr_density " + \
+            "WHERE " +  "st_intersects(heat_tot_curr_density.rast,st_transform(st_geomfromtext( 'Polygon(("+ geometry +"))'::text, 4326),3035));"
+        query = db.session.execute(sql_query)
+
+        result = json.dumps([dict(r) for r in query])
+        result = json.loads(result)
+
+        return result
+
+    @staticmethod
+    def centroid_for_hectare(point):
+        sql_query = \
+            "SELECT ST_AsGeoJSON(st_transform((st_pixelascentroids(heat_tot_curr_density.rast, 1, false)).geom ,4326)) AS geoJson," + \
+            " ST_Distance((st_pixelascentroids(heat_tot_curr_density.rast, 1, false)).geom, " + \
+            "st_transform(st_geomfromtext('POINT("+ point +")'::text, 4326),3035)) as distance " + \
+            "FROM geo.heat_tot_curr_density " + \
+            "WHERE " +  "st_intersects(heat_tot_curr_density.rast,st_transform(st_geomfromtext('POINT("+ point +")'::text, 4326),3035)) ORDER BY distance ASC limit 1;"
+        query = db.session.execute(sql_query)
+        #print >> sys.stderr, query
+        result = json.dumps([dict(r) for r in query])
+        #result = json.loads(result)
+        #print >> sys.stderr, result
+        return result
+
+    @staticmethod
+    def number_of_centroid_for_hectare(geometry):
+        sql_query = "SELECT sum(ST_Count(ST_Clip(heat_tot_curr_density.rast, 1, st_transform(st_geomfromtext( 'Polygon (("+ geometry +"))'::text, 4326),3035), true), 1, true)) " + \
+                    "FROM geo.heat_tot_curr_density " + \
+                    "WHERE " +  "st_intersects(heat_tot_curr_density.rast,st_transform(st_geomfromtext( 'Polygon(("+ geometry +"))'::text, 4326),3035));"
+        query = db.session.execute(sql_query).first()
+        if query == None :
+            result = 0
+        else:
+            result = str(query[0] or 0)
+
+
+
+        return result
+
 
 
 class HeatDensityLau(db.Model):
@@ -152,7 +190,7 @@ class HeatDensityLau(db.Model):
         query = db.session.query(
                 func.sum(HeatDensityLau.sum),
                 func.avg(HeatDensityLau.sum),
-                func.count(HeatDensityLau.sum)
+                func.sum(HeatDensityLau.count)
             ). \
             join(Lau, HeatDensityLau.lau). \
             join(Time, HeatDensityLau.time). \
@@ -171,20 +209,20 @@ class HeatDensityLau(db.Model):
             'unit': 'MWh'
         },{
             'name': 'heat_density',
-            'value': str(query[1] or 0),
+            'value': str(query[1]/query[2] or 0),
             'unit': 'MWh/ha'
         },{
             'name': 'count',
             'value': str(query[2] or 0),
-            'unit': 'lau'
+            'unit': 'cell'
         }]
 
     @staticmethod
     def aggregate_for_nuts_selection(nuts, year, level):
         query = db.session.query(
                 func.sum(HeatDensityLau.sum),
-                func.avg(HeatDensityLau.sum),
-                func.count(HeatDensityLau.sum)
+                func.sum(HeatDensityLau.sum),
+                func.sum(HeatDensityLau.count)
             ). \
             join(Lau, HeatDensityLau.lau). \
             join(Time, HeatDensityLau.time). \
@@ -195,19 +233,19 @@ class HeatDensityLau(db.Model):
 
         if query == None or len(query) < 3:
                 return []
-
+        average_ha =  Decimal(query[1])/Decimal(query[2])
         return [{
             'name': 'heat_consumption',
             'value': str(query[0] or 0),
             'unit': 'MWh'
         }, {
             'name': 'heat_density',
-            'value': str(query[1] or 0),
+            'value': str(average_ha or 0),
             'unit': 'MWh/ha'
         }, {
             'name': 'count',
             'value': str(query[2] or 0),
-            'unit': 'lau'
+            'unit': 'cell'
         }]
 
 
@@ -277,8 +315,8 @@ class HeatDensityNuts(db.Model):
     def aggregate_for_nuts_selection(nuts, year, nuts_level):
         query = db.session.query(
                 func.sum(HeatDensityNuts.sum),
-                func.avg(HeatDensityNuts.sum),
-                func.count(HeatDensityNuts.sum)
+                func.sum(HeatDensityNuts.sum),
+                func.sum(HeatDensityNuts.count)
             ). \
             join(NutsRG01M, HeatDensityNuts.nuts). \
             filter(HeatDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
@@ -287,6 +325,7 @@ class HeatDensityNuts(db.Model):
 
         if query == None or len(query) < 3:
             return []
+        average_ha =  Decimal(query[1])/Decimal(query[2])
 
         return [{
             'name': 'heat_consumption',
@@ -294,12 +333,12 @@ class HeatDensityNuts(db.Model):
             'unit': 'MWh'
         },{
             'name': 'heat_density',
-            'value': str(query[1] or 0),
+            'value': str(average_ha or 0),
             'unit': 'MWh/ha'
         },{
             'name': 'count',
             'value': str(query[2] or 0),
-            'unit': 'nuts'
+            'unit': 'cell'
         }]
 
 """
