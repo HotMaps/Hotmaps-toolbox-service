@@ -124,7 +124,7 @@ class LayersHectare():
 				
 			sql_query += ';'
 
-			print (sql_query)
+
 			# Execution of the query
 			query = db.session.execute(sql_query).first()
 

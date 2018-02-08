@@ -115,10 +115,10 @@ class HeatDensityHa(db.Model):
             "FROM geo.heat_tot_curr_density " + \
             "WHERE " +  "st_intersects(heat_tot_curr_density.rast,st_transform(st_geomfromtext( 'Polygon(("+ geometry +"))'::text, 4326),3035));"
         query = db.session.execute(sql_query)
-        print >> sys.stderr, query
+
         result = json.dumps([dict(r) for r in query])
         result = json.loads(result)
-        print >> sys.stderr, result
+
         return result
 
     @staticmethod
