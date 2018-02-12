@@ -15,6 +15,11 @@ point = api.model('Point', {
     'lng': fields.Float(description='Longitude')
 })
 
+point_curve = api.model('Point', {
+    'X': fields.Float(description='X-axis'),
+    'Y': fields.Float(description='Y-axis')
+})
+
 grid = api.model('Grid', {
     'gid': fields.Integer(readOnly=True, description='ID of the grid geometry'),
     'id': fields.Integer(desciption='id'),
@@ -215,6 +220,14 @@ load_profile_aggregation_day_input = api.model('Input for load profile (for day)
     'day': fields.Integer(description='Day'),
     'nuts': fields.List(fields.String(descriptions='List of NUTS')),
     'nuts_level': fields.String(description='Nuts level')
+})
+
+load_profile_aggregation_curve = api.model('Input for load profile duration curve', {
+    'year': fields.Integer(description='Year'),
+    'nuts': fields.List(fields.String(descriptions='List of NUTS'))
+})
+load_profile_aggregation_curve_output = api.model('Output for load profile duration curve', {
+    'points': fields.List(fields.Nested(point_curve))
 })
 
 stats_layers_nuts_output = api.model('Stats for selected layers, year and area', {

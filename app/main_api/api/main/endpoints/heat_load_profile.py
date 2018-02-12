@@ -3,7 +3,8 @@ import re
 from flask import request
 from flask_restplus import Resource
 from main_api.api.main.serializers import load_profile_aggregation_year, load_profile_aggregation_year_input, \
-    load_profile_aggregation_month, load_profile_aggregation_month_input, load_profile_aggregation_day, load_profile_aggregation_day_input
+    load_profile_aggregation_month, load_profile_aggregation_month_input, load_profile_aggregation_day, load_profile_aggregation_day_input, \
+    load_profile_aggregation_curve_output, load_profile_aggregation_curve
 from main_api.api.restplus import api
 from main_api.models.nuts import Nuts
 from main_api.models.heat_load_profile import HeatLoadProfileNuts
@@ -103,3 +104,23 @@ class HeatLoadProfileAggregationDay(HeatLoadProfileResource):
         return output
 
 
+@ns.route('/aggregate/duration_curve')
+@api.response(404, 'No data found')
+class HeatLoadProfileAggregation(HeatLoadProfileResource):
+    @api.marshal_with(load_profile_aggregation_curve_output)
+    @api.expect(load_profile_aggregation_curve)
+    def post(self):
+        """
+        Returns the statistics for specific layers, point and year
+        :return:
+        """
+        year = api.payload['year']
+        nuts = api.payload['nuts']
+
+        output = {}
+
+        output = HeatLoadProfileNuts.duration_curve(year=year, nuts=nuts)
+
+        return {
+            "points": output
+        }
