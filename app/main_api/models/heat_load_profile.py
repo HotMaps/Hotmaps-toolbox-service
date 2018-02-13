@@ -198,7 +198,7 @@ class HeatLoadProfileNuts(db.Model):
 		nutsListQuery = nutsListQuery[:-1]
 
 		# Query
-		sql_query = "select t.val, t.nuts, t.hoy " +\
+		'''sql_query = "select t.val, t.nuts, t.hoy " +\
 						"from (select stat.load_profile.value as val, " +\
 						"       stat.load_profile.nuts_id as nuts, stat.time.hour_of_year as hoy " +\
 						"       from stat."+ HeatLoadProfileNuts.__tablename__+", stat.time " +\
@@ -206,8 +206,14 @@ class HeatLoadProfileNuts(db.Model):
 						"           AND stat.load_profile.nuts_id IN ("+str(nutsListQuery)+") " +\
 						"           AND stat.time.year = " + str(year) + ") as t " +\
 						"GROUP BY t.hoy, t.nuts, t.val " +\
-						"ORDER BY t.nuts;"
+						"ORDER BY t.nuts;"'''
   
+		sql_query = "select stat.load_profile.value as val, stat.load_profile.nuts_id as nutsid, stat.time.hour_of_year as hod " +\
+						"from stat.load_profile inner join stat.time on stat.load_profile.fk_time_id = stat.time.id " +\
+						"WHERE stat.load_profile.nuts_id IN ("+str(nutsListQuery)+") AND stat.time.year = " + str(year) + " " +\
+						"order by nutsid, hour_of_year;"
+
+
 		# Execution of the query
 		query = db.session.execute(sql_query)
 		
@@ -242,7 +248,6 @@ class HeatLoadProfileNuts(db.Model):
 			# Remove nuts from dictionary if less than 4000 values
 			if len(valuesByNuts[listOfNuts[n]]['hours']) < settings.LIMIT_VALUES_PER_NUTS:
 				del valuesByNuts[listOfNuts[n]]
-
 
 		# Check if modulo is not 0 
 		if len(listAllValues)%settings.HOURS_PER_YEAR != 0 and nbNuts > 1:
