@@ -30,6 +30,21 @@ class HeatLoadProfileResource(Resource):
                 list_nuts_id.append(nuts_id)
         return list_nuts_id
 
+    def transform_nuts_list(self, nuts):
+        # Store nuts in new custom list
+        nutsPayload = []
+        for n in nuts:
+            n = n[:4]
+            if n not in nutsPayload:
+                nutsPayload.append(str(n))
+
+        # Adapt format of list for the query
+        nutsListQuery = str(nutsPayload)
+        nutsListQuery = nutsListQuery[1:] # Remove the left hook
+        nutsListQuery = nutsListQuery[:-1] # Remove the right hook
+
+        return nutsListQuery
+
 @ns.route('/aggregate/year')
 @api.response(404, 'No data found')
 class HeatLoadProfileAggregationYear(HeatLoadProfileResource):
@@ -119,7 +134,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
 
         output = {}
 
-        output = HeatLoadProfileNuts.duration_curve(year=year, nuts=nuts)
+        output = HeatLoadProfileNuts.duration_curve(year=year, nuts=self.transform_nuts_list(nuts))
 
         return {
             "points": output

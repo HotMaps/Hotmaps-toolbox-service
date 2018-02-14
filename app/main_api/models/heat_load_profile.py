@@ -180,116 +180,35 @@ class HeatLoadProfileNuts(db.Model):
 	@staticmethod
 	def duration_curve(year, nuts):
 
-		listAllValues = []
-		valuesByNuts = {}
-		listOfNuts = []
-		valuesToSample = []
-
-		# Store nuts in new custom list
-		nutsPayload = []
-		for n in nuts:
-			n = n[:4]
-			if n not in nutsPayload:
-				nutsPayload.append(str(n))
-
-		# Adapt format of list for the query
-		nutsListQuery = str(nutsPayload)
-		nutsListQuery = nutsListQuery[1:]
-		nutsListQuery = nutsListQuery[:-1]
-
 		# Query
-		'''sql_query = "select t.val, t.nuts, t.hoy " +\
-						"from (select stat.load_profile.value as val, " +\
-						"       stat.load_profile.nuts_id as nuts, stat.time.hour_of_year as hoy " +\
-						"       from stat."+ HeatLoadProfileNuts.__tablename__+", stat.time " +\
-						"           WHERE stat.load_profile.fk_time_id = stat.time.id " +\
-						"           AND stat.load_profile.nuts_id IN ("+str(nutsListQuery)+") " +\
-						"           AND stat.time.year = " + str(year) + ") as t " +\
-						"GROUP BY t.hoy, t.nuts, t.val " +\
-						"ORDER BY t.nuts;"'''
-  
-		sql_query = "select stat.load_profile.value as val, stat.load_profile.nuts_id as nutsid, stat.time.hour_of_year as hod " +\
-						"from stat.load_profile inner join stat.time on stat.load_profile.fk_time_id = stat.time.id " +\
-						"WHERE stat.load_profile.nuts_id IN ("+str(nutsListQuery)+") AND stat.time.year = " + str(year) + " " +\
-						"order by nutsid, hour_of_year;"
-
+		sql_query = "WITH nutsSelection as (select gid from geo.nuts " +\
+						"WHERE nuts_id IN ("+nuts+") AND geo.nuts.year = to_date('" + str(year) + "','YYYY')) " +\
+					"SELECT sum(stat.load_profile.value) as val, stat.time.hour_of_year as hoy from stat.load_profile " +\
+						"INNER JOIN nutsSelection on stat.load_profile.fk_nuts_gid = nutsSelection.gid " +\
+						"INNER JOIN stat.time on stat.load_profile.fk_time_id = stat.time.id " +\
+						"WHERE fk_nuts_gid is not null and fk_time_id is not null " +\
+						"AND stat.load_profile.fk_nuts_gid = nutsSelection.gid " +\
+						"GROUP BY hoy " +\
+						"HAVING	COUNT(value)=COUNT(*) " +\
+						"ORDER BY val DESC;"
 
 		# Execution of the query
 		query = db.session.execute(sql_query)
-		
-		# Store query results in list
+
+		# Store query results in a list
+		listAllValues = []
 		for q in query:
-			listAllValues.append(q)
-			listOfNuts.append(q[1])
-		
-		# Get unique nuts values and store them back into a list
-		listOfNuts = set(listOfNuts)
-		listOfNuts = list(listOfNuts)
+			listAllValues.append(q[0])
 
-		# Get number of nuts
-		nbNuts = len(listOfNuts)
-
-		# Store values in dictionary by nuts
-		for n in range(nbNuts):
-			val = []
-			hours = []
-
-			for v in listAllValues:
-				if v[1] == listOfNuts[n]:
-					val.append(v[0])
-					hours.append(v[2])
-			
-			valuesByNuts[listOfNuts[n]] = {}
-			valuesByNuts[listOfNuts[n]]['val'] = []
-			valuesByNuts[listOfNuts[n]]['val'] = val
-			valuesByNuts[listOfNuts[n]]['hours'] = []
-			valuesByNuts[listOfNuts[n]]['hours'] = hours
-
-			# Remove nuts from dictionary if less than 4000 values
-			if len(valuesByNuts[listOfNuts[n]]['hours']) < settings.LIMIT_VALUES_PER_NUTS:
-				del valuesByNuts[listOfNuts[n]]
-
-		# Check if modulo is not 0 
-		if len(listAllValues)%settings.HOURS_PER_YEAR != 0 and nbNuts > 1:
-			# Check which value is missing
-			hourToDelete = []
-			for n in range(nbNuts):
-				for hour in range(settings.HOURS_PER_YEAR):
-					if hour+1 not in valuesByNuts[listOfNuts[n]]['hours']:
-						hourToDelete.append(hour) # Store index of hour(line) to delete
-			
-			# Delete same line for each nuts
-			for h in hourToDelete:
-				for n in range(nbNuts):
-					if h in valuesByNuts[listOfNuts[n]]['hours']:
-						valuesByNuts[listOfNuts[n]]['hours'].pop(h)
-						valuesByNuts[listOfNuts[n]]['val'].pop(h)
-
-
-		# Get number of values for each nuts
-		numberOfValues = len(valuesByNuts[listOfNuts[0]]['val'])
-
-		# Check if more than one nuts		
-		if nbNuts > 1:
-			# Calculate the sum of each hour of nuts
-			for c in range(numberOfValues):
-				val = 0
-				for n in range(nbNuts):
-					val += valuesByNuts[listOfNuts[n]]['val'][c]
-				valuesToSample.append(val)
-		else:
-			valuesToSample = valuesByNuts[listOfNuts[0]]['val']
-
-
-		# Sort the values list in descending order
-		valuesToSample = sorted(valuesToSample, reverse=True)
+		# Get number of values
+		numberOfValues = len(listAllValues)
 
 		# Create the points for the curve with the X and Y axis
 		listPoints = []
-		for n, l in enumerate(valuesToSample):
+		for n, l in enumerate(listAllValues):
 			listPoints.append({
 				'X':n+1,
-				'Y':valuesToSample[n]
+				'Y':listAllValues[n]
 			})
 
 		# Sampling of the values
@@ -316,9 +235,6 @@ class HeatLoadProfileNuts(db.Model):
 		# Add min value at the end if the list doesn't contain it
 		if minValue not in finalListPoints:
 			finalListPoints.append(minValue)
-
-		for c, l in enumerate(finalListPoints):
-			print(finalListPoints[c])
 
 		return finalListPoints
 
