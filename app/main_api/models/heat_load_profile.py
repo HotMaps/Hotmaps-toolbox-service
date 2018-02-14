@@ -180,7 +180,7 @@ class HeatLoadProfileNuts(db.Model):
 	@staticmethod
 	def duration_curve(year, nuts):
 
-		# Query
+		# Custom Query
 		sql_query = "WITH nutsSelection as (select gid from geo.nuts " +\
 						"WHERE nuts_id IN ("+nuts+") AND geo.nuts.year = to_date('" + str(year) + "','YYYY')) " +\
 					"SELECT sum(stat.load_profile.value) as val, stat.time.hour_of_year as hoy from stat.load_profile " +\
