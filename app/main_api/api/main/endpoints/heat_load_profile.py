@@ -3,7 +3,8 @@ import re
 from flask import request
 from flask_restplus import Resource
 from main_api.api.main.serializers import load_profile_aggregation_year, load_profile_aggregation_year_input, \
-    load_profile_aggregation_month, load_profile_aggregation_month_input, load_profile_aggregation_day, load_profile_aggregation_day_input
+    load_profile_aggregation_month, load_profile_aggregation_month_input, load_profile_aggregation_day, load_profile_aggregation_day_input, \
+    load_profile_aggregation_curve_output, load_profile_aggregation_curve
 from main_api.api.restplus import api
 from main_api.models.nuts import Nuts
 from main_api.models.heat_load_profile import HeatLoadProfileNuts
@@ -28,6 +29,21 @@ class HeatLoadProfileResource(Resource):
             if nuts_id not in list_nuts_id:
                 list_nuts_id.append(nuts_id)
         return list_nuts_id
+
+    def transform_nuts_list(self, nuts):
+        # Store nuts in new custom list
+        nutsPayload = []
+        for n in nuts:
+            n = n[:4]
+            if n not in nutsPayload:
+                nutsPayload.append(str(n))
+
+        # Adapt format of list for the query
+        nutsListQuery = str(nutsPayload)
+        nutsListQuery = nutsListQuery[1:] # Remove the left hook
+        nutsListQuery = nutsListQuery[:-1] # Remove the right hook
+
+        return nutsListQuery
 
 @ns.route('/aggregate/year')
 @api.response(404, 'No data found')
@@ -103,3 +119,23 @@ class HeatLoadProfileAggregationDay(HeatLoadProfileResource):
         return output
 
 
+@ns.route('/aggregate/duration_curve')
+@api.response(404, 'No data found')
+class HeatLoadProfileAggregation(HeatLoadProfileResource):
+    @api.marshal_with(load_profile_aggregation_curve_output)
+    @api.expect(load_profile_aggregation_curve)
+    def post(self):
+        """
+        Returns the statistics for specific layers, point and year
+        :return:
+        """
+        year = api.payload['year']
+        nuts = api.payload['nuts']
+
+        output = {}
+
+        output = HeatLoadProfileNuts.duration_curve(year=year, nuts=self.transform_nuts_list(nuts))
+
+        return {
+            "points": output
+        }
