@@ -150,8 +150,6 @@ class HeatLoadProfileNuts(db.Model):
 			filter(Nuts.nuts_id.in_(nuts)). \
 			group_by(HeatLoadProfileNuts.value, Time.hour_of_day, Time.day, Time.month, HeatLoadProfileNuts.unit, Time.year, Nuts.stat_levl_). \
 			order_by(Time.hour_of_day.asc()).all()
-
-		print(query)
 		if query == None or len(query) < 1:
 			return []
 
