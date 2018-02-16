@@ -16,34 +16,38 @@ VOLUME /data
 RUN apt-get update && apt-get dist-upgrade -y && apt-get autoremove -y
 
 # Install required software
-RUN apt-get install -y \
-	software-properties-common \
-    wget
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y \
+    build-essential \
+    software-properties-common \
+    wget \
+    ca-certificates \
+    gcc \
+    git \
+    libpq-dev \
+    libgeos-dev \
+    make \
+    python-pip \
+    python2.7 \
+    python2.7-dev \
+    ssh \
+    && apt-get autoremove \
+    && apt-get clean
 
-RUN add-apt-repository ppa:jonathonf/python-3.6
+RUN pip install -U "setuptools==38.5.1"
+RUN pip install -U "pip==9.0.1"
 
-RUN apt-get update && apt-get install -y \
-	python3.6 \
-	python3.6-dev \
-	python3.6-venv \
-	libgeos-dev 
 
-	
-RUN wget https://bootstrap.pypa.io/get-pip.py
-RUN python3.6 get-pip.py
-RUN ln -s /usr/bin/python3.6 /usr/local/bin/python3
-
-# Make Python3.6 default
-RUN ln -s /usr/bin/python3.6 /usr/local/bin/python
 
 # Setup app server
 RUN mkdir -p /data
 COPY gunicorn-config.py /data/gunicorn-config.py
-RUN pip3 install gunicorn
+RUN pip install gunicorn
 
 # Install required python modules
 COPY requirements.txt /data/requirements.txt
-RUN pip3 install -r /data/requirements.txt
+RUN pip install -r /data/requirements.txt
 
 # Copy app source code
 COPY app /data
