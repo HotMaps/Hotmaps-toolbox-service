@@ -114,7 +114,8 @@ class HeatLoadProfileAggregationDay(HeatLoadProfileResource):
 
         output = {}
         if nuts_level >= 2:
-            output = HeatLoadProfileNuts.aggregate_for_day(nuts=self.normalize_nuts(nuts), year=2010, month=month, day=day)
+            output = HeatLoadProfileNuts.aggregate_for_day(nuts=self.normalize_nuts(nuts), year=2010, month=month, day=day, nuts_level =nuts_level)
+        print(output)
 
         return output
 

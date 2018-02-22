@@ -131,16 +131,15 @@ class HeatLoadProfileNuts(db.Model):
 
 
 	@staticmethod
-	def aggregate_for_day(nuts, year, month, day):
+	def aggregate_for_day(nuts, year, month, day, nuts_level):
 		query = db.session.query(
-				HeatLoadProfileNuts.value,
+				func.sum(HeatLoadProfileNuts.value),
 				HeatLoadProfileNuts.unit,
 				Time.hour_of_day,
 				Time.day,
 				Time.month,
 				Time.year,
 				literal("hour", type_=Unicode).label('granularity'),
-				Nuts.stat_levl_
 			). \
 			join(Nuts, HeatLoadProfileNuts.nuts). \
 			join(Time, HeatLoadProfileNuts.time). \
@@ -148,16 +147,15 @@ class HeatLoadProfileNuts(db.Model):
 			filter(Time.month == month). \
 			filter(Time.day == day). \
 			filter(Nuts.nuts_id.in_(nuts)). \
-			group_by(HeatLoadProfileNuts.value, Time.hour_of_day, Time.day, Time.month, HeatLoadProfileNuts.unit, Time.year, Nuts.stat_levl_). \
+			group_by(Time.hour_of_day, Time.day, Time.month, HeatLoadProfileNuts.unit, Time.year). \
 			order_by(Time.hour_of_day.asc()).all()
 		if query == None or len(query) < 1:
 			return []
 
 		output = []
-		nuts_level = -1
 		for row in query:
-			if (len(row) >= 8):
-				nuts_level = row[7]
+			if (len(row) >= 7):
+
 				output.append({
 					"value": row[0],
 					"unit": row[1],
