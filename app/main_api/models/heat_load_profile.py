@@ -172,6 +172,118 @@ class HeatLoadProfileNuts(db.Model):
 			"nuts_level": nuts_level,
 		}
 
+	@staticmethod
+	def aggregate_by_hectare(year, month, day, geometry):
+
+		# Check the type of the query
+		if month != 0 and day != 0:
+			by = 'byDay'
+		elif month != 0:
+			by = 'byMonth'
+		else:
+			by = 'byYear'
+		
+
+		# Custom Query
+		sql_query = "with subAreas as (SELECT ST_Intersection(ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258),nuts.geom) as soustracteGeom, " +\
+							"nuts.gid " +\
+							"FROM geo.nuts " +\
+							"where ST_Intersects(nuts.geom,ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258)) " + \
+							"AND STAT_LEVL_=2 AND year = to_date('" + str(year) + "','YYYY')), " +\
+						"statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density.rast,1, " +\
+							"ST_Transform(subAreas.soustracteGeom,3035),0,true),1,true)).* as stat, subAreas.gid " +\
+							"FROM subAreas, geo.heat_tot_curr_density " +\
+							"WHERE ST_Intersects(heat_tot_curr_density.rast,ST_Transform(subAreas.soustracteGeom,3035)) group by subAreas.gid), " +\
+						"statLoadProfilBySubarea as (select stat.load_profile.nuts_id as load_profile_nutsid, stat.load_profile.value as val_load_profile, " +\
+							"stat.time.month as month_of_year, " +\
+							"stat.time.hour_of_year as hour_of_year, " +\
+							"stat.time.day as day_of_month, " +\
+    						"stat.time.hour_of_day as hour_of_day, " +\
+							"statBySubAreas.count as statCount, statBySubAreas.sum as statSum_HD " +\
+							"from stat.load_profile " +\
+							"left join statBySubAreas on statBySubAreas.gid = stat.load_profile.fk_nuts_gid " +\
+							"inner join stat.time on stat.load_profile.fk_time_id = stat.time.id " +\
+							"WHERE fk_nuts_gid is not null and fk_time_id is not null " +\
+							"AND statBySubAreas.gid = stat.load_profile.fk_nuts_gid AND stat.time.year = " + str(year) + " " +\
+							"order by stat.time.hour_of_year), " +\
+						"totalLoadprofile as ( " +\
+							"select sum(val_load_profile) as tot_load_profile,load_profile_nutsid " +\
+							"from statLoadProfilBySubarea group by load_profile_nutsid), " +\
+						"normalizedData as (select sum(val_load_profile/tot_load_profile*statSum_HD) as normalizedCalutation, " +\
+							"hour_of_year, month_of_year, day_of_month, hour_of_day " +\
+							"from statLoadProfilBySubarea " +\
+							"inner join totalLoadprofile on statLoadProfilBySubarea.load_profile_nutsid = totalLoadprofile.load_profile_nutsid " +\
+							"group by hour_of_year, month_of_year, hour_of_day, day_of_month " +\
+							"order by hour_of_year) " +\
+						"select "
+
+		if by == 'byYear':
+			sql_query += "min(normalizedCalutation), max(normalizedCalutation), avg(normalizedCalutation), month_of_year " +\
+						"from normalizedData " +\
+						"group by month_of_year " +\
+						"order by month_of_year"
+		elif by == 'byMonth':
+			sql_query += "min(normalizedCalutation), max(normalizedCalutation), avg(normalizedCalutation), day_of_month " +\
+						"from normalizedData " +\
+						"where month_of_year = " + str(month) + " " +\
+						"group by day_of_month, month_of_year " +\
+						"order by day_of_month"
+		else:
+			sql_query += "normalizedCalutation, hour_of_day " +\
+						"from normalizedData " +\
+						"where day_of_month = " + str(day) + " " +\
+						"and month_of_year = " + str(month) + " " +\
+						"group by normalizedCalutation, hour_of_day " +\
+						"order by hour_of_day"		
+
+		# Execution of the query
+		query = db.session.execute(sql_query)
+
+		# Storing the results
+		output = []
+		if by == 'byYear':
+			for c, q in enumerate(query):
+				output.append({
+					'year': year,
+					'month': q[3],
+					'granularity': 'month',
+					'unit': 'kW',
+					'min': q[0],
+					'max': q[1],
+					'average': q[2]
+					})
+		elif by == 'byMonth':
+			for c, q in enumerate(query):
+				output.append({
+					'year': year,
+					'month': month,
+					'day': q[3],
+					'granularity': 'day',
+					'unit': 'kW',
+					'min': q[0],
+					'max': q[1],
+					'average': q[2]
+					})
+		else:
+			for c, q in enumerate(query):
+				output.append({
+					'year': year,
+					'month': month,
+					'day': day,
+					'hour_of_day': q[1],
+					'granularity': 'hour',
+					'unit': 'kW',
+					'value': q[0]
+					})
+
+		'''for c, o in enumerate(output):
+			print(output[c])'''
+		
+		return {
+			"values": output
+		}
+		
+
 
 	@staticmethod
 	def duration_curve(year, nuts):
@@ -196,15 +308,71 @@ class HeatLoadProfileNuts(db.Model):
 		for q in query:
 			listAllValues.append(q[0])
 
+		# Creation of points and sampling of the values
+		finalListPoints = HeatLoadProfileNuts.sampling_data(listAllValues)
+
+		return finalListPoints
+
+
+	@staticmethod
+	def duration_curve_hectares(year, geometry):
+
+		sql_query = "with subAreas as (SELECT ST_Intersection(ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258),nuts.geom) as soustracteGeom, " +\
+							"nuts.gid " +\
+							"FROM geo.nuts " +\
+							"where ST_Intersects(nuts.geom,ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258)) " + \
+							"AND STAT_LEVL_=2 AND year = to_date('" + str(year) + "','YYYY')), " +\
+						"statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density.rast,1, " +\
+							"ST_Transform(subAreas.soustracteGeom,3035),0,true),1,true)).* as stat, subAreas.gid " +\
+							"FROM subAreas, geo.heat_tot_curr_density " +\
+							"WHERE ST_Intersects(heat_tot_curr_density.rast,ST_Transform(subAreas.soustracteGeom,3035)) group by subAreas.gid), " +\
+						"statLoadProfilBySubarea as (select stat.load_profile.nuts_id as load_profile_nutsid, stat.load_profile.value as val_load_profile, " +\
+							"stat.time.month as month_of_year, " +\
+							"stat.time.hour_of_year as hour_of_year, " +\
+							"stat.time.day as day_of_month, " +\
+    						"stat.time.hour_of_day as hour_of_day, " +\
+							"statBySubAreas.count as statCount, statBySubAreas.sum as statSum_HD " +\
+							"from stat.load_profile " +\
+							"left join statBySubAreas on statBySubAreas.gid = stat.load_profile.fk_nuts_gid " +\
+							"inner join stat.time on stat.load_profile.fk_time_id = stat.time.id " +\
+							"WHERE fk_nuts_gid is not null and fk_time_id is not null " +\
+							"AND statBySubAreas.gid = stat.load_profile.fk_nuts_gid AND stat.time.year = " + str(year) + " " +\
+							"order by stat.time.hour_of_year), " +\
+						"totalLoadprofile as ( " +\
+							"select sum(val_load_profile) as tot_load_profile,load_profile_nutsid " +\
+							"from statLoadProfilBySubarea group by load_profile_nutsid) " +\
+						"select sum(val_load_profile/tot_load_profile*statSum_HD) as normalizedCalutation,hour_of_year " +\
+							"from statLoadProfilBySubarea " +\
+							"inner join totalLoadprofile on statLoadProfilBySubarea.load_profile_nutsid = totalLoadprofile.load_profile_nutsid " +\
+							"group by hour_of_year " +\
+							"order by normalizedCalutation DESC;"
+
+
+		# Execution of the query
+		query = db.session.execute(sql_query)
+
+		# Store query results in a list
+		listAllValues = []
+		for q in query:
+			listAllValues.append(q[0])
+
+		# Creation of points and sampling of the values
+		finalListPoints = HeatLoadProfileNuts.sampling_data(listAllValues)
+
+		return finalListPoints
+
+
+	@staticmethod
+	def sampling_data(listValues):
 		# Get number of values
-		numberOfValues = len(listAllValues)
+		numberOfValues = len(listValues)
 
 		# Create the points for the curve with the X and Y axis
 		listPoints = []
-		for n, l in enumerate(listAllValues):
+		for n, l in enumerate(listValues):
 			listPoints.append({
 				'X':n+1,
-				'Y':listAllValues[n]
+				'Y':listValues[n]
 			})
 
 		# Sampling of the values
@@ -233,8 +401,6 @@ class HeatLoadProfileNuts(db.Model):
 			finalListPoints.append(minValue)
 
 		return finalListPoints
-
-
 
 """    @staticmethod
 	def aggregate_for_month_hdm(nuts, year):
