@@ -20,6 +20,11 @@ point_curve = api.model('Point', {
     'Y': fields.Float(description='Y-axis')
 })
 
+values_by_hectare = api.model('Value', {
+    'hour_of_year': fields.Float(description='Hour of year'),
+    'value': fields.Float(description='Value')
+})
+
 grid = api.model('Grid', {
     'gid': fields.Integer(readOnly=True, description='ID of the grid geometry'),
     'id': fields.Integer(desciption='id'),
@@ -247,6 +252,22 @@ load_profile_aggregation_curve = api.model('Input for load profile duration curv
 })
 load_profile_aggregation_curve_output = api.model('Output for load profile duration curve', {
     'points': fields.List(fields.Nested(point_curve))
+})
+
+load_profile_aggregation_curve_hectares = api.model('Input for load profile duration curve', {
+    'year': fields.Integer(description='Year'),
+    'areas': fields.List(fields.Nested(area))
+})
+
+load_profile_aggregation_hectares = api.model('Input for load profile hectares', {
+    'year': fields.Integer(description='Year'),
+    'month': fields.Integer(description='Month'),
+    'day': fields.Integer(description='Day'),
+    'areas': fields.List(fields.Nested(area))
+})
+
+load_profile_aggregation_hectares_output = api.model('Output for load profile hectares', {
+    'values': fields.List(fields.Nested(load_profile_aggregation_day_row))
 })
 
 stats_layers_nuts_output = api.model('Stats for selected layers, year and area', {

@@ -4,7 +4,8 @@ from flask import request
 from flask_restplus import Resource
 from main_api.api.main.serializers import load_profile_aggregation_year, load_profile_aggregation_year_input, \
     load_profile_aggregation_month, load_profile_aggregation_month_input, load_profile_aggregation_day, load_profile_aggregation_day_input, \
-    load_profile_aggregation_curve_output, load_profile_aggregation_curve
+    load_profile_aggregation_curve_output, load_profile_aggregation_curve, load_profile_aggregation_hectares, load_profile_aggregation_hectares_output, \
+    load_profile_aggregation_curve_hectares
 from main_api.api.restplus import api
 from main_api.models.nuts import Nuts
 from main_api.models.heat_load_profile import HeatLoadProfileNuts
@@ -126,7 +127,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
     @api.expect(load_profile_aggregation_curve)
     def post(self):
         """
-        Returns the statistics for specific layers, point and year
+        Returns the statistics for specific layers, point and yeardjh
         :return:
         """
         year = api.payload['year']
@@ -139,3 +140,90 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         return {
             "points": output
         }
+
+@ns.route('/aggregate/duration_curve/hectares')
+@api.response(404, 'No data found')
+class HeatLoadProfileAggregation(HeatLoadProfileResource):
+    @api.marshal_with(load_profile_aggregation_curve_output)
+    @api.expect(load_profile_aggregation_curve_hectares)
+    def post(self):
+        """
+        Returns the statistics for specific layers, point and year
+        :return:
+        """
+        year = api.payload['year']
+        areas = api.payload['areas']
+
+        polyArray = []
+        output = {}
+
+        # convert to polygon format for each polygon and store them in polyArray
+        for polygon in areas: 
+            po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
+            polyArray.append(po)
+        
+        for p in polyArray:
+            print(p)
+            
+        # convert array of polygon into multipolygon
+        multipolygon = shapely_geom.MultiPolygon(polyArray)
+        print(multipolygon)
+
+        #geom = "SRID=4326;{}".format(multipolygon.wkt)
+        geom = multipolygon.wkt
+
+        output = HeatLoadProfileNuts.duration_curve_hectares(year=year, geometry=geom)
+
+        return {
+            "points": output
+        }
+
+@ns.route('/aggregate/hectares')
+@api.response(404, 'No data found')
+class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
+    #@api.marshal_with(load_profile_aggregation_hectares_output)
+    @api.expect(load_profile_aggregation_hectares)
+    def post(self):
+        """
+        Returns the heat load data by hectare
+        :return:
+        """
+
+        # Entrees
+        year = api.payload['year']
+        areas = api.payload['areas']
+        
+        if 'month' in api.payload.keys():
+          month = api.payload["month"]
+        else:
+          month = 0
+
+        if 'day' in api.payload.keys():
+          day = api.payload["day"]
+        else:
+          day = 0     
+
+
+        polyArray = []
+        output = {}
+
+        # convert to polygon format for each polygon and store them in polyArray
+        for polygon in areas: 
+            po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
+            polyArray.append(po)
+        
+        for p in polyArray:
+            print(p)
+
+        # convert array of polygon into multipolygon
+        multipolygon = shapely_geom.MultiPolygon(polyArray)
+        print(multipolygon)
+
+        #geom = "SRID=4326;{}".format(multipolygon.wkt)
+        geom = multipolygon.wkt
+
+        #res = LayersHectare.aggregate_for_selection(geometry=geom, year=year, layers=layers)
+        res = HeatLoadProfileNuts.aggregate_by_hectare(year=year, month=month, day=day, geometry=geom)
+        output = res
+
+        return output
