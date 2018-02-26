@@ -4,9 +4,9 @@ from flask import request
 from flask_restplus import Resource
 from main_api.api.main.serializers import stats_layers_area_input, stats_layers_output, stats_layers_hectares_output, stats_layers_nuts_input, stats_layers_nuts_output, stats_layer_point_input, stats_layers_area_nuts_input, stats_layers_hectares_input
 from main_api.api.restplus import api
-from main_api.models.wwtp import Wwtp, WwtpNuts3, WwtpLau2
-from main_api.models.heat_density_map import HeatDensityMap, HeatDensityHa, HeatDensityNuts3, HeatDensityLau2
-from main_api.models.population_density import PopulationDensityHa, PopulationDensityNuts3, PopulationDensityLau2
+from main_api.models.wwtp import Wwtp, WwtpNuts3, WwtpLau2, WwtpNuts2, WwtpNuts1, WwtpNuts0
+from main_api.models.heat_density_map import HeatDensityMap, HeatDensityHa, HeatDensityNuts3, HeatDensityLau2, HeatDensityNuts0, HeatDensityNuts1, HeatDensityNuts2
+from main_api.models.population_density import PopulationDensityHa, PopulationDensityNuts3, PopulationDensityLau2, PopulationDensityNuts2, PopulationDensityNuts1,PopulationDensityNuts0
 from main_api.models.nuts import Nuts, NutsRG01M
 from main_api.models.lau import Lau
 from main_api.models.hectare import LayersHectare 
@@ -26,15 +26,24 @@ ns = api.namespace('stats', description='Operations related to statistisdscs')
 layers_ref = {
 	'wwtp': Wwtp,
 	'wwtp_nuts3': WwtpNuts3,
+	'wwtp_nuts2': WwtpNuts2,
+	'wwtp_nuts1': WwtpNuts1,
+	'wwtp_nuts0': WwtpNuts0,
 	'wwtp_ha': Wwtp,
 	'wwtp_lau2': WwtpLau2,
 	'population': PopulationDensityNuts3,
 	'population_density_nuts3': PopulationDensityNuts3,
+	'population_density_nuts2': PopulationDensityNuts2,
+	'population_density_nuts1': PopulationDensityNuts1,
+	'population_density_nuts0': PopulationDensityNuts0,
 	'population_density_ha': PopulationDensityHa,
 	'population_density_lau2': PopulationDensityLau2,
 	'heat_density_map': HeatDensityMap,
 	'heat_density_ha': HeatDensityHa,
 	'heat_density_nuts3': HeatDensityNuts3,
+	'heat_density_nuts2': HeatDensityNuts2,
+	'heat_density_nuts1': HeatDensityNuts1,
+	'heat_density_nuts0': HeatDensityNuts0,
 	'heat_density_lau2': HeatDensityLau2,
 }
 
@@ -143,11 +152,18 @@ class StatsLayersNutsInArea(Resource):
 		layers = api.payload['layers']
 		nuts = api.payload['nuts']
 
+
+		print ('year {} '.format(year))
+		print ('layers {} '.format(layers))
+		print ('nuts {} '.format(nuts))
+
+
 		# compute nuts level
 		nuts_level = 0
 		for n in nuts:
 			if len(n)-2 > nuts_level:
 				nuts_level = len(n)-2
+				print ('nuts_level {} '.format(nuts_level))
 
 		output = []
 
@@ -164,6 +180,8 @@ class StatsLayersNutsInArea(Resource):
 				'name': layer,
 				'values': a.aggregate_for_nuts_selection(nuts=nuts, year=year)
 			})
+
+		print ('output {} '.format(output))
 
 		# compute heat consumption/person if both layers are selected
 		pop_nuts_name = 'population_density_nuts3'

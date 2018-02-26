@@ -60,12 +60,14 @@ class HeatLoadProfileAggregationYear(HeatLoadProfileResource):
         nuts = api.payload['nuts']
         try:
             nuts_level = int(api.payload['nuts_level'])
+            print ('nuts_level {} '.format(nuts_level))
         except ValueError:
             nuts_level = 2
 
         output = {}
         if nuts_level >= 2:
             output = HeatLoadProfileNuts.aggregate_for_year(nuts=self.normalize_nuts(nuts), year=2010)
+
 
         return output
 
