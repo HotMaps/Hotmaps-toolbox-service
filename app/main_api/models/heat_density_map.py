@@ -251,7 +251,21 @@ class HeatDensityLau(db.Model):
 
 
 class HeatDensityNuts(db.Model):
-    __tablename__ = 'heat_density_nuts'
+    # the former table name was __tablename__ = 'heat_density_nuts'
+
+    """@staticmethod
+    def aggregate_for_selection(geometry, year, nuts_level):
+        query = db.session.query(
+                func.sum(HeatDensityNuts.sum),
+                func.avg(HeatDensityNuts.sum),
+                func.count(HeatDensityNuts.sum)
+            ). \
+            join(NutsRG01M, HeatDensityNuts.nuts). \
+            filter(HeatDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
+            filter(NutsRG01M.stat_levl_ == nuts_level). \
+            filter(func.ST_Within(NutsRG01M.geom,
+                                  func.ST_Transform(func.ST_GeomFromEWKT(geometry), HeatDensityNuts.CRS))).first()"""
+    __tablename__ = 'heat_tot_curr_density_nuts_test'
     __table_args__ = (
         db.ForeignKeyConstraint(['nuts_id'], ['geo.nuts_rg_01m.nuts_id']),
         {"schema": 'stat'}
@@ -288,7 +302,6 @@ class HeatDensityNuts(db.Model):
                 func.count(HeatDensityNuts.sum)
             ). \
             join(NutsRG01M, HeatDensityNuts.nuts). \
-            filter(HeatDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
             filter(NutsRG01M.stat_levl_ == nuts_level). \
             filter(func.ST_Within(NutsRG01M.geom,
                                   func.ST_Transform(func.ST_GeomFromEWKT(geometry), HeatDensityNuts.CRS))).first()
@@ -313,13 +326,22 @@ class HeatDensityNuts(db.Model):
 
     @staticmethod
     def aggregate_for_nuts_selection(nuts, year, nuts_level):
-        query = db.session.query(
+        print ('nuts_level {} '.format(nuts_level))
+        """query = db.session.query(
                 func.sum(HeatDensityNuts.sum),
                 func.sum(HeatDensityNuts.sum),
                 func.sum(HeatDensityNuts.count)
             ). \
             join(NutsRG01M, HeatDensityNuts.nuts). \
             filter(HeatDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
+            filter(NutsRG01M.stat_levl_ == nuts_level). \
+            filter(NutsRG01M.nuts_id.in_(nuts)).first()"""
+        query = db.session.query(
+                func.sum(HeatDensityNuts.sum),
+                func.sum(HeatDensityNuts.sum),
+                func.sum(HeatDensityNuts.count)
+            ). \
+            join(NutsRG01M, HeatDensityNuts.nuts). \
             filter(NutsRG01M.stat_levl_ == nuts_level). \
             filter(NutsRG01M.nuts_id.in_(nuts)).first()
 
