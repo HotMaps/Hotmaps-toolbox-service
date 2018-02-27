@@ -64,7 +64,7 @@ class CentroidsLayersInArea(Resource):
         response = []
         for x in result:
             response.append(   json.loads(x['geojson']))
-        print >> sys.stderr, len(response)
+
         # output
         return {
             "centroids": len(response),
@@ -79,12 +79,10 @@ class CentroidLayersInHectare(Resource):
         :return:
         """
         point = api.payload['point']
-        print >> sys.stderr, point
         result = HeatDensityHa.centroid_for_hectare(point)
         response = []
         for x in result:
             response.append(   json.loads(x['geojson']))
-        print >> sys.stderr, response
         # output
         return {
             "point": response,

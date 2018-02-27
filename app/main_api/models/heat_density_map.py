@@ -130,10 +130,9 @@ class HeatDensityHa(db.Model):
             "FROM geo.heat_tot_curr_density " + \
             "WHERE " +  "st_intersects(heat_tot_curr_density.rast,st_transform(st_geomfromtext('POINT("+ point +")'::text, 4326),3035)) ORDER BY distance ASC limit 1;"
         query = db.session.execute(sql_query)
-        #print >> sys.stderr, query
         result = json.dumps([dict(r) for r in query])
         #result = json.loads(result)
-        #print >> sys.stderr, result
+
         return result
 
     @staticmethod
@@ -326,7 +325,6 @@ class HeatDensityNuts(db.Model):
 
     @staticmethod
     def aggregate_for_nuts_selection(nuts, year, nuts_level):
-        print ('nuts_level {} '.format(nuts_level))
         """query = db.session.query(
                 func.sum(HeatDensityNuts.sum),
                 func.sum(HeatDensityNuts.sum),
@@ -347,6 +345,13 @@ class HeatDensityNuts(db.Model):
 
         if query == None or len(query) < 3:
             return []
+        if query[1] == None:
+            return []
+        if query[2] == None:
+            return []
+
+
+
         average_ha =  Decimal(query[1])/Decimal(query[2])
 
         return [{

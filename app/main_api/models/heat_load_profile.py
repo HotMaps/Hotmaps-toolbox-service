@@ -40,7 +40,7 @@ class HeatLoadProfileNuts(db.Model):
 
 	@staticmethod
 	def aggregate_for_year(nuts, year):
-		print ('nuts {} '.format(nuts))
+
 		query = db.session.query(
 				func.avg(HeatLoadProfileNuts.value),
 				func.min(HeatLoadProfileNuts.value),
@@ -277,8 +277,6 @@ class HeatLoadProfileNuts(db.Model):
 					'value': q[0]
 					})
 
-		'''for c, o in enumerate(output):
-			print(output[c])'''
 		
 		return {
 			"values": output

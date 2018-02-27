@@ -60,9 +60,9 @@ class HeatLoadProfileAggregationYear(HeatLoadProfileResource):
         nuts = api.payload['nuts']
         try:
             nuts_level = int(api.payload['nuts_level'])
-            print ('nuts_level {} '.format(nuts_level))
         except ValueError:
             nuts_level = 2
+
 
         output = {}
         if nuts_level >= 2:
@@ -118,7 +118,6 @@ class HeatLoadProfileAggregationDay(HeatLoadProfileResource):
         output = {}
         if nuts_level >= 2:
             output = HeatLoadProfileNuts.aggregate_for_day(nuts=self.normalize_nuts(nuts), year=2010, month=month, day=day, nuts_level =nuts_level)
-        print(output)
 
         return output
 
@@ -159,18 +158,15 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
 
         polyArray = []
         output = {}
-
+        # TODO: this part must be one methods same in /aggregate/hectares Rules 1 NO DUPLICATE
         # convert to polygon format for each polygon and store them in polyArray
         for polygon in areas: 
             po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
             polyArray.append(po)
-        
-        for p in polyArray:
-            print(p)
+
             
         # convert array of polygon into multipolygon
         multipolygon = shapely_geom.MultiPolygon(polyArray)
-        print(multipolygon)
 
         #geom = "SRID=4326;{}".format(multipolygon.wkt)
         geom = multipolygon.wkt
@@ -209,18 +205,15 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
 
         polyArray = []
         output = {}
-
+        # TODO: this part must be one methods same in /aggregate/duration_curve/hectares Rules 1 NO DUPLICATE
         # convert to polygon format for each polygon and store them in polyArray
         for polygon in areas: 
             po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
             polyArray.append(po)
-        
-        for p in polyArray:
-            print(p)
+
 
         # convert array of polygon into multipolygon
         multipolygon = shapely_geom.MultiPolygon(polyArray)
-        print(multipolygon)
 
         #geom = "SRID=4326;{}".format(multipolygon.wkt)
         geom = multipolygon.wkt

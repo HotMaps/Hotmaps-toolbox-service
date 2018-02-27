@@ -80,8 +80,6 @@ class StatsLayersInArea(Resource):
 				'values': a.aggregate_for_selection(geometry=geom, year=year)
 			})
 
-		print(output)
-
 		# compute heat consumption/person if both layers are selected
 		pop_nuts_name = 'population_density_nuts3'
 		heat_nuts_name = 'heat_density_nuts3'
@@ -153,17 +151,11 @@ class StatsLayersNutsInArea(Resource):
 		nuts = api.payload['nuts']
 
 
-		print ('year {} '.format(year))
-		print ('layers {} '.format(layers))
-		print ('nuts {} '.format(nuts))
-
-
 		# compute nuts level
 		nuts_level = 0
 		for n in nuts:
 			if len(n)-2 > nuts_level:
 				nuts_level = len(n)-2
-				print ('nuts_level {} '.format(nuts_level))
 
 		output = []
 
@@ -180,8 +172,6 @@ class StatsLayersNutsInArea(Resource):
 				'name': layer,
 				'values': a.aggregate_for_nuts_selection(nuts=nuts, year=year)
 			})
-
-		print ('output {} '.format(output))
 
 		# compute heat consumption/person if both layers are selected
 		pop_nuts_name = 'population_density_nuts3'
@@ -226,8 +216,7 @@ class StatsLayersHectareMulti(Resource):
 			po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
 			polyArray.append(po)
 		
-		'''for p in polyArray:
-			print(p)'''
+
 
 		# convert array of polygon into multipolygon
 		multipolygon = shapely_geom.MultiPolygon(polyArray)
