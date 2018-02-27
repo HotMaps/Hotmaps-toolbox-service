@@ -153,10 +153,9 @@ class HeatDensityHa(db.Model):
 
 
 class HeatDensityLau(db.Model):
-    __tablename__ = 'heat_density_lau'
+    __tablename__ = 'heat_tot_curr_density_lau_test'
     __table_args__ = (
-        db.ForeignKeyConstraint(['fk_lau_gid'], ['geo.lau.gid']),
-        db.ForeignKeyConstraint(['fk_time_id'], ['stat.time.id']),
+        db.ForeignKeyConstraint(['fk_lau_gid'], ['public.lau.gid']),
         {"schema": 'stat'}
     )
 
@@ -174,11 +173,11 @@ class HeatDensityLau(db.Model):
     variance = db.Column(db.Numeric(precision=30, scale=10))
     range = db.Column(db.Numeric(precision=30, scale=10))
     fk_lau_gid = db.Column(db.BigInteger)
-    fk_time_id = db.Column(db.BigInteger)
+    #fk_time_id = db.Column(db.BigInteger)
 
 
     lau = db.relationship("Lau")
-    time = db.relationship("Time")
+    #time = db.relationship("Time")
 
     def __repr__(self):
         return "<HeatDensityLau(comm_id='%s', year='%s', sum='%d', lau='%s')>" % \
@@ -192,14 +191,14 @@ class HeatDensityLau(db.Model):
                 func.sum(HeatDensityLau.count)
             ). \
             join(Lau, HeatDensityLau.lau). \
-            join(Time, HeatDensityLau.time). \
-            filter(Time.year == year). \
-            filter(Time.granularity == 'year'). \
-            filter(Lau.stat_levl_ == level). \
             filter(func.ST_Within(Lau.geom,
                                   func.ST_Transform(func.ST_GeomFromEWKT(geometry), HeatDensityLau.CRS))).first()
 
         if query == None or len(query) < 3:
+            return []
+        if query[1] == None:
+            return []
+        if query[2] == None:
             return []
 
         return [{
@@ -224,14 +223,15 @@ class HeatDensityLau(db.Model):
                 func.sum(HeatDensityLau.count)
             ). \
             join(Lau, HeatDensityLau.lau). \
-            join(Time, HeatDensityLau.time). \
-            filter(Time.year == year). \
-            filter(Time.granularity == 'year'). \
-            filter(Lau.stat_levl_ == level). \
             filter(Lau.comm_id.in_(nuts)).first()
 
         if query == None or len(query) < 3:
                 return []
+        if query[1] == None:
+            return []
+        if query[2] == None:
+            return []
+
         average_ha =  Decimal(query[1])/Decimal(query[2])
         return [{
             'name': 'heat_consumption',
@@ -307,6 +307,10 @@ class HeatDensityNuts(db.Model):
 
 
         if query == None or len(query) < 3:
+            return []
+        if query[1] == None:
+            return []
+        if query[2] == None:
             return []
 
         return [{

@@ -69,10 +69,16 @@ class PopulationDensityHa(db.Model):
     Population Density layer as lau
 """
 class PopulationDensityLau(db.Model):
-    __tablename__ = 'pop_density_lau'
-    __table_args__ = (
+    __tablename__ = 'pop_tot_curr_density_lau_test'
+
+    """__table_args__ = (
         db.ForeignKeyConstraint(['fk_lau_gid'], ['geo.lau.gid']),
         db.ForeignKeyConstraint(['fk_time_id'], ['stat.time.id']),
+        {"schema": 'stat'}
+    )
+"""
+    __table_args__ = (
+        db.ForeignKeyConstraint(['fk_lau_gid'], ['public.lau.gid']),
         {"schema": 'stat'}
     )
 
@@ -90,10 +96,10 @@ class PopulationDensityLau(db.Model):
     variance = db.Column(db.Numeric(precision=30, scale=10))
     range = db.Column(db.Numeric(precision=30, scale=10))
     fk_lau_gid = db.Column(db.BigInteger)
-    fk_time_id = db.Column(db.BigInteger)
+    #fk_time_id = db.Column(db.BigInteger)
 
     lau = db.relationship("Lau")
-    time = db.relationship("Time")
+    #time = db.relationship("Time")
 
     def __repr__(self):
         return "<PopDensityLau(comm_id='%s', year='%s', sum='%d', lau='%s')>" % \
@@ -101,8 +107,7 @@ class PopulationDensityLau(db.Model):
 
     @staticmethod
     def aggregate_for_selection(geometry, year, level):
-
-        query = db.session.query(
+        """query = db.session.query(
                 func.sum(PopulationDensityLau.sum),
                 func.avg(PopulationDensityLau.sum),
                 func.sum(PopulationDensityLau.count)
@@ -112,6 +117,15 @@ class PopulationDensityLau(db.Model):
             filter(Time.year == year). \
             filter(Time.granularity == 'year'). \
             filter(Lau.stat_levl_ == level). \
+            filter(func.ST_Within(Lau.geom,
+                                  func.ST_Transform(func.ST_GeomFromEWKT(geometry), PopulationDensityLau.CRS))).first()"""
+
+        query = db.session.query(
+                func.sum(PopulationDensityLau.sum),
+                func.avg(PopulationDensityLau.sum),
+                func.sum(PopulationDensityLau.count)
+            ). \
+            join(Lau, PopulationDensityLau.lau). \
             filter(func.ST_Within(Lau.geom,
                                   func.ST_Transform(func.ST_GeomFromEWKT(geometry), PopulationDensityLau.CRS))).first()
 
@@ -140,14 +154,16 @@ class PopulationDensityLau(db.Model):
                 func.sum(PopulationDensityLau.count)
             ). \
             join(Lau, PopulationDensityLau.lau). \
-            join(Time, PopulationDensityLau.time). \
             filter(Time.year == year). \
             filter(Time.granularity == 'year'). \
-            filter(Lau.stat_levl_ == level). \
             filter(Lau.comm_id.in_(nuts)).first()
 
         if query == None or len(query) < 3:
                 return []
+        if query[1] == None:
+            return []
+        if query[2] == None:
+            return []
         average_ha =  Decimal(query[1])/Decimal(query[2])
         return [{
             'name': 'population',
@@ -168,7 +184,7 @@ class PopulationDensityLau(db.Model):
     Population Density layer as nuts
 """
 class PopulationDensityNuts(db.Model):
-    __tablename__ = 'pop_density_nuts'
+    __tablename__ = 'pop_tot_curr_density_nuts_test'
     __table_args__ = (
         db.ForeignKeyConstraint(['nuts_id'], ['geo.nuts_rg_01m.nuts_id']),
         {"schema": 'stat'}
@@ -178,16 +194,16 @@ class PopulationDensityNuts(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     nuts_id = db.Column(db.String(14))
-    date = db.Column(db.Date)
-    count = db.Column(db.BigInteger, name ='_count')
-    sum = db.Column(db.Numeric(precision=30, scale=10), name ='_sum' )
-    mean = db.Column(db.Numeric(precision=30, scale=10), name ='_mean')
-    median = db.Column(db.Numeric(precision=30, scale=10), name ='_median')
-    min = db.Column(db.Numeric(precision=30, scale=10), name ='_min')
-    max = db.Column(db.Numeric(precision=30, scale=10), name ='_max')
-    std = db.Column(db.Numeric(precision=30, scale=10), name ='_std')
-    variance = db.Column(db.Numeric(precision=30, scale=10), name ='_variance')
-    range = db.Column(db.Numeric(precision=30, scale=10), name ='_range')
+    #date = db.Column(db.Date)
+    count = db.Column(db.BigInteger)
+    sum = db.Column(db.Numeric(precision=30, scale=10) )
+    mean = db.Column(db.Numeric(precision=30, scale=10))
+    median = db.Column(db.Numeric(precision=30, scale=10))
+    min = db.Column(db.Numeric(precision=30, scale=10))
+    max = db.Column(db.Numeric(precision=30, scale=10))
+    std = db.Column(db.Numeric(precision=30, scale=10))
+    variance = db.Column(db.Numeric(precision=30, scale=10))
+    range = db.Column(db.Numeric(precision=30, scale=10))
     nuts = db.relationship("NutsRG01M")
 
     def __repr__(self):
@@ -202,7 +218,6 @@ class PopulationDensityNuts(db.Model):
                 func.count(PopulationDensityNuts.sum)
             ). \
             join(NutsRG01M, PopulationDensityNuts.nuts). \
-            filter(PopulationDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
             filter(NutsRG01M.stat_levl_ == nuts_level). \
             filter(func.ST_Within(NutsRG01M.geom, func.ST_Transform(func.ST_GeomFromEWKT(geometry), PopulationDensityNuts.CRS))).first()
 
@@ -231,12 +246,15 @@ class PopulationDensityNuts(db.Model):
             func.sum(PopulationDensityNuts.count)
         ). \
             join(NutsRG01M, PopulationDensityNuts.nuts). \
-            filter(PopulationDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
             filter(NutsRG01M.stat_levl_ == nuts_level). \
             filter(NutsRG01M.nuts_id.in_(nuts)).first()
 
         if query == None or len(query) < 3:
                 return []
+        if query[1] == None:
+            return []
+        if query[2] == None:
+            return []
         average_ha =  Decimal(query[1])/Decimal(query[2])
         return [{
             'name': 'population',

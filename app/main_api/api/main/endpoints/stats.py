@@ -150,7 +150,6 @@ class StatsLayersNutsInArea(Resource):
 		layers = api.payload['layers']
 		nuts = api.payload['nuts']
 
-
 		# compute nuts level
 		nuts_level = 0
 		for n in nuts:
@@ -167,7 +166,6 @@ class StatsLayersNutsInArea(Resource):
 				a = layers_ref[layer]()
 			except KeyError:
 				continue
-
 			output.append({
 				'name': layer,
 				'values': a.aggregate_for_nuts_selection(nuts=nuts, year=year)
