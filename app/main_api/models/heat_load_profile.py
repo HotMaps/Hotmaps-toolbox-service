@@ -61,6 +61,7 @@ class HeatLoadProfileNuts(db.Model):
 
 		if query == None or len(query) < 1:
 			return []
+
 		output = []
 		nuts_level = -1
 		for row in query:
@@ -174,6 +175,111 @@ class HeatLoadProfileNuts(db.Model):
 		}
 
 	@staticmethod
+	def aggregate_for_nuts(year, month, day, nuts):
+
+		# Check the type of the query
+		if month != 0 and day != 0:
+			by = 'byDay'
+		elif month != 0:
+			by = 'byMonth'
+		else:
+			by = 'byYear'
+			
+		# Custom Query
+		sql_query = "with nutsSelection as (select gid from geo.nuts " +\
+						"WHERE nuts_id IN ("+nuts+") AND geo.nuts.year = to_date('" + str(year) + "','YYYY')), " +\
+					"loadprofile as (SELECT sum(stat.load_profile.value) as valtot, fk_nuts_gid from stat.load_profile " +\
+						"INNER JOIN nutsSelection on stat.load_profile.fk_nuts_gid = nutsSelection.gid " +\
+						"where stat.load_profile.fk_nuts_gid = nutsSelection.gid " +\
+						"group by fk_nuts_gid), " +\
+					"heatdemand as (SELECT sum as HDtotal, fk_nuts_gid from stat.heat_tot_curr_density_nuts_test " +\
+						"INNER JOIN nutsSelection on stat.heat_tot_curr_density_nuts_test.fk_nuts_gid = nutsSelection.gid " +\
+						"where stat.heat_tot_curr_density_nuts_test.fk_nuts_gid = nutsSelection.gid), " +\
+					"normalizedData as (SELECT avg(stat.load_profile.value/valtot*HDtotal) AS avg_1, min(stat.load_profile.value/valtot*HDtotal) AS min_1, " +\
+						"max(stat.load_profile.value/valtot*HDtotal) AS max_1, sum(stat.load_profile.value/valtot*HDtotal) as sum_1, " +\
+						"stat.time.month AS statmonth, stat.time.year AS statyear "
+
+		if by == 'byMonth':
+			sql_query += ", stat.time.day AS statday "
+		if by == 'byDay':
+			sql_query += ", stat.time.hour_of_day AS hour_of_day, stat.time.day AS statday "
+
+		sql_query += "FROM stat.load_profile " +\
+						"INNER JOIN nutsSelection on stat.load_profile.fk_nuts_gid = nutsSelection.gid " +\
+						"INNER JOIN loadprofile on stat.load_profile.fk_nuts_gid = loadprofile.fk_nuts_gid " +\
+						"INNER JOIN heatdemand on stat.load_profile.fk_nuts_gid = heatdemand.fk_nuts_gid " +\
+						"INNER JOIN geo.nuts ON geo.nuts.gid = stat.load_profile.fk_nuts_gid " +\
+						"INNER JOIN stat.time ON stat.time.id = stat.load_profile.fk_time_id "
+
+		if by == 'byYear':
+			sql_query += "GROUP BY stat.load_profile.fk_nuts_gid, statmonth, statyear " +\
+						"ORDER BY statmonth ASC) " +\
+						"select sum(min_1), sum(max_1), sum(avg_1), statmonth from normalizedData " +\
+						"group by statmonth " +\
+						"order by statmonth;"
+		elif by == 'byMonth':
+			sql_query += "GROUP BY stat.load_profile.fk_nuts_gid, statday, statmonth, statyear " +\
+						"ORDER BY statday ASC) " +\
+						"select sum(min_1), sum(max_1), sum(avg_1), statday from normalizedData " +\
+						"where statmonth = " + str(month) + " " +\
+						"group by statday, statmonth " +\
+						"order by statday;"
+		else:
+			sql_query += "GROUP BY stat.load_profile.fk_nuts_gid, hour_of_day, statday, statmonth, statyear " +\
+						"ORDER BY hour_of_day ASC) " +\
+						"select sum(sum_1), hour_of_day from normalizedData " +\
+						"where statmonth = " + str(month) + " " +\
+						"and statday = " + str(day) + " " +\
+						"group by hour_of_day " +\
+						"order by hour_of_day;"
+
+
+		# Execution of the query
+		query = db.session.execute(sql_query)
+
+		# Storing the results
+		output = []
+		if by == 'byYear':
+			for c, q in enumerate(query):
+				output.append({
+					'year': year,
+					'month': q[3],
+					'granularity': 'month',
+					'unit': 'kW',
+					'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
+					'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
+					'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
+					})
+		elif by == 'byMonth':
+			for c, q in enumerate(query):
+				output.append({
+					'year': year,
+					'month': month,
+					'day': q[3],
+					'granularity': 'day',
+					'unit': 'kW',
+					'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
+					'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
+					'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
+					})
+		else:
+			for c, q in enumerate(query):
+				output.append({
+					'year': year,
+					'month': month,
+					'day': day,
+					'hour_of_day': q[1],
+					'granularity': 'hour',
+					'unit': 'kW',
+					'value': round(q[0], settings.NUMBER_DECIMAL_DATA)
+					})
+		
+		return {
+			"values": output
+		}
+
+
+	@staticmethod
 	def aggregate_by_hectare(year, month, day, geometry):
 
 		# Check the type of the query
@@ -199,7 +305,7 @@ class HeatLoadProfileNuts(db.Model):
 							"stat.time.month as month_of_year, " +\
 							"stat.time.hour_of_year as hour_of_year, " +\
 							"stat.time.day as day_of_month, " +\
-    						"stat.time.hour_of_day as hour_of_day, " +\
+							"stat.time.hour_of_day as hour_of_day, " +\
 							"statBySubAreas.count as statCount, statBySubAreas.sum as statSum_HD " +\
 							"from stat.load_profile " +\
 							"left join statBySubAreas on statBySubAreas.gid = stat.load_profile.fk_nuts_gid " +\
@@ -249,9 +355,9 @@ class HeatLoadProfileNuts(db.Model):
 					'month': q[3],
 					'granularity': 'month',
 					'unit': 'kW',
-					'min': q[0],
-					'max': q[1],
-					'average': q[2]
+					'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
+					'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
+					'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
 					})
 		elif by == 'byMonth':
 			for c, q in enumerate(query):
@@ -261,9 +367,9 @@ class HeatLoadProfileNuts(db.Model):
 					'day': q[3],
 					'granularity': 'day',
 					'unit': 'kW',
-					'min': q[0],
-					'max': q[1],
-					'average': q[2]
+					'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
+					'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
+					'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
 					})
 		else:
 			for c, q in enumerate(query):
@@ -274,7 +380,7 @@ class HeatLoadProfileNuts(db.Model):
 					'hour_of_day': q[1],
 					'granularity': 'hour',
 					'unit': 'kW',
-					'value': q[0]
+					'value': round(q[0], settings.NUMBER_DECIMAL_DATA)
 					})
 
 		
@@ -287,13 +393,33 @@ class HeatLoadProfileNuts(db.Model):
 	@staticmethod
 	def duration_curve(year, nuts):
 
-		# Custom Query
-		sql_query = "WITH nutsSelection as (select gid from geo.nuts " +\
+		# Custom Query (no normalized data)
+		'''sql_query = "WITH nutsSelection as (select gid from geo.nuts " +\
 						"WHERE nuts_id IN ("+nuts+") AND geo.nuts.year = to_date('" + str(year) + "','YYYY')) " +\
 					"SELECT sum(stat.load_profile.value) as val, stat.time.hour_of_year as hoy from stat.load_profile " +\
 						"INNER JOIN nutsSelection on stat.load_profile.fk_nuts_gid = nutsSelection.gid " +\
 						"INNER JOIN stat.time on stat.load_profile.fk_time_id = stat.time.id " +\
 						"WHERE fk_nuts_gid is not null and fk_time_id is not null " +\
+						"AND stat.load_profile.fk_nuts_gid = nutsSelection.gid " +\
+						"GROUP BY hoy " +\
+						"HAVING	COUNT(value)=COUNT(*) " +\
+						"ORDER BY val DESC;"'''
+
+		# Custom Query
+		sql_query = "WITH nutsSelection as (select gid from geo.nuts " +\
+						"WHERE nuts_id IN ("+nuts+") AND geo.nuts.year = to_date('" + str(year) + "','YYYY')), " +\
+					"loadprofile as (SELECT sum(stat.load_profile.value) as valtot, fk_nuts_gid from stat.load_profile " +\
+						"INNER JOIN nutsSelection on stat.load_profile.fk_nuts_gid = nutsSelection.gid " +\
+						"where stat.load_profile.fk_nuts_gid = nutsSelection.gid group by fk_nuts_gid), " +\
+					"heatdemand as (SELECT sum as HDtotal, fk_nuts_gid from stat.heat_tot_curr_density_nuts_test " +\
+						"INNER JOIN nutsSelection on stat.heat_tot_curr_density_nuts_test.fk_nuts_gid = nutsSelection.gid " +\
+						"where stat.heat_tot_curr_density_nuts_test.fk_nuts_gid = nutsSelection.gid) " +\
+					"SELECT sum(stat.load_profile.value/valtot*HDtotal) as val, stat.time.hour_of_year as hoy from stat.load_profile " +\
+						"INNER JOIN nutsSelection on stat.load_profile.fk_nuts_gid = nutsSelection.gid " +\
+						"INNER JOIN stat.time on stat.load_profile.fk_time_id = stat.time.id " +\
+						"INNER JOIN loadprofile on stat.load_profile.fk_nuts_gid = loadprofile.fk_nuts_gid " +\
+						"INNER JOIN heatdemand on stat.load_profile.fk_nuts_gid = heatdemand.fk_nuts_gid " +\
+						"WHERE stat.load_profile.fk_nuts_gid is not null and fk_time_id is not null " +\
 						"AND stat.load_profile.fk_nuts_gid = nutsSelection.gid " +\
 						"GROUP BY hoy " +\
 						"HAVING	COUNT(value)=COUNT(*) " +\
@@ -329,7 +455,7 @@ class HeatLoadProfileNuts(db.Model):
 							"stat.time.month as month_of_year, " +\
 							"stat.time.hour_of_year as hour_of_year, " +\
 							"stat.time.day as day_of_month, " +\
-    						"stat.time.hour_of_day as hour_of_day, " +\
+							"stat.time.hour_of_day as hour_of_day, " +\
 							"statBySubAreas.count as statCount, statBySubAreas.sum as statSum_HD " +\
 							"from stat.load_profile " +\
 							"left join statBySubAreas on statBySubAreas.gid = stat.load_profile.fk_nuts_gid " +\

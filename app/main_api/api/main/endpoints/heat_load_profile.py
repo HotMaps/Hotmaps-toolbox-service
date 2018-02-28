@@ -129,7 +129,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
     @api.expect(load_profile_aggregation_curve)
     def post(self):
         """
-        Returns the statistics for specific layers, point and yeardjh
+        Returns the statistics for specific layers, point and year
         :return:
         """
         year = api.payload['year']
@@ -220,6 +220,40 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
 
         #res = LayersHectare.aggregate_for_selection(geometry=geom, year=year, layers=layers)
         res = HeatLoadProfileNuts.aggregate_by_hectare(year=year, month=month, day=day, geometry=geom)
+        output = res
+
+        return output
+
+
+@ns.route('/aggregate')
+@api.response(404, 'No data found')
+class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
+    #@api.marshal_with(load_profile_aggregation_hectares_output)
+    @api.expect(load_profile_aggregation_day_input)
+    def post(self):
+        """
+        Returns the heat load data by nuts
+        :return:
+        """
+
+        # Entrees
+        year = api.payload['year']
+        nuts = api.payload['nuts']
+        
+        if 'month' in api.payload.keys():
+          month = api.payload["month"]
+        else:
+          month = 0
+
+        if 'day' in api.payload.keys():
+          day = api.payload["day"]
+        else:
+          day = 0
+
+        output = {}
+
+        res = HeatLoadProfileNuts.aggregate_for_nuts(nuts=self.transform_nuts_list(nuts), year=year, month=month, day=day)
+
         output = res
 
         return output
