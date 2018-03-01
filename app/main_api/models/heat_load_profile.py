@@ -186,15 +186,14 @@ class HeatLoadProfileNuts(db.Model):
 			by = 'byYear'
 			
 		# Custom Query
-		sql_query = "with nutsSelection as (select gid from geo.nuts " +\
-						"WHERE nuts_id IN ("+nuts+") AND geo.nuts.year = to_date('" + str(year) + "','YYYY')), " +\
-					"loadprofile as (SELECT sum(stat.load_profile.value) as valtot, fk_nuts_gid from stat.load_profile " +\
-						"INNER JOIN nutsSelection on stat.load_profile.fk_nuts_gid = nutsSelection.gid " +\
-						"where stat.load_profile.fk_nuts_gid = nutsSelection.gid " +\
-						"group by fk_nuts_gid), " +\
-					"heatdemand as (SELECT sum as HDtotal, fk_nuts_gid from stat.heat_tot_curr_density_nuts_test " +\
-						"INNER JOIN nutsSelection on stat.heat_tot_curr_density_nuts_test.fk_nuts_gid = nutsSelection.gid " +\
-						"where stat.heat_tot_curr_density_nuts_test.fk_nuts_gid = nutsSelection.gid), " +\
+		sql_query = "WITH nutsSelection as (select nuts_id FROM stat.heat_tot_curr_density_nuts_test WHERE nuts_id IN ("+nuts+")), " +\
+					"loadprofile as (SELECT sum(stat.load_profile.value) as valtot, stat.load_profile.nuts_id from stat.load_profile " +\
+						"INNER JOIN nutsSelection on stat.load_profile.nuts_id = nutsSelection.nuts_id " +\
+						"where stat.load_profile.nuts_id = nutsSelection.nuts_id " +\
+						"group by  nutsSelection.nuts_id, stat.load_profile.nuts_id), " +\
+					"heatdemand as (SELECT sum as HDtotal, stat.heat_tot_curr_density_nuts_test.nuts_id from stat.heat_tot_curr_density_nuts_test " +\
+						"INNER JOIN nutsSelection on stat.heat_tot_curr_density_nuts_test.nuts_id = nutsSelection.nuts_id " +\
+						"where stat.heat_tot_curr_density_nuts_test.nuts_id = nutsSelection.nuts_id), " +\
 					"normalizedData as (SELECT avg(stat.load_profile.value/valtot*HDtotal) AS avg_1, min(stat.load_profile.value/valtot*HDtotal) AS min_1, " +\
 						"max(stat.load_profile.value/valtot*HDtotal) AS max_1, sum(stat.load_profile.value/valtot*HDtotal) as sum_1, " +\
 						"stat.time.month AS statmonth, stat.time.year AS statyear "
@@ -205,10 +204,10 @@ class HeatLoadProfileNuts(db.Model):
 			sql_query += ", stat.time.hour_of_day AS hour_of_day, stat.time.day AS statday "
 
 		sql_query += "FROM stat.load_profile " +\
-						"INNER JOIN nutsSelection on stat.load_profile.fk_nuts_gid = nutsSelection.gid " +\
-						"INNER JOIN loadprofile on stat.load_profile.fk_nuts_gid = loadprofile.fk_nuts_gid " +\
-						"INNER JOIN heatdemand on stat.load_profile.fk_nuts_gid = heatdemand.fk_nuts_gid " +\
-						"INNER JOIN geo.nuts ON geo.nuts.gid = stat.load_profile.fk_nuts_gid " +\
+						"INNER JOIN nutsSelection on stat.load_profile.nuts_id = nutsSelection.nuts_id " +\
+						"INNER JOIN loadprofile on stat.load_profile.nuts_id = loadprofile.nuts_id " +\
+						"INNER JOIN heatdemand on stat.load_profile.nuts_id = heatdemand.nuts_id " +\
+						"INNER JOIN geo.nuts ON geo.nuts.nuts_id = stat.load_profile.nuts_id " +\
 						"INNER JOIN stat.time ON stat.time.id = stat.load_profile.fk_time_id "
 
 		if by == 'byYear':
