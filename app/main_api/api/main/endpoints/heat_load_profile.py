@@ -19,7 +19,7 @@ from geoalchemy2.shape import to_shape
 
 log = logging.getLogger(__name__)
 
-ns = api.namespace('load-profile', description='Operations related to heat load profile')
+ns = api.namespace('heat-load-profile', description='Operations related to heat load profile')
 
 
 class HeatLoadProfileResource(Resource):
@@ -46,90 +46,15 @@ class HeatLoadProfileResource(Resource):
 
         return nutsListQuery
 
-@ns.route('/aggregate/year')
-@api.response(404, 'No data found')
-class HeatLoadProfileAggregationYear(HeatLoadProfileResource):
-    @api.marshal_with(load_profile_aggregation_year)
-    @api.expect(load_profile_aggregation_year_input)
-    def post(self):
-        """
-        Returns the statistics for specific layers, point and year
-        :return:
-        """
-        year = api.payload['year']
-        nuts = api.payload['nuts']
-        try:
-            nuts_level = int(api.payload['nuts_level'])
-        except ValueError:
-            nuts_level = 2
 
-
-        output = {}
-        if nuts_level >= 2:
-            output = HeatLoadProfileNuts.aggregate_for_year(nuts=self.normalize_nuts(nuts), year=2010)
-
-
-        return output
-
-@ns.route('/aggregate/month')
-@api.response(404, 'No data found')
-class HeatLoadProfileAggregationMonth(HeatLoadProfileResource):
-    @api.marshal_with(load_profile_aggregation_month)
-    @api.expect(load_profile_aggregation_month_input)
-    def post(self):
-        """
-        Returns the statistics for specific layers, point and year
-        :return:
-        """
-        year = api.payload['year']
-        month = api.payload['month']
-        nuts = api.payload['nuts']
-        try:
-            nuts_level = int(api.payload['nuts_level'])
-        except ValueError:
-            nuts_level = 2
-
-        output = {}
-        if nuts_level >= 2:
-            output = HeatLoadProfileNuts.aggregate_for_month(nuts=self.normalize_nuts(nuts), year=2010, month=month)
-
-        return output
-
-
-@ns.route('/aggregate/day')
-@api.response(404, 'No data found')
-class HeatLoadProfileAggregationDay(HeatLoadProfileResource):
-    @api.marshal_with(load_profile_aggregation_day)
-    @api.expect(load_profile_aggregation_day_input)
-    def post(self):
-        """
-        Returns the statistics for specific layers, point and year
-        :return:
-        """
-        year = api.payload['year']
-        month = api.payload['month']
-        day = api.payload['day']
-        nuts = api.payload['nuts']
-        try:
-            nuts_level = int(api.payload['nuts_level'])
-        except ValueError:
-            nuts_level = 2
-
-        output = {}
-        if nuts_level >= 2:
-            output = HeatLoadProfileNuts.aggregate_for_day(nuts=self.normalize_nuts(nuts), year=2010, month=month, day=day, nuts_level =nuts_level)
-
-        return output
-
-
-@ns.route('/aggregate/duration_curve')
+@ns.route('/duration-curve/nuts-lau')
 @api.response(404, 'No data found')
 class HeatLoadProfileAggregation(HeatLoadProfileResource):
     @api.marshal_with(load_profile_aggregation_curve_output)
     @api.expect(load_profile_aggregation_curve)
     def post(self):
         """
-        Returns the statistics for specific layers, point and year
+        Returns the statistics for specific layers, area and year
         :return:
         """
         year = api.payload['year']
@@ -143,14 +68,14 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
             "points": output
         }
 
-@ns.route('/aggregate/duration_curve/hectares')
+@ns.route('/duration-curve/hectares')
 @api.response(404, 'No data found')
 class HeatLoadProfileAggregation(HeatLoadProfileResource):
     @api.marshal_with(load_profile_aggregation_curve_output)
     @api.expect(load_profile_aggregation_curve_hectares)
     def post(self):
         """
-        Returns the statistics for specific layers, point and year
+        Returns the statistics for specific layers, area and year
         :return:
         """
         year = api.payload['year']
@@ -177,7 +102,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
             "points": output
         }
 
-@ns.route('/aggregate/hectares')
+@ns.route('/hectares')
 @api.response(404, 'No data found')
 class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
     #@api.marshal_with(load_profile_aggregation_hectares_output)
@@ -225,14 +150,14 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
         return output
 
 
-@ns.route('/aggregate')
+@ns.route('/nuts-lau')
 @api.response(404, 'No data found')
 class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
     #@api.marshal_with(load_profile_aggregation_hectares_output)
     @api.expect(load_profile_aggregation_day_input)
     def post(self):
         """
-        Returns the heat load data by nuts
+        Returns the heat load data by nuts or lau
         :return:
         """
 

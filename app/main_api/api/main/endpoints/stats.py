@@ -47,96 +47,8 @@ layers_ref = {
 	'heat_density_lau2': HeatDensityLau2,
 }
 
-@ns.route('/layers/area/')
-@api.response(404, 'No data found for that specific area.')
-class StatsLayersInArea(Resource):
 
-	@api.marshal_with(stats_layers_output)
-	@api.expect(stats_layers_area_input)
-	def post(self):
-		"""
-		Returns the statistics for specific layers, area and year
-		:return:
-		"""
-		year = api.payload['year']
-		layers = api.payload['layers']
-		points = api.payload['points']
-		poly = shapely_geom.Polygon([[p['lng'], p['lat']] for p in points])
-		geom = "SRID=4326;{}".format(poly.wkt)
-
-		output = []
-
-		# for each layer,
-		# try to match layer name with layer class
-		# run aggregate_for_selection method
-		for layer in layers:
-			try:
-				a = layers_ref[layer]()
-			except KeyError:
-				continue
-
-			output.append({
-				'name': layer,
-				'values': a.aggregate_for_selection(geometry=geom, year=year)
-			})
-
-		# compute heat consumption/person if both layers are selected
-		pop_nuts_name = 'population_density_nuts3'
-		heat_nuts_name = 'heat_density_nuts3'
-		sf = StatsFunctions()
-
-		if pop_nuts_name in layers and heat_nuts_name in layers:
-			sf.computeConsPerPerson(pop_nuts_name, heat_nuts_name, output)
-
-		# compute heat consumption/person if both layers are selected
-		pop1ha_name = 'population_density_ha'
-		hdm_name = 'heat_density_ha'
-
-		if pop1ha_name in layers and hdm_name in layers:
-			sf.computeConsPerPerson(pop1ha_name, hdm_name, output)
-
-		# compute heat consumption/person if both layers are selected
-		pop_lau_name = 'population_density_lau2'
-		heat_lau_name = 'heat_density_lau2'
-
-		if pop_lau_name in layers and heat_lau_name in layers:
-			sf.computeConsPerPerson(pop_lau_name, heat_lau_name, output)
-
-		# return feature collection
-		# priority lau higher level first
-		# then nuts higher level first
-		nuts = None
-		r = re.compile("^.*_nuts[0-3]$")
-		nuts_layers = list(filter(r.match, layers))
-		if nuts_layers != None and hasattr(nuts_layers, '__len__') and len(nuts_layers) > 0:
-			nuts_levels = []
-			for l in nuts_layers:
-				try:
-					nuts_levels.append(int(re.search("^.*nuts([0-3])$", l).group(1)))
-				except (AttributeError, ValueError):
-					pass
-
-			nuts = NutsRG01M.nuts_in_geometry(geometry=geom, year=year, nuts_level=max(nuts_levels))
-
-		r = re.compile("^.*_lau[0-3]$")
-		lau_layers = list(filter(r.match, layers))
-		if lau_layers != None and hasattr(lau_layers, '__len__') and len(lau_layers) > 0:
-			levels = []
-			for l in lau_layers:
-				try:
-					levels.append(int(re.search("^.*lau([0-3])$", l).group(1)))
-				except (AttributeError, ValueError):
-					pass
-
-			nuts = Lau.nuts_in_geometry(geometry=geom, year=2013, level=max(levels))
-
-		return {
-			"layers": output,
-			"feature_collection": nuts
-		}
-
-
-@ns.route('/layers/nuts/')
+@ns.route('/layers/nuts-lau')
 @api.response(404, 'No data found for that specific list of NUTS.')
 class StatsLayersNutsInArea(Resource):
 	@api.marshal_with(stats_layers_nuts_output)
@@ -191,7 +103,7 @@ class StatsLayersNutsInArea(Resource):
 			"layers": output,
 		}
 
-@ns.route('/layers/hectares/multi')
+@ns.route('/layers/hectares')
 @api.response(404, 'No data found for that specific area.')
 class StatsLayersHectareMulti(Resource):
 	@api.marshal_with(stats_layers_hectares_output)
