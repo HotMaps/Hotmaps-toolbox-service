@@ -36,26 +36,30 @@ def configure_app(flask_app):
 def initialize_app(flask_app):
     configure_app(flask_app)
 
+
+
+    #with app.app_context():
+        #db.create_all()
+
+
+def create_app(config_name):
+    """
+    Create app instance
+    """
+    app = Flask(__name__)
+
+    cfg = os.path.join(os.getcwd(), 'config', config_name + '.py')
+    app.config.from_pyfile(cfg)
+
+    # initialize extensions
     blueprint = Blueprint('api', __name__, url_prefix='/api')
     api.init_app(blueprint)
     api.add_namespace(main_population_namespace)
     api.add_namespace(main_heat_density_map_namespace)
     api.add_namespace(main_stats_namespace)
     api.add_namespace(main_heat_load_profile_namespace)
-    flask_app.register_blueprint(blueprint)
-
-    db.init_app(flask_app)
-    #with app.app_context():
-        #db.create_all()
-
-
-def create_app():
-    """
-    Create app instance
-    """
-    app = Flask(__name__)
-
-    initialize_app(app)
+    app.register_blueprint(blueprint)
+    db.init_app(app)
 
     CORS(app, resources={
         r"/api/*": {"origins": {
@@ -63,7 +67,9 @@ def create_app():
             "http://hotmaps.hevs.ch:8080",
             "http://lesly-hotmaps:4200",
             "http://albain-hotmaps:4200",
-            "http://dany-hotmaps:4200"
+            "http://dany-hotmaps:4200",
+            "http://hotmapsdev.hevs.ch",
+
         }
     }})
 
