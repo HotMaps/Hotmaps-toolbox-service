@@ -44,6 +44,8 @@ RUN pip install -U "pip==9.0.1"
 RUN mkdir -p /data
 COPY gunicorn-config.py /data/gunicorn-config.py
 RUN pip install gunicorn
+RUN mkdir -p /data/config
+COPY /config /data/config
 
 # Install required python modules
 COPY requirements.txt /data/requirements.txt
