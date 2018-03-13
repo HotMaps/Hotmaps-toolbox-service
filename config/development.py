@@ -1,6 +1,5 @@
 # Flask settings
 DEBUG = True
-SECRET_KEY = 'top-secret!'
 FLASK_SECRET_KEY = 'paPTvnNME5NBHHuIOlFqG6zS77vHadbo'
 SQLALCHEMY_DATABASE_URI = 'postgresql://hotmaps:Dractwatha9@hotmaps.hevs.ch:32768/toolboxdb'
 DEBUG = True
