@@ -12,8 +12,8 @@ class LayersHectare():
 
 	@staticmethod
 	def aggregate_for_selection(geometry, year, layers):
-		popDeHa = 'population_density_ha'
-		heatDeHa = 'heat_density_ha'
+		popDeHa = 'pop_tot_curr_density_ha'
+		heatDeHa = 'heat_tot_curr_density_ha'
 		wwtpHa = 'wwtp_ha'
 
 		result = []

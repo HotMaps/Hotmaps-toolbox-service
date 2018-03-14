@@ -226,8 +226,8 @@ class StatsLayersHectareMulti(Resource):
 		output = res
 
 		# compute heat consumption/person if both layers are selected
-		pop1ha_name = 'population_density_ha'
-		hdm_name = 'heat_density_ha'
+		pop1ha_name = 'pop_tot_curr_density_ha'
+		hdm_name = 'heat_tot_curr_density_ha'
 		sf = StatsFunctions()
 
 		if pop1ha_name in layers and hdm_name in layers:
