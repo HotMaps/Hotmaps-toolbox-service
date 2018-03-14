@@ -16,6 +16,7 @@ import datetime
 import shapely.geometry as shapely_geom
 from geojson import FeatureCollection, Feature
 from geoalchemy2.shape import to_shape
+from main_api import settings
 
 
 
@@ -24,27 +25,27 @@ log = logging.getLogger(__name__)
 ns = api.namespace('stats', description='Operations related to statistisdscs')
 
 layers_ref = {
-	'wwtp': Wwtp,
-	'wwtp_nuts3': WwtpNuts3,
-	'wwtp_nuts2': WwtpNuts2,
-	'wwtp_nuts1': WwtpNuts1,
-	'wwtp_nuts0': WwtpNuts0,
-	'wwtp_ha': Wwtp,
-	'wwtp_lau2': WwtpLau2,
-	'population': PopulationDensityNuts3,
-	'population_density_nuts3': PopulationDensityNuts3,
-	'population_density_nuts2': PopulationDensityNuts2,
-	'population_density_nuts1': PopulationDensityNuts1,
-	'population_density_nuts0': PopulationDensityNuts0,
-	'population_density_ha': PopulationDensityHa,
-	'population_density_lau2': PopulationDensityLau2,
-	'heat_density_map': HeatDensityMap,
-	'heat_density_ha': HeatDensityHa,
-	'heat_density_nuts3': HeatDensityNuts3,
-	'heat_density_nuts2': HeatDensityNuts2,
-	'heat_density_nuts1': HeatDensityNuts1,
-	'heat_density_nuts0': HeatDensityNuts0,
-	'heat_density_lau2': HeatDensityLau2,
+	settings.WWTP: Wwtp,
+	settings.WWTP + '_nuts3': WwtpNuts3,
+	settings.WWTP + '_nuts2': WwtpNuts2,
+	settings.WWTP + '_nuts1': WwtpNuts1,
+	settings.WWTP + '_nuts0': WwtpNuts0,
+	settings.WWTP + '_ha': Wwtp,
+	settings.WWTP + '_lau2': WwtpLau2,
+	settings.POPULATION_TOT: PopulationDensityNuts3,
+	settings.POPULATION_TOT + '_nuts3': PopulationDensityNuts3,
+	settings.POPULATION_TOT + '_nuts2': PopulationDensityNuts2,
+	settings.POPULATION_TOT + '_nuts1': PopulationDensityNuts1,
+	settings.POPULATION_TOT + '_nuts0': PopulationDensityNuts0,
+	settings.POPULATION_TOT + '_ha': PopulationDensityHa,
+	settings.POPULATION_TOT + '_lau2': PopulationDensityLau2,
+	settings.HEAT_DENSITY_TOT: HeatDensityMap,
+	settings.HEAT_DENSITY_TOT + '_ha': HeatDensityHa,
+	settings.HEAT_DENSITY_TOT + '_nuts3': HeatDensityNuts3,
+	settings.HEAT_DENSITY_TOT + '_nuts2': HeatDensityNuts2,
+	settings.HEAT_DENSITY_TOT + '_nuts1': HeatDensityNuts1,
+	settings.HEAT_DENSITY_TOT + '_nuts0': HeatDensityNuts0,
+	settings.HEAT_DENSITY_TOT + '_lau2': HeatDensityLau2,
 }
 
 
@@ -84,16 +85,18 @@ class StatsLayersNutsInArea(Resource):
 			})
 
 		# compute heat consumption/person if both layers are selected
-		pop_nuts_name = 'population_density_nuts3'
-		heat_nuts_name = 'heat_density_nuts3'
+
+
+		pop_nuts_name = settings.POPULATION_TOT + '_nuts3'
+		heat_nuts_name = settings.HEAT_DENSITY_TOT + '_nuts3'
 		sf = StatsFunctions()
 
 		if pop_nuts_name in layers and heat_nuts_name in layers:
 			sf.computeConsPerPerson(pop_nuts_name, heat_nuts_name, output)
 
 		# compute heat consumption/person if both layers are selected
-		pop_lau_name = 'population_density_lau2'
-		heat_lau_name = 'heat_density_lau2'
+		pop_lau_name = settings.POPULATION_TOT + '_lau2'
+		heat_lau_name = settings.HEAT_DENSITY_TOT + '_lau2'
 
 		if pop_lau_name in layers and heat_lau_name in layers:
 			sf.computeConsPerPerson(pop_lau_name, heat_lau_name, output)
@@ -138,8 +141,8 @@ class StatsLayersHectareMulti(Resource):
 		output = res
 
 		# compute heat consumption/person if both layers are selected
-		pop1ha_name = 'pop_tot_curr_density_ha'
-		hdm_name = 'heat_tot_curr_density_ha'
+		pop1ha_name = settings.POPULATION_TOT + '_ha'
+		hdm_name = settings.HEAT_DENSITY_TOT + '_ha'
 		sf = StatsFunctions()
 
 		if pop1ha_name in layers and hdm_name in layers:
