@@ -5,7 +5,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from flask import Flask, Blueprint
 from flask_cors import CORS
 from main_api import settings, secrets
-from main_api.api.main.endpoints.population import ns as main_population_namespace
 from main_api.api.main.endpoints.heat_density_map import ns as main_heat_density_map_namespace
 from main_api.api.main.endpoints.stats import ns as main_stats_namespace
 from main_api.api.main.endpoints.heat_load_profile import ns as main_heat_load_profile_namespace
@@ -41,7 +40,6 @@ def create_app(config_name):
     # initialize extensions
     blueprint = Blueprint('api', __name__, url_prefix='/api')
     api.init_app(blueprint)
-    api.add_namespace(main_population_namespace)
     api.add_namespace(main_heat_density_map_namespace)
     api.add_namespace(main_stats_namespace)
     api.add_namespace(main_heat_load_profile_namespace)
