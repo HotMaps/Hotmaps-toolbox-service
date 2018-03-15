@@ -10,6 +10,6 @@ docker rm -fv toolbox-service
 docker run \
         --name=toolbox-service \
         --link postgis-database:postgis \
-        -p 9005:80 \
+        -p 9006:80 \
         -d \
         hotmaps/toolbox-service
