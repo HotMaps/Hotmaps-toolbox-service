@@ -1,8 +1,8 @@
 # Flask settings
-
+from main_api import secrets
 DEBUG = True
 FLASK_SECRET_KEY = 'paPTvnNME5NBHHuIOlFqG6zS77vHadbo'
-SQLALCHEMY_DATABASE_URI = 'postgresql://hotmaps:Dractwatha9@hotmapsdev.hevs.ch:32768/toolboxdb'
+SQLALCHEMY_DATABASE_URI = secrets.SQLALCHEMY_DATABASE_URI_DEVELOPMENT
 SECRET_KEY = 'paPTvnNME5NBHHuIOlFqG6zS77vHadbo'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 SWAGGER_UI_DOC_EXPANSION = 'list'

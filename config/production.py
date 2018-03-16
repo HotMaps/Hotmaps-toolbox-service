@@ -1,12 +1,11 @@
 DEBUG = False
 
-
+from main_api import secrets
 SECRET_KEY = 'top-secret!'
 # Flask settings
 FLASK_SECRET_KEY = 'paPTvnNME5NBHHuIOlFqG6zS77vHadbo'
 
-SQLALCHEMY_DATABASE_URI = 'postgresql://hotmaps:Dractwatha9@hotmaps.hevs.ch:32768/toolboxdb'
-DEBUG = True
+SQLALCHEMY_DATABASE_URI = secrets.SQLALCHEMY_DATABASE_URI_PRODUCTION
 #flask_app.config['SERVER_NAME'] = settings.FLASK_SERVER_NAME
 SECRET_KEY = 'paPTvnNME5NBHHuIOlFqG6zS77vHadbo'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
