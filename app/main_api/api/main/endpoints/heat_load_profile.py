@@ -9,6 +9,7 @@ from main_api.api.main.serializers import load_profile_aggregation_year, load_pr
 from main_api.api.restplus import api
 from main_api.models.nuts import Nuts
 from main_api.models.heat_load_profile import HeatLoadProfileNuts
+from main_api.models.heatloadQueries import HeatLoadProfile
 from sqlalchemy import func, BigInteger, TypeDecorator
 from main_api.models import db
 import datetime
@@ -62,7 +63,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
 
         output = {}
 
-        output = HeatLoadProfileNuts.duration_curve(year=year, nuts=self.transform_nuts_list(nuts))
+        output = HeatLoadProfile.duration_curve_nuts_lau(year=year, nuts=self.transform_nuts_list(nuts))
 
         return {
             "points": output
@@ -96,7 +97,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         #geom = "SRID=4326;{}".format(multipolygon.wkt)
         geom = multipolygon.wkt
 
-        output = HeatLoadProfileNuts.duration_curve_hectares(year=year, geometry=geom)
+        output = HeatLoadProfile.duration_curve_hectares(year=year, geometry=geom)
 
         return {
             "points": output
@@ -143,8 +144,7 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
         #geom = "SRID=4326;{}".format(multipolygon.wkt)
         geom = multipolygon.wkt
 
-        #res = LayersHectare.aggregate_for_selection(geometry=geom, year=year, layers=layers)
-        res = HeatLoadProfileNuts.aggregate_by_hectare(year=year, month=month, day=day, geometry=geom)
+        res = HeatLoadProfile.heatloadprofile_hectares(year=year, month=month, day=day, geometry=geom)
         output = res
 
         return output
@@ -177,7 +177,7 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
 
         output = {}
 
-        res = HeatLoadProfileNuts.aggregate_for_nuts(nuts=self.transform_nuts_list(nuts), year=year, month=month, day=day)
+        res = HeatLoadProfile.heatloadprofile_nuts_lau(nuts=self.transform_nuts_list(nuts), year=year, month=month, day=day)
 
         output = res
 
