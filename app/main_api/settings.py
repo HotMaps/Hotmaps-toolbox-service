@@ -43,3 +43,27 @@ CORS_HEADERS = (
 
 # SQLAlchemy settings
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+# Duration curve constants used in heat.load.profile.py
+HOURS_PER_YEAR = 8760
+LIMIT_VALUES_PER_NUTS = 4000
+POINTS_FIRST_GROUP_PERCENTAGE = 0.0228
+POINTS_SECOND_GROUP_PERCENTAGE = 0.1141
+POINTS_THIRD_GROUP_PERCENTAGE = 0.7207
+POINTS_FOURTH_GROUP_PERCENTAGE = 0.1424
+POINTS_FIRST_GROUP_STEP = 12
+POINTS_SECOND_GROUP_STEP = 40
+POINTS_THIRD_GROUP_STEP = 134
+POINTS_FOURTH_GROUP_STEP = 39
+
+# heat load and duration curve data options
+NUMBER_DECIMAL_DATA = 2
+
+#name of repository
+POPULATION_TOT = 'pop_tot_curr_density'
+HEAT_DENSITY_TOT = 'heat_tot_curr_density'
+HEAT_DENSITY__NON_RES = 'heat_nonres_curr_density'
+HEAT_DENSITY_RES = 'heat_res_curr_density'
+WWTP = 'wwtp'
+
+

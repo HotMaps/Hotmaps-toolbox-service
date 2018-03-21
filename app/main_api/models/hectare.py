@@ -1,5 +1,6 @@
 import datetime
 from main_api.models import db
+from main_api import settings
 from sqlalchemy import func
 
 from main_api.models.wwtp import Wwtp
@@ -12,9 +13,9 @@ class LayersHectare():
 
 	@staticmethod
 	def aggregate_for_selection(geometry, year, layers):
-		popDeHa = 'population_density_ha'
-		heatDeHa = 'heat_density_ha'
-		wwtpHa = 'wwtp_ha'
+		popDeHa = settings.POPULATION_TOT + '_ha'
+		heatDeHa = settings.HEAT_DENSITY_TOT + '_ha'
+		wwtpHa = settings.WWTP + '_ha'
 
 		result = []
 
@@ -147,3 +148,5 @@ class LayersHectare():
 						})
 		
 		return result
+
+		

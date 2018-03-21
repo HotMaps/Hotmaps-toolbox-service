@@ -130,10 +130,9 @@ class HeatDensityHa(db.Model):
             "FROM geo.heat_tot_curr_density " + \
             "WHERE " +  "st_intersects(heat_tot_curr_density.rast,st_transform(st_geomfromtext('POINT("+ point +")'::text, 4326),3035)) ORDER BY distance ASC limit 1;"
         query = db.session.execute(sql_query)
-        #print >> sys.stderr, query
         result = json.dumps([dict(r) for r in query])
         #result = json.loads(result)
-        #print >> sys.stderr, result
+
         return result
 
     @staticmethod
@@ -154,10 +153,9 @@ class HeatDensityHa(db.Model):
 
 
 class HeatDensityLau(db.Model):
-    __tablename__ = 'heat_density_lau'
+    __tablename__ = 'heat_tot_curr_density_lau_test'
     __table_args__ = (
-        db.ForeignKeyConstraint(['fk_lau_gid'], ['geo.lau.gid']),
-        db.ForeignKeyConstraint(['fk_time_id'], ['stat.time.id']),
+        db.ForeignKeyConstraint(['fk_lau_gid'], ['public.lau.gid']),
         {"schema": 'stat'}
     )
 
@@ -175,11 +173,11 @@ class HeatDensityLau(db.Model):
     variance = db.Column(db.Numeric(precision=30, scale=10))
     range = db.Column(db.Numeric(precision=30, scale=10))
     fk_lau_gid = db.Column(db.BigInteger)
-    fk_time_id = db.Column(db.BigInteger)
+    #fk_time_id = db.Column(db.BigInteger)
 
 
     lau = db.relationship("Lau")
-    time = db.relationship("Time")
+    #time = db.relationship("Time")
 
     def __repr__(self):
         return "<HeatDensityLau(comm_id='%s', year='%s', sum='%d', lau='%s')>" % \
@@ -193,14 +191,14 @@ class HeatDensityLau(db.Model):
                 func.sum(HeatDensityLau.count)
             ). \
             join(Lau, HeatDensityLau.lau). \
-            join(Time, HeatDensityLau.time). \
-            filter(Time.year == year). \
-            filter(Time.granularity == 'year'). \
-            filter(Lau.stat_levl_ == level). \
             filter(func.ST_Within(Lau.geom,
                                   func.ST_Transform(func.ST_GeomFromEWKT(geometry), HeatDensityLau.CRS))).first()
 
         if query == None or len(query) < 3:
+            return []
+        if query[1] == None:
+            return []
+        if query[2] == None:
             return []
 
         return [{
@@ -225,14 +223,15 @@ class HeatDensityLau(db.Model):
                 func.sum(HeatDensityLau.count)
             ). \
             join(Lau, HeatDensityLau.lau). \
-            join(Time, HeatDensityLau.time). \
-            filter(Time.year == year). \
-            filter(Time.granularity == 'year'). \
-            filter(Lau.stat_levl_ == level). \
             filter(Lau.comm_id.in_(nuts)).first()
 
         if query == None or len(query) < 3:
                 return []
+        if query[1] == None:
+            return []
+        if query[2] == None:
+            return []
+
         average_ha =  Decimal(query[1])/Decimal(query[2])
         return [{
             'name': 'heat_consumption',
@@ -251,7 +250,21 @@ class HeatDensityLau(db.Model):
 
 
 class HeatDensityNuts(db.Model):
-    __tablename__ = 'heat_density_nuts'
+    # the former table name was __tablename__ = 'heat_density_nuts'
+
+    """@staticmethod
+    def aggregate_for_selection(geometry, year, nuts_level):
+        query = db.session.query(
+                func.sum(HeatDensityNuts.sum),
+                func.avg(HeatDensityNuts.sum),
+                func.count(HeatDensityNuts.sum)
+            ). \
+            join(NutsRG01M, HeatDensityNuts.nuts). \
+            filter(HeatDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
+            filter(NutsRG01M.stat_levl_ == nuts_level). \
+            filter(func.ST_Within(NutsRG01M.geom,
+                                  func.ST_Transform(func.ST_GeomFromEWKT(geometry), HeatDensityNuts.CRS))).first()"""
+    __tablename__ = 'heat_tot_curr_density_nuts_test'
     __table_args__ = (
         db.ForeignKeyConstraint(['nuts_id'], ['geo.nuts_rg_01m.nuts_id']),
         {"schema": 'stat'}
@@ -288,13 +301,16 @@ class HeatDensityNuts(db.Model):
                 func.count(HeatDensityNuts.sum)
             ). \
             join(NutsRG01M, HeatDensityNuts.nuts). \
-            filter(HeatDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
             filter(NutsRG01M.stat_levl_ == nuts_level). \
             filter(func.ST_Within(NutsRG01M.geom,
                                   func.ST_Transform(func.ST_GeomFromEWKT(geometry), HeatDensityNuts.CRS))).first()
 
 
         if query == None or len(query) < 3:
+            return []
+        if query[1] == None:
+            return []
+        if query[2] == None:
             return []
 
         return [{
@@ -313,7 +329,7 @@ class HeatDensityNuts(db.Model):
 
     @staticmethod
     def aggregate_for_nuts_selection(nuts, year, nuts_level):
-        query = db.session.query(
+        """query = db.session.query(
                 func.sum(HeatDensityNuts.sum),
                 func.sum(HeatDensityNuts.sum),
                 func.sum(HeatDensityNuts.count)
@@ -321,10 +337,25 @@ class HeatDensityNuts(db.Model):
             join(NutsRG01M, HeatDensityNuts.nuts). \
             filter(HeatDensityNuts.date == datetime.datetime.strptime(str(year), '%Y')). \
             filter(NutsRG01M.stat_levl_ == nuts_level). \
+            filter(NutsRG01M.nuts_id.in_(nuts)).first()"""
+        query = db.session.query(
+                func.sum(HeatDensityNuts.sum),
+                func.sum(HeatDensityNuts.sum),
+                func.sum(HeatDensityNuts.count)
+            ). \
+            join(NutsRG01M, HeatDensityNuts.nuts). \
+            filter(NutsRG01M.stat_levl_ == nuts_level). \
             filter(NutsRG01M.nuts_id.in_(nuts)).first()
 
         if query == None or len(query) < 3:
             return []
+        if query[1] == None:
+            return []
+        if query[2] == None:
+            return []
+
+
+
         average_ha =  Decimal(query[1])/Decimal(query[2])
 
         return [{

@@ -54,7 +54,6 @@ class Wwtp(db.Model):
             try:
                 # create subquery to get lau geometries inside
                 nuts_geom_query = db.session.query(func.ST_Union(Lau.geom).label('nuts_geom')). \
-                    filter(Lau.stat_levl_ == level). \
                     filter(Lau.comm_id.in_(nuts)). \
                     subquery('nuts_geom_query')
             except KeyError:
