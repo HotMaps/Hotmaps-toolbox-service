@@ -1,8 +1,23 @@
 from main_api import settings
 
+# LAYERS
 popDeHa = settings.POPULATION_TOT + '_ha'
 heatDeHa = settings.HEAT_DENSITY_TOT + '_ha'
 wwtpHa = settings.WWTP + '_ha'
+grassHa = settings.GRASS_FLOOR_AREA_TOT + '_ha'
+grassResHa = settings.GRASS_FLOOR_AREA_RES + '_ha'
+grassNonResHa = settings.GRASS_FLOOR_AREA_NON_RES + '_ha'
+bVolTotHa = settings.BUILDING_VOLUMES_TOT + '_ha'
+bVolResHa = settings.BUILDING_VOLUMES_RES + '_ha'
+bVolNonResHa = settings.BUILDING_VOLUMES_NON_RES + '_ha'
+heatResHa = settings.HEAT_DENSITY_RES + '_ha'
+heatNonResHa = settings.HEAT_DENSITY_NON_RES + '_ha'
+indSitesHa = settings.INDUSTRIAL_SITES + '_ha'
+biomassPotHa = settings.BIOMASS_POTENTIAL + '_ha'
+mswHa = settings.MUNICIPAL_SOLID_WASTE + '_ha'
+windPotHa = settings.WIND_POTENTIAL + '_ha'
+solarPotHa = settings.SOLAR_POTENTIAL + '_ha'
+geothermalPotHa = settings.GEOTHERMAL_POTENTIAL + '_ha'
 
 CRS = 3035
 
@@ -25,61 +40,120 @@ layersData = {
 				0:'power', 1:'capacity'},
 			'resultsUnit':{
 				0:'kW', 1:'Person equivalent'}
-			}
+			},
+	grassHa:{'tablename':'gfa_tot_curr_density',
+			'resultsName':{
+				0:'value', 1:'density', 2:'count_cell'},
+			'resultsUnit':{ 
+				0:'value', 1:'value/ha', 2:'cell'}
+			},
+	grassResHa:{'tablename':'gfa_res_curr_density',
+			'resultsName':{
+				0:'value5', 1:'density5', 2:'count_cell5'},
+			'resultsUnit':{ 
+				0:'value', 1:'value/ha', 2:'cell'}
+			},
+	grassNonResHa:{'tablename':'gfa_nonres_curr_density',
+			'resultsName':{
+				0:'value6', 1:'density6', 2:'count_cell6'},
+			'resultsUnit':{ 
+				0:'value', 1:'value/ha', 2:'cell'}
+			},
+	bVolTotHa:{'tablename':'vol_tot_curr_density',
+			'resultsName':{
+				0:'value2', 1:'density2', 2:'count_cell2'},
+			'resultsUnit':{ 
+				0:'value', 1:'value/ha', 2:'cell'}
+			},
+	bVolResHa:{'tablename':'vol_res_curr_density',
+			'resultsName':{
+				0:'value3', 1:'density3', 2:'count_cell3'},
+			'resultsUnit':{ 
+				0:'value', 1:'value/ha', 2:'cell'}
+			},
+	bVolNonResHa:{'tablename':'vol_nonres_curr_density',
+			'resultsName':{
+				0:'value4', 1:'density4', 2:'count_cell4'},
+			'resultsUnit':{ 
+				0:'value', 1:'value/ha', 2:'cell'}
+			},
+	heatResHa:{'tablename':'heat_res_curr_density',
+			'resultsName':{
+				0:'value7', 1:'density7', 2:'count_cell7'},
+			'resultsUnit':{ 
+				0:'value', 1:'value/ha', 2:'cell'}
+			},
+	heatNonResHa:{'tablename':'heat_nonres_curr_density',
+			'resultsName':{
+				0:'value8', 1:'density8', 2:'count_cell8'},
+			'resultsUnit':{ 
+				0:'value', 1:'value/ha', 2:'cell'}
+			},
+	geothermalPotHa:{'tablename':'potential_shallowgeothermal',
+			'resultsName':{
+				0:'value9', 1:'density9', 2:'count_cell9'},
+			'resultsUnit':{ 
+				0:'value', 1:'value/ha', 2:'cell'}
+			},
 }
 
 # ALL QUERIES DATA FOR THE STATS BY LAYERS 
 def createQueryDataStatsHectares(geometry, year):
-	withPop = ''
-	withHeat = ''
-	withWwtp = ''
-
-	# 'with' parts
-	withPop = 'stat_pop AS ( SELECT (' + \
-		'	((ST_SummaryStatsAgg(' + \
-		'		ST_Clip('+ layersData[popDeHa]['tablename'] + '.rast, 1, ' + \
-		'			st_transform(st_geomfromtext(\'' + \
-						geometry + '\'::text,4326),' + str(CRS) + '),false),true,0))).*) as stats ' + \
-		'FROM' + \
-		'	geo.'+ layersData[popDeHa]['tablename'] + \
-		' WHERE' + \
-		'	ST_Intersects('+ layersData[popDeHa]['tablename'] + '.rast,' + \
-		'		st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + ')) ' + \
-		'AND date = to_date(\''+ str(year) +'\',\'YYYY\')) '
-
-	withHeat = ' stat_heat AS ( SELECT (' + \
-		'		((ST_SummaryStatsAgg(ST_Clip('+ layersData[heatDeHa]['tablename'] + '.rast, 1, ' + \
-		'			st_transform(st_geomfromtext(\''+ \
-						geometry +'\'::text,4326),' + str(CRS) + '),false),true,0))).*) as stats ' + \
-		'FROM' + \
-		'	geo.'+ layersData[heatDeHa]['tablename'] + \
-		' WHERE' + \
-		'	ST_Intersects('+ layersData[heatDeHa]['tablename'] + '.rast,' + \
-		'		st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + ')) ' + \
-		'AND date = to_date(\''+ str(year) +'\',\'YYYY\')) '
-
-	withWwtp = ' stat_wwtp AS (SELECT ' + \
-		'		count(*) as nbWwtp, sum(capacity) as capacityPerson, sum(power) as power ' + \
-		'FROM' + \
-		'	geo.'+ layersData[wwtpHa]['tablename'] + ' tbl_wwtp' + \
-		' WHERE' + \
-		'	ST_Within(tbl_wwtp.geom,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + ')) ' + \
-		'AND date = to_date(\''+ str(year) +'\',\'YYYY\')) '
-
-	# 'select' parts
-	selectPop = 'stat_pop.sum as population, (stat_pop.sum/stat_pop.count) as population_density, stat_pop.count as count_cell_pop '
-	selectHeat = 'stat_heat.sum as heat_consumption, (stat_heat.sum/stat_heat.count) as heat_density, stat_heat.count as count_cell_heat '
-	selectWwtp = 'stat_wwtp.capacityPerson as capacity, stat_wwtp.power as power '
-
 	# 'from' parts
 	fromPop = 'stat_pop'
 	fromHeat = 'stat_heat'
 	fromWwtp = 'stat_wwtp'
+	fromGrass = 'stat_grass'
+	fromGrassRes = 'stat_grassRes'
+	fromGrassNonRes = 'stat_grassNonRes'
+	frombVolTot = 'stat_bVolTot'
+	frombVolRes = 'stat_bVolRes'
+	frombVolNonRes = 'stat_bVolNonRes'
+	fromHeatRes = 'stat_heatRes'
+	fromHeatNonRes = 'stat_heatNonRes'
+	fromGeothermalPot = 'stat_geothermalPot'
+
+	# 'with' parts
+	withPop = createWithPartEachLayer(geometry=geometry, year=year, layer=popDeHa, fromPart=fromPop)
+	withHeat = createWithPartEachLayer(geometry=geometry, year=year, layer=heatDeHa, fromPart=fromHeat)
+	withWwtp = createWithPartEachLayer(geometry=geometry, year=year, layer=wwtpHa, fromPart=fromWwtp)
+	withGrass = createWithPartEachLayer(geometry=geometry, year=year, layer=grassHa, fromPart=fromGrass)
+	withGrassRes = createWithPartEachLayer(geometry=geometry, year=year, layer=grassResHa, fromPart=fromGrassRes)
+	withGrassNonRes = createWithPartEachLayer(geometry=geometry, year=year, layer=grassNonResHa, fromPart=fromGrassNonRes)
+	withbVolTot = createWithPartEachLayer(geometry=geometry, year=year, layer=bVolTotHa, fromPart=frombVolTot)
+	withbVolRes = createWithPartEachLayer(geometry=geometry, year=year, layer=bVolResHa, fromPart=frombVolRes)
+	withbVolNonRes = createWithPartEachLayer(geometry=geometry, year=year, layer=bVolNonResHa, fromPart=frombVolNonRes)
+	withHeatRes = createWithPartEachLayer(geometry=geometry, year=year, layer=heatResHa, fromPart=fromHeatRes)
+	withHeatNonRes = createWithPartEachLayer(geometry=geometry, year=year, layer=heatNonResHa, fromPart=fromHeatNonRes)
+	withGeothermalPot = createWithPartEachLayer(geometry=geometry, year=year, layer=geothermalPotHa, fromPart=fromGeothermalPot)
+	
+	# 'select' parts
+	selectPop = 'stat_pop.sum as population, (stat_pop.sum/stat_pop.count) as population_density, stat_pop.count as count_cell_pop '
+	selectHeat = 'stat_heat.sum as heat_consumption, (stat_heat.sum/stat_heat.count) as heat_density, stat_heat.count as count_cell_heat '
+	selectWwtp = 'stat_wwtp.capacityPerson as capacity, stat_wwtp.power as power '
+	selectGrass = 'stat_grass.sum as value, (stat_grass.sum/stat_grass.count) as density, stat_grass.count as count_cell '
+	selectGrassRes = 'stat_grassRes.sum as value5, (stat_grassRes.sum/stat_grassRes.count) as density5, stat_grassRes.count as count_cell5 '
+	selectGrassNonRes = 'stat_grassNonRes.sum as value6, (stat_grassNonRes.sum/stat_grassNonRes.count) as density6, stat_grassNonRes.count as count_cell6 '
+	selectbVolTot = 'stat_bVolTot.sum as value2, (stat_bVolTot.sum/stat_bVolTot.count) as density2, stat_bVolTot.count as count_cell2 '
+	selectbVolRes = 'stat_bVolRes.sum as value3, (stat_bVolRes.sum/stat_bVolRes.count) as density3, stat_bVolRes.count as count_cell3 '
+	selectbVolNonRes = 'stat_bVolNonRes.sum as value4, (stat_bVolNonRes.sum/stat_bVolNonRes.count) as density4, stat_bVolNonRes.count as count_cell4 '
+	selectHeatRes = 'stat_heatRes.sum as value7, (stat_heatRes.sum/stat_heatRes.count) as density7, stat_heatRes.count as count_cell7 '
+	selectHeatNonRes = 'stat_heatNonRes.sum as value8, (stat_heatNonRes.sum/stat_heatNonRes.count) as density8, stat_heatNonRes.count as count_cell8 '
+	selectGeothermalPot = 'stat_geothermalPot.sum as value9, (stat_geothermalPot.sum/stat_geothermalPot.count) as density9, stat_geothermalPot.count as count_cell9 '
 
 	# Dictionary with query data
 	layersQueryData = {heatDeHa:{'with':withHeat, 'select':selectHeat, 'from':fromHeat},
 						popDeHa:{'with':withPop, 'select':selectPop, 'from':fromPop},
-						wwtpHa:{'with':withWwtp, 'select':selectWwtp, 'from':fromWwtp}}
+						wwtpHa:{'with':withWwtp, 'select':selectWwtp, 'from':fromWwtp},
+						grassHa:{'with':withGrass, 'select':selectGrass, 'from':fromGrass},
+						grassResHa:{'with':withGrassRes, 'select':selectGrassRes, 'from':fromGrassRes},
+						grassNonResHa:{'with':withGrassNonRes, 'select':selectGrassNonRes, 'from':fromGrassNonRes},
+						bVolTotHa:{'with':withbVolTot, 'select':selectbVolTot, 'from':frombVolTot},
+						bVolResHa:{'with':withbVolRes, 'select':selectbVolRes, 'from':frombVolRes},
+						bVolNonResHa:{'with':withbVolNonRes, 'select':selectbVolNonRes, 'from':frombVolNonRes},
+						heatResHa:{'with':withHeatRes, 'select':selectHeatRes, 'from':fromHeatRes},
+						heatNonResHa:{'with':withHeatNonRes, 'select':selectHeatNonRes, 'from':fromHeatNonRes},
+						geothermalPotHa:{'with':withGeothermalPot, 'select':selectGeothermalPot, 'from':fromGeothermalPot}}
 
 	return layersQueryData
 
@@ -318,3 +392,29 @@ def computeConsPerPerson(l1, l2, output):
 		hdm.get('values').append(v)
 
 	return hdm
+
+def createWithPartEachLayer(geometry, year, layer, fromPart):
+	if layer == wwtpHa:
+		w = ''+fromPart+' AS (SELECT ' + \
+		'		count(*) as nbWwtp, sum(capacity) as capacityPerson, sum(power) as power ' + \
+		'FROM' + \
+		'	geo.'+ layersData[layer]['tablename'] + ' tbl_wwtp' + \
+		' WHERE' + \
+		'	ST_Within(tbl_wwtp.geom,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + ')) ' + \
+		'AND date = to_date(\''+ str(year) +'\',\'YYYY\')) '
+	else:
+		w = ''+fromPart+' AS ( SELECT (' + \
+		'	((ST_SummaryStatsAgg(ST_Clip('+ layersData[layer]['tablename'] + '.rast, 1, ' + \
+		'			st_transform(st_geomfromtext(\'' + \
+						geometry + '\'::text,4326),' + str(CRS) + '),false),true,0))).*) as stats ' + \
+		'FROM' + \
+		'	geo.'+ layersData[layer]['tablename'] + \
+		' WHERE' + \
+		'	ST_Intersects('+ layersData[layer]['tablename'] + '.rast,' + \
+		'		st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + ')) '
+		if layer == popDeHa or layer == heatDeHa:
+			w += 'AND date = to_date(\''+ str(year) +'\',\'YYYY\')) '
+		else:
+			w += ')'
+
+	return w

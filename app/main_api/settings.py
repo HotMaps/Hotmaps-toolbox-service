@@ -62,8 +62,18 @@ NUMBER_DECIMAL_DATA = 2
 #name of repository
 POPULATION_TOT = 'pop_tot_curr_density'
 HEAT_DENSITY_TOT = 'heat_tot_curr_density'
-HEAT_DENSITY__NON_RES = 'heat_nonres_curr_density'
+HEAT_DENSITY_NON_RES = 'heat_nonres_curr_density'
 HEAT_DENSITY_RES = 'heat_res_curr_density'
 WWTP = 'wwtp'
-
-
+GRASS_FLOOR_AREA_TOT = 'gfa_tot_curr_density'
+GRASS_FLOOR_AREA_RES = 'gfa_res_curr_density'
+GRASS_FLOOR_AREA_NON_RES = 'gfa_nonres_curr_density'
+BUILDING_VOLUMES_RES = 'vol_res_curr_density'
+BUILDING_VOLUMES_TOT = 'vol_tot_curr_density'
+BUILDING_VOLUMES_NON_RES = 'vol_nonres_curr_density'
+INDUSTRIAL_SITES = 'industrial_sites_Industrial_Database'
+BIOMASS_POTENTIAL = 'potential_biomass'
+MUNICIPAL_SOLID_WASTE = 'potential_municipal_solid_waste'
+WIND_POTENTIAL = 'potential_wind'
+SOLAR_POTENTIAL = 'potential_solar'
+GEOTHERMAL_POTENTIAL = 'potential_shallowgeothermal'

@@ -331,12 +331,10 @@ class LayersHectare:
 				
 			sql_query += ';'
 
-
 			# Execution of the query
 			query = db.session.execute(sql_query).first()
 
-			# Storing the results
-			
+			# Storing the results			
 			if query == None or len(query) < 2:
 					result = []
 			else:
