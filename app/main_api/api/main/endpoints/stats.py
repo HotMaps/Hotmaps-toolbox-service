@@ -9,7 +9,11 @@ from main_api.api.restplus import api
 #from main_api.models.population_density import PopulationDensityHa, PopulationDensityNuts3, PopulationDensityLau2, PopulationDensityNuts2, PopulationDensityNuts1,PopulationDensityNuts0
 from main_api.models.statsQueries import HeatDensityMapModel, HeatDensityHaModel, HeatDensityNuts3, HeatDensityLau2, HeatDensityNuts0, HeatDensityNuts1, \
 HeatDensityNuts2, PopulationDensityHaModel, PopulationDensityNuts3, PopulationDensityLau2, PopulationDensityNuts2, PopulationDensityNuts1, \
-PopulationDensityNuts0, Wwtp, WwtpNuts3, WwtpLau2, WwtpNuts2, WwtpNuts1, WwtpNuts0
+PopulationDensityNuts0, Wwtp, WwtpNuts3, WwtpLau2, WwtpNuts2, WwtpNuts1, WwtpNuts0, \
+GrassFloorAreaNuts3, GrassFloorAreaNuts2, GrassFloorAreaNuts1, GrassFloorAreaNuts0, GrassFloorAreaLau2, \
+BuildingsVolumesTotNuts3, BuildingsVolumesTotNuts2, BuildingsVolumesTotNuts1, BuildingsVolumesTotNuts0, BuildingsVolumesTotLau2, \
+BuildingsVolumesResNuts3, BuildingsVolumesResNuts2, BuildingsVolumesResNuts1, BuildingsVolumesResNuts0, BuildingsVolumesResLau2, \
+BuildingsVolumesNonResNuts3, BuildingsVolumesNonResNuts2, BuildingsVolumesNonResNuts1, BuildingsVolumesNonResNuts0, BuildingsVolumesNonResLau2
 from main_api.models.nuts import Nuts, NutsRG01M
 from main_api.models.lau import Lau
 from main_api.models.statsQueries import LayersHectare
@@ -58,7 +62,27 @@ layers_ref = {
 	settings.BUILDING_VOLUMES_RES + '_ha': None,
 	settings.BUILDING_VOLUMES_NON_RES + '_ha': None,
 	settings.HEAT_DENSITY_RES + '_ha': None,
-	settings.HEAT_DENSITY_NON_RES + '_ha': None
+	settings.HEAT_DENSITY_NON_RES + '_ha': None,
+	settings.GRASS_FLOOR_AREA_TOT + '_nuts3': GrassFloorAreaNuts3,
+	settings.GRASS_FLOOR_AREA_TOT + '_nuts2': GrassFloorAreaNuts2,
+	settings.GRASS_FLOOR_AREA_TOT + '_nuts1': GrassFloorAreaNuts1,
+	settings.GRASS_FLOOR_AREA_TOT + '_nuts0': GrassFloorAreaNuts0,
+	settings.GRASS_FLOOR_AREA_TOT + '_lau2': GrassFloorAreaLau2,
+	settings.BUILDING_VOLUMES_TOT + '_nuts3': BuildingsVolumesTotNuts3,
+	settings.BUILDING_VOLUMES_TOT + '_nuts2': BuildingsVolumesTotNuts2,
+	settings.BUILDING_VOLUMES_TOT + '_nuts1': BuildingsVolumesTotNuts1,
+	settings.BUILDING_VOLUMES_TOT + '_nuts0': BuildingsVolumesTotNuts0,
+	settings.BUILDING_VOLUMES_TOT + '_lau2': BuildingsVolumesTotLau2,
+	settings.BUILDING_VOLUMES_RES + '_nuts3': BuildingsVolumesResNuts3,
+	settings.BUILDING_VOLUMES_RES + '_nuts2': BuildingsVolumesResNuts2,
+	settings.BUILDING_VOLUMES_RES + '_nuts1': BuildingsVolumesResNuts1,
+	settings.BUILDING_VOLUMES_RES + '_nuts0': BuildingsVolumesResNuts0,
+	settings.BUILDING_VOLUMES_RES + '_lau2': BuildingsVolumesResLau2,
+	settings.BUILDING_VOLUMES_NON_RES + '_nuts3': BuildingsVolumesNonResNuts3,
+	settings.BUILDING_VOLUMES_NON_RES + '_nuts2': BuildingsVolumesNonResNuts2,
+	settings.BUILDING_VOLUMES_NON_RES + '_nuts1': BuildingsVolumesNonResNuts1,
+	settings.BUILDING_VOLUMES_NON_RES + '_nuts0': BuildingsVolumesNonResNuts0,
+	settings.BUILDING_VOLUMES_NON_RES + '_lau2': BuildingsVolumesNonResLau2
 	#settings.GEOTHERMAL_POTENTIAL + '_ha':None
 }
 

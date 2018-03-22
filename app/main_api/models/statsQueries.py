@@ -10,6 +10,10 @@ from main_api.models.population_density import PopulationDensityHaModel, Populat
 from main_api.models.nuts import Nuts, NutsRG01M
 from main_api.models.lau import Lau
 
+import logging
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
 import generalData
 
 class HeatDensityLau:
@@ -258,6 +262,124 @@ class Wwtp:
 			'unit': 'Person equivalent'
 		}]
 
+
+'''class GrassFloorAreaLau:
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class GrassFloorAreaNuts:
+	@staticmethod
+	def stats_nuts_lau(nuts, year, layers, type):
+		# do things
+
+class GrassFloorAreaLau2():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return  GrassFloorAreaLau.aggregate_for_nuts_selection(nuts=nuts, year=year, level=2)
+class GrassFloorAreaNuts3():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return GrassFloorAreaNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=3)
+class GrassFloorAreaNuts2():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return GrassFloorAreaNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=2)
+class GrassFloorAreaNuts1():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return GrassFloorAreaNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=1)
+class GrassFloorAreaNuts0():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return GrassFloorAreaNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=0)
+
+class BuildingsVolumesTotLau:
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesTotNuts:
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesTotLau2():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesTotNuts3():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesTotNuts2():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesTotNuts1():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesTotNuts0():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+
+class BuildingsVolumesResLau:
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesResNuts:
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesResLau2():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesResNuts3():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesResNuts2():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesResNuts1():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesResNuts0():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+
+class BuildingsVolumesNonResLau:
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesNonResNuts:
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesNonResLau2():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesNonResNuts3():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesNonResNuts2():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesNonResNuts1():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []
+class BuildingsVolumesNonResNuts0():
+	@staticmethod
+	def aggregate_for_nuts_selection(nuts, year):
+		return []'''
+
 """
 	WwtpNuts classes for each nuts/lau level
 """
@@ -286,6 +408,10 @@ class WwtpNuts0():
 	def aggregate_for_nuts_selection(nuts, year):
 		return Wwtp.aggregate_for_nuts_selection(nuts=nuts, year=year, type='nuts', level=0)
 
+class LayersNutsLau:
+	@staticmethod
+	def stats_nuts_lau(nuts, year, layers, type):
+		# do things
 
 class LayersHectare:
 
