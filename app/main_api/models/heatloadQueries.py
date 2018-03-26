@@ -28,42 +28,51 @@ class HeatLoadProfile:
 		# Execution of the query
 		query = db.session.execute(sql_query)
 
-		# Storing the results
+		# Storing the results only if there is data
 		output = []
 		if by == 'byYear':
 			for c, q in enumerate(query):
-				output.append({
-					'year': year,
-					'month': q[3],
-					'granularity': 'month',
-					'unit': 'kW',
-					'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
-					'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
-					'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
-					})
+				if q[0]:
+					output.append({
+						'year': year,
+						'month': q[3],
+						'granularity': 'month',
+						'unit': 'kW',
+						'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
+						'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
+						'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
+						})
+				else:
+					output = []
 		elif by == 'byMonth':
 			for c, q in enumerate(query):
-				output.append({
-					'year': year,
-					'month': month,
-					'day': q[3],
-					'granularity': 'day',
-					'unit': 'kW',
-					'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
-					'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
-					'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
-					})
+				if q[0]:
+					output.append({
+						'year': year,
+						'month': month,
+						'day': q[3],
+						'granularity': 'day',
+						'unit': 'kW',
+						'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
+						'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
+						'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
+						})
+				else:
+					output = []
 		else:
 			for c, q in enumerate(query):
-				output.append({
-					'year': year,
-					'month': month,
-					'day': day,
-					'hour_of_day': q[1],
-					'granularity': 'hour',
-					'unit': 'kW',
-					'value': round(q[0], settings.NUMBER_DECIMAL_DATA)
-					})
+				if q[0]:
+					output.append({
+						'year': year,
+						'month': month,
+						'day': day,
+						'hour_of_day': q[1],
+						'granularity': 'hour',
+						'unit': 'kW',
+						'value': round(q[0], settings.NUMBER_DECIMAL_DATA)
+						})
+				else:
+					output = []
 		
 		return {
 			"values": output
@@ -90,43 +99,51 @@ class HeatLoadProfile:
 		# Execution of the query
 		query = db.session.execute(sql_query)
 
-		# Storing the results
+		# Storing the results only if there is data
 		output = []
 		if by == 'byYear':
 			for c, q in enumerate(query):
-				output.append({
-					'year': year,
-					'month': q[3],
-					'granularity': 'month',
-					'unit': 'kW',
-					'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
-					'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
-					'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
-					})
+				if q[0]:					
+					output.append({
+						'year': year,
+						'month': q[3],
+						'granularity': 'month',
+						'unit': 'kW',
+						'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
+						'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
+						'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
+						})
+				else:
+					output = []
 		elif by == 'byMonth':
 			for c, q in enumerate(query):
-				output.append({
-					'year': year,
-					'month': month,
-					'day': q[3],
-					'granularity': 'day',
-					'unit': 'kW',
-					'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
-					'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
-					'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
-					})
+				if q[0]:
+					output.append({
+						'year': year,
+						'month': month,
+						'day': q[3],
+						'granularity': 'day',
+						'unit': 'kW',
+						'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
+						'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
+						'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
+						})
+				else:
+					output = []
 		else:
 			for c, q in enumerate(query):
-				output.append({
-					'year': year,
-					'month': month,
-					'day': day,
-					'hour_of_day': q[1],
-					'granularity': 'hour',
-					'unit': 'kW',
-					'value': round(q[0], settings.NUMBER_DECIMAL_DATA)
-					})
-
+				if q[0]:
+					output.append({
+						'year': year,
+						'month': month,
+						'day': day,
+						'hour_of_day': q[1],
+						'granularity': 'hour',
+						'unit': 'kW',
+						'value': round(q[0], settings.NUMBER_DECIMAL_DATA)
+						})
+				else:
+					output = []
 		
 		return {
 			"values": output
@@ -146,8 +163,11 @@ class HeatLoadProfile:
 		for q in query:
 			listAllValues.append(q[0])
 
-		# Creation of points and sampling of the values
-		finalListPoints = generalData.sampling_data(listAllValues)
+		# Creation of points and sampling of the values only if there is data
+		if listAllValues:
+			finalListPoints = generalData.sampling_data(listAllValues)
+		else:
+			finalListPoints = []	
 
 		return finalListPoints
 
@@ -165,8 +185,11 @@ class HeatLoadProfile:
 		for q in query:
 			listAllValues.append(q[0])
 
-		# Creation of points and sampling of the values
-		finalListPoints = generalData.sampling_data(listAllValues)
+		# Creation of points and sampling of the values only if there is data
+		if listAllValues:
+			finalListPoints = generalData.sampling_data(listAllValues)
+		else:
+			finalListPoints = []		
 
 		return finalListPoints
 

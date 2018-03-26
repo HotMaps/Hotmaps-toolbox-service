@@ -1,95 +1,119 @@
 from main_api import settings
 
 # LAYERS
-popDeHa = settings.POPULATION_TOT + '_ha'
-heatDeHa = settings.HEAT_DENSITY_TOT + '_ha'
-wwtpHa = settings.WWTP + '_ha'
-grassHa = settings.GRASS_FLOOR_AREA_TOT + '_ha'
-grassResHa = settings.GRASS_FLOOR_AREA_RES + '_ha'
-grassNonResHa = settings.GRASS_FLOOR_AREA_NON_RES + '_ha'
-bVolTotHa = settings.BUILDING_VOLUMES_TOT + '_ha'
-bVolResHa = settings.BUILDING_VOLUMES_RES + '_ha'
-bVolNonResHa = settings.BUILDING_VOLUMES_NON_RES + '_ha'
-heatResHa = settings.HEAT_DENSITY_RES + '_ha'
-heatNonResHa = settings.HEAT_DENSITY_NON_RES + '_ha'
-indSitesHa = settings.INDUSTRIAL_SITES + '_ha'
-biomassPotHa = settings.BIOMASS_POTENTIAL + '_ha'
-mswHa = settings.MUNICIPAL_SOLID_WASTE + '_ha'
-windPotHa = settings.WIND_POTENTIAL + '_ha'
-solarPotHa = settings.SOLAR_POTENTIAL + '_ha'
-geothermalPotHa = settings.GEOTHERMAL_POTENTIAL + '_ha'
+popDe = settings.POPULATION_TOT
+heatDe = settings.HEAT_DENSITY_TOT
+wwtp = settings.WWTP
+grass = settings.GRASS_FLOOR_AREA_TOT
+grassRes = settings.GRASS_FLOOR_AREA_RES
+grassNonRes = settings.GRASS_FLOOR_AREA_NON_RES
+bVolTot = settings.BUILDING_VOLUMES_TOT
+bVolRes = settings.BUILDING_VOLUMES_RES
+bVolNonRes = settings.BUILDING_VOLUMES_NON_RES
+heatRes = settings.HEAT_DENSITY_RES
+heatNonRes = settings.HEAT_DENSITY_NON_RES
+indSites = settings.INDUSTRIAL_SITES
+biomassPot = settings.BIOMASS_POTENTIAL
+msw = settings.MUNICIPAL_SOLID_WASTE
+windPot = settings.WIND_POTENTIAL
+solarPot = settings.SOLAR_POTENTIAL
+geothermalPot = settings.GEOTHERMAL_POTENTIAL
 
 CRS = 3035
 
-# ALL DATA FOR THE STATS BY LAYERS
+# ALL DATA FOR THE STATS
 layersData = {
-	heatDeHa:{'tablename':'heat_tot_curr_density',
+	heatDe:{'tablename':'heat_tot_curr_density',
+			'from':'stat_heat',
+			'select':'stat_heat.sum as heat_consumption, (stat_heat.sum/stat_heat.count) as heat_density, stat_heat.count as count_cell_heat ',
 			'resultsName':{
 				0:'heat_consumption', 1:'heat_density', 2:'count_cell_heat'},
 			'resultsUnit':{
 				0:'MWh', 1:'MWh/ha', 2:'cell'}
 			},
-	popDeHa:{'tablename':'pop_tot_curr_density',
+	popDe:{'tablename':'pop_tot_curr_density',
+			'from':'stat_pop',
+			'select':'stat_pop.sum as population, (stat_pop.sum/stat_pop.count) as population_density, stat_pop.count as count_cell_pop ',
 			'resultsName':{
 				0:'population', 1:'population_density', 2:'count_cell_pop'},
 			'resultsUnit':{ 
 				0:'person', 1:'person/ha', 2:'cell'}
 			},
-	wwtpHa:{'tablename':'wwtp',
+	wwtp:{'tablename':'wwtp',
+			'from':'stat_wwtp',
+			'select':'stat_wwtp.capacityPerson as capacity, stat_wwtp.power as power ',
 			'resultsName':{
 				0:'power', 1:'capacity'},
 			'resultsUnit':{
 				0:'kW', 1:'Person equivalent'}
 			},
-	grassHa:{'tablename':'gfa_tot_curr_density',
+	grass:{'tablename':'gfa_tot_curr_density',
+			'from':'stat_grass',
+			'select':'stat_grass.sum as value, (stat_grass.sum/stat_grass.count) as density, stat_grass.count as count_cell ',
 			'resultsName':{
 				0:'value', 1:'density', 2:'count_cell'},
 			'resultsUnit':{ 
 				0:'value', 1:'value/ha', 2:'cell'}
 			},
-	grassResHa:{'tablename':'gfa_res_curr_density',
+	grassRes:{'tablename':'gfa_res_curr_density',
+			'from':'stat_grassRes',
+			'select':'stat_grassRes.sum as value5, (stat_grassRes.sum/stat_grassRes.count) as density5, stat_grassRes.count as count_cell5 ',
 			'resultsName':{
 				0:'value5', 1:'density5', 2:'count_cell5'},
 			'resultsUnit':{ 
 				0:'value', 1:'value/ha', 2:'cell'}
 			},
-	grassNonResHa:{'tablename':'gfa_nonres_curr_density',
+	grassNonRes:{'tablename':'gfa_nonres_curr_density',
+			'from':'stat_grassNonRes',
+			'select':'stat_grassNonRes.sum as value6, (stat_grassNonRes.sum/stat_grassNonRes.count) as density6, stat_grassNonRes.count as count_cell6 ',
 			'resultsName':{
 				0:'value6', 1:'density6', 2:'count_cell6'},
 			'resultsUnit':{ 
 				0:'value', 1:'value/ha', 2:'cell'}
 			},
-	bVolTotHa:{'tablename':'vol_tot_curr_density',
+	bVolTot:{'tablename':'vol_tot_curr_density',
+			'from':'stat_bVolTot',
+			'select':'stat_bVolTot.sum as value2, (stat_bVolTot.sum/stat_bVolTot.count) as density2, stat_bVolTot.count as count_cell2 ',
 			'resultsName':{
 				0:'value2', 1:'density2', 2:'count_cell2'},
 			'resultsUnit':{ 
 				0:'value', 1:'value/ha', 2:'cell'}
 			},
-	bVolResHa:{'tablename':'vol_res_curr_density',
+	bVolRes:{'tablename':'vol_res_curr_density',
+			'from':'stat_bVolRes',
+			'select':'stat_bVolRes.sum as value3, (stat_bVolRes.sum/stat_bVolRes.count) as density3, stat_bVolRes.count as count_cell3 ',
 			'resultsName':{
 				0:'value3', 1:'density3', 2:'count_cell3'},
 			'resultsUnit':{ 
 				0:'value', 1:'value/ha', 2:'cell'}
 			},
-	bVolNonResHa:{'tablename':'vol_nonres_curr_density',
+	bVolNonRes:{'tablename':'vol_nonres_curr_density',
+			'from':'stat_bVolNonRes',
+			'select':'stat_bVolNonRes.sum as value4, (stat_bVolNonRes.sum/stat_bVolNonRes.count) as density4, stat_bVolNonRes.count as count_cell4 ',
 			'resultsName':{
 				0:'value4', 1:'density4', 2:'count_cell4'},
 			'resultsUnit':{ 
 				0:'value', 1:'value/ha', 2:'cell'}
 			},
-	heatResHa:{'tablename':'heat_res_curr_density',
+	heatRes:{'tablename':'heat_res_curr_density',
+			'from':'stat_heatRes',
+			'select':'stat_heatRes.sum as value7, (stat_heatRes.sum/stat_heatRes.count) as density7, stat_heatRes.count as count_cell7 ',
 			'resultsName':{
 				0:'value7', 1:'density7', 2:'count_cell7'},
 			'resultsUnit':{ 
 				0:'value', 1:'value/ha', 2:'cell'}
 			},
-	heatNonResHa:{'tablename':'heat_nonres_curr_density',
+	heatNonRes:{'tablename':'heat_nonres_curr_density',
+			'from':'stat_heatNonRes',
+			'select':'stat_heatNonRes.sum as value8, (stat_heatNonRes.sum/stat_heatNonRes.count) as density8, stat_heatNonRes.count as count_cell8 ',
 			'resultsName':{
 				0:'value8', 1:'density8', 2:'count_cell8'},
 			'resultsUnit':{ 
 				0:'value', 1:'value/ha', 2:'cell'}
 			},
-	geothermalPotHa:{'tablename':'potential_shallowgeothermal',
+	geothermalPot:{'tablename':'potential_shallowgeothermal',
+			'from':'stat_geothermalPot',
+			'select':'stat_geothermalPot.sum as value9, (stat_geothermalPot.sum/stat_geothermalPot.count) as density9, stat_geothermalPot.count as count_cell9 ',
 			'resultsName':{
 				0:'value9', 1:'density9', 2:'count_cell9'},
 			'resultsUnit':{ 
@@ -99,61 +123,60 @@ layersData = {
 
 # ALL QUERIES DATA FOR THE STATS BY LAYERS 
 def createQueryDataStatsHectares(geometry, year):
-	# 'from' parts
-	fromPop = 'stat_pop'
-	fromHeat = 'stat_heat'
-	fromWwtp = 'stat_wwtp'
-	fromGrass = 'stat_grass'
-	fromGrassRes = 'stat_grassRes'
-	fromGrassNonRes = 'stat_grassNonRes'
-	frombVolTot = 'stat_bVolTot'
-	frombVolRes = 'stat_bVolRes'
-	frombVolNonRes = 'stat_bVolNonRes'
-	fromHeatRes = 'stat_heatRes'
-	fromHeatNonRes = 'stat_heatNonRes'
-	fromGeothermalPot = 'stat_geothermalPot'
-
 	# 'with' parts
-	withPop = createWithPartEachLayer(geometry=geometry, year=year, layer=popDeHa, fromPart=fromPop)
-	withHeat = createWithPartEachLayer(geometry=geometry, year=year, layer=heatDeHa, fromPart=fromHeat)
-	withWwtp = createWithPartEachLayer(geometry=geometry, year=year, layer=wwtpHa, fromPart=fromWwtp)
-	withGrass = createWithPartEachLayer(geometry=geometry, year=year, layer=grassHa, fromPart=fromGrass)
-	withGrassRes = createWithPartEachLayer(geometry=geometry, year=year, layer=grassResHa, fromPart=fromGrassRes)
-	withGrassNonRes = createWithPartEachLayer(geometry=geometry, year=year, layer=grassNonResHa, fromPart=fromGrassNonRes)
-	withbVolTot = createWithPartEachLayer(geometry=geometry, year=year, layer=bVolTotHa, fromPart=frombVolTot)
-	withbVolRes = createWithPartEachLayer(geometry=geometry, year=year, layer=bVolResHa, fromPart=frombVolRes)
-	withbVolNonRes = createWithPartEachLayer(geometry=geometry, year=year, layer=bVolNonResHa, fromPart=frombVolNonRes)
-	withHeatRes = createWithPartEachLayer(geometry=geometry, year=year, layer=heatResHa, fromPart=fromHeatRes)
-	withHeatNonRes = createWithPartEachLayer(geometry=geometry, year=year, layer=heatNonResHa, fromPart=fromHeatNonRes)
-	withGeothermalPot = createWithPartEachLayer(geometry=geometry, year=year, layer=geothermalPotHa, fromPart=fromGeothermalPot)
+	withPop = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=popDe, fromPart=layersData[popDe]['from'])
+	withHeat = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=heatDe, fromPart=layersData[heatDe]['from'])
+	withWwtp = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=wwtp, fromPart=layersData[wwtp]['from'])
+	withGrass = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=grass, fromPart=layersData[grass]['from'])
+	withGrassRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=grassRes, fromPart=layersData[grassRes]['from'])
+	withGrassNonRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=grassNonRes, fromPart=layersData[grassNonRes]['from'])
+	withbVolTot = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=bVolTot, fromPart=layersData[bVolTot]['from'])
+	withbVolRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=bVolRes, fromPart=layersData[bVolRes]['from'])
+	withbVolNonRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=bVolNonRes, fromPart=layersData[bVolNonRes]['from'])
+	withHeatRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=heatRes, fromPart=layersData[heatRes]['from'])
+	withHeatNonRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=heatNonRes, fromPart=layersData[heatNonRes]['from'])
 	
-	# 'select' parts
-	selectPop = 'stat_pop.sum as population, (stat_pop.sum/stat_pop.count) as population_density, stat_pop.count as count_cell_pop '
-	selectHeat = 'stat_heat.sum as heat_consumption, (stat_heat.sum/stat_heat.count) as heat_density, stat_heat.count as count_cell_heat '
-	selectWwtp = 'stat_wwtp.capacityPerson as capacity, stat_wwtp.power as power '
-	selectGrass = 'stat_grass.sum as value, (stat_grass.sum/stat_grass.count) as density, stat_grass.count as count_cell '
-	selectGrassRes = 'stat_grassRes.sum as value5, (stat_grassRes.sum/stat_grassRes.count) as density5, stat_grassRes.count as count_cell5 '
-	selectGrassNonRes = 'stat_grassNonRes.sum as value6, (stat_grassNonRes.sum/stat_grassNonRes.count) as density6, stat_grassNonRes.count as count_cell6 '
-	selectbVolTot = 'stat_bVolTot.sum as value2, (stat_bVolTot.sum/stat_bVolTot.count) as density2, stat_bVolTot.count as count_cell2 '
-	selectbVolRes = 'stat_bVolRes.sum as value3, (stat_bVolRes.sum/stat_bVolRes.count) as density3, stat_bVolRes.count as count_cell3 '
-	selectbVolNonRes = 'stat_bVolNonRes.sum as value4, (stat_bVolNonRes.sum/stat_bVolNonRes.count) as density4, stat_bVolNonRes.count as count_cell4 '
-	selectHeatRes = 'stat_heatRes.sum as value7, (stat_heatRes.sum/stat_heatRes.count) as density7, stat_heatRes.count as count_cell7 '
-	selectHeatNonRes = 'stat_heatNonRes.sum as value8, (stat_heatNonRes.sum/stat_heatNonRes.count) as density8, stat_heatNonRes.count as count_cell8 '
-	selectGeothermalPot = 'stat_geothermalPot.sum as value9, (stat_geothermalPot.sum/stat_geothermalPot.count) as density9, stat_geothermalPot.count as count_cell9 '
+	# Dictionary with query data
+	layersQueryData = {heatDe:{'with':withHeat, 'select':layersData[heatDe]['select'], 'from':layersData[heatDe]['from']},
+						popDe:{'with':withPop, 'select':layersData[popDe]['select'], 'from':layersData[popDe]['from']},
+						wwtp:{'with':withWwtp, 'select':layersData[wwtp]['select'], 'from':layersData[wwtp]['from']},
+						grass:{'with':withGrass, 'select':layersData[grass]['select'], 'from':layersData[grass]['from']},
+						grassRes:{'with':withGrassRes, 'select':layersData[grassRes]['select'], 'from':layersData[grassRes]['from']},
+						grassNonRes:{'with':withGrassNonRes, 'select':layersData[grassNonRes]['select'], 'from':layersData[grassNonRes]['from']},
+						bVolTot:{'with':withbVolTot, 'select':layersData[bVolTot]['select'], 'from':layersData[bVolTot]['from']},
+						bVolRes:{'with':withbVolRes, 'select':layersData[bVolRes]['select'], 'from':layersData[bVolRes]['from']},
+						bVolNonRes:{'with':withbVolNonRes, 'select':layersData[bVolNonRes]['select'], 'from':layersData[bVolNonRes]['from']},
+						heatRes:{'with':withHeatRes, 'select':layersData[heatRes]['select'], 'from':layersData[heatRes]['from']},
+						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']}}
+
+	return layersQueryData
+
+def createQueryDataStatsNutsLau(nuts, year, type):
+	# 'with' parts
+	withPop = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=popDe, type=type, fromPart=layersData[popDe]['from'])
+	withHeat = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=heatDe, type=type, fromPart=layersData[heatDe]['from'])
+	withWwtp = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=wwtp, type=type, fromPart=layersData[wwtp]['from'])
+	withGrass = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=grass, type=type, fromPart=layersData[grass]['from'])
+	withGrassRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=grassRes, type=type, fromPart=layersData[grassRes]['from'])
+	withGrassNonRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=grassNonRes, type=type, fromPart=layersData[grassNonRes]['from'])
+	withbVolTot = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=bVolTot, type=type, fromPart=layersData[bVolTot]['from'])
+	withbVolRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=bVolRes, type=type, fromPart=layersData[bVolRes]['from'])
+	withbVolNonRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=bVolNonRes, type=type, fromPart=layersData[bVolNonRes]['from'])
+	withHeatRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=heatRes, type=type, fromPart=layersData[heatRes]['from'])
+	withHeatNonRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=heatNonRes, type=type, fromPart=layersData[heatNonRes]['from'])
 
 	# Dictionary with query data
-	layersQueryData = {heatDeHa:{'with':withHeat, 'select':selectHeat, 'from':fromHeat},
-						popDeHa:{'with':withPop, 'select':selectPop, 'from':fromPop},
-						wwtpHa:{'with':withWwtp, 'select':selectWwtp, 'from':fromWwtp},
-						grassHa:{'with':withGrass, 'select':selectGrass, 'from':fromGrass},
-						grassResHa:{'with':withGrassRes, 'select':selectGrassRes, 'from':fromGrassRes},
-						grassNonResHa:{'with':withGrassNonRes, 'select':selectGrassNonRes, 'from':fromGrassNonRes},
-						bVolTotHa:{'with':withbVolTot, 'select':selectbVolTot, 'from':frombVolTot},
-						bVolResHa:{'with':withbVolRes, 'select':selectbVolRes, 'from':frombVolRes},
-						bVolNonResHa:{'with':withbVolNonRes, 'select':selectbVolNonRes, 'from':frombVolNonRes},
-						heatResHa:{'with':withHeatRes, 'select':selectHeatRes, 'from':fromHeatRes},
-						heatNonResHa:{'with':withHeatNonRes, 'select':selectHeatNonRes, 'from':fromHeatNonRes},
-						geothermalPotHa:{'with':withGeothermalPot, 'select':selectGeothermalPot, 'from':fromGeothermalPot}}
+	layersQueryData = {heatDe:{'with':withHeat, 'select':layersData[heatDe]['select'], 'from':layersData[heatDe]['from']},
+						popDe:{'with':withPop, 'select':layersData[popDe]['select'], 'from':layersData[popDe]['from']},
+						wwtp:{'with':withWwtp, 'select':layersData[wwtp]['select'], 'from':layersData[wwtp]['from']},
+						grass:{'with':withGrass, 'select':layersData[grass]['select'], 'from':layersData[grass]['from']},
+						grassRes:{'with':withGrassRes, 'select':layersData[grassRes]['select'], 'from':layersData[grassRes]['from']},
+						grassNonRes:{'with':withGrassNonRes, 'select':layersData[grassNonRes]['select'], 'from':layersData[grassNonRes]['from']},
+						bVolTot:{'with':withbVolTot, 'select':layersData[bVolTot]['select'], 'from':layersData[bVolTot]['from']},
+						bVolRes:{'with':withbVolRes, 'select':layersData[bVolRes]['select'], 'from':layersData[bVolRes]['from']},
+						bVolNonRes:{'with':withbVolNonRes, 'select':layersData[bVolNonRes]['select'], 'from':layersData[bVolNonRes]['from']},
+						heatRes:{'with':withHeatRes, 'select':layersData[heatRes]['select'], 'from':layersData[heatRes]['from']},
+						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']}}
 
 	return layersQueryData
 
@@ -393,8 +416,8 @@ def computeConsPerPerson(l1, l2, output):
 
 	return hdm
 
-def createWithPartEachLayer(geometry, year, layer, fromPart):
-	if layer == wwtpHa:
+def constructWithPartEachLayerHectare(geometry, year, layer, fromPart):
+	if layer == settings.WWTP:
 		w = ''+fromPart+' AS (SELECT ' + \
 		'		count(*) as nbWwtp, sum(capacity) as capacityPerson, sum(power) as power ' + \
 		'FROM' + \
@@ -412,9 +435,102 @@ def createWithPartEachLayer(geometry, year, layer, fromPart):
 		' WHERE' + \
 		'	ST_Intersects('+ layersData[layer]['tablename'] + '.rast,' + \
 		'		st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + ')) '
-		if layer == popDeHa or layer == heatDeHa:
+		if layer == popDe or layer == heatDe:
 			w += 'AND date = to_date(\''+ str(year) +'\',\'YYYY\')) '
 		else:
-			w += ')'
+			w += ') '
 
 	return w
+
+def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
+	# Get name of table to select nuts/lau
+	if type == 'nuts':
+		id_type = 'nuts_id'
+	else:
+		id_type = 'comm_id'
+
+	if layer == wwtp:
+		w = "nutsSelection as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+") and year = to_date('2013','YYYY')), " +\
+				""+fromPart+" as (SELECT sum(power) as power, sum(capacity) as capacityPerson " +\
+				"from nutsSelection, geo.wwtp tbl_wwtp " +\
+				"where st_within(tbl_wwtp.geom, st_transform(nutsSelection.geom,3035)) " +\
+				"and date = to_date('2015','YYYY'))"
+	elif layer == heatDe or layer == popDe:
+		w = ""+fromPart+" as (SELECT sum(stat."+layersData[layer]['tablename']+"_"+type+"_test.sum) AS sum, " +\
+					"sum(stat."+ layersData[layer]['tablename'] +"_"+type+"_test.count) AS count " +\
+				"FROM stat."+layersData[layer]['tablename']+"_"+type+"_test " +\
+				"WHERE stat."+layersData[layer]['tablename']+"_"+type+"_test."+id_type+" IN ("+nuts+")) "
+	else:
+		w = ""+fromPart+" as (SELECT sum(stat."+layersData[layer]['tablename']+"_"+type+".sum) AS sum, " +\
+					"sum(stat."+ layersData[layer]['tablename'] +"_"+type+".count) AS count " +\
+				"FROM stat."+layersData[layer]['tablename']+"_"+type+" " +\
+				"WHERE stat."+layersData[layer]['tablename']+"_"+type+"."+id_type+" IN ("+nuts+")) "
+
+	return w
+
+def transform_nuts_list(nuts):
+		# Store nuts in new custom list
+		nutsPayload = []
+		for n in nuts:
+			n = n[:4]
+			if n not in nutsPayload:
+				nutsPayload.append(str(n))
+
+		# Adapt format of list for the query
+		nutsListQuery = str(nutsPayload)
+		nutsListQuery = nutsListQuery[1:] # Remove the left hook
+		nutsListQuery = nutsListQuery[:-1] # Remove the right hook
+
+		return nutsListQuery
+
+def adapt_nuts_list(nuts):
+		# Store nuts in new custom list
+		nutsPayload = []
+		for n in nuts:
+			if n not in nutsPayload:
+				nutsPayload.append(str(n))
+
+		# Adapt format of list for the query
+		nutsListQuery = str(nutsPayload)
+		nutsListQuery = nutsListQuery[1:] # Remove the left hook
+		nutsListQuery = nutsListQuery[:-1] # Remove the right hook
+
+		return nutsListQuery
+
+def createAllLayers(layers):
+	allLayers = []
+	for l in layers:
+		allLayers.append(l+'_ha')
+		allLayers.append(l+'_nuts3')
+		allLayers.append(l+'_nuts2')
+		allLayers.append(l+'_nuts1')
+		allLayers.append(l+'_nuts0')
+		allLayers.append(l+'_lau2')
+
+	return allLayers
+
+def getTypeScale(layers):
+	if layers[0].endswith('lau2'):
+		return 'lau'
+	else:
+		return 'nuts'
+
+def adapt_layers_list(layersPayload, type, allLayers):
+	layers = []
+	if type == 'lau':
+		for layer in layersPayload:
+			if layer in allLayers:
+				layer = layer[:-5] # Remove the type for each layer 
+				layers.append(layer)
+	elif type == 'ha':
+		for layer in layersPayload:
+			if layer in allLayers:
+				layer = layer[:-3] # Remove the type for each layer 
+				layers.append(layer)
+	else:
+		for layer in layersPayload:
+			if layer in allLayers:
+				layer = layer[:-6] # Remove the type for each layer 
+				layers.append(layer)
+
+	return layers

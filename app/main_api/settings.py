@@ -59,7 +59,7 @@ POINTS_FOURTH_GROUP_STEP = 39
 # heat load and duration curve data options
 NUMBER_DECIMAL_DATA = 2
 
-#name of repository
+# All repositories
 POPULATION_TOT = 'pop_tot_curr_density'
 HEAT_DENSITY_TOT = 'heat_tot_curr_density'
 HEAT_DENSITY_NON_RES = 'heat_nonres_curr_density'
