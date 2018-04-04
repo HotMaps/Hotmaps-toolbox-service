@@ -40,7 +40,6 @@ grid_properties = api.model('Properties', {
     'xmax': fields.Integer(description='Xmax'),
     'ymin': fields.Integer(description='Ymin'),
     'ymax': fields.Integer(description='Ymax'),
-
 })
 
 multipolygon_geometry = api.model('MultiPolygon', {
@@ -164,7 +163,9 @@ stats_layers_output = api.model('Stats for selected layers, year and area', {
 })
 
 stats_layers_hectares_output = api.model('Stats for selected layers, year and area', {
-    'layers': fields.List(fields.Nested(stats_layer_aggregation))
+    'layers': fields.List(fields.Nested(stats_layer_aggregation)),
+    'no_data_layers': fields.List(fields.String(description='Layer')),
+    'no_table_layers': fields.List(fields.String(description='Layer'))
 })
 
 stats_layers_area_nuts_input = api.model('Input for statistics on layers, area and year', {
@@ -272,6 +273,8 @@ load_profile_aggregation_hectares_output = api.model('Output for load profile he
 
 stats_layers_nuts_output = api.model('Stats for selected layers, year and area', {
     'layers': fields.List(fields.Nested(stats_layer_aggregation)),
+    'no_data_layers': fields.List(fields.String(description='Layer')),
+    'no_table_layers': fields.List(fields.String(description='Layer'))
     #'load_profile_month': fields.Nested(load_profile_aggregation_year),
 })
 

@@ -29,7 +29,7 @@ layersData = {
 			'resultsName':{
 				0:'heat_consumption', 1:'heat_density', 2:'count_cell_heat'},
 			'resultsUnit':{
-				0:'MWh', 1:'MWh/ha', 2:'cell'}
+				0:'MWh', 1:'MWh/ha', 2:'cells'}
 			},
 	popDe:{'tablename':'pop_tot_curr_density',
 			'from':'stat_pop',
@@ -37,7 +37,7 @@ layersData = {
 			'resultsName':{
 				0:'population', 1:'population_density', 2:'count_cell_pop'},
 			'resultsUnit':{ 
-				0:'person', 1:'person/ha', 2:'cell'}
+				0:'person', 1:'person/ha', 2:'cells'}
 			},
 	wwtp:{'tablename':'wwtp',
 			'from':'stat_wwtp',
@@ -49,75 +49,75 @@ layersData = {
 			},
 	grass:{'tablename':'gfa_tot_curr_density',
 			'from':'stat_grass',
-			'select':'stat_grass.sum as value, (stat_grass.sum/stat_grass.count) as density, stat_grass.count as count_cell ',
+			'select':'stat_grass.sum as '+grass+'_value, (stat_grass.sum/stat_grass.count) as '+grass+'_density, stat_grass.count as '+grass+'_cells ',
 			'resultsName':{
-				0:'value', 1:'density', 2:'count_cell'},
+				0:grass+'_value', 1:grass+'_density', 2:grass+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cell'}
+				0:'value', 1:'value/ha', 2:'cells'}
 			},
 	grassRes:{'tablename':'gfa_res_curr_density',
 			'from':'stat_grassRes',
-			'select':'stat_grassRes.sum as value5, (stat_grassRes.sum/stat_grassRes.count) as density5, stat_grassRes.count as count_cell5 ',
+			'select':'stat_grassRes.sum as '+grassRes+'_value, (stat_grassRes.sum/stat_grassRes.count) as '+grassRes+'_density, stat_grassRes.count as '+grassRes+'_cells ',
 			'resultsName':{
-				0:'value5', 1:'density5', 2:'count_cell5'},
+				0:grassRes+'_value', 1:grassRes+'_density', 2:grassRes+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cell'}
+				0:'value', 1:'value/ha', 2:'cells'}
 			},
 	grassNonRes:{'tablename':'gfa_nonres_curr_density',
 			'from':'stat_grassNonRes',
-			'select':'stat_grassNonRes.sum as value6, (stat_grassNonRes.sum/stat_grassNonRes.count) as density6, stat_grassNonRes.count as count_cell6 ',
+			'select':'stat_grassNonRes.sum as '+grassNonRes+'_value, (stat_grassNonRes.sum/stat_grassNonRes.count) as '+grassNonRes+'_density, stat_grassNonRes.count as '+grassNonRes+'_cells ',
 			'resultsName':{
-				0:'value6', 1:'density6', 2:'count_cell6'},
+				0:grassNonRes+'_value', 1:grassNonRes+'_density', 2:grassNonRes+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cell'}
+				0:'value', 1:'value/ha', 2:'cells'}
 			},
 	bVolTot:{'tablename':'vol_tot_curr_density',
 			'from':'stat_bVolTot',
-			'select':'stat_bVolTot.sum as value2, (stat_bVolTot.sum/stat_bVolTot.count) as density2, stat_bVolTot.count as count_cell2 ',
+			'select':'stat_bVolTot.sum as '+bVolTot+'_value, (stat_bVolTot.sum/stat_bVolTot.count) as '+bVolTot+'_density, stat_bVolTot.count as '+bVolTot+'_cells ',
 			'resultsName':{
-				0:'value2', 1:'density2', 2:'count_cell2'},
+				0:bVolTot+'_value', 1:bVolTot+'_density', 2:bVolTot+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cell'}
+				0:'value', 1:'value/ha', 2:'cells'}
 			},
 	bVolRes:{'tablename':'vol_res_curr_density',
 			'from':'stat_bVolRes',
-			'select':'stat_bVolRes.sum as value3, (stat_bVolRes.sum/stat_bVolRes.count) as density3, stat_bVolRes.count as count_cell3 ',
+			'select':'stat_bVolRes.sum as '+bVolRes+'_value, (stat_bVolRes.sum/stat_bVolRes.count) as '+bVolRes+'_density, stat_bVolRes.count as '+bVolRes+'_cells ',
 			'resultsName':{
-				0:'value3', 1:'density3', 2:'count_cell3'},
+				0:bVolRes+'_value', 1:bVolRes+'_density', 2:bVolRes+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cell'}
+				0:'value', 1:'value/ha', 2:'cells'}
 			},
 	bVolNonRes:{'tablename':'vol_nonres_curr_density',
 			'from':'stat_bVolNonRes',
-			'select':'stat_bVolNonRes.sum as value4, (stat_bVolNonRes.sum/stat_bVolNonRes.count) as density4, stat_bVolNonRes.count as count_cell4 ',
+			'select':'stat_bVolNonRes.sum as '+bVolNonRes+'_value, (stat_bVolNonRes.sum/stat_bVolNonRes.count) as '+bVolNonRes+'_density, stat_bVolNonRes.count as '+bVolNonRes+'_cells ',
 			'resultsName':{
-				0:'value4', 1:'density4', 2:'count_cell4'},
+				0:bVolNonRes+'_value', 1:bVolNonRes+'_density', 2:bVolNonRes+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cell'}
+				0:'value', 1:'value/ha', 2:'cells'}
 			},
 	heatRes:{'tablename':'heat_res_curr_density',
 			'from':'stat_heatRes',
-			'select':'stat_heatRes.sum as value7, (stat_heatRes.sum/stat_heatRes.count) as density7, stat_heatRes.count as count_cell7 ',
+			'select':'stat_heatRes.sum as '+heatRes+'_value, (stat_heatRes.sum/stat_heatRes.count) as '+heatRes+'_density, stat_heatRes.count as '+heatRes+'_cells ',
 			'resultsName':{
-				0:'value7', 1:'density7', 2:'count_cell7'},
+				0:heatRes+'_value', 1:heatRes+'_density', 2:heatRes+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cell'}
+				0:'value', 1:'value/ha', 2:'cells'}
 			},
 	heatNonRes:{'tablename':'heat_nonres_curr_density',
 			'from':'stat_heatNonRes',
-			'select':'stat_heatNonRes.sum as value8, (stat_heatNonRes.sum/stat_heatNonRes.count) as density8, stat_heatNonRes.count as count_cell8 ',
+			'select':'stat_heatNonRes.sum as '+heatNonRes+'_value, (stat_heatNonRes.sum/stat_heatNonRes.count) as '+heatNonRes+'_density, stat_heatNonRes.count as '+heatNonRes+'_cells ',
 			'resultsName':{
-				0:'value8', 1:'density8', 2:'count_cell8'},
+				0:heatNonRes+'_value', 1:heatNonRes+'_density', 2:heatNonRes+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cell'}
+				0:'value', 1:'value/ha', 2:'cells'}
 			},
 	geothermalPot:{'tablename':'potential_shallowgeothermal',
 			'from':'stat_geothermalPot',
-			'select':'stat_geothermalPot.sum as value9, (stat_geothermalPot.sum/stat_geothermalPot.count) as density9, stat_geothermalPot.count as count_cell9 ',
+			'select':'stat_geothermalPot.sum as '+geothermalPot+'_value, (stat_geothermalPot.sum/stat_geothermalPot.count) as '+geothermalPot+'_density, stat_geothermalPot.count as '+geothermalPot+'_cells ',
 			'resultsName':{
-				0:'value9', 1:'density9', 2:'count_cell9'},
+				0:geothermalPot+'_value', 1:geothermalPot+'_density', 2:geothermalPot+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cell'}
+				0:'value', 1:'value/ha', 2:'cells'}
 			},
 }
 
@@ -232,8 +232,8 @@ def createQueryDataLPHectares(year, month, day, geometry):
 
 	# Dictionary with query data
 	queryData = {'byYear':{'with':withPart, 'select':selectYear},
-						'byMonth':{'with':withPart, 'select':selectMonth},
-						'byDay':{'with':withPart, 'select':selectDay}}
+					'byMonth':{'with':withPart, 'select':selectMonth},
+					'byDay':{'with':withPart, 'select':selectDay}}
 
 	return queryData
 
@@ -500,6 +500,7 @@ def adapt_nuts_list(nuts):
 def createAllLayers(layers):
 	allLayers = []
 	for l in layers:
+		allLayers.append(l)
 		allLayers.append(l+'_ha')
 		allLayers.append(l+'_nuts3')
 		allLayers.append(l+'_nuts2')
@@ -510,10 +511,14 @@ def createAllLayers(layers):
 	return allLayers
 
 def getTypeScale(layers):
-	if layers[0].endswith('lau2'):
-		return 'lau'
+	if layers:		
+		if layers[0].endswith('lau2'):
+			return 'lau'
+		else:
+			return 'nuts'
 	else:
-		return 'nuts'
+		return ''
+
 
 def adapt_layers_list(layersPayload, type, allLayers):
 	layers = []
@@ -532,5 +537,30 @@ def adapt_layers_list(layersPayload, type, allLayers):
 			if layer in allLayers:
 				layer = layer[:-6] # Remove the type for each layer 
 				layers.append(layer)
+
+	return layers
+
+def removeScaleLayers(layersList, type):
+	layers = []
+	if type == 'lau':
+		for layer in layersList:
+			layer = layer[:-5] # Remove the type for each layer 
+			layers.append(layer)
+	elif type == 'ha':
+		for layer in layersList:
+			layer = layer[:-3] # Remove the type for each layer 
+			layers.append(layer)
+	else:
+		for layer in layersList:
+			layer = layer[:-6] # Remove the type for each layer 
+			layers.append(layer)
+
+	return layers
+
+def layers_filter(layersPayload, list):
+	layers = []
+	for l in layersPayload:
+		if l not in list:
+			layers.append(l)
 
 	return layers

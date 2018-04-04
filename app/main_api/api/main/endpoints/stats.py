@@ -30,26 +30,6 @@ log = logging.getLogger(__name__)
 
 ns = api.namespace('stats', description='Operations related to statistisdscs')
 
-layers_ref_hectares = [
-	settings.POPULATION_TOT,
-	settings.HEAT_DENSITY_TOT,
-	settings.HEAT_DENSITY_NON_RES,
-	settings.HEAT_DENSITY_RES,
-	settings.WWTP,
-	settings.GRASS_FLOOR_AREA_TOT,
-	settings.GRASS_FLOOR_AREA_RES,
-	settings.GRASS_FLOOR_AREA_NON_RES,
-	settings.BUILDING_VOLUMES_RES,
-	settings.BUILDING_VOLUMES_TOT,
-	settings.BUILDING_VOLUMES_NON_RES
-]
-
-layers_ref_nutslau = [
-	settings.POPULATION_TOT,
-	settings.HEAT_DENSITY_TOT,
-	settings.WWTP
-]
-
 
 @ns.route('/layers/nuts-lau')
 @api.response(404, 'No data found for that specific list of NUTS.')
@@ -65,10 +45,30 @@ class StatsLayersNutsInArea(Resource):
 		year = api.payload['year']
 		layersPayload = api.payload['layers']
 		nuts = api.payload['nuts']
-		type = generalData.getTypeScale(layersPayload)
 
-		# All layers that can be used (contains data)
-		allLayers = generalData.createAllLayers(layers_ref_nutslau)
+		# Stop execution if layers list is empty 
+		if not layersPayload:
+			return
+
+		# Get type
+		type = generalData.getTypeScale(layersPayload)		
+
+		# Layers filtration and management
+		if type == 'nuts':
+			allLayersTable = generalData.createAllLayers(settings.LAYERS_REF_NUTS_TABLE)
+			allLayers = generalData.createAllLayers(settings.LAYERS_REF_NUTS)
+
+			noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
+			noDataLayers = generalData.layers_filter(layersPayload, allLayers)
+
+		elif type == 'lau':
+			allLayersTable = generalData.createAllLayers(settings.LAYERS_REF_LAU_TABLE)
+			allLayers = generalData.createAllLayers(settings.LAYERS_REF_LAU)
+
+			noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
+			noDataLayers = generalData.layers_filter(layersPayload, allLayers)
+		else:
+			return
 
 		# Keep only existing layers
 		layers = generalData.adapt_layers_list(layersPayload=layersPayload, type=type, allLayers=allLayers)
@@ -85,9 +85,15 @@ class StatsLayersNutsInArea(Resource):
 		if pop_nuts_name in layers and heat_nuts_name in layers:
 			generalData.computeConsPerPerson(pop_nuts_name, heat_nuts_name, output)
 
+		# Remove scale for each layer
+		noTableLayers = generalData.removeScaleLayers(noTableLayers, type)
+		noDataLayers = generalData.removeScaleLayers(noDataLayers, type)
+
 		# output
 		return {
 			"layers": output,
+			"no_data_layers": noDataLayers,
+			"no_table_layers": noTableLayers
 		}
 
 @ns.route('/layers/hectares')
@@ -105,15 +111,18 @@ class StatsLayersHectareMulti(Resource):
 		layersPayload = api.payload['layers']        
 		areas = api.payload['areas']
 
-		# All layers that can be used (contains data)
-		allLayers = generalData.createAllLayers(layers_ref_hectares)
+		# Stop execution if layers list is empty 
+		if not layersPayload:
+			return
+
+		# Layers filtration and management
+		allLayersTable = generalData.createAllLayers(settings.LAYERS_REF_HECTARES_TABLE)
+		allLayers = generalData.createAllLayers(settings.LAYERS_REF_HECTARES)
+		noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
+		noDataLayers = generalData.layers_filter(layersPayload, allLayers)
 
 		# Keep only existing layers
 		layers = generalData.adapt_layers_list(layersPayload=layersPayload, type='ha', allLayers=allLayers)
-
-		# Stop execution if layers list is empty 
-		if not layers:
-			return
 
 		polyArray = []
 		output = []
@@ -140,7 +149,13 @@ class StatsLayersHectareMulti(Resource):
 		if pop1ha_name in layers and hdm_name in layers:
 			generalData.computeConsPerPerson(pop1ha_name, hdm_name, output)
 
+		# Remove scale for each layer
+		noTableLayers = generalData.removeScaleLayers(noTableLayers, type='ha')
+		noDataLayers = generalData.removeScaleLayers(noDataLayers, type='ha')
+
 		#output
 		return {
 			"layers": output,
+			"no_data_layers": noDataLayers,
+			"no_table_layers": noTableLayers
 		}
