@@ -9,7 +9,7 @@ from decimal import *
 """
     Population Density layer as ha
 """
-class PopulationDensityHa(db.Model):
+class PopulationDensityHaModel(db.Model):
     __tablename__ = 'pop_tot_curr_density'
     __table_args__ = (
         {"schema": 'geo'}
@@ -26,49 +26,11 @@ class PopulationDensityHa(db.Model):
         str_date = self.date.strftime("%Y-%m-%d")
         return "<PopDensity1ha(rid='%s', date='%s', filename='%d', rast='%s')>" % (self.rid, str_date, self.filename, str(self.rast))
 
-    @staticmethod
-    def aggregate_for_selection(geometry, year):
-
-        # Custom query
-        sql_query = \
-            "WITH buffer AS (SELECT ST_Buffer(ST_Transform(ST_GeomFromText('" + \
-                            geometry + "'), " + \
-                            str(PopulationDensityHa.CRS) + "), 0) AS buffer_geom " + \
-            ") " + \
-            "SELECT (stats).sum, (stats).mean, (stats).count " + \
-            "FROM ( " + \
-                "SELECT ST_SummaryStats(ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE))) AS stats " + \
-                "FROM " + PopulationDensityHa.__table_args__['schema'] + "." + \
-                PopulationDensityHa.__tablename__ + ", buffer " + \
-                "WHERE ST_Intersects(rast, buffer_geom) " + \
-                "AND date = to_date('" + str(year) + "', 'YYYY') " + \
-            ") AS foo " + \
-            ";"
-
-
-        query = db.session.execute(sql_query).first()
-
-        if query == None or len(query) < 3:
-            return []
-
-        return [{
-            'name': 'population',
-            'value': str(query[0] or 0),
-            'unit': 'person'
-        },{
-            'name': 'population_density',
-            'value': str(query[1] or 0),
-            'unit': 'person/ha'
-        },{
-            'name': 'count',
-            'value': str(query[2] or 0),
-            'unit': 'cell'
-        }]
 
 """
     Population Density layer as lau
 """
-class PopulationDensityLau(db.Model):
+class PopulationDensityLauModel(db.Model):
     __tablename__ = 'pop_tot_curr_density_lau_test'
 
     """__table_args__ = (
@@ -105,85 +67,11 @@ class PopulationDensityLau(db.Model):
         return "<PopDensityLau(comm_id='%s', year='%s', sum='%d', lau='%s')>" % \
                (self.comm_id, self.time.year, self.sum, str(self.lau))
 
-    @staticmethod
-    def aggregate_for_selection(geometry, year, level):
-        """query = db.session.query(
-                func.sum(PopulationDensityLau.sum),
-                func.avg(PopulationDensityLau.sum),
-                func.sum(PopulationDensityLau.count)
-            ). \
-            join(Lau, PopulationDensityLau.lau). \
-            join(Time, PopulationDensityLau.time). \
-            filter(Time.year == year). \
-            filter(Time.granularity == 'year'). \
-            filter(Lau.stat_levl_ == level). \
-            filter(func.ST_Within(Lau.geom,
-                                  func.ST_Transform(func.ST_GeomFromEWKT(geometry), PopulationDensityLau.CRS))).first()"""
-
-        query = db.session.query(
-                func.sum(PopulationDensityLau.sum),
-                func.avg(PopulationDensityLau.sum),
-                func.sum(PopulationDensityLau.count)
-            ). \
-            join(Lau, PopulationDensityLau.lau). \
-            filter(func.ST_Within(Lau.geom,
-                                  func.ST_Transform(func.ST_GeomFromEWKT(geometry), PopulationDensityLau.CRS))).first()
-
-        if query == None or len(query) < 3:
-            return []
-
-        return [{
-            'name': 'population',
-            'value': str(query[0] or 0),
-            'unit': 'person'
-        }, {
-            'name': 'population_density',
-            'value': str(query[1]/query[2] or 0),
-            'unit': 'person'
-        }, {
-            'name': 'count',
-            'value': str(query[2] or 0),
-            'unit': 'cell'
-        }]
-
-    @staticmethod
-    def aggregate_for_nuts_selection(nuts, year, level):
-        query = db.session.query(
-                func.sum(PopulationDensityLau.sum),
-                func.sum(PopulationDensityLau.sum),
-                func.sum(PopulationDensityLau.count)
-            ). \
-            join(Lau, PopulationDensityLau.lau). \
-            filter(Time.year == year). \
-            filter(Time.granularity == 'year'). \
-            filter(Lau.comm_id.in_(nuts)).first()
-
-        if query == None or len(query) < 3:
-                return []
-        if query[1] == None:
-            return []
-        if query[2] == None:
-            return []
-        average_ha =  Decimal(query[1])/Decimal(query[2])
-        return [{
-            'name': 'population',
-            'value': str(query[0] or 0),
-            'unit': 'person'
-        }, {
-            'name': 'population_density',
-            'value': str(average_ha or 0),
-            'unit': 'person/ha'
-        }, {
-            'name': 'count',
-            'value': str(query[2] or 0),
-            'unit': 'cell'
-        }]
-
 
 """
     Population Density layer as nuts
 """
-class PopulationDensityNuts(db.Model):
+class PopulationDensityNutsModel(db.Model):
     __tablename__ = 'pop_tot_curr_density_nuts_test'
     __table_args__ = (
         db.ForeignKeyConstraint(['nuts_id'], ['geo.nuts_rg_01m.nuts_id']),
@@ -210,105 +98,3 @@ class PopulationDensityNuts(db.Model):
         str_date = self.date.strftime("%Y-%m-%d")
         return "<PopDensity(nuts_id='%s', date='%s', value='%d', nuts='%s')>" % (self.nuts_id, str_date, self.value, str(self.nuts))
 
-    @staticmethod
-    def aggregate_for_selection(geometry, year, nuts_level):
-        query = db.session.query(
-                func.sum(PopulationDensityNuts.sum),
-                func.avg(PopulationDensityNuts.sum),
-                func.count(PopulationDensityNuts.sum)
-            ). \
-            join(NutsRG01M, PopulationDensityNuts.nuts). \
-            filter(NutsRG01M.stat_levl_ == nuts_level). \
-            filter(func.ST_Within(NutsRG01M.geom, func.ST_Transform(func.ST_GeomFromEWKT(geometry), PopulationDensityNuts.CRS))).first()
-
-        if query == None or len(query) < 3:
-            return []
-
-        return [{
-            'name': 'population',
-            'value': str(query[0] or 0),
-            'unit': 'person'
-        }, {
-            'name': 'population_density',
-            'value': str(query[1] or 0),
-            'unit': 'person'
-        }, {
-            'name': 'count',
-            'value': str(query[2] or 0),
-            'unit': 'nuts'
-        }]
-
-    @staticmethod
-    def aggregate_for_nuts_selection(nuts, year, nuts_level):
-        query = db.session.query(
-            func.sum(PopulationDensityNuts.sum),
-            func.sum(PopulationDensityNuts.sum),
-            func.sum(PopulationDensityNuts.count)
-        ). \
-            join(NutsRG01M, PopulationDensityNuts.nuts). \
-            filter(NutsRG01M.stat_levl_ == nuts_level). \
-            filter(NutsRG01M.nuts_id.in_(nuts)).first()
-
-        if query == None or len(query) < 3:
-                return []
-        if query[1] == None:
-            return []
-        if query[2] == None:
-            return []
-        average_ha =  Decimal(query[1])/Decimal(query[2])
-        return [{
-            'name': 'population',
-            'value': str(query[0] or 0),
-            'unit': 'person'
-        }, {
-            'name': 'population_density',
-            'value': str(average_ha or 0),
-            'unit': 'person/ha'
-        }, {
-            'name': 'count',
-            'value': str(query[2] or 0),
-            'unit': 'cell'
-        }]
-
-"""
-    PopulationDensityNuts classes for each nuts/lau level
-"""
-class PopulationDensityLau2():
-    @staticmethod
-    def aggregate_for_selection(geometry, year):
-        return PopulationDensityLau.aggregate_for_selection(geometry=geometry, year=year, level=2)
-    @staticmethod
-    def aggregate_for_nuts_selection(nuts, year):
-        return PopulationDensityLau.aggregate_for_nuts_selection(nuts=nuts, year=year, level=2)
-
-class PopulationDensityNuts3():
-    @staticmethod
-    def aggregate_for_selection(geometry, year):
-        return PopulationDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=3)
-    @staticmethod
-    def aggregate_for_nuts_selection(nuts, year):
-        return PopulationDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=3)
-
-class PopulationDensityNuts2():
-    @staticmethod
-    def aggregate_for_selection(geometry, year):
-        return PopulationDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=2)
-    @staticmethod
-    def aggregate_for_nuts_selection(nuts, year):
-        return PopulationDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=2)
-
-class PopulationDensityNuts1():
-    @staticmethod
-    def aggregate_for_selection(geometry, year):
-        return PopulationDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=1)
-    @staticmethod
-    def aggregate_for_nuts_selection(nuts, year):
-        return PopulationDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=1)
-
-class PopulationDensityNuts0():
-    @staticmethod
-    def aggregate_for_selection(geometry, year):
-        return PopulationDensityNuts.aggregate_for_selection(geometry=geometry, year=year, nuts_level=0)
-    @staticmethod
-    def aggregate_for_nuts_selection(nuts, year):
-        return PopulationDensityNuts.aggregate_for_nuts_selection(nuts=nuts, year=year, nuts_level=0)
