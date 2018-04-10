@@ -53,7 +53,7 @@ layersData = {
 			'resultsName':{
 				0:grass+'_value', 1:grass+'_density', 2:grass+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cells'}
+				0:'m2', 1:'m2/ha', 2:'cells'}
 			},
 	grassRes:{'tablename':'gfa_res_curr_density',
 			'from':'stat_grassRes',
