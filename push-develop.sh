@@ -7,6 +7,7 @@ git commit -m commitmessage
 git push origin develop
 ssh crem@vlhh2020.hevs.ch <<'ENDSSH'
 #commands to run on remote host
+sudo -i
 
 sh /var/hotmaps/scripts/toolbox-service/update.sh
 ENDSSH
