@@ -5,7 +5,7 @@ echo Hello, Can you please add the commit message?
 read commitmessage
 git commit -m commitmessage
 git push origin develop
-ssh crem@vlhh2020.hevs.ch <<'ENDSSH'
+ssh root@vlhh2020.hevs.ch <<'ENDSSH'
 #commands to run on remote host
 sudo -i
 
