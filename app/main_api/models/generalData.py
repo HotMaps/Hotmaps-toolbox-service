@@ -61,7 +61,7 @@ layersData = {
 			'resultsName':{
 				0:grassRes+'_value', 1:grassRes+'_density', 2:grassRes+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cells'}
+				0:'m2', 1:'m2/ha', 2:'cells'}
 			},
 	grassNonRes:{'tablename':'gfa_nonres_curr_density',
 			'from':'stat_grassNonRes',
@@ -69,7 +69,7 @@ layersData = {
 			'resultsName':{
 				0:grassNonRes+'_value', 1:grassNonRes+'_density', 2:grassNonRes+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cells'}
+				0:'m2', 1:'m2/ha', 2:'cells'}
 			},
 	bVolTot:{'tablename':'vol_tot_curr_density',
 			'from':'stat_bVolTot',
@@ -101,7 +101,7 @@ layersData = {
 			'resultsName':{
 				0:heatRes+'_value', 1:heatRes+'_density', 2:heatRes+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cells'}
+				0:'MWh', 1:'MWh/ha', 2:'cells'}
 			},
 	heatNonRes:{'tablename':'heat_nonres_curr_density',
 			'from':'stat_heatNonRes',
@@ -109,7 +109,7 @@ layersData = {
 			'resultsName':{
 				0:heatNonRes+'_value', 1:heatNonRes+'_density', 2:heatNonRes+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cells'}
+				0:'MWh', 1:'MWh/ha', 2:'cells'}
 			},
 	geothermalPot:{'tablename':'potential_shallowgeothermal',
 			'from':'stat_geothermalPot',
@@ -389,15 +389,17 @@ def computeConsPerPerson(l1, l2, output):
 	hdm = None
 	heat_cons = None
 	population = None
-
+	print(l2)
 	for l in output:
 		if l.get('name') == l2:
 			hdm = l
 			for v in l.get('values', []):
+				print(v.get('name'))
 				if v.get('name') == 'heat_consumption':
 					heat_cons = v
 		if l.get('name') == l1:
 			for v in l.get('values', []):
+				print(v.get('name'))
 				if v.get('name') == 'population':
 					population = v
 
