@@ -135,7 +135,7 @@ def createQueryDataStatsHectares(geometry, year):
 	withbVolNonRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=bVolNonRes, fromPart=layersData[bVolNonRes]['from'])
 	withHeatRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=heatRes, fromPart=layersData[heatRes]['from'])
 	withHeatNonRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=heatNonRes, fromPart=layersData[heatNonRes]['from'])
-	
+
 	# Dictionary with query data
 	layersQueryData = {heatDe:{'with':withHeat, 'select':layersData[heatDe]['select'], 'from':layersData[heatDe]['from']},
 						popDe:{'with':withPop, 'select':layersData[popDe]['select'], 'from':layersData[popDe]['from']},
@@ -389,17 +389,14 @@ def computeConsPerPerson(l1, l2, output):
 	hdm = None
 	heat_cons = None
 	population = None
-	print(l2)
 	for l in output:
 		if l.get('name') == l2:
 			hdm = l
 			for v in l.get('values', []):
-				print(v.get('name'))
 				if v.get('name') == 'heat_consumption':
 					heat_cons = v
 		if l.get('name') == l1:
 			for v in l.get('values', []):
-				print(v.get('name'))
 				if v.get('name') == 'population':
 					population = v
 
