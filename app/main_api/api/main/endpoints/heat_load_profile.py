@@ -16,6 +16,7 @@ import datetime
 import shapely.geometry as shapely_geom
 from geojson import FeatureCollection, Feature
 from geoalchemy2.shape import to_shape
+from main_api.models import generalData
 
 
 log = logging.getLogger(__name__)
@@ -32,21 +33,6 @@ class HeatLoadProfileResource(Resource):
                 list_nuts_id.append(nuts_id)
         return list_nuts_id
 
-    def transform_nuts_list(self, nuts):
-        # Store nuts in new custom list
-        nutsPayload = []
-        for n in nuts:
-            n = n[:4]
-            if n not in nutsPayload:
-                nutsPayload.append(str(n))
-
-        # Adapt format of list for the query
-        nutsListQuery = str(nutsPayload)
-        nutsListQuery = nutsListQuery[1:] # Remove the left hook
-        nutsListQuery = nutsListQuery[:-1] # Remove the right hook
-
-        return nutsListQuery
-
 
 @ns.route('/duration-curve/nuts-lau')
 @api.response(404, 'No data found')
@@ -60,10 +46,11 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         """
         year = api.payload['year']
         nuts = api.payload['nuts']
+        nuts = generalData.transform_nuts_list(nuts)
 
         output = {}
 
-        output = HeatLoadProfile.duration_curve_nuts_lau(year=year, nuts=self.transform_nuts_list(nuts))
+        output = HeatLoadProfile.duration_curve_nuts_lau(year=year, nuts=nuts)
 
         return {
             "points": output
@@ -164,6 +151,7 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
         # Entrees
         year = api.payload['year']
         nuts = api.payload['nuts']
+        nuts = generalData.transform_nuts_list(nuts)
         
         if 'month' in api.payload.keys():
           month = api.payload["month"]
@@ -177,7 +165,7 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
 
         output = {}
 
-        res = HeatLoadProfile.heatloadprofile_nuts_lau(nuts=self.transform_nuts_list(nuts), year=year, month=month, day=day)
+        res = HeatLoadProfile.heatloadprofile_nuts_lau(nuts=nuts, year=year, month=month, day=day)
 
         output = res
 
