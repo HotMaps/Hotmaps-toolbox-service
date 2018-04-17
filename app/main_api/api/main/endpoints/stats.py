@@ -46,8 +46,8 @@ class StatsLayersNutsInArea(Resource):
 		layersPayload = api.payload['layers']
 		nuts = api.payload['nuts']
 
-		# Stop execution if layers list is empty 
-		if not layersPayload:
+		# Stop execution if layers list or nuts list is empty 
+		if not layersPayload or not nuts:
 			return
 
 		# Get type
@@ -111,8 +111,8 @@ class StatsLayersHectareMulti(Resource):
 		layersPayload = api.payload['layers']        
 		areas = api.payload['areas']
 
-		# Stop execution if layers list is empty 
-		if not layersPayload:
+		# Stop execution if layers list or areas list is empty 
+		if not layersPayload or not areas:
 			return
 
 		# Layers filtration and management

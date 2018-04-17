@@ -46,6 +46,11 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         """
         year = api.payload['year']
         nuts = api.payload['nuts']
+
+        # Stop execution if nuts list is empty 
+        if not nuts:
+            return
+
         nuts = generalData.transform_nuts_list(nuts)
 
         output = {}
@@ -68,6 +73,10 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         """
         year = api.payload['year']
         areas = api.payload['areas']
+
+        # Stop execution if areas list is empty 
+        if not areas:
+            return
 
         polyArray = []
         output = {}
@@ -104,6 +113,10 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
         # Entrees
         year = api.payload['year']
         areas = api.payload['areas']
+
+        # Stop execution if areas list is empty 
+        if not areas:
+            return
         
         if 'month' in api.payload.keys():
           month = api.payload["month"]
@@ -151,6 +164,11 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
         # Entrees
         year = api.payload['year']
         nuts = api.payload['nuts']
+
+        # Stop execution if nuts list is empty 
+        if not nuts:
+            return
+            
         nuts = generalData.transform_nuts_list(nuts)
         
         if 'month' in api.payload.keys():
