@@ -20,6 +20,8 @@ class LayersNutsLau:
 	@staticmethod
 	def stats_nuts_lau(nuts, year, layers, type): #/stats/layers/hectares
 
+		print(layers)
+
 		# Get the data
 		layersQueryData = generalData.createQueryDataStatsNutsLau(nuts=nuts, year=year, type=type)
 		layersData = generalData.layersData
@@ -58,8 +60,13 @@ class LayersNutsLau:
 				
 			sql_query += ';'
 
+			print("pk1")
+			
+
 			# Execution of the query
 			query = db.session.execute(sql_query).first()
+
+			print("pk")
 
 			# Storing the results only if there is data			
 			if query[0] == None:
@@ -123,6 +130,8 @@ class LayersHectare:
 					sql_query += ', '	
 				
 			sql_query += ';'
+
+			print(sql_query)
 
 			# Execution of the query
 			query = db.session.execute(sql_query).first()

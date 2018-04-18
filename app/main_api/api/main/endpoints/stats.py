@@ -46,6 +46,10 @@ class StatsLayersNutsInArea(Resource):
 		layersPayload = api.payload['layers']
 		nuts = api.payload['nuts']
 
+		print(layersPayload)
+		print(nuts)
+		print(year)
+
 		# Stop execution if layers list is empty 
 		if not layersPayload:
 			return

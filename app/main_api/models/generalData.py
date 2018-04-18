@@ -13,6 +13,8 @@ bVolNonRes = settings.BUILDING_VOLUMES_NON_RES
 heatRes = settings.HEAT_DENSITY_RES
 heatNonRes = settings.HEAT_DENSITY_NON_RES
 indSites = settings.INDUSTRIAL_SITES
+indSitesEm = settings.INDUSTRIAL_SITES_EMISSIONS
+indSitesExc = settings.INDUSTRIAL_SITES_EXCESS_HEAT
 biomassPot = settings.BIOMASS_POTENTIAL
 msw = settings.MUNICIPAL_SOLID_WASTE
 windPot = settings.WIND_POTENTIAL
@@ -119,6 +121,14 @@ layersData = {
 			'resultsUnit':{ 
 				0:'value', 1:'value/ha', 2:'cells'}
 			},
+	indSitesEm:{'tablename':'industrial_database_emissions',
+			'from':'stat_indSitesEm',
+			'select':'stat_indSitesEm.emissions_ets_2014 as '+indSitesEm+'_value ',
+			'resultsName':{
+				0:indSitesEm+'_value'},
+			'resultsUnit':{ 
+				0:'value'}
+			}
 }
 
 # ALL QUERIES DATA FOR THE STATS BY LAYERS 
@@ -135,6 +145,8 @@ def createQueryDataStatsHectares(geometry, year):
 	withbVolNonRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=bVolNonRes, fromPart=layersData[bVolNonRes]['from'])
 	withHeatRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=heatRes, fromPart=layersData[heatRes]['from'])
 	withHeatNonRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=heatNonRes, fromPart=layersData[heatNonRes]['from'])
+	withIndSitesEm = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=indSitesEm, fromPart=layersData[indSitesEm]['from'])
+
 	
 	# Dictionary with query data
 	layersQueryData = {heatDe:{'with':withHeat, 'select':layersData[heatDe]['select'], 'from':layersData[heatDe]['from']},
@@ -147,7 +159,8 @@ def createQueryDataStatsHectares(geometry, year):
 						bVolRes:{'with':withbVolRes, 'select':layersData[bVolRes]['select'], 'from':layersData[bVolRes]['from']},
 						bVolNonRes:{'with':withbVolNonRes, 'select':layersData[bVolNonRes]['select'], 'from':layersData[bVolNonRes]['from']},
 						heatRes:{'with':withHeatRes, 'select':layersData[heatRes]['select'], 'from':layersData[heatRes]['from']},
-						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']}}
+						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']},
+						indSitesEm:{'with':withIndSitesEm, 'select':layersData[indSitesEm]['select'], 'from':layersData[indSitesEm]['from']}}
 
 	return layersQueryData
 
@@ -164,6 +177,7 @@ def createQueryDataStatsNutsLau(nuts, year, type):
 	withbVolNonRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=bVolNonRes, type=type, fromPart=layersData[bVolNonRes]['from'])
 	withHeatRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=heatRes, type=type, fromPart=layersData[heatRes]['from'])
 	withHeatNonRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=heatNonRes, type=type, fromPart=layersData[heatNonRes]['from'])
+	withIndSitesEm = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=indSitesEm, type=type, fromPart=layersData[indSitesEm]['from'])
 
 	# Dictionary with query data
 	layersQueryData = {heatDe:{'with':withHeat, 'select':layersData[heatDe]['select'], 'from':layersData[heatDe]['from']},
@@ -176,7 +190,8 @@ def createQueryDataStatsNutsLau(nuts, year, type):
 						bVolRes:{'with':withbVolRes, 'select':layersData[bVolRes]['select'], 'from':layersData[bVolRes]['from']},
 						bVolNonRes:{'with':withbVolNonRes, 'select':layersData[bVolNonRes]['select'], 'from':layersData[bVolNonRes]['from']},
 						heatRes:{'with':withHeatRes, 'select':layersData[heatRes]['select'], 'from':layersData[heatRes]['from']},
-						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']}}
+						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']},
+						indSitesEm:{'with':withIndSitesEm, 'select':layersData[indSitesEm]['select'], 'from':layersData[indSitesEm]['from']}}
 
 	return layersQueryData
 
@@ -427,6 +442,16 @@ def constructWithPartEachLayerHectare(geometry, year, layer, fromPart):
 		' WHERE' + \
 		'	ST_Within(tbl_wwtp.geom,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + ')) ' + \
 		'AND date = to_date(\''+ str(year) +'\',\'YYYY\')) '
+	elif layer == indSitesEm:
+		w = ''+fromPart+' AS ( SELECT (' + \
+		'	((ST_SummaryStatsAgg(ST_Clip('+ layersData[layer]['tablename'] + '.rast, 1, ' + \
+		'			st_transform(st_geomfromtext(\'' + \
+						geometry + '\'::text,4326),' + str(CRS) + '),false),true,0))).*) as stats ' + \
+		'FROM' + \
+		'	public.'+ layersData[layer]['tablename'] + \
+		' WHERE' + \
+		'	ST_Intersects('+ layersData[layer]['tablename'] + '.rast,' + \
+		'		st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + '))) '
 	else:
 		w = ''+fromPart+' AS ( SELECT (' + \
 		'	((ST_SummaryStatsAgg(ST_Clip('+ layersData[layer]['tablename'] + '.rast, 1, ' + \
@@ -462,6 +487,11 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
 					"sum(stat."+ layersData[layer]['tablename'] +"_"+type+"_test.count) AS count " +\
 				"FROM stat."+layersData[layer]['tablename']+"_"+type+"_test " +\
 				"WHERE stat."+layersData[layer]['tablename']+"_"+type+"_test."+id_type+" IN ("+nuts+")) "
+	elif layer == indSitesEm:
+		w = "nutsSelection as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), " +\
+				""+fromPart+" as (SELECT sum(emissions_ets_2014) as sum " +\
+				"from nutsSelection, public."+ layersData[layer]['tablename'] +" " +\
+				"where st_within(public."+ layersData[layer]['tablename'] +".geometry, st_transform(nutsSelection.geom,3035)))"
 	else:
 		w = ""+fromPart+" as (SELECT sum(stat."+layersData[layer]['tablename']+"_"+type+".sum) AS sum, " +\
 					"sum(stat."+ layersData[layer]['tablename'] +"_"+type+".count) AS count " +\
