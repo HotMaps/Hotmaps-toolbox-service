@@ -4,6 +4,8 @@ from main_api import settings
 popDe = settings.POPULATION_TOT
 heatDe = settings.HEAT_DENSITY_TOT
 wwtp = settings.WWTP
+wwtpCapacity = settings.WWTP_CAPACITY
+wwtpPower = settings.WWTP_POWER
 grass = settings.GRASS_FLOOR_AREA_TOT
 grassRes = settings.GRASS_FLOOR_AREA_RES
 grassNonRes = settings.GRASS_FLOOR_AREA_NON_RES
@@ -39,13 +41,29 @@ layersData = {
 			'resultsUnit':{ 
 				0:'person', 1:'person/ha', 2:'cells'}
 			},
-	wwtp:{'tablename':'wwtp',
+	wwtp:{'tablename':'wwtp_capacity',
 			'from':'stat_wwtp',
 			'select':'stat_wwtp.capacityPerson as capacity, stat_wwtp.power as power ',
 			'resultsName':{
 				0:'power', 1:'capacity'},
 			'resultsUnit':{
 				0:'kW', 1:'Person equivalent'}
+			},
+	wwtpCapacity:{'tablename':'wwtp_capacity',
+			'from':'stat_wwtpCap',
+			'select':'stat_wwtpCap.capacityPerson as capacity ',
+			'resultsName':{
+				0:'capacity'},
+			'resultsUnit':{
+				0:'Person equivalent'}
+			},
+	wwtpPower:{'tablename':'wwtp_power',
+			'from':'stat_wwtpPower',
+			'select':'stat_wwtpPower.power as power ',
+			'resultsName':{
+				0:'power'},
+			'resultsUnit':{
+				0:'kW'}
 			},
 	grass:{'tablename':'gfa_tot_curr_density',
 			'from':'stat_grass',
@@ -135,6 +153,8 @@ def createQueryDataStatsHectares(geometry, year):
 	withbVolNonRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=bVolNonRes, fromPart=layersData[bVolNonRes]['from'])
 	withHeatRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=heatRes, fromPart=layersData[heatRes]['from'])
 	withHeatNonRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=heatNonRes, fromPart=layersData[heatNonRes]['from'])
+	withWwtpCap = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=wwtpCapacity, fromPart=layersData[wwtpCapacity]['from'])
+	withWwtpPower = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=wwtpPower, fromPart=layersData[wwtpPower]['from'])
 	
 	# Dictionary with query data
 	layersQueryData = {heatDe:{'with':withHeat, 'select':layersData[heatDe]['select'], 'from':layersData[heatDe]['from']},
@@ -147,7 +167,9 @@ def createQueryDataStatsHectares(geometry, year):
 						bVolRes:{'with':withbVolRes, 'select':layersData[bVolRes]['select'], 'from':layersData[bVolRes]['from']},
 						bVolNonRes:{'with':withbVolNonRes, 'select':layersData[bVolNonRes]['select'], 'from':layersData[bVolNonRes]['from']},
 						heatRes:{'with':withHeatRes, 'select':layersData[heatRes]['select'], 'from':layersData[heatRes]['from']},
-						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']}}
+						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']},
+						wwtpCapacity:{'with':withWwtpCap, 'select':layersData[wwtpCapacity]['select'], 'from':layersData[wwtpCapacity]['from']},
+						wwtpPower:{'with':withWwtpPower, 'select':layersData[wwtpPower]['select'], 'from':layersData[wwtpPower]['from']}}
 
 	return layersQueryData
 
@@ -164,6 +186,8 @@ def createQueryDataStatsNutsLau(nuts, year, type):
 	withbVolNonRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=bVolNonRes, type=type, fromPart=layersData[bVolNonRes]['from'])
 	withHeatRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=heatRes, type=type, fromPart=layersData[heatRes]['from'])
 	withHeatNonRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=heatNonRes, type=type, fromPart=layersData[heatNonRes]['from'])
+	withWwtpCap = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=wwtpCapacity, type=type, fromPart=layersData[wwtpCapacity]['from'])
+	withWwtpPower = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=wwtpPower, type=type, fromPart=layersData[wwtpPower]['from'])
 
 	# Dictionary with query data
 	layersQueryData = {heatDe:{'with':withHeat, 'select':layersData[heatDe]['select'], 'from':layersData[heatDe]['from']},
@@ -176,7 +200,9 @@ def createQueryDataStatsNutsLau(nuts, year, type):
 						bVolRes:{'with':withbVolRes, 'select':layersData[bVolRes]['select'], 'from':layersData[bVolRes]['from']},
 						bVolNonRes:{'with':withbVolNonRes, 'select':layersData[bVolNonRes]['select'], 'from':layersData[bVolNonRes]['from']},
 						heatRes:{'with':withHeatRes, 'select':layersData[heatRes]['select'], 'from':layersData[heatRes]['from']},
-						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']}}
+						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']},
+						wwtpCapacity:{'with':withWwtpCap, 'select':layersData[wwtpCapacity]['select'], 'from':layersData[wwtpCapacity]['from']},
+						wwtpPower:{'with':withWwtpPower, 'select':layersData[wwtpPower]['select'], 'from':layersData[wwtpPower]['from']}}
 
 	return layersQueryData
 
@@ -419,14 +445,17 @@ def computeConsPerPerson(l1, l2, output):
 	return hdm
 
 def constructWithPartEachLayerHectare(geometry, year, layer, fromPart):
-	if layer == settings.WWTP:
-		w = ''+fromPart+' AS (SELECT ' + \
-		'		count(*) as nbWwtp, sum(capacity) as capacityPerson, sum(power) as power ' + \
-		'FROM' + \
-		'	geo.'+ layersData[layer]['tablename'] + ' tbl_wwtp' + \
+	if layer == wwtpCapacity or layer == wwtpPower:
+		w = ''+fromPart+' AS (SELECT '
+		if layer == wwtpCapacity:
+			w += 'sum(capacity) as capacityPerson '
+		else:
+			w += 'sum(power) as power '
+
+		w += 'FROM' + \
+		'	public.'+ layersData[layer]['tablename'] +'' + \
 		' WHERE' + \
-		'	ST_Within(tbl_wwtp.geom,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + ')) ' + \
-		'AND date = to_date(\''+ str(year) +'\',\'YYYY\')) '
+		'	ST_Within(public.'+ layersData[layer]['tablename'] +'.geometry,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + '))) '
 	else:
 		w = ''+fromPart+' AS ( SELECT (' + \
 		'	((ST_SummaryStatsAgg(ST_Clip('+ layersData[layer]['tablename'] + '.rast, 1, ' + \
@@ -451,12 +480,16 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
 	else:
 		id_type = 'comm_id'
 
-	if layer == wwtp:
-		w = "nutsSelection as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+") and year = to_date('2013','YYYY')), " +\
-				""+fromPart+" as (SELECT sum(power) as power, sum(capacity) as capacityPerson " +\
-				"from nutsSelection, geo.wwtp tbl_wwtp " +\
-				"where st_within(tbl_wwtp.geom, st_transform(nutsSelection.geom,3035)) " +\
-				"and date = to_date('2015','YYYY'))"
+	if layer == wwtpCapacity or layer == wwtpPower:
+		w = "nutsSelection_"+ layer +" as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), "
+		if layer == wwtpCapacity:
+			w += ""+fromPart+" as (SELECT sum(capacity) as capacityPerson " +\
+				"from nutsSelection_"+ layer +", public.wwtp_capacity " +\
+				"where st_within(public.wwtp_capacity.geometry, st_transform(nutsSelection_"+ layer +".geom,3035)))"
+		else:
+			w += ""+fromPart+" as (SELECT sum(power) as power " +\
+				"from nutsSelection_"+ layer +", public.wwtp_power " +\
+				"where st_within(public.wwtp_power.geometry, st_transform(nutsSelection_"+ layer +".geom,3035)))"
 	elif layer == heatDe or layer == popDe:
 		w = ""+fromPart+" as (SELECT sum(stat."+layersData[layer]['tablename']+"_"+type+"_test.sum) AS sum, " +\
 					"sum(stat."+ layersData[layer]['tablename'] +"_"+type+"_test.count) AS count " +\
