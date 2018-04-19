@@ -123,11 +123,19 @@ layersData = {
 			},
 	indSitesEm:{'tablename':'industrial_database_emissions',
 			'from':'stat_indSitesEm',
-			'select':'stat_indSitesEm.emissions_ets_2014 as '+indSitesEm+'_value ',
+			'select':'stat_indSitesEm.sum/1000000 as '+indSitesEm+'_value ',
 			'resultsName':{
 				0:indSitesEm+'_value'},
 			'resultsUnit':{ 
-				0:'value'}
+				0:'Mtonnes/year'}
+			},
+	indSitesExc:{'tablename':'industrial_database_excess_heat',
+			'from':'stat_indSitesExc',
+			'select':'stat_indSitesExc.sum1 as '+indSitesExc+'_value, stat_indSitesExc.sum2 as '+indSitesExc+'_value2, stat_indSitesExc.sum3 as '+indSitesExc+'_value3, stat_indSitesExc.total as total ',
+			'resultsName':{
+				0:indSitesExc+'_value', 1:indSitesExc+'_value2', 2:indSitesExc+'_value3', 3:'total'},
+			'resultsUnit':{ 
+				0:'GWh/year', 1:'GWh/year', 2:'GWh/year', 3:'GWh/year'}
 			}
 }
 
@@ -146,7 +154,7 @@ def createQueryDataStatsHectares(geometry, year):
 	withHeatRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=heatRes, fromPart=layersData[heatRes]['from'])
 	withHeatNonRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=heatNonRes, fromPart=layersData[heatNonRes]['from'])
 	withIndSitesEm = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=indSitesEm, fromPart=layersData[indSitesEm]['from'])
-
+	withIndSitesExc = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=indSitesExc, fromPart=layersData[indSitesExc]['from'])
 	
 	# Dictionary with query data
 	layersQueryData = {heatDe:{'with':withHeat, 'select':layersData[heatDe]['select'], 'from':layersData[heatDe]['from']},
@@ -160,7 +168,8 @@ def createQueryDataStatsHectares(geometry, year):
 						bVolNonRes:{'with':withbVolNonRes, 'select':layersData[bVolNonRes]['select'], 'from':layersData[bVolNonRes]['from']},
 						heatRes:{'with':withHeatRes, 'select':layersData[heatRes]['select'], 'from':layersData[heatRes]['from']},
 						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']},
-						indSitesEm:{'with':withIndSitesEm, 'select':layersData[indSitesEm]['select'], 'from':layersData[indSitesEm]['from']}}
+						indSitesEm:{'with':withIndSitesEm, 'select':layersData[indSitesEm]['select'], 'from':layersData[indSitesEm]['from']},
+						indSitesExc:{'with':withIndSitesExc, 'select':layersData[indSitesExc]['select'], 'from':layersData[indSitesExc]['from']}}
 
 	return layersQueryData
 
@@ -178,6 +187,7 @@ def createQueryDataStatsNutsLau(nuts, year, type):
 	withHeatRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=heatRes, type=type, fromPart=layersData[heatRes]['from'])
 	withHeatNonRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=heatNonRes, type=type, fromPart=layersData[heatNonRes]['from'])
 	withIndSitesEm = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=indSitesEm, type=type, fromPart=layersData[indSitesEm]['from'])
+	withIndSitesExc = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=indSitesExc, type=type, fromPart=layersData[indSitesExc]['from'])
 
 	# Dictionary with query data
 	layersQueryData = {heatDe:{'with':withHeat, 'select':layersData[heatDe]['select'], 'from':layersData[heatDe]['from']},
@@ -191,7 +201,8 @@ def createQueryDataStatsNutsLau(nuts, year, type):
 						bVolNonRes:{'with':withbVolNonRes, 'select':layersData[bVolNonRes]['select'], 'from':layersData[bVolNonRes]['from']},
 						heatRes:{'with':withHeatRes, 'select':layersData[heatRes]['select'], 'from':layersData[heatRes]['from']},
 						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']},
-						indSitesEm:{'with':withIndSitesEm, 'select':layersData[indSitesEm]['select'], 'from':layersData[indSitesEm]['from']}}
+						indSitesEm:{'with':withIndSitesEm, 'select':layersData[indSitesEm]['select'], 'from':layersData[indSitesEm]['from']},
+						indSitesExc:{'with':withIndSitesExc, 'select':layersData[indSitesExc]['select'], 'from':layersData[indSitesExc]['from']}}
 
 	return layersQueryData
 
@@ -443,15 +454,19 @@ def constructWithPartEachLayerHectare(geometry, year, layer, fromPart):
 		'	ST_Within(tbl_wwtp.geom,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + ')) ' + \
 		'AND date = to_date(\''+ str(year) +'\',\'YYYY\')) '
 	elif layer == indSitesEm:
-		w = ''+fromPart+' AS ( SELECT (' + \
-		'	((ST_SummaryStatsAgg(ST_Clip('+ layersData[layer]['tablename'] + '.rast, 1, ' + \
-		'			st_transform(st_geomfromtext(\'' + \
-						geometry + '\'::text,4326),' + str(CRS) + '),false),true,0))).*) as stats ' + \
+		w = ''+fromPart+' AS (SELECT ' + \
+		'		sum(emissions_ets_2014) as sum ' + \
 		'FROM' + \
 		'	public.'+ layersData[layer]['tablename'] + \
 		' WHERE' + \
-		'	ST_Intersects('+ layersData[layer]['tablename'] + '.rast,' + \
-		'		st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + '))) '
+		'	ST_Within(public.'+ layersData[layer]['tablename'] +'.geometry,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),4326))) '
+	elif layer == indSitesExc:
+		w = ''+fromPart+' AS (SELECT ' + \
+		'		sum(excess_heat_100_200c) as sum1, sum(excess_heat_200_500c) as sum2, sum(excess_heat_500c) as sum3, sum(excess_heat_total) as total ' + \
+		'FROM' + \
+		'	public.'+ layersData[layer]['tablename'] + \
+		' WHERE' + \
+		'	ST_Within(public.'+ layersData[layer]['tablename'] +'.geometry,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),4326))) '
 	else:
 		w = ''+fromPart+' AS ( SELECT (' + \
 		'	((ST_SummaryStatsAgg(ST_Clip('+ layersData[layer]['tablename'] + '.rast, 1, ' + \
@@ -488,10 +503,16 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
 				"FROM stat."+layersData[layer]['tablename']+"_"+type+"_test " +\
 				"WHERE stat."+layersData[layer]['tablename']+"_"+type+"_test."+id_type+" IN ("+nuts+")) "
 	elif layer == indSitesEm:
-		w = "nutsSelection as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), " +\
+		w = "nutsSelection_Em as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), " +\
 				""+fromPart+" as (SELECT sum(emissions_ets_2014) as sum " +\
-				"from nutsSelection, public."+ layersData[layer]['tablename'] +" " +\
-				"where st_within(public."+ layersData[layer]['tablename'] +".geometry, st_transform(nutsSelection.geom,3035)))"
+				"from nutsSelection_Em, public."+ layersData[layer]['tablename'] +" " +\
+				"where st_within(public."+ layersData[layer]['tablename'] +".geometry, st_transform(nutsSelection_Em.geom,4326))) "
+	elif layer == indSitesExc:
+		w = "nutsSelection_Exc as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), " +\
+				""+fromPart+" as (SELECT sum(excess_heat_100_200c) as sum1, sum(excess_heat_200_500c) as sum2, " +\
+				"sum(excess_heat_500c) as sum3, sum(excess_heat_total) as total " +\
+				"from nutsSelection_Exc, public."+ layersData[layer]['tablename'] +" " +\
+				"where st_within(public."+ layersData[layer]['tablename'] +".geometry, st_transform(nutsSelection_Exc.geom,4326))) "
 	else:
 		w = ""+fromPart+" as (SELECT sum(stat."+layersData[layer]['tablename']+"_"+type+".sum) AS sum, " +\
 					"sum(stat."+ layersData[layer]['tablename'] +"_"+type+".count) AS count " +\
