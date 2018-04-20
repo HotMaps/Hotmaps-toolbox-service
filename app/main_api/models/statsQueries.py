@@ -18,7 +18,7 @@ import generalData
 
 class LayersNutsLau: 
 	@staticmethod
-	def stats_nuts_lau(nuts, year, layers, type): #/stats/layers/hectares
+	def stats_nuts_lau(nuts, year, layers, type): #/stats/layers/nuts-lau
 
 		# Get the data
 		layersQueryData = generalData.createQueryDataStatsNutsLau(nuts=nuts, year=year, type=type)
@@ -68,9 +68,14 @@ class LayersNutsLau:
 				for layer in layers:
 					values = []
 					for c, l in enumerate(layersData[layer]['resultsName']):
+
+						currentValue = query[layersData[layer]['resultsName'][c]]
+						if currentValue == None:
+							currentValue = 0
+
 						values.append({
 								'name':layersData[layer]['resultsName'][c],
-								'value':str(query[layersData[layer]['resultsName'][c]]),
+								'value':currentValue,
 								'unit':layersData[layer]['resultsUnit'][c]
 							})
 
@@ -134,9 +139,14 @@ class LayersHectare:
 				for layer in layers:
 					values = []
 					for c, l in enumerate(layersData[layer]['resultsName']):
+						
+						currentValue = query[layersData[layer]['resultsName'][c]]
+						if currentValue == None:
+							currentValue = 0
+
 						values.append({
 								'name':layersData[layer]['resultsName'][c],
-								'value':str(query[layersData[layer]['resultsName'][c]]),
+								'value':currentValue,
 								'unit':layersData[layer]['resultsUnit'][c]
 							})
 
@@ -144,7 +154,6 @@ class LayersHectare:
 							'name':layer,
 							'values':values
 						})
-
 		
 		return result
 
