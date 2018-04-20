@@ -23,6 +23,7 @@ windPot = settings.WIND_POTENTIAL
 solarPot = settings.SOLAR_POTENTIAL
 geothermalPot = settings.GEOTHERMAL_POTENTIAL
 
+
 CRS = 3035
 
 # ALL DATA FOR THE STATS
@@ -154,7 +155,15 @@ layersData = {
 				0:indSitesExc+'_value', 1:indSitesExc+'_value2', 2:indSitesExc+'_value3', 3:'total'},
 			'resultsUnit':{
 				0:'GWh/year', 1:'GWh/year', 2:'GWh/year', 3:'GWh/year'}
-			}
+			},
+	solarPot:{'tablename':'solar_optimal_total',
+			'from':'stat_solarPot',
+			'select':'stat_solarPot.sum as '+solarPot+'_value, (stat_solarPot.sum/stat_solarPot.count) as '+solarPot+'_density, stat_solarPot.count as '+solarPot+'_cells ',
+			'resultsName':{
+				0:solarPot+'_value', 1:solarPot+'_density', 2:solarPot+'_cells'},
+			'resultsUnit':{
+				0:'value', 1:'value/ha', 2:'cells'}
+			},
 }
 
 # ALL QUERIES DATA FOR THE STATS BY LAYERS 
@@ -171,6 +180,8 @@ def createQueryDataStatsHectares(geometry, year):
 	withbVolNonRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=bVolNonRes, fromPart=layersData[bVolNonRes]['from'])
 	withHeatRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=heatRes, fromPart=layersData[heatRes]['from'])
 	withHeatNonRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=heatNonRes, fromPart=layersData[heatNonRes]['from'])
+	withSolarPot = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=solarPot, fromPart=layersData[solarPot]['from'])
+
 	withIndSitesEm = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=indSitesEm, fromPart=layersData[indSitesEm]['from'])
 	withIndSitesExc = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=indSitesExc, fromPart=layersData[indSitesExc]['from'])
 	withWwtpCap = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=wwtpCapacity, fromPart=layersData[wwtpCapacity]['from'])
@@ -187,12 +198,12 @@ def createQueryDataStatsHectares(geometry, year):
 						bVolRes:{'with':withbVolRes, 'select':layersData[bVolRes]['select'], 'from':layersData[bVolRes]['from']},
 						bVolNonRes:{'with':withbVolNonRes, 'select':layersData[bVolNonRes]['select'], 'from':layersData[bVolNonRes]['from']},
 						heatRes:{'with':withHeatRes, 'select':layersData[heatRes]['select'], 'from':layersData[heatRes]['from']},
-						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']},
 						wwtpCapacity:{'with':withWwtpCap, 'select':layersData[wwtpCapacity]['select'], 'from':layersData[wwtpCapacity]['from']},
 						wwtpPower:{'with':withWwtpPower, 'select':layersData[wwtpPower]['select'], 'from':layersData[wwtpPower]['from']},
-						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']},
 						indSitesEm:{'with':withIndSitesEm, 'select':layersData[indSitesEm]['select'], 'from':layersData[indSitesEm]['from']},
-						indSitesExc:{'with':withIndSitesExc, 'select':layersData[indSitesExc]['select'], 'from':layersData[indSitesExc]['from']}}
+						indSitesExc:{'with':withIndSitesExc, 'select':layersData[indSitesExc]['select'], 'from':layersData[indSitesExc]['from']},
+						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']},
+						solarPot:{'with':withSolarPot, 'select':layersData[solarPot]['select'], 'from':layersData[solarPot]['from']}}
 
 	return layersQueryData
 
@@ -209,6 +220,7 @@ def createQueryDataStatsNutsLau(nuts, year, type):
 	withbVolNonRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=bVolNonRes, type=type, fromPart=layersData[bVolNonRes]['from'])
 	withHeatRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=heatRes, type=type, fromPart=layersData[heatRes]['from'])
 	withHeatNonRes = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=heatNonRes, type=type, fromPart=layersData[heatNonRes]['from'])
+	withSolarPot = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=solarPot, type=type, fromPart=layersData[solarPot]['from'])
 	withWwtpCap = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=wwtpCapacity, type=type, fromPart=layersData[wwtpCapacity]['from'])
 	withWwtpPower = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=wwtpPower, type=type, fromPart=layersData[wwtpPower]['from'])
 	withIndSitesEm = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=indSitesEm, type=type, fromPart=layersData[indSitesEm]['from'])
@@ -226,6 +238,7 @@ def createQueryDataStatsNutsLau(nuts, year, type):
 						bVolNonRes:{'with':withbVolNonRes, 'select':layersData[bVolNonRes]['select'], 'from':layersData[bVolNonRes]['from']},
 						heatRes:{'with':withHeatRes, 'select':layersData[heatRes]['select'], 'from':layersData[heatRes]['from']},
 						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']},
+						solarPot:{'with':withSolarPot, 'select':layersData[solarPot]['select'], 'from':layersData[solarPot]['from']},
 						wwtpCapacity:{'with':withWwtpCap, 'select':layersData[wwtpCapacity]['select'], 'from':layersData[wwtpCapacity]['from']},
 						wwtpPower:{'with':withWwtpPower, 'select':layersData[wwtpPower]['select'], 'from':layersData[wwtpPower]['from']},
 						indSitesEm:{'with':withIndSitesEm, 'select':layersData[indSitesEm]['select'], 'from':layersData[indSitesEm]['from']},
