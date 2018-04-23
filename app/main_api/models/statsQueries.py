@@ -74,11 +74,15 @@ class LayersNutsLau:
 						if currentValue == None:
 							currentValue = 0
 
-						values.append({
-								'name':layersData[layer]['resultsName'][c],
-								'value':currentValue,
-								'unit':layersData[layer]['resultsUnit'][c]
-							})
+
+						try:
+							values.append({
+									'name':layersData[layer]['resultsName'][c],
+									'value':currentValue,
+									'unit':layersData[layer]['resultsUnit'][c]
+								})
+						except KeyError: # Special case we retrieve only one value for an hectare
+							pass
 
 					result.append({
 							'name':layer,
@@ -140,16 +144,18 @@ class LayersHectare:
 				for layer in layers:
 					values = []
 					for c, l in enumerate(layersData[layer]['resultsName']):
-						
-						currentValue = query[layersData[layer]['resultsName'][c]]
-						if currentValue == None:
-							currentValue = 0
+						try:
+							currentValue = query[layersData[layer]['resultsName'][c]]
+							if currentValue == None:
+								currentValue = 0
 
-						values.append({
-								'name':layersData[layer]['resultsName'][c],
-								'value':currentValue,
-								'unit':layersData[layer]['resultsUnit'][c]
-							})
+							values.append({
+									'name':layersData[layer]['resultsName'][c],
+									'value':currentValue,
+									'unit':layersData[layer]['resultsUnit'][c]
+								})
+						except KeyError: # Special case we retrieve only one value for an hectare
+							pass
 
 					result.append({
 							'name':layer,

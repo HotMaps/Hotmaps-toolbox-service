@@ -70,27 +70,27 @@ layersData = {
 			},
 	grass:{'tablename':'gfa_tot_curr_density',
 			'from':'stat_grass',
-			'select':'stat_grass.sum as '+grass+'_value, (stat_grass.sum/stat_grass.count) as '+grass+'_density, stat_grass.count as '+grass+'_cells ',
+			'select':'(stat_grass.sum/stat_grass.count) as '+grass+'_density, stat_grass.count as '+grass+'_cells ',
 			'resultsName':{
-				0:grass+'_value', 1:grass+'_density', 2:grass+'_cells'},
+				 0:grass+'_density', 1:grass+'_cells'},
 			'resultsUnit':{ 
-				0:'m2', 1:'m2/ha', 2:'cells'}
+				 0:'m2', 1:'cells'}
 			},
 	grassRes:{'tablename':'gfa_res_curr_density',
 			'from':'stat_grassRes',
-			'select':'stat_grassRes.sum as '+grassRes+'_value, (stat_grassRes.sum/stat_grassRes.count) as '+grassRes+'_density, stat_grassRes.count as '+grassRes+'_cells ',
+			'select':'(stat_grassRes.sum/stat_grassRes.count) as '+grassRes+'_density, stat_grassRes.count as '+grassRes+'_cells ',
 			'resultsName':{
-				0:grassRes+'_value', 1:grassRes+'_density', 2:grassRes+'_cells'},
+				0:grassRes+'_density',  1:grassRes+'_cells'},
 			'resultsUnit':{ 
-				0:'m2', 1:'m2/ha', 2:'cells'}
+				0:'m2', 2:'cells'}
 			},
 	grassNonRes:{'tablename':'gfa_nonres_curr_density',
 			'from':'stat_grassNonRes',
-			'select':'stat_grassNonRes.sum as '+grassNonRes+'_value, (stat_grassNonRes.sum/stat_grassNonRes.count) as '+grassNonRes+'_density, stat_grassNonRes.count as '+grassNonRes+'_cells ',
+			'select':' (stat_grassNonRes.sum/stat_grassNonRes.count) as '+grassNonRes+'_density, stat_grassNonRes.count as '+grassNonRes+'_cells ',
 			'resultsName':{
-				0:grassNonRes+'_value', 1:grassNonRes+'_density', 2:grassNonRes+'_cells'},
+				0:grassNonRes+'_density', 1:grassNonRes+'_cells'},
 			'resultsUnit':{ 
-				0:'m2', 1:'m2/ha', 2:'cells'}
+				0:'m2', 2:'cells'}
 			},
 	bVolTot:{'tablename':'vol_tot_curr_density',
 			'from':'stat_bVolTot',
@@ -158,11 +158,11 @@ layersData = {
 			},
 	solarPot:{'tablename':'solar_optimal_total',
 			'from':'stat_solarPot',
-			'select':'stat_solarPot.sum as '+solarPot+'_value, (stat_solarPot.sum/stat_solarPot.count) as '+solarPot+'_density, stat_solarPot.count as '+solarPot+'_cells ',
+			'select':'(stat_solarPot.sum/stat_solarPot.count) as '+solarPot+'_density, stat_solarPot.count as '+solarPot+'_cells ',
 			'resultsName':{
-				0:solarPot+'_value', 1:solarPot+'_density', 2:solarPot+'_cells'},
+				 0:solarPot+'_density', 1:solarPot+'_cells'},
 			'resultsUnit':{
-				0:'value', 1:'value/ha', 2:'cells'}
+				 0:'kWh/m2', 2:'cells'}
 			},
 }
 
@@ -495,7 +495,7 @@ def constructWithPartEachLayerHectare(geometry, year, layer, fromPart):
 		w += 'FROM' + \
 		'	public.'+ layersData[layer]['tablename'] +'' + \
 		' WHERE' + \
-		'	ST_Within(tbl_wwtp.geom,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + ')) ' + \
+		'	ST_Within(public.'+ layersData[layer]['tablename'] +'.geometry,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + ')) ' + \
 		'AND date = to_date(\''+ str(year) +'\',\'YYYY\')) '
 	elif layer == indSitesEm:
 		w = ''+fromPart+' AS (SELECT ' + \
