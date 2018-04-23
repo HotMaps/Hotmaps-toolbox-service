@@ -4,12 +4,6 @@ from flask import request
 from flask_restplus import Resource
 from main_api.api.main.serializers import stats_layers_area_input, stats_layers_output, stats_layers_hectares_output, stats_layers_nuts_input, stats_layers_nuts_output, stats_layer_point_input, stats_layers_area_nuts_input, stats_layers_hectares_input
 from main_api.api.restplus import api
-#from main_api.models.wwtp import Wwtp, WwtpNuts3, WwtpLau2, WwtpNuts2, WwtpNuts1, WwtpNuts0
-#from main_api.models.heat_density_map import HeatDensityMap, HeatDensityHa, HeatDensityNuts3, HeatDensityLau2, HeatDensityNuts0, HeatDensityNuts1, HeatDensityNuts2
-#from main_api.models.population_density import PopulationDensityHa, PopulationDensityNuts3, PopulationDensityLau2, PopulationDensityNuts2, PopulationDensityNuts1,PopulationDensityNuts0
-#from main_api.models.statsQueries import HeatDensityMapModel, HeatDensityHaModel, HeatDensityNuts3, HeatDensityLau2, HeatDensityNuts0, HeatDensityNuts1, \
-#HeatDensityNuts2, PopulationDensityHaModel, PopulationDensityNuts3, PopulationDensityLau2, PopulationDensityNuts2, PopulationDensityNuts1, \
-#PopulationDensityNuts0, Wwtp, WwtpNuts3, WwtpLau2, WwtpNuts2, WwtpNuts1, WwtpNuts0
 from main_api.models.nuts import Nuts, NutsRG01M
 from main_api.models.lau import Lau
 from main_api.models.statsQueries import LayersHectare
@@ -46,8 +40,8 @@ class StatsLayersNutsInArea(Resource):
 		layersPayload = api.payload['layers']
 		nuts = api.payload['nuts']
 
-		# Stop execution if layers list is empty 
-		if not layersPayload:
+		# Stop execution if layers list or nuts list is empty 
+		if not layersPayload or not nuts:
 			return
 
 		# Get type
@@ -111,8 +105,8 @@ class StatsLayersHectareMulti(Resource):
 		layersPayload = api.payload['layers']        
 		areas = api.payload['areas']
 
-		# Stop execution if layers list is empty 
-		if not layersPayload:
+		# Stop execution if layers list or areas list is empty 
+		if not layersPayload or not areas:
 			return
 
 		# Layers filtration and management

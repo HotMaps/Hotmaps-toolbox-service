@@ -18,7 +18,7 @@ import generalData
 
 class LayersNutsLau: 
 	@staticmethod
-	def stats_nuts_lau(nuts, year, layers, type): #/stats/layers/hectares
+	def stats_nuts_lau(nuts, year, layers, type): #/stats/layers/nuts-lau
 
 		# Get the data
 		layersQueryData = generalData.createQueryDataStatsNutsLau(nuts=nuts, year=year, type=type)
@@ -57,6 +57,7 @@ class LayersNutsLau:
 					sql_query += ', '	
 				
 			sql_query += ';'
+			print(sql_query)
 
 			# Execution of the query
 			query = db.session.execute(sql_query).first()
@@ -68,11 +69,20 @@ class LayersNutsLau:
 				for layer in layers:
 					values = []
 					for c, l in enumerate(layersData[layer]['resultsName']):
-						values.append({
-								'name':layersData[layer]['resultsName'][c],
-								'value':str(query[layersData[layer]['resultsName'][c]]),
-								'unit':layersData[layer]['resultsUnit'][c]
-							})
+
+						currentValue = query[layersData[layer]['resultsName'][c]]
+						if currentValue == None:
+							currentValue = 0
+
+
+						try:
+							values.append({
+									'name':layersData[layer]['resultsName'][c],
+									'value':currentValue,
+									'unit':layersData[layer]['resultsUnit'][c]
+								})
+						except KeyError: # Special case we retrieve only one value for an hectare
+							pass
 
 					result.append({
 							'name':layer,
@@ -134,17 +144,23 @@ class LayersHectare:
 				for layer in layers:
 					values = []
 					for c, l in enumerate(layersData[layer]['resultsName']):
-						values.append({
-								'name':layersData[layer]['resultsName'][c],
-								'value':str(query[layersData[layer]['resultsName'][c]]),
-								'unit':layersData[layer]['resultsUnit'][c]
-							})
+						try:
+							currentValue = query[layersData[layer]['resultsName'][c]]
+							if currentValue == None:
+								currentValue = 0
+
+							values.append({
+									'name':layersData[layer]['resultsName'][c],
+									'value':currentValue,
+									'unit':layersData[layer]['resultsUnit'][c]
+								})
+						except KeyError: # Special case we retrieve only one value for an hectare
+							pass
 
 					result.append({
 							'name':layer,
 							'values':values
 						})
-
 		
 		return result
 
