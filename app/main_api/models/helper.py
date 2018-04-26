@@ -1,3 +1,6 @@
+import json
+
+
 def find_key_in_dict(key, dictionary):
     for k, v in dictionary.items():
         if k == key:
@@ -9,6 +12,7 @@ def find_key_in_dict(key, dictionary):
             for d in v:
                 for result in find_key_in_dict(key, d):
                     yield result
+
 def retrieveCrossIndicator(denominator_indicator_name, numerator_indicator_name, layers, payload_output):
     if denominator_indicator_name in layers and numerator_indicator_name in layers:
         numerator = getValuesFromName(numerator_indicator_name,payload_output)
@@ -32,14 +36,13 @@ def getValuesFromName(name, output):
     values = None
     for i in output:
         if i['name'] == name:
-            print(i['values'][0])
             values = i['values'][0]
             break
     return values
 
 def getDictFromJson(output):
     outputdumps = json.dumps(output)
-    print('outputdumps type {0}'.format(type(outputdumps)))
     outputloads = json.loads(outputdumps)[0]
-    print('outputloads type {0}'.format(type(outputloads)))
+    return outputloads
+
 

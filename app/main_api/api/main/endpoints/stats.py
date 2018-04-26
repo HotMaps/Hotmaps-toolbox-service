@@ -148,11 +148,13 @@ class StatsLayersHectareMulti(Resource):
 		hdm_name = settings.HEAT_DENSITY_TOT
 		heat_curr_non_res_name = settings.HEAT_DENSITY_NON_RES
 		heat_curr_res_name = settings.HEAT_DENSITY_RES
+		gfa_tot_curr_density_name = settings.GRASS_FLOOR_AREA_TOT
 
 
 		retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
 		retrieveCrossIndicator(pop1ha_name, heat_curr_res_name, layers, output)
 		retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
+		retrieveCrossIndicator(gfa_tot_curr_density_name, hdm_name, layers, output)
 
 		# Remove scale for each layer
 		noTableLayers = generalData.removeScaleLayers(noTableLayers, type='ha')
