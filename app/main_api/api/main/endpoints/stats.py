@@ -17,7 +17,9 @@ from geoalchemy2.shape import to_shape
 from main_api import settings
 
 from main_api.models import generalData
+from main_api.models.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator
 
+import json
 
 
 log = logging.getLogger(__name__)
@@ -72,12 +74,17 @@ class StatsLayersNutsInArea(Resource):
 		res = LayersNutsLau.stats_nuts_lau(nuts=generalData.adapt_nuts_list(nuts), year=year, layers=layers, type=type)
 		output = res
 
-		# compute heat consumption/person if both layers are selected
-		pop_nuts_name = settings.POPULATION_TOT
-		heat_nuts_name = settings.HEAT_DENSITY_TOT
 
-		if pop_nuts_name in layers and heat_nuts_name in layers:
-			generalData.computeConsPerPerson(pop_nuts_name, heat_nuts_name, output)
+		# compute Cross indicators if both layers are selected
+		pop1ha_name = settings.POPULATION_TOT
+		hdm_name = settings.HEAT_DENSITY_TOT
+		heat_curr_non_res_name = settings.HEAT_DENSITY_NON_RES
+		heat_curr_res_name = settings.HEAT_DENSITY_RES
+
+
+		retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
+		retrieveCrossIndicator(pop1ha_name, heat_curr_res_name, layers, output)
+		retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
 
 		# Remove scale for each layer
 		noTableLayers = generalData.removeScaleLayers(noTableLayers, type)
@@ -139,9 +146,13 @@ class StatsLayersHectareMulti(Resource):
 		# compute heat consumption/person if both layers are selected
 		pop1ha_name = settings.POPULATION_TOT
 		hdm_name = settings.HEAT_DENSITY_TOT
+		heat_curr_non_res_name = settings.HEAT_DENSITY_NON_RES
+		heat_curr_res_name = settings.HEAT_DENSITY_RES
 
-		if pop1ha_name in layers and hdm_name in layers:
-			generalData.computeConsPerPerson(pop1ha_name, hdm_name, output)
+
+		retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
+		retrieveCrossIndicator(pop1ha_name, heat_curr_res_name, layers, output)
+		retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
 
 		# Remove scale for each layer
 		noTableLayers = generalData.removeScaleLayers(noTableLayers, type='ha')

@@ -448,6 +448,9 @@ def sampling_data(listValues):
 
 	return finalListPoints
 
+
+
+
 def computeConsPerPerson(l1, l2, output):
 	"""
 	Compute the heat consumption/person if population_density and heat_density layers are selected
@@ -455,17 +458,14 @@ def computeConsPerPerson(l1, l2, output):
 	hdm = None
 	heat_cons = None
 	population = None
-	print(l2)
 	for l in output:
-		if l.get('name') == l2:
+		if l == l2:
 			hdm = l
 			for v in l.get('values', []):
-				print(v.get('name'))
 				if v.get('name') == 'heat_consumption':
 					heat_cons = v
 		if l.get('name') == l1:
 			for v in l.get('values', []):
-				print(v.get('name'))
 				if v.get('name') == 'population':
 					population = v
 
