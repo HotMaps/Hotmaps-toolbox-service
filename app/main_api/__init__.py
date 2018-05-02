@@ -52,6 +52,9 @@ def create_app(config_name):
             "http://albain-hotmaps:4200",
             "http://dany-hotmaps:4200",
             "http://hotmapsdev.hevs.ch",
+            "http://maps.googleapis.com/maps/api/geocode/",
+            "http://maps.googleapis.com/maps/api/",
+            "http://maps.googleapis.com/*"
         }
         }})
     return app
