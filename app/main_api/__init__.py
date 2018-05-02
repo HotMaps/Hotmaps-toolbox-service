@@ -47,10 +47,14 @@ def create_app(config_name):
         r"/api/*": {"origins": {
             "http://hotmaps.hevs.ch",
             "http://hotmaps.hevs.ch:8080",
+            "http://hotmaps.hevs.ch:9006",
             "http://lesly-hotmaps:4200",
             "http://albain-hotmaps:4200",
             "http://dany-hotmaps:4200",
             "http://hotmapsdev.hevs.ch",
+            "http://maps.googleapis.com/maps/api/geocode/",
+            "http://maps.googleapis.com/maps/api/",
+            "http://maps.googleapis.com/*"
         }
         }})
     return app

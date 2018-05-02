@@ -21,7 +21,7 @@ biomassPot = settings.BIOMASS_POTENTIAL
 msw = settings.MUNICIPAL_SOLID_WASTE
 windPot = settings.WIND_POTENTIAL
 solarPot = settings.SOLAR_POTENTIAL
-geothermalPot = settings.GEOTHERMAL_POTENTIAL
+geothermalPotHeatCond = settings.GEOTHERMAL_POTENTIAL_HEAT_COND
 
 
 CRS = 3035
@@ -132,11 +132,11 @@ layersData = {
 			'resultsUnit':{ 
 				0:'MWh', 1:'MWh/ha', 2:'cells'}
 			},
-	geothermalPot:{'tablename':'potential_shallowgeothermal',
-		   'from':'stat_geothermalPot',
-		   'select':'stat_geothermalPot.sum as '+geothermalPot+'_value ',
+	geothermalPotHeatCond:{'tablename':'potential_shallowgeothermal_heat_cond',
+		   'from':'stat_geothermalPotHeatCond',
+		   'select':'stat_geothermalPotHeatCond.sum as '+geothermalPotHeatCond+'_value ',
 		   'resultsName':{
-			   0:geothermalPot+'_value'},
+			   0:geothermalPotHeatCond+'_value'},
 		   'resultsUnit':{
 			   0:'W/mK'}
 		   },
@@ -182,7 +182,7 @@ def createQueryDataStatsHectares(geometry, year):
 	withHeatNonRes = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=heatNonRes, fromPart=layersData[heatNonRes]['from'])
 	withSolarPot = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=solarPot, fromPart=layersData[solarPot]['from'])
 
-	withGeothermalPot = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=geothermalPot, fromPart=layersData[geothermalPot]['from'])
+	withGeothermalPotHeatCond = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=geothermalPotHeatCond, fromPart=layersData[geothermalPotHeatCond]['from'])
 	withIndSitesEm = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=indSitesEm, fromPart=layersData[indSitesEm]['from'])
 	withIndSitesExc = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=indSitesExc, fromPart=layersData[indSitesExc]['from'])
 	withWwtpCap = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=wwtpCapacity, fromPart=layersData[wwtpCapacity]['from'])
@@ -203,7 +203,7 @@ def createQueryDataStatsHectares(geometry, year):
 						wwtpPower:{'with':withWwtpPower, 'select':layersData[wwtpPower]['select'], 'from':layersData[wwtpPower]['from']},
 						indSitesEm:{'with':withIndSitesEm, 'select':layersData[indSitesEm]['select'], 'from':layersData[indSitesEm]['from']},
 						indSitesExc:{'with':withIndSitesExc, 'select':layersData[indSitesExc]['select'], 'from':layersData[indSitesExc]['from']},
-					   	geothermalPot:{'with':withGeothermalPot, 'select':layersData[geothermalPot]['select'], 'from':layersData[geothermalPot]['from']},
+					   geothermalPotHeatCond:{'with':withGeothermalPotHeatCond, 'select':layersData[geothermalPotHeatCond]['select'], 'from':layersData[geothermalPotHeatCond]['from']},
 						heatNonRes:{'with':withHeatNonRes, 'select':layersData[heatNonRes]['select'], 'from':layersData[heatNonRes]['from']},
 						solarPot:{'with':withSolarPot, 'select':layersData[solarPot]['select'], 'from':layersData[solarPot]['from']}}
 
@@ -226,7 +226,7 @@ def createQueryDataStatsNutsLau(nuts, year, type):
 	withWwtpCap = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=wwtpCapacity, type=type, fromPart=layersData[wwtpCapacity]['from'])
 	withWwtpPower = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=wwtpPower, type=type, fromPart=layersData[wwtpPower]['from'])
 	withIndSitesEm = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=indSitesEm, type=type, fromPart=layersData[indSitesEm]['from'])
-	withGeothermalPot = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=geothermalPot, type=type, fromPart=layersData[geothermalPot]['from'])
+	withGeothermalPotHeatCond = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=geothermalPotHeatCond, type=type, fromPart=layersData[geothermalPotHeatCond]['from'])
 	withIndSitesExc = constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=indSitesExc, type=type, fromPart=layersData[indSitesExc]['from'])
 
 	# Dictionary with query data
@@ -244,7 +244,7 @@ def createQueryDataStatsNutsLau(nuts, year, type):
 						solarPot:{'with':withSolarPot, 'select':layersData[solarPot]['select'], 'from':layersData[solarPot]['from']},
 						wwtpCapacity:{'with':withWwtpCap, 'select':layersData[wwtpCapacity]['select'], 'from':layersData[wwtpCapacity]['from']},
 						wwtpPower:{'with':withWwtpPower, 'select':layersData[wwtpPower]['select'], 'from':layersData[wwtpPower]['from']},
-					   	geothermalPot:{'with':withGeothermalPot, 'select':layersData[geothermalPot]['select'], 'from':layersData[geothermalPot]['from']},
+					   geothermalPotHeatCond:{'with':withGeothermalPotHeatCond, 'select':layersData[geothermalPotHeatCond]['select'], 'from':layersData[geothermalPotHeatCond]['from']},
 						indSitesEm:{'with':withIndSitesEm, 'select':layersData[indSitesEm]['select'], 'from':layersData[indSitesEm]['from']},
 						indSitesExc:{'with':withIndSitesExc, 'select':layersData[indSitesExc]['select'], 'from':layersData[indSitesExc]['from']}}
 
@@ -510,13 +510,14 @@ def constructWithPartEachLayerHectare(geometry, year, layer, fromPart):
 		' WHERE' + \
 		'	ST_Within(public.'+ layersData[layer]['tablename'] +'.geometry,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),4326))) '
 
-	elif layer == geothermalPot:
+	elif layer == geothermalPotHeatCond:
 		w = ''+fromPart+' AS (SELECT ' + \
-			'		sum(heat_cond) as sum ' + \
+			' SUM(CAST(heat_cond as DECIMAL(9,2)) * CAST(ST_Area(geometry) as DECIMAL(9,2))) / SUM(ST_Area(geometry)) as sum ' + \
 			'FROM' + \
 			'	public.'+ layersData[layer]['tablename'] + \
 			' WHERE' + \
 			'	ST_Within(public.'+ layersData[layer]['tablename'] +'.geometry,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),4326))) '
+
 	elif layer == indSitesExc:
 		w = ''+fromPart+' AS (SELECT ' + \
 		'		sum(excess_heat_100_200c) as sum1, sum(excess_heat_200_500c) as sum2, sum(excess_heat_500c) as sum3, sum(excess_heat_total) as total ' + \
@@ -568,12 +569,12 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
 				""+fromPart+" as (SELECT sum(emissions_ets_2014) as sum " +\
 				"from nutsSelection_Em, public."+ layersData[layer]['tablename'] +" " +\
 				"where st_within(public."+ layersData[layer]['tablename'] +".geometry, st_transform(nutsSelection_Em.geom,4326))) "
-	elif layer == geothermalPot:
+	elif layer == geothermalPotHeatCond:
 		w = "nutsSelection_Em as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), " + \
-			""+fromPart+" as (SELECT sum(heat_cond) as sum " + \
+			""+fromPart+" as (SELECT SUM(CAST(heat_cond as DECIMAL(9,2)) * CAST(ST_Area(geometry) as DECIMAL(9,2))) / SUM(ST_Area(geometry)) as sum " + \
 			"from nutsSelection_Em, public."+ layersData[layer]['tablename'] +" " + \
 			"where st_within(public."+ layersData[layer]['tablename'] +".geometry, st_transform(nutsSelection_Em.geom,4326))) "
-		print("w {0}".format(w))
+
 	elif layer == indSitesExc:
 		w = "nutsSelection_Exc as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), " +\
 				""+fromPart+" as (SELECT sum(excess_heat_100_200c) as sum1, sum(excess_heat_200_500c) as sum2, " +\
