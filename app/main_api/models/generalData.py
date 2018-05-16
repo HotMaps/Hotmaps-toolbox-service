@@ -22,6 +22,8 @@ msw = settings.MUNICIPAL_SOLID_WASTE
 windPot = settings.WIND_POTENTIAL
 solarPot = settings.SOLAR_POTENTIAL
 geothermalPotHeatCond = settings.GEOTHERMAL_POTENTIAL_HEAT_COND
+electricityCo2EmisionsFactor = settings.ELECRICITY_CO2_EMISSION_FACTOR
+
 
 
 CRS = 3035
