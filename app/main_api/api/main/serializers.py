@@ -271,11 +271,22 @@ load_profile_aggregation_hectares_output = api.model('Output for load profile he
     'values': fields.List(fields.Nested(load_profile_aggregation_day_row))
 })
 
+stats_list_nuts_input = api.model('Input  list of nuts ', {
+    'nuts': fields.List(fields.String(descriptions='List of NUTS')),
+})
+
 stats_layers_nuts_output = api.model('Stats for selected layers, year and area', {
     'layers': fields.List(fields.Nested(stats_layer_aggregation)),
     'no_data_layers': fields.List(fields.String(description='Layer')),
     'no_table_layers': fields.List(fields.String(description='Layer'))
     #'load_profile_month': fields.Nested(load_profile_aggregation_year),
+})
+
+
+stats_list_label_dataset = api.model('Output  list of labels and datasets', {
+    'labels': fields.List(fields.String(description='list of label')),
+    'datasets': fields.List(fields.String(descriptions='List of values')),
+
 })
 
 stats_layers_nuts_input = api.model('Input for statistics on layers, list of nuts and year', {

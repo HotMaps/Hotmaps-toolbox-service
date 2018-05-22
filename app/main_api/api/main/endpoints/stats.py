@@ -2,11 +2,14 @@ import logging
 import re
 from flask import request
 from flask_restplus import Resource
-from main_api.api.main.serializers import stats_layers_area_input, stats_layers_output, stats_layers_hectares_output, stats_layers_nuts_input, stats_layers_nuts_output, stats_layer_point_input, stats_layers_area_nuts_input, stats_layers_hectares_input
+from main_api.api.main.serializers import stats_layers_area_input, stats_layers_output, stats_layers_hectares_output,\
+	stats_layers_nuts_input, stats_layers_nuts_output, stats_layer_point_input,\
+	stats_layers_area_nuts_input, stats_layers_hectares_input, stats_list_nuts_input, stats_list_label_dataset
 from main_api.api.restplus import api
 from main_api.models.nuts import Nuts, NutsRG01M
 from main_api.models.lau import Lau
 from main_api.models.statsQueries import LayersHectare
+from main_api.models.statsQueries import ElectricityMix
 from main_api.models.statsQueries import LayersNutsLau
 from sqlalchemy import func, BigInteger, TypeDecorator
 from main_api.models import db
@@ -97,6 +100,7 @@ class StatsLayersNutsInArea(Resource):
 			"no_table_layers": noTableLayers
 		}
 
+
 @ns.route('/layers/hectares')
 @api.response(404, 'No data found for that specific area.')
 class StatsLayersHectareMulti(Resource):
@@ -166,3 +170,31 @@ class StatsLayersHectareMulti(Resource):
 			"no_data_layers": noDataLayers,
 			"no_table_layers": noTableLayers
 		}
+
+
+
+@ns.route('/energy-mix/nuts-lau')
+@api.response(404, 'No data found for that specific list of NUTS.')
+class StatsLayersNutsInArea(Resource):
+	@api.marshal_with(stats_list_label_dataset)
+	@api.expect(stats_list_nuts_input)
+	def post(self):
+		"""
+		Returns the statistics for specific layers, area and year
+		:return:
+		"""
+		# Entrees
+		nuts = api.payload['nuts']
+
+		# Stop execution if layers list or nuts list is empty
+		if not nuts:
+			return
+		res = ElectricityMix.getEnergyMixNutsLau(generalData.adapt_nuts_list(nuts))
+
+		output = res
+
+		# Remove scale for each layer
+
+
+		# output
+		return output

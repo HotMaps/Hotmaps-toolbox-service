@@ -10,6 +10,7 @@ from main_api.models.population_density import PopulationDensityHaModel, Populat
 from main_api.models.nuts import Nuts, NutsRG01M
 from main_api.models.lau import Lau
 import generalData
+import json
 
 #import logging
 #logging.basicConfig()
@@ -162,6 +163,99 @@ class LayersHectare:
 							'values':values
 						})
 		
+		return result
+
+
+class ElectricityMix:
+
+	@staticmethod
+
+	def getEnergyMixNutsLau(nuts):
+		sql_query = "WITH energy_total as (SELECT sum(electricity_generation) as value FROM " + settings.ELECRICITY_MIX + " WHERE nuts0_code IN ("+nuts+") )" + \
+					"SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM " + settings.ELECRICITY_MIX + " ,energy_total WHERE nuts0_code IN ("+nuts+")  GROUP BY energy_carrier" ;
+
+		query = db.session.execute(sql_query)
+
+		labels = []
+		datasets = []
+		for c, l in enumerate(query):
+			labels.append(l[0])
+			datasets.append(l[1])
+		result = []
+		result.append({
+			'labels':labels,
+			'datasets':datasets
+		})
+		return result
+
+	def electricity_mix_nuts0(geometry, year, layers): #/stats/layers/hectares
+
+		# Get the data
+		layersQueryData = generalData.createQueryDataStatsHectares(geometry=geometry, year=year)
+		layersData = generalData.layersData
+
+		# Get the number of layers
+		nbLayers = len(layers)
+
+		result = []
+
+		# Check if there is at least one layer
+		if layers:
+			# Construction of the query
+			sql_query = 'WITH '
+
+			for c, layer in enumerate(layers):
+				sql_query += layersQueryData[layer]['with']
+				# Add a comma when the query needs one
+				if nbLayers > 1 and c < nbLayers-1:
+					sql_query += ', '
+
+			sql_query += 'SELECT '
+
+			for c, layer in enumerate(layers):
+				sql_query += layersQueryData[layer]['select']
+				# Add a comma when the query needs one
+				if nbLayers > 1 and c < nbLayers-1:
+					sql_query += ', '
+
+			sql_query += 'FROM '
+
+			for c, layer in enumerate(layers):
+				sql_query += layersQueryData[layer]['from']
+				# Add a comma when the query needs one
+				if nbLayers > 1 and c < nbLayers-1:
+					sql_query += ', '
+
+			sql_query += ';'
+
+			# Execution of the query
+			query = db.session.execute(sql_query).first()
+
+			# Storing the results only if there is data
+			if query[0] == None:
+				result = []
+			else:
+				for layer in layers:
+					values = []
+					for c, l in enumerate(layersData[layer]['resultsName']):
+						try:
+							currentValue = query[layersData[layer]['resultsName'][c]]
+							if currentValue == None:
+								currentValue = 0
+
+							values.append({
+								'name':layersData[layer]['resultsName'][c],
+								'value':currentValue,
+								'unit':layersData[layer]['resultsUnit'][c]
+							})
+						except KeyError: # Special case we retrieve only one value for an hectare
+							pass
+
+					result.append({
+						'name':layer,
+						'values':values
+					})
+
 		return result
 
 		
