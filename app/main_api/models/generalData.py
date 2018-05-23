@@ -170,13 +170,13 @@ layersData = {
 				 0:'kWh/m2', 2:'cells'}
 			},
 
-	electricityCo2EmisionsFactor:{'tablename':'hourly_co2_emission_factors',
-								  'from':'stat_hourly_co2_emission_factors',
-								  'select':'(stat_hourly_co2_emission_factors.sum/stat_hourly_co2_emission_factors.count) as '+electricityCo2EmisionsFactor+'_density, stat_hourly_co2_emission_factors.count as '+electricityCo2EmisionsFactor+'_cells ',
+	electricityCo2EmisionsFactor:{'tablename':electricityCo2EmisionsFactor,
+								  'from':'stat_yearly_co2_emission',
+								  'select':'stat_yearly_co2_emission.sum as '+electricityCo2EmisionsFactor+'_density ',
 								  'resultsName':{
-									  0:electricityCo2EmisionsFactor+'_density', 1:electricityCo2EmisionsFactor+'_cells'},
+									  0:electricityCo2EmisionsFactor+'_density'},
 								  'resultsUnit':{
-									  0:'kWh/m2', 2:'cells'}
+									  0:'kWh/m2'}
 								  },
 	hdd:{'tablename':'hdd_curr_tif',
 		 'from':'stat_hdd_curr_tif',
@@ -635,9 +635,9 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
 				"where st_within(public."+ layersData[layer]['tablename'] +".geometry, st_transform(nutsSelection_Exc.geom,4326))) "
 	elif layer == electricityCo2EmisionsFactor:
 		w = "nutsSelection as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), " + \
-			""+fromPart+" as (SELECT sum(value) as sum1, sum(unit) as sum2, " + \
-			"from nutsSelection, public."+ layersData[layer]['tablename'] +" " + \
-			"where st_within(public."+ layersData[layer]['tablename'] +".geometry, st_transform(nutsSelection.geom,4326))) "
+			""+fromPart+" as (SELECT sum(value) as sum, count(value) as count " + \
+			"from  public."+ layersData[layer]['tablename'] +" " + \
+			"where public."+ layersData[layer]['tablename'] +".nuts_code  in ("+nuts+")) "
 	else:
 		w = ""+fromPart+" as (SELECT sum(stat."+layersData[layer]['tablename']+"_"+type+".sum) AS sum, " +\
 					"sum(stat."+ layersData[layer]['tablename'] +"_"+type+".count) AS count " +\

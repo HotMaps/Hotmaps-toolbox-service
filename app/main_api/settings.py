@@ -63,11 +63,11 @@ NUMBER_DECIMAL_DATA = 2
 POPULATION_TOT = 'pop_tot_curr_density'
 HEAT_DENSITY_TOT = 'heat_tot_curr_density'
 HEAT_DENSITY_NON_RES = 'heat_nonres_curr_density'
-HEAT_DENSITY_RES = 'heat_res_curr_density'
+HEAT_DENSITY_RES = 'heat_res_curr_density_tif'
 WWTP = 'wwtp'
 WWTP_CAPACITY = 'wwtp_capacity'
 WWTP_POWER = 'wwtp_power'
-GRASS_FLOOR_AREA_TOT = 'gfa_tot_curr_density'
+GRASS_FLOOR_AREA_TOT = 'gfa_tot_curr_density_tif'
 GRASS_FLOOR_AREA_RES = 'gfa_res_curr_density_tif'
 GRASS_FLOOR_AREA_NON_RES = 'gfa_nonres_curr_density_tif'
 BUILDING_VOLUMES_RES = 'vol_res_curr_density_tif'
@@ -81,10 +81,12 @@ MUNICIPAL_SOLID_WASTE = 'potential_municipal_solid_waste'
 WIND_POTENTIAL = 'potential_wind'
 SOLAR_POTENTIAL = 'solar_optimal_total'
 GEOTHERMAL_POTENTIAL_HEAT_COND = 'potential_shallowgeothermal_heat_cond'
-ELECRICITY_CO2_EMISSION_FACTOR = 'hourly_co2_emission_factors'
+ELECRICITY_CO2_EMISSION_FACTOR = 'yearly_co2_emission'
 HDD_CUR = 'hdd_curr_tif'
 CDD_CUR = 'cdd_curr_tif'
 ELECRICITY_MIX = 'stat.yearly_electricity_generation_mix'
+
+_TOT = 'pop_tot_curr_density'
 
 # All layers references for queries
 LAYERS_REF_ALL = [
@@ -132,7 +134,6 @@ LAYERS_REF_HECTARES = [
     WWTP_POWER,
     SOLAR_POTENTIAL,
     GEOTHERMAL_POTENTIAL_HEAT_COND,
-    ELECRICITY_CO2_EMISSION_FACTOR,
     HDD_CUR,
     CDD_CUR,
 ]
@@ -156,7 +157,6 @@ LAYERS_REF_HECTARES_TABLE = [
     WWTP_CAPACITY,
     WWTP_POWER,
     GEOTHERMAL_POTENTIAL_HEAT_COND,
-    ELECRICITY_CO2_EMISSION_FACTOR,
     HDD_CUR,
     CDD_CUR,
 ]
@@ -164,6 +164,7 @@ LAYERS_REF_HECTARES_TABLE = [
 LAYERS_REF_NUTS = [
     POPULATION_TOT,
     HEAT_DENSITY_TOT,
+    HEAT_DENSITY_RES,
     INDUSTRIAL_SITES_EMISSIONS,
     INDUSTRIAL_SITES_EXCESS_HEAT,
     GRASS_FLOOR_AREA_TOT,
@@ -185,6 +186,8 @@ LAYERS_REF_NUTS = [
 LAYERS_REF_LAU = [
     POPULATION_TOT,
     HEAT_DENSITY_TOT,
+    HEAT_DENSITY_NON_RES,
+    HEAT_DENSITY_RES,
     WWTP,
     BUILDING_VOLUMES_RES,
     BUILDING_VOLUMES_TOT,
@@ -199,7 +202,6 @@ LAYERS_REF_LAU = [
     WWTP_CAPACITY,
     WWTP_POWER,
     GEOTHERMAL_POTENTIAL_HEAT_COND,
-    ELECRICITY_CO2_EMISSION_FACTOR,
     HDD_CUR,
     CDD_CUR,
 ]
@@ -207,6 +209,7 @@ LAYERS_REF_LAU = [
 LAYERS_REF_NUTS_TABLE = [
     POPULATION_TOT,
     HEAT_DENSITY_TOT,
+    HEAT_DENSITY_RES,
     WWTP,
     GRASS_FLOOR_AREA_TOT,
     GRASS_FLOOR_AREA_RES,
@@ -231,6 +234,8 @@ LAYERS_REF_NUTS_TABLE = [
 LAYERS_REF_LAU_TABLE = [
     POPULATION_TOT,
     HEAT_DENSITY_TOT,
+    HEAT_DENSITY_NON_RES,
+    HEAT_DENSITY_RES,
     WWTP,
     GRASS_FLOOR_AREA_TOT,
     GRASS_FLOOR_AREA_RES,

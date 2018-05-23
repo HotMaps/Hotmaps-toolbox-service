@@ -282,11 +282,15 @@ stats_layers_nuts_output = api.model('Stats for selected layers, year and area',
     #'load_profile_month': fields.Nested(load_profile_aggregation_year),
 })
 
+data = api.model('data', {
+    'data': fields.List(fields.String(description='list of values')),
+    'label': fields.String(description='list of values'),
+    'backgroundColor': fields.List(fields.String(description='list of color'))
+})
 
 stats_list_label_dataset = api.model('Output  list of labels and datasets', {
     'labels': fields.List(fields.String(description='list of label')),
-    'datasets': fields.List(fields.String(descriptions='List of values')),
-
+    'datasets': fields.List(fields.Nested(data)),
 })
 
 stats_layers_nuts_input = api.model('Input for statistics on layers, list of nuts and year', {

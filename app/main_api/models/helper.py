@@ -45,4 +45,7 @@ def getDictFromJson(output):
     outputloads = json.loads(outputdumps)[0]
     return outputloads
 
+def roundValue(value):
+    return round(value, 1)
+
 
