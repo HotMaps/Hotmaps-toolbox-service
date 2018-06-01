@@ -48,6 +48,10 @@ def create_app(config_name):
             "http://hotmaps.hevs.ch",
             "http://hotmaps.hevs.ch:8080",
             "http://hotmaps.hevs.ch:9006",
+            "http://172.17.0.5/"
+            "http://172.17.0.6/"
+            "http://maps.googleapis.com/"
+            "http://hotmaps.hevs.ch:9006",
             "http://lesly-hotmaps:4200",
             "http://albain-hotmaps:4200",
             "http://dany-hotmaps:4200",
