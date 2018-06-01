@@ -1,2 +1,2 @@
 bind = "0.0.0.0:80"
-workers = 15
+workers = 40
