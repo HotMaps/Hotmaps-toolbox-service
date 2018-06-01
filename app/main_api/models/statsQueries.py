@@ -3,13 +3,14 @@ from main_api.models import db
 from main_api import settings
 from sqlalchemy import func
 from decimal import *
-
+from main_api.models import helper
 from main_api.models.wwtp import WwtpModel
 from main_api.models.heat_density_map import HeatDensityMapModel, HeatDensityHaModel, HeatDensityLauModel, HeatDensityNutsModel
 from main_api.models.population_density import PopulationDensityHaModel, PopulationDensityLauModel, PopulationDensityNutsModel
 from main_api.models.nuts import Nuts, NutsRG01M
 from main_api.models.lau import Lau
 import generalData
+import json
 
 #import logging
 #logging.basicConfig()
@@ -57,7 +58,6 @@ class LayersNutsLau:
 					sql_query += ', '	
 				
 			sql_query += ';'
-			print(sql_query)
 
 			# Execution of the query
 			query = db.session.execute(sql_query).first()
@@ -164,4 +164,34 @@ class LayersHectare:
 		
 		return result
 
-		
+
+class ElectricityMix:
+
+	@staticmethod
+
+	def getEnergyMixNutsLau(nuts):
+		print(nuts)
+		sql_query = "WITH energy_total as (SELECT sum(electricity_generation) as value FROM " + settings.ELECRICITY_MIX + " WHERE nuts0_code IN ("+nuts+") )" + \
+					"SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM " + settings.ELECRICITY_MIX + " ,energy_total WHERE nuts0_code IN ("+nuts+")  GROUP BY energy_carrier ORDER BY energy_carrier ASC" ;
+
+		query = db.session.execute(sql_query)
+
+		labels = []
+		data = []
+		backgroundColor = []
+		for c, l in enumerate(query):
+			labels.append(l[0])
+			data.append(helper.roundValue(l[1]))
+			backgroundColor.append(helper.getGenerationMixColor(l[0]))
+		datasets = {
+			'data' : data,
+			'label': '%',
+			'backgroundColor': backgroundColor
+		}
+
+		result = {
+			'labels':labels,
+			'datasets':datasets
+		}
+		return result
+

@@ -45,4 +45,23 @@ def getDictFromJson(output):
     outputloads = json.loads(outputdumps)[0]
     return outputloads
 
+def roundValue(value):
+    return round(value, 1)
+
+def getGenerationMixColor(value):
+    switcher = {
+        "Nuklear": "#909090",
+        "Lignite": "#556B2F",
+        "Hard coal": "#000000",
+        "Natural gas": "#FFD700",
+        "Oil": "#8B0000",
+        "Other fossil fuels": "#A9A9A9",
+        "PV": "#FFFF00",
+        "Wind ": "#D8BFD8",
+        "Biomass": "#228B22",
+        "Hydro": "#1E90FF",
+        "No information on source": "#FFFAFA",
+    }
+    return switcher.get(value, "#D8BFD8")
+
 
