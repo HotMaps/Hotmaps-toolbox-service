@@ -58,7 +58,6 @@ class LayersNutsLau:
 					sql_query += ', '	
 				
 			sql_query += ';'
-			print(sql_query)
 
 			# Execution of the query
 			query = db.session.execute(sql_query).first()
@@ -171,31 +170,23 @@ class ElectricityMix:
 	@staticmethod
 
 	def getEnergyMixNutsLau(nuts):
+		print(nuts)
 		sql_query = "WITH energy_total as (SELECT sum(electricity_generation) as value FROM " + settings.ELECRICITY_MIX + " WHERE nuts0_code IN ("+nuts+") )" + \
-					"SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM " + settings.ELECRICITY_MIX + " ,energy_total WHERE nuts0_code IN ("+nuts+")  GROUP BY energy_carrier" ;
+					"SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM " + settings.ELECRICITY_MIX + " ,energy_total WHERE nuts0_code IN ("+nuts+")  GROUP BY energy_carrier ORDER BY energy_carrier ASC" ;
 
 		query = db.session.execute(sql_query)
 
 		labels = []
 		data = []
+		backgroundColor = []
 		for c, l in enumerate(query):
 			labels.append(l[0])
 			data.append(helper.roundValue(l[1]))
+			backgroundColor.append(helper.getGenerationMixColor(l[0]))
 		datasets = {
 			'data' : data,
 			'label': '%',
-			'backgroundColor': ["#0074D9",
-							  "#FF4136",
-							  "#2ECC40",
-							  "#FF851B",
-							  "#7FDBFF",
-							  "#B10DC9",
-							  "#FFDC00",
-							  "#001f3f",
-							  "#39CCCC",
-							  "#01FF70",
-							  "#85144b",
-							  ]
+			'backgroundColor': backgroundColor
 		}
 
 		result = {

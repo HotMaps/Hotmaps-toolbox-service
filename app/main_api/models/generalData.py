@@ -103,7 +103,7 @@ layersData = {
 			'resultsName':{
 				0:bVolTot+'_value', 1:bVolTot+'_density', 2:bVolTot+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cells'}
+				0:'m3', 1:'m3/ha', 2:'cells'}
 			},
 	bVolRes:{'tablename':bVolRes,
 			'from':'stat_bVolRes',
@@ -111,7 +111,7 @@ layersData = {
 			'resultsName':{
 				0:bVolRes+'_value', 1:bVolRes+'_density', 2:bVolRes+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cells'}
+				0:'m3', 1:'m3/ha', 2:'cells'}
 			},
 	bVolNonRes:{'tablename':bVolNonRes,
 			'from':'stat_bVolNonRes',
@@ -119,7 +119,7 @@ layersData = {
 			'resultsName':{
 				0:bVolNonRes+'_value', 1:bVolNonRes+'_density', 2:bVolNonRes+'_cells'},
 			'resultsUnit':{ 
-				0:'value', 1:'value/ha', 2:'cells'}
+				0:'m3', 1:'m3/ha', 2:'cells'}
 			},
 	heatRes:{'tablename':'heat_res_curr_density',
 			'from':'stat_heatRes',
@@ -176,7 +176,7 @@ layersData = {
 								  'resultsName':{
 									  0:electricityCo2EmisionsFactor+'_density'},
 								  'resultsUnit':{
-									  0:'kWh/m2'}
+									  0:'kg/MWh'}
 								  },
 	hdd:{'tablename':'hdd_curr_tif',
 		 'from':'stat_hdd_curr_tif',
@@ -354,7 +354,7 @@ def createQueryDataLPHectares(year, month, day, geometry):
 
 # ALL QUERIES DATA FOR THE HEAT LOAD PROFILE BY NUTS 
 def createQueryDataLPNutsLau(year, month, day, nuts):
-	print(nuts)
+
 	withPart = "WITH nutsSelection as (select nuts_id FROM stat.heat_tot_curr_density_nuts_test WHERE nuts_id IN ("+nuts+")), " +\
 					"loadprofile as (SELECT sum(stat.load_profile.value) as valtot, stat.load_profile.nuts_id from stat.load_profile " +\
 						"INNER JOIN nutsSelection on stat.load_profile.nuts_id = nutsSelection.nuts_id " +\
@@ -617,10 +617,10 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
 				"FROM stat."+layersData[layer]['tablename']+"_"+type+"_test " +\
 				"WHERE stat."+layersData[layer]['tablename']+"_"+type+"_test."+id_type+" IN ("+nuts+")) "
 	elif layer == indSitesEm:
-		w = "nutsSelection_Em as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), " +\
+		w = "nutsSelection_indSitesEm as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), " +\
 				""+fromPart+" as (SELECT sum(emissions_ets_2014) as sum " +\
-				"from nutsSelection_Em, public."+ layersData[layer]['tablename'] +" " +\
-				"where st_within(public."+ layersData[layer]['tablename'] +".geometry, st_transform(nutsSelection_Em.geom,4326))) "
+				"from nutsSelection_indSitesEm, public."+ layersData[layer]['tablename'] +" " +\
+				"where st_within(public."+ layersData[layer]['tablename'] +".geometry, st_transform(nutsSelection_indSitesEm.geom,4326))) "
 	elif layer == geothermalPotHeatCond:
 		w = "nutsSelection_Em as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), " + \
 			""+fromPart+" as (SELECT SUM(CAST(heat_cond as DECIMAL(9,2)) * CAST(ST_Area(geometry) as DECIMAL(9,2))) / SUM(ST_Area(geometry)) as sum " + \
