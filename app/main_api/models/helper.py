@@ -20,17 +20,20 @@ def retrieveCrossIndicator(denominator_indicator_name, numerator_indicator_name,
         generateCrossIndicator(numerator, denominator,numerator_indicator_name, payload_output)
 
 def generateCrossIndicator(numerator, denominator, value_to_append, output):
-    denominator_val = float(denominator.get('value', 1))
-    denominator_val = denominator_val if denominator_val > 0 else 1
-    numerator_val = float(numerator.get('value', 0))
-    v = {
-        'name': numerator['name'] + '_per_' + denominator['name'],
-        'value': numerator_val / denominator_val,
-        'unit': numerator.get('unit') + '/' + denominator.get('unit')
-    }
-    for x in output:
-        if x['name'] == value_to_append:
-            x['values'].append(v)
+    try:
+        denominator_val = float(denominator.get('value', 1))
+        denominator_val = denominator_val if denominator_val > 0 else 1
+        numerator_val = float(numerator.get('value', 0))
+        v = {
+            'name': numerator['name'] + '_per_' + denominator['name'],
+            'value': numerator_val / denominator_val,
+            'unit': numerator.get('unit') + '/' + denominator.get('unit')
+        }
+        for x in output:
+            if x['name'] == value_to_append:
+                x['values'].append(v)
+    except:
+        print 'numerator = {}, denominator = {},value_to_append = {},output = {}'.format(numerator, denominator, value_to_append, output)
 
 def getValuesFromName(name, output):
     values = None
