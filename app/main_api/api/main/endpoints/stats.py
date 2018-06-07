@@ -21,6 +21,7 @@ from main_api import settings
 
 from main_api.models import generalData
 from main_api.models.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator
+from main_api import celery
 
 import json
 
@@ -187,14 +188,19 @@ class StatsLayersNutsInArea(Resource):
 		nuts = api.payload['nuts']
 
 		# Stop execution if layers list or nuts list is empty
-		if not nuts:
-			return
-		res = ElectricityMix.getEnergyMixNutsLau(generalData.adapt_nuts_list(nuts))
+		return processGenerationMix.delay(nuts)
 
-		output = res
 
 		# Remove scale for each layer
 
 
-		# output
-		return output
+		return 'www'
+
+@celery.task(name = 'energy_mix_nuts_lau')
+def processGenerationMix(nuts):
+	if not nuts:
+		return
+	res = ElectricityMix.getEnergyMixNutsLau(generalData.adapt_nuts_list(nuts))
+
+	return res
+

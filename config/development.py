@@ -12,3 +12,5 @@ ERROR_404_HELP = False
 RESTPLUS_JSON = {
     'separators': (',', ':')
 }
+CELERY_BROKER_URL = 'amqp://localhost//'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
