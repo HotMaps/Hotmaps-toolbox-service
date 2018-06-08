@@ -1,26 +1,32 @@
+from flask import Flask
+
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
+from .api_v1 import nsStats as main_stats_namespace
+from .api_v1 import load_profile_namespace as main_heat_load_profile_namespace
+from flask_celery import make_celery
 import logging.config
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from flask import Flask, Blueprint
+
 from flask_cors import CORS
-from main_api import settings, secrets
 from celery import Celery
 celery = Celery()
-from main_api.api.main.endpoints.stats import ns as main_stats_namespace
-from main_api.api.main.endpoints.heat_load_profile import ns as main_heat_load_profile_namespace
-from main_api.api.restplus import api
-from main_api.models import db
 
-from flask_celery import make_celery
+
+
+
+from app.decorator.restplus import api
+
+
+from app.flask_celery import make_celery
 # methods
-
-
-
-log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'logging.conf')
+"""log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'logging.conf')
 logging.config.fileConfig(log_file_path)
 log = logging.getLogger(__name__)
-logging.getLogger('flask_cors').level = logging.DEBUG
+logging.getLogger('flask_cors').level = logging.DEBUG"""
 
 
 
@@ -34,7 +40,7 @@ def create_app(config_name):
     app.config.from_pyfile(cfg)
 
     # initialize extensions
-    blueprint = Blueprint('api', __name__, url_prefix='/api')
+    from .api_v1 import blueprint
     api.init_app(blueprint)
     api.add_namespace(main_stats_namespace)
     api.add_namespace(main_heat_load_profile_namespace)
@@ -60,3 +66,7 @@ def create_app(config_name):
         }
         }})
     return app
+
+
+
+#log.info(app)

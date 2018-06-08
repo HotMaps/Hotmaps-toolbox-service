@@ -1,6 +1,6 @@
 import datetime, logging
-from main_api import settings
-from main_api.models import db
+from app import settings
+from app import db
 
 import generalData
 

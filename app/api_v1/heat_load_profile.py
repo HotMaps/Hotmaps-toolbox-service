@@ -2,28 +2,26 @@ import logging
 import re
 from flask import request
 from flask_restplus import Resource
-from main_api.api.main.serializers import load_profile_aggregation_year, load_profile_aggregation_year_input, \
+from app.decorator.serializers import load_profile_aggregation_year, load_profile_aggregation_year_input, \
     load_profile_aggregation_month, load_profile_aggregation_month_input, load_profile_aggregation_day, load_profile_aggregation_day_input, \
     load_profile_aggregation_curve_output, load_profile_aggregation_curve, load_profile_aggregation_hectares, load_profile_aggregation_hectares_output, \
     load_profile_aggregation_curve_hectares
-from main_api.api.restplus import api
-from main_api.models.nuts import Nuts
-from main_api.models.heat_load_profile import HeatLoadProfileNuts
-from main_api.models.heatloadQueries import HeatLoadProfile
-from sqlalchemy import func, BigInteger, TypeDecorator
-from main_api.models import db
-import datetime
+from app.decorator.restplus import api
+
+from app.models.heatloadQueries import HeatLoadProfile
+
+
+
 import shapely.geometry as shapely_geom
-from geojson import FeatureCollection, Feature
-from geoalchemy2.shape import to_shape
-from main_api.models import generalData
+
+from app.models import generalData
 
 
 log = logging.getLogger(__name__)
 
-ns = api.namespace('heat-load-profile', description='Operations related to heat load profile')
+load_profile_namespace = api.namespace('heat-load-profile', description='Operations related to heat load profile')
 
-
+ns = load_profile_namespace
 class HeatLoadProfileResource(Resource):
     def normalize_nuts(self, nuts):
         list_nuts_id = []

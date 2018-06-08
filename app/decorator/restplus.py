@@ -2,7 +2,7 @@ import traceback
 import logging
 
 from flask_restplus import Api
-from main_api import settings
+from app import settings
 from sqlalchemy.orm.exc import NoResultFound
 
 

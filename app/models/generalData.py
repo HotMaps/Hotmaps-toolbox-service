@@ -1,4 +1,4 @@
-from main_api import settings
+from app import settings
 
 # LAYERS
 popDe = settings.POPULATION_TOT

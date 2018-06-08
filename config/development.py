@@ -1,5 +1,5 @@
 # Flask settings
-from main_api import secrets
+from app import secrets
 DEBUG = True
 FLASK_SECRET_KEY = 'paPTvnNME5NBHHuIOlFqG6zS77vHadbo'
 SQLALCHEMY_DATABASE_URI = secrets.SQLALCHEMY_DATABASE_URI_DEVELOPMENT

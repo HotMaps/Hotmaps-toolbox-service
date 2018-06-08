@@ -1,4 +1,4 @@
-from main_api.models import db
+from models import db
 
 
 class Time(db.Model):

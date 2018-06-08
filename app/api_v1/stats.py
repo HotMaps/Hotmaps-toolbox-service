@@ -2,33 +2,32 @@ import logging
 import re
 from flask import request
 from flask_restplus import Resource
-from main_api.api.main.serializers import stats_layers_area_input, stats_layers_output, stats_layers_hectares_output,\
+from app.decorator.serializers import stats_layers_area_input, stats_layers_output, stats_layers_hectares_output,\
 	stats_layers_nuts_input, stats_layers_nuts_output, stats_layer_point_input,\
 	stats_layers_area_nuts_input, stats_layers_hectares_input, stats_list_nuts_input, stats_list_label_dataset
-from main_api.api.restplus import api
-from main_api.models.nuts import Nuts, NutsRG01M
-from main_api.models.lau import Lau
-from main_api.models.statsQueries import LayersHectare
-from main_api.models.statsQueries import ElectricityMix
-from main_api.models.statsQueries import LayersNutsLau
-from sqlalchemy import func, BigInteger, TypeDecorator
-from main_api.models import db
-import datetime
+from app.decorator.restplus import api
+
+from app.models.statsQueries import LayersHectare
+from app.models.statsQueries import ElectricityMix
+from app.models.statsQueries import LayersNutsLau
+
+
 import shapely.geometry as shapely_geom
-from geojson import FeatureCollection, Feature
-from geoalchemy2.shape import to_shape
-from main_api import settings
 
-from main_api.models import generalData
-from main_api.models.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator
-from main_api import celery
+from app import settings
 
+from app.models import generalData
+from app.models.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator
+import app
+
+print dir(app)
 import json
 
 
 log = logging.getLogger(__name__)
 
-ns = api.namespace('stats', description='Operations related to statistisdscs')
+nsStats = api.namespace('stats', description='Operations related to statistisdscs')
+ns = nsStats
 
 
 @ns.route('/layers/nuts-lau')
@@ -188,15 +187,16 @@ class StatsLayersNutsInArea(Resource):
 		nuts = api.payload['nuts']
 
 		# Stop execution if layers list or nuts list is empty
-		return processGenerationMix.delay(nuts)
+		#return processGenerationMix.delay(nuts)
+		return processGenerationMix(nuts)
 
 
 		# Remove scale for each layer
 
 
-		return 'www'
 
-@celery.task(name = 'energy_mix_nuts_lau')
+
+#@celery.task(name = 'energy_mix_nuts_lau')
 def processGenerationMix(nuts):
 	if not nuts:
 		return

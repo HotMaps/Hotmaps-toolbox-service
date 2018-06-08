@@ -1,6 +1,6 @@
 import datetime
 
-from main_api.models import db
+from app import db
 from geoalchemy2 import Geometry
 from sqlalchemy import func
 from geojson import FeatureCollection, Feature

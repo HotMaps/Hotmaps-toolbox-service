@@ -1,16 +1,11 @@
 import datetime
-from main_api.models import db
-from main_api import settings
-from sqlalchemy import func
+from app.models import helper
+from app import db
+from app import settings
 from decimal import *
-from main_api.models import helper
-from main_api.models.wwtp import WwtpModel
-from main_api.models.heat_density_map import HeatDensityMapModel, HeatDensityHaModel, HeatDensityLauModel, HeatDensityNutsModel
-from main_api.models.population_density import PopulationDensityHaModel, PopulationDensityLauModel, PopulationDensityNutsModel
-from main_api.models.nuts import Nuts, NutsRG01M
-from main_api.models.lau import Lau
+
 import generalData
-import json
+
 
 #import logging
 #logging.basicConfig()

@@ -1,6 +1,6 @@
 DEBUG = False
 
-from main_api import secrets
+from app import secrets
 SECRET_KEY = 'top-secret!'
 # Flask settings
 FLASK_SECRET_KEY = 'paPTvnNME5NBHHuIOlFqG6zS77vHadbo'

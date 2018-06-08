@@ -1,8 +1,8 @@
 import datetime
-from main_api.models import db
+from models import db
 from geoalchemy2 import Geometry
-from main_api.models.nuts import Nuts
-from main_api.models.lau import Lau
+from models.nuts import Nuts
+from models.lau import Lau
 from sqlalchemy import func
 
 class WwtpModel(db.Model):

@@ -1,4 +1,4 @@
-from main_api.models import db
+from models import db
 from geoalchemy2 import Geometry
 
 

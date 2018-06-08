@@ -1,12 +1,6 @@
-import datetime, logging
-from main_api import settings
-from main_api.models import db
-from main_api.models.nuts import Nuts
-from main_api.models.time import Time
-from geoalchemy2 import Geometry, Raster
-from sqlalchemy import func
-from sqlalchemy.sql import literal
-from sqlalchemy.types import Unicode
+
+from app import db
+
 
 #logging.basicConfig()
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
