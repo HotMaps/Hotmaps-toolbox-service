@@ -24,6 +24,33 @@ To build this image from Dockerfile run this command in your Docker or Docker To
 
 `docker build -t hotmaps/toolbox .`
 
+### Setup celery
+
+start celery:
+`celery -A app.celery worker --loglevel=info`
+
+
+### Setup rabbitMq
+by default rabbitmq server will run on the port 5672
+#### Setup rabbitMq server on the OS
+
+start a rabbitmq server installed in the system :
+`sudo service rabbitmq-server start`
+
+check the status of the server :
+`sudo rabbitmqctl status`
+
+
+#### Setup redis
+by default redis server will run on the port 6379
+#### Setup redis server on the OS
+
+start a redis server installed in the system :
+`sudo service redis-server start`
+
+check the status of the server :
+`sudo service redis-server status`
+
 #### Run
 
 **Important:** Before running make sure you have a directory containing some code. This directory will be linked to the volume of the container. Here is the most basic file that needs to be in that directory*:

@@ -1,3 +1,4 @@
+from app import celery
 import logging
 import re
 from flask import request
@@ -188,7 +189,7 @@ class StatsLayersNutsInArea(Resource):
 
 		# Stop execution if layers list or nuts list is empty
 		#return processGenerationMix.delay(nuts)
-		return processGenerationMix(nuts)
+		return processGenerationMix.delay(nuts)
 
 
 		# Remove scale for each layer
@@ -196,7 +197,7 @@ class StatsLayersNutsInArea(Resource):
 
 
 
-#@celery.task(name = 'energy_mix_nuts_lau')
+@celery.task(name = 'energy_mix_nuts_lau')
 def processGenerationMix(nuts):
 	if not nuts:
 		return
