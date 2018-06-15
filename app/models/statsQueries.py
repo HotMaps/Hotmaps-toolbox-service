@@ -1,6 +1,6 @@
 import datetime
 from app.models import helper
-from app import db
+from app import dbGIS as db
 from app import settings
 from decimal import *
 

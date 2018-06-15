@@ -27,9 +27,12 @@ To build this image from Dockerfile run this command in your Docker or Docker To
 ### Setup celery
 
 start celery:
-`celery -A app.celery worker --loglevel=info`
+`celery -A celery_worker.celery worker --loglevel=info`
 
 
+
+### Setup flower
+celery -A celery_worker.celery flower --port=5555
 ### Setup rabbitMq
 by default rabbitmq server will run on the port 5672
 #### Setup rabbitMq server on the OS

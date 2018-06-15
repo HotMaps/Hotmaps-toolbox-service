@@ -1,9 +1,6 @@
-import datetime
-from models import db
+from app import dbGIS as db
 from geoalchemy2 import Geometry
-from models.nuts import Nuts
-from models.lau import Lau
-from sqlalchemy import func
+
 
 class WwtpModel(db.Model):
     __tablename__ = 'wwtp'

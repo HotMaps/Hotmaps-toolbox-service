@@ -1,5 +1,5 @@
 
-from app import db
+from app import dbGIS as db
 
 
 #logging.basicConfig()

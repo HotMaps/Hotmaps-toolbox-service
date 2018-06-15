@@ -1,4 +1,4 @@
-from models import db
+from app import dbGIS as db
 
 
 class Time(db.Model):

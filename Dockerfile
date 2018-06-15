@@ -40,23 +40,39 @@ RUN pip install -U "pip==9.0.1"
 
 
 
+
 # Setup app server
 RUN mkdir -p /data
-COPY gunicorn-config.py /data/gunicorn-config.py
+COPY . /run
+WORKDIR /run
+RUN ls
 RUN pip install gunicorn
-RUN mkdir -p /data/config
-COPY /config /data/config
-
 # Install required python modules
-COPY requirements.txt /data/requirements.txt
-RUN pip install -r /data/requirements.txt
+
+RUN pip install -r requirements.txt
 
 # Copy app source code
-COPY app /data
 
-WORKDIR /data
+
+
+
+
+
+
 
 EXPOSE 80
 
 # Start server
-CMD ["gunicorn", "--config", "/data/gunicorn-config.py", "--log-config", "/data/logging.conf", "wsgi:application"]
+CMD ["gunicorn", "--config", "gunicorn-config.py", "--log-config", "app/logging.conf", "run_wsgi:application"]
+
+RUN apt-get install -y rabbitmq-server
+RUN service rabbitmq-server start
+RUN service rabbitmq-server restart
+RUN rabbitmqctl status
+RUN apt-get install -y redis-server
+RUN service redis-server start
+
+RUN service redis-server status
+CMD ["celery", "worker", "-A", "celery_worker.celery", "--loglevel=info"]
+
+

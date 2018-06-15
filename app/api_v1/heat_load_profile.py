@@ -1,12 +1,10 @@
+from app import celery
 import logging
-import re
-from flask import request
 from flask_restplus import Resource
-from app.decorator.serializers import load_profile_aggregation_year, load_profile_aggregation_year_input, \
-    load_profile_aggregation_month, load_profile_aggregation_month_input, load_profile_aggregation_day, load_profile_aggregation_day_input, \
-    load_profile_aggregation_curve_output, load_profile_aggregation_curve, load_profile_aggregation_hectares, load_profile_aggregation_hectares_output, \
+from app.decorators.serializers import  load_profile_aggregation_day_input, \
+    load_profile_aggregation_curve_output, load_profile_aggregation_curve, load_profile_aggregation_hectares, \
     load_profile_aggregation_curve_hectares
-from app.decorator.restplus import api
+from app.decorators.restplus import api
 
 from app.models.heatloadQueries import HeatLoadProfile
 
@@ -53,11 +51,20 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
 
         output = {}
 
-        output = HeatLoadProfile.duration_curve_nuts_lau(year=year, nuts=nuts)
+        output = durationCurveNutsLau.delay(year,nuts)
 
         return {
-            "points": output
+            "points": output.wait()
         }
+
+@celery.task(name = 'duration_curve_nuts_lau')
+def durationCurveNutsLau(year, nuts):
+    if not nuts and year:
+        return
+    output = HeatLoadProfile.duration_curve_nuts_lau(year=year, nuts=nuts)
+
+    return output
+
 
 @ns.route('/duration-curve/hectares')
 @api.response(404, 'No data found')
@@ -73,29 +80,34 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         areas = api.payload['areas']
 
         # Stop execution if areas list is empty 
-        if not areas:
-            return
 
-        polyArray = []
-        output = {}
-        # TODO: this part must be one methods same in /aggregate/hectares Rules 1 NO DUPLICATE
-        # convert to polygon format for each polygon and store them in polyArray
-        for polygon in areas: 
-            po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
-            polyArray.append(po)
-
-            
-        # convert array of polygon into multipolygon
-        multipolygon = shapely_geom.MultiPolygon(polyArray)
-
-        #geom = "SRID=4326;{}".format(multipolygon.wkt)
-        geom = multipolygon.wkt
-
-        output = HeatLoadProfile.duration_curve_hectares(year=year, geometry=geom)
-
+        output = durationCurveHectare.delay(areas,year)
         return {
-            "points": output
+            "points": output.wait()
         }
+@celery.task(name = 'duration_curve_hectare')
+def durationCurveHectare(areas,year):
+    if not areas:
+        return
+
+    polyArray = []
+    output = {}
+    # TODO: this part must be one methods same in /aggregate/hectares Rules 1 NO DUPLICATE
+    # convert to polygon format for each polygon and store them in polyArray
+    for polygon in areas:
+        po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
+        polyArray.append(po)
+
+
+    # convert array of polygon into multipolygon
+    multipolygon = shapely_geom.MultiPolygon(polyArray)
+
+    #geom = "SRID=4326;{}".format(multipolygon.wkt)
+    geom = multipolygon.wkt
+
+    output = HeatLoadProfile.duration_curve_hectares(year=year, geometry=geom)
+
+    return output
 
 @ns.route('/hectares')
 @api.response(404, 'No data found')
@@ -112,26 +124,26 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
         year = api.payload['year']
         areas = api.payload['areas']
 
-        # Stop execution if areas list is empty 
+        # Stop execution if areas list is empty
         if not areas:
             return
-        
+
         if 'month' in api.payload.keys():
-          month = api.payload["month"]
+            month = api.payload["month"]
         else:
-          month = 0
+            month = 0
 
         if 'day' in api.payload.keys():
-          day = api.payload["day"]
+            day = api.payload["day"]
         else:
-          day = 0     
+            day = 0
 
 
         polyArray = []
         output = {}
         # TODO: this part must be one methods same in /aggregate/duration_curve/hectares Rules 1 NO DUPLICATE
         # convert to polygon format for each polygon and store them in polyArray
-        for polygon in areas: 
+        for polygon in areas:
             po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
             polyArray.append(po)
 
@@ -143,9 +155,11 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
         geom = multipolygon.wkt
 
         res = HeatLoadProfile.heatloadprofile_hectares(year=year, month=month, day=day, geometry=geom)
-        output = res
 
-        return output
+        return res
+
+
+
 
 
 @ns.route('/nuts-lau')

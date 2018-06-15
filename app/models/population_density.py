@@ -1,10 +1,5 @@
-import datetime
-from models import db
-from models.nuts import NutsRG01M
-from sqlalchemy import func
+from app import dbGIS as db
 from geoalchemy2 import Raster
-from models.lau import Lau
-from models.time import Time
 from decimal import *
 """
     Population Density layer as ha

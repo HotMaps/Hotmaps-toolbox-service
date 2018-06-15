@@ -1,6 +1,6 @@
 import datetime, logging
 from app import settings
-from app import db
+from app import dbGIS
 
 import generalData
 

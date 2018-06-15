@@ -1,5 +1,5 @@
 from flask_restplus import fields
-from app.decorator.restplus import api
+from app.decorators.restplus import api
 from geoalchemy2.shape import to_shape
 from geojson import Feature, FeatureCollection, dumps
 
@@ -34,6 +34,49 @@ grid = api.model('Grid', {
     'ymax': fields.String(description='Ymax'),
     'geom': Geometry(attribute='geom', description='Geometry')
 })
+
+input_component= api.model('computation module component', {
+    'component_name': fields.String(desciption='component_name'),
+    'component_type': fields.String(desciption='component_type'),
+    'parameter_name': fields.String(desciption='parameter_name'),
+    'value': fields.String(description='value'),
+    'unit': fields.List(fields.String(description='unit')),
+    'min': fields.String(description='min'),
+    'max': fields.String(description='max'),
+    'cmId': fields.String(description='cmId'),
+
+
+})
+
+compution_module_class= api.model('computation module list', {
+    'id': fields.Integer(readOnly=True, description='ID of the computation module register'),
+    'cm_name': fields.String(desciption='cm_name'),
+    'cm_url': fields.String(desciption='cm_url'),
+    'category': fields.String(desciption='category'),
+    'cm_description': fields.String(description='cm_description'),
+    'layers_needed': fields.List(fields.String(description='layers_needed')),
+    'input_components': fields.List(fields.Nested(input_component)),
+
+
+})
+
+
+compution_module_list = api.model('Input for population density for area', {
+
+    'list': fields.List(fields.Nested(compution_module_class))
+})
+input_component_list = api.model('Input for population density for area', {
+
+    'list': fields.List(fields.Nested(input_component))
+})
+
+
+test_communication_cm = api.model('Input for population density for area', {
+
+    'custom': fields.String(description='custom')
+})
+
+
 
 grid_properties = api.model('Properties', {
     'xmin': fields.Integer(description='Xmin'),
@@ -308,4 +351,14 @@ stats_layers_hectares_input = api.model('Input for statistics on layers, hectare
     'layers': fields.List(fields.String(description='Layer')),
     'areas': fields.List(fields.Nested(area)),
     'year': fields.Integer(description='Year'),
+})
+input_computation_module = api.model('Input for population density for area', {
+
+    'cm_id': fields.String(description='cm test'),
+    'inputs':  fields.List(fields.String(description='inputs')),
+    'layers': fields.List(fields.String(description='Layer')),
+    'areas': fields.List(fields.Nested(area)),
+    'year': fields.Integer(description='Year'),
+    'url_file': fields.Integer(description='url_file'),
+
 })
