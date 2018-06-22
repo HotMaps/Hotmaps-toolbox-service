@@ -1,37 +1,46 @@
-version: "2"
-
+version: "3"
 services:
-  flask:
-    build: flask
-    command: "python app.py"
+  rabbit:
+      hostname: rabbit
+      image: rabbitmq:latest
+      environment:
+          - RABBITMQ_DEFAULT_USER=admin
+          - RABBITMQ_DEFAULT_PASS=mypass
+      ports:
+          - "5672:5672"
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
     restart: always
     ports:
-      - '5000:5000'
-    volumes:
-      - ./code/:/app
-    networks:
-      - flask-redis-celery
-
-  celery:
-    build: celery
-    command: "celery -A app.celery worker --loglevel=info"
-    user: nobody
-    restart: always
-    volumes:
-      - ./code/:/app
-    networks:
-      - flask-redis-celery
-
+     - "5000:5000"
+    links:
+         - rabbit
+         - redis
+    depends_on:
+      - redis
+  worker:
+    build:
+      context: ./api
+      dockerfile: Dockerfile_celery_queue
+    links:
+      - rabbit
+    depends_on:
+      - rabbit
+      - redis
+  monitor:
+    build:
+      context: ./api
+      dockerfile: Dockerfile_flower
+    ports:
+     - "5555:5555"
+    entrypoint: flower
+    command:  -A celery_worker.celery --port=5555 --broker=amqp://admin:mypass@rabbit:5672/
+    depends_on:
+      - redis
+      - rabbit
   redis:
-    image: redis:4.0.1-alpine
-    command: "redis-server --requirepass {REDIS_PWD:ln_pwd_123}"
-    volumes:
-      - redis:/data
-    networks:
-      - flask-redis-celery
+    image: redis
 
-volumes:
-    redis:
 
-networks:
-    flask-redis-celery:

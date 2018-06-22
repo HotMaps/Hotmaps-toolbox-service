@@ -4,15 +4,15 @@ from app.decorators.restplus import api
 from app.decorators.serializers import  compution_module_class, \
     input_computation_module, test_communication_cm, \
     compution_module_list
-from app.model import ComputationModule
-from .. import dbCM
-nsCM = api.namespace('Computation-module', description='Operations related to statistisdscs')
+from app.model import register_calulation_module
+
+nsCM = api.namespace('cm', description='Operations related to statistisdscs')
 ns = nsCM
 from flask_restplus import Resource
 from app import celery
 import requests
 
-#TODO Add url to find the right computation module
+#TODO Add url to find  right computation module
 URL_CM = 'http://127.0.0.1:5001/'
 list_of_computation_module  = [
 
@@ -48,13 +48,17 @@ class ComputationModuleList(Resource):
 @ns.route('/register/', methods=['POST'])
 class ComputationModuleClass(Resource):
     # @api.expect(input_computation_module)
-    @api.expect(compution_module_class)
+    #@api.expect(compution_module_class)
     @api.marshal_with(test_communication_cm)
     def post(self):
-        cm = ComputationModule()
-        cm.import_data(request.json)
-        dbCM.session.add(cm)
-        dbCM.session.commit()
+        registerCM.delay(request.values)
+
+
+
+@celery.task(name = 'registerCM')
+def registerCM(json):
+    register_calulation_module(json)
+
 
     #return {}, 201, {'Location': cm.get_url()}
 
@@ -78,16 +82,16 @@ class ComputationModuleCompute(Resource):
         #res = requests.post(URL_CM + 'computation-module/compute/', data = api.payload)
         print current_app.name
         app = current_app._get_current_object()
-        with app.app_context():
+        #with app.app_context():
             #app.app_context().push()
-            res = computeCM.delay(url, data)
-            response = res.wait()
-            print 'response:',response
-            return response
-            #print 'res:',res
-            #print response
-            #print 'response from server:',response.text
-            #return response.text
+        res = computeCM.delay(url, data)
+        response = res.wait()
+        print 'response:',response
+        return response
+        #print 'res:',res
+        #print response
+        #print 'response from server:',response.text
+        #return response.text
 
 
 

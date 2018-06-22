@@ -55,7 +55,7 @@ compution_module_class= api.model('computation module list', {
     'category': fields.String(desciption='category'),
     'cm_description': fields.String(description='cm_description'),
     'layers_needed': fields.List(fields.String(description='layers_needed')),
-    'input_components': fields.List(fields.Nested(input_component)),
+    #'input_components': fields.List(fields.Nested(input_component)),
 
 
 })

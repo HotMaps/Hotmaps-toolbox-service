@@ -5,6 +5,10 @@
 
 FROM ubuntu:16.04
 
+ENV CELERY_BROKER_URL amqp://admin:mypass@rabbit:5672/
+ENV CELERY_RESULT_BACKEND redis://redis:6379/0
+ENV C_FORCE_ROOT true
+
 MAINTAINER Daniel Hunacek <daniel.hunacek@hevs.ch>
 
 # setup volume
@@ -43,8 +47,9 @@ RUN pip install -U "pip==9.0.1"
 
 # Setup app server
 RUN mkdir -p /data
-COPY . /run
-WORKDIR /run
+COPY . /api
+WORKDIR /api
+
 RUN ls
 RUN pip install gunicorn
 # Install required python modules
@@ -55,24 +60,10 @@ RUN pip install -r requirements.txt
 
 
 
-
-
-
-
-
-EXPOSE 80
+EXPOSE 5000
 
 # Start server
 CMD ["gunicorn", "--config", "gunicorn-config.py", "--log-config", "app/logging.conf", "run_wsgi:application"]
 
-RUN apt-get install -y rabbitmq-server
-RUN service rabbitmq-server start
-RUN service rabbitmq-server restart
-RUN rabbitmqctl status
-RUN apt-get install -y redis-server
-RUN service redis-server start
-
-RUN service redis-server status
-CMD ["celery", "worker", "-A", "celery_worker.celery", "--loglevel=info"]
 
 

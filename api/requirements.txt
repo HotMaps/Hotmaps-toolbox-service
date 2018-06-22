@@ -26,3 +26,4 @@ celery
 requests
 redis
 SQLAlchemy==1.0.11
+

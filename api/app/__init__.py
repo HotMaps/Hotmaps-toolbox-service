@@ -7,6 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 
+
 from celery import Celery
 from app.decorators.restplus import api as api_rest_plus
 
@@ -16,7 +17,7 @@ import settings
 
 
 dbGIS = SQLAlchemy()
-dbCM = SQLAlchemy()
+
 celery = Celery(__name__, backend=settings.CELERY_RESULT_BACKEND,
                 broker=settings.CELERY_BROKER_URL)
 
@@ -51,7 +52,6 @@ def create_app(config_name):
 
     app.register_blueprint(api)
     dbGIS.init_app(app)
-    dbCM.init_app(app)
     CORS(app, resources={
         r"/api/*": {"origins": {
             "http://hotmaps.hevs.ch",
