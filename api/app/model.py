@@ -41,27 +41,98 @@ def init_sqlite_caculation_module_database(dbname=DB_NAME):
     cursor = conn.cursor()
     cursor.execute("DROP TABLE IF EXISTS calculation_module")
     cursor.execute("CREATE TABLE calculation_module (cm_id INTEGER NOT NULL, cm_name VARCHAR(255), "
-                   "cm_description VARCHAR(255),cm_url VARCHAR(255),category VARCHAR(255),layers_needed VARCHAR(255),createdAt REAL(255),updateAt REAL(255),"
+                   "cm_description VARCHAR(255),cm_url VARCHAR(255),category VARCHAR(255),layers_needed VARCHAR(255),createdAt REAL(255),updatedAt REAL(255),"
                    " PRIMARY KEY(cm_id))")
+    conn.commit()
+    cursor.execute("DROP TABLE IF EXISTS inputs_calculation_module")
+    cursor.execute("CREATE TABLE inputs_calculation_module (input_id INTEGER NOT NULL, input_name VARCHAR(255), "
+                   "input_type VARCHAR(255),input_parameter_name VARCHAR(255),input_value INTEGER, input_unit VARCHAR(255),"
+                   "input_min INTEGER,input_max INTEGER,createdAt REAL(255),updatedAt REAL(255),cm_id INTEGER NOT NULL,"
+                   " PRIMARY KEY(input_id),FOREIGN KEY(cm_id) REFERENCES calculation_module(cm_id))")
     conn.commit()
     return conn
 
 def register_calulation_module(data):
-    conn = sqlite3.connect(DB_NAME)
 
-    cm_name = data['cm_name']
-    category = data['category']
-    cm_description = data['cm_description']
-    cm_url = data['cm_url']
-    cm_Id = data['id']
-    layers_needed = data['layers_needed']
-    input_components = data['input_components']
-    print 'input_components',input_components
-    updatedAt = datetime.utcnow()
-    createdAt = datetime.utcnow()
-    cursor = conn.cursor()
+    if data is not None:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cm_name = data['cm_name']
 
-    cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt) VALUES (?,?,?,?,?,?,?,?)", ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ))
-    conn.commit()
+        category = data['category']
+        cm_description = data['cm_description']
+        cm_url = data['cm_url']
+        cm_id = data['cm_id']
+        layers_needed = data['layers_needed']
+        updatedAt = datetime.utcnow()
+        createdAt = datetime.utcnow()
+        inputs_calculation_module = data['inputs_calculation_module']
+        try:
 
+            ln = str(layers_needed)
+            cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt) VALUES (?,?,?,?,?,?,?,?)", ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt ))
+            conn.commit()
+            for value in inputs_calculation_module:
+                input_name = value['input_name']
+                input_type = value['input_type']
+                input_parameter_name = value['input_parameter_name']
+                input_value = value['input_value']
+                input_unit = value['input_unit']
+                input_min = value['input_min']
+                input_max = value['input_max']
+                cm_id = value['cm_id']
+                conn = sqlite3.connect(DB_NAME)
+                cursor = conn.cursor()
+                cursor.execute("INSERT INTO inputs_calculation_module (input_name, input_type, input_parameter_name, input_value, input_unit, input_min, input_max, cm_id, createdAt,updatedAt) VALUES (?,?,?,?,?,?,?,?,?,?)", (input_name, input_type, input_parameter_name, input_value, input_unit, input_min, input_max, cm_id, createdAt,updatedAt))
+                conn.commit()
+            conn.close()
+
+        except ValidationError:
+            print 'error'
+        except sqlite3.IntegrityError as e:
+            print e
+            update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,inputs_calculation_module,cursor,conn)
+
+
+def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,inputs_calculation_module,cursor,conn):
+    try:
+
+        ln = str(layers_needed)
+        cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt,cm_id ))
+        conn.commit()
+        print type(cm_id)
+        cursor.execute("DELETE FROM inputs_calculation_module WHERE cm_id = ? ", (str(cm_id)))
+        conn.commit()
+        for value in inputs_calculation_module:
+            input_name = value['input_name']
+            input_type = value['input_type']
+            input_parameter_name = value['input_parameter_name']
+            input_value = value['input_value']
+            input_unit = value['input_unit']
+            input_min = value['input_min']
+            input_max = value['input_max']
+            cm_id = value['cm_id']
+            cursor.execute("INSERT INTO inputs_calculation_module (input_name, input_type, input_parameter_name, input_value, input_unit, input_min, input_max, cm_id, createdAt,updatedAt) VALUES (?,?,?,?,?,?,?,?,?,?)", (input_name, input_type, input_parameter_name, input_value, input_unit, input_min, input_max, cm_id, createdAt,updatedAt))
+            conn.commit()
+        conn.close()
+
+    except ValidationError:
+        print 'error'
+    except sqlite3.IntegrityError as e:
+        print e
+
+def getCMUrl(cm_id):
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+
+        cm_url = cursor.execute('select cm_url from calculation_module where cm_id = ?',
+                        (cm_id), one=True)
+        conn.close()
+        return cm_url
+
+    except ValidationError:
+        print 'error'
+    except sqlite3.IntegrityError as e:
+        print e
 

@@ -4,7 +4,7 @@ from app.decorators.restplus import api
 from app.decorators.serializers import  compution_module_class, \
     input_computation_module, test_communication_cm, \
     compution_module_list
-from app.model import register_calulation_module
+from app.model import register_calulation_module,getCMUrl
 
 nsCM = api.namespace('cm', description='Operations related to statistisdscs')
 ns = nsCM
@@ -49,15 +49,20 @@ class ComputationModuleList(Resource):
 class ComputationModuleClass(Resource):
     # @api.expect(input_computation_module)
     #@api.expect(compution_module_class)
-    @api.marshal_with(test_communication_cm)
     def post(self):
-        registerCM.delay(request.values)
+        input = request.get_json()
+        registerCM.delay(input)
 
 
 
 @celery.task(name = 'registerCM')
-def registerCM(json):
-    register_calulation_module(json)
+def registerCM(input):
+    print 'input', input
+    register_calulation_module(input)
+
+@celery.task(name = 'getCMUrl')
+def getCMUrl(cm_id):
+    return getCMUrl(cm_id)
 
 
     #return {}, 201, {'Location': cm.get_url()}
@@ -73,18 +78,25 @@ class ComputationModuleCompute(Resource):
         :return:
 
         """
-        print 'request {}'.format(request.json)
+        print 'request {}'.format(request.get_json())
+        data = request.get_json()
+        cm_id = data["cm_id"]
         # 1. find the good computation module with the right url in the database from cm db  => generate url
 
+        url_cm = getCMUrl(cm_id)
+
+
         # 2. if this is a raster clip of the raster or provide vector needed => generate link
-        url = URL_CM
+
         data = api.payload
         #res = requests.post(URL_CM + 'computation-module/compute/', data = api.payload)
         print current_app.name
         app = current_app._get_current_object()
         #with app.app_context():
+
+
             #app.app_context().push()
-        res = computeCM.delay(url, data)
+        res = computeCM.delay(url_cm, data)
         response = res.wait()
         print 'response:',response
         return response
