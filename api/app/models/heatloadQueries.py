@@ -1,5 +1,5 @@
 import datetime, logging
-from app import settings
+from app import constants
 from app import dbGIS as db
 
 import generalData
@@ -38,9 +38,9 @@ class HeatLoadProfile:
 						'month': q[3],
 						'granularity': 'month',
 						'unit': 'kW',
-						'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
-						'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
-						'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
+						'min': round(q[0], constants.NUMBER_DECIMAL_DATA),
+						'max': round(q[1], constants.NUMBER_DECIMAL_DATA),
+						'average': round(q[2], constants.NUMBER_DECIMAL_DATA)
 						})
 				else:
 					output = []
@@ -53,9 +53,9 @@ class HeatLoadProfile:
 						'day': q[3],
 						'granularity': 'day',
 						'unit': 'kW',
-						'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
-						'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
-						'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
+						'min': round(q[0], constants.NUMBER_DECIMAL_DATA),
+						'max': round(q[1], constants.NUMBER_DECIMAL_DATA),
+						'average': round(q[2], constants.NUMBER_DECIMAL_DATA)
 						})
 				else:
 					output = []
@@ -69,7 +69,7 @@ class HeatLoadProfile:
 						'hour_of_day': q[1],
 						'granularity': 'hour',
 						'unit': 'kW',
-						'value': round(q[0], settings.NUMBER_DECIMAL_DATA)
+						'value': round(q[0], constants.NUMBER_DECIMAL_DATA)
 						})
 				else:
 					output = []
@@ -109,9 +109,9 @@ class HeatLoadProfile:
 						'month': q[3],
 						'granularity': 'month',
 						'unit': 'kW',
-						'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
-						'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
-						'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
+						'min': round(q[0], constants.NUMBER_DECIMAL_DATA),
+						'max': round(q[1], constants.NUMBER_DECIMAL_DATA),
+						'average': round(q[2], constants.NUMBER_DECIMAL_DATA)
 						})
 				else:
 					output = []
@@ -124,9 +124,9 @@ class HeatLoadProfile:
 						'day': q[3],
 						'granularity': 'day',
 						'unit': 'kW',
-						'min': round(q[0], settings.NUMBER_DECIMAL_DATA),
-						'max': round(q[1], settings.NUMBER_DECIMAL_DATA),
-						'average': round(q[2], settings.NUMBER_DECIMAL_DATA)
+						'min': round(q[0], constants.NUMBER_DECIMAL_DATA),
+						'max': round(q[1], constants.NUMBER_DECIMAL_DATA),
+						'average': round(q[2], constants.NUMBER_DECIMAL_DATA)
 						})
 				else:
 					output = []
@@ -140,7 +140,7 @@ class HeatLoadProfile:
 						'hour_of_day': q[1],
 						'granularity': 'hour',
 						'unit': 'kW',
-						'value': round(q[0], settings.NUMBER_DECIMAL_DATA)
+						'value': round(q[0], constants.NUMBER_DECIMAL_DATA)
 						})
 				else:
 					output = []

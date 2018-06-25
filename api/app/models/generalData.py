@@ -1,30 +1,30 @@
-from app import settings
+from app import constants
 
 # LAYERS
-popDe = settings.POPULATION_TOT
-heatDe = settings.HEAT_DENSITY_TOT
-wwtp = settings.WWTP
-wwtpCapacity = settings.WWTP_CAPACITY
-wwtpPower = settings.WWTP_POWER
-grass = settings.GRASS_FLOOR_AREA_TOT
-grassRes = settings.GRASS_FLOOR_AREA_RES
-grassNonRes = settings.GRASS_FLOOR_AREA_NON_RES
-bVolTot = settings.BUILDING_VOLUMES_TOT
-bVolRes = settings.BUILDING_VOLUMES_RES
-bVolNonRes = settings.BUILDING_VOLUMES_NON_RES
-heatRes = settings.HEAT_DENSITY_RES
-heatNonRes = settings.HEAT_DENSITY_NON_RES
-indSites = settings.INDUSTRIAL_SITES
-indSitesEm = settings.INDUSTRIAL_SITES_EMISSIONS
-indSitesExc = settings.INDUSTRIAL_SITES_EXCESS_HEAT
-biomassPot = settings.BIOMASS_POTENTIAL
-msw = settings.MUNICIPAL_SOLID_WASTE
-windPot = settings.WIND_POTENTIAL
-solarPot = settings.SOLAR_POTENTIAL
-geothermalPotHeatCond = settings.GEOTHERMAL_POTENTIAL_HEAT_COND
-electricityCo2EmisionsFactor = settings.ELECRICITY_CO2_EMISSION_FACTOR
-hdd = settings.HDD_CUR
-cdd = settings.CDD_CUR
+popDe = constants.POPULATION_TOT
+heatDe = constants.HEAT_DENSITY_TOT
+wwtp = constants.WWTP
+wwtpCapacity = constants.WWTP_CAPACITY
+wwtpPower = constants.WWTP_POWER
+grass = constants.GRASS_FLOOR_AREA_TOT
+grassRes = constants.GRASS_FLOOR_AREA_RES
+grassNonRes = constants.GRASS_FLOOR_AREA_NON_RES
+bVolTot = constants.BUILDING_VOLUMES_TOT
+bVolRes = constants.BUILDING_VOLUMES_RES
+bVolNonRes = constants.BUILDING_VOLUMES_NON_RES
+heatRes = constants.HEAT_DENSITY_RES
+heatNonRes = constants.HEAT_DENSITY_NON_RES
+indSites = constants.INDUSTRIAL_SITES
+indSitesEm = constants.INDUSTRIAL_SITES_EMISSIONS
+indSitesExc = constants.INDUSTRIAL_SITES_EXCESS_HEAT
+biomassPot = constants.BIOMASS_POTENTIAL
+msw = constants.MUNICIPAL_SOLID_WASTE
+windPot = constants.WIND_POTENTIAL
+solarPot = constants.SOLAR_POTENTIAL
+geothermalPotHeatCond = constants.GEOTHERMAL_POTENTIAL_HEAT_COND
+electricityCo2EmisionsFactor = constants.ELECRICITY_CO2_EMISSION_FACTOR
+hdd = constants.HDD_CUR
+cdd = constants.CDD_CUR
 
 
 
@@ -472,14 +472,14 @@ def sampling_data(listValues):
 		})
 
 	# Sampling of the values
-	cut1 = int(numberOfValues*settings.POINTS_FIRST_GROUP_PERCENTAGE) 
-	cut2 = int(cut1+(numberOfValues*settings.POINTS_SECOND_GROUP_PERCENTAGE)) 
-	cut3 = int(cut2+(numberOfValues*settings.POINTS_THIRD_GROUP_PERCENTAGE)) 
+	cut1 = int(numberOfValues*constants.POINTS_FIRST_GROUP_PERCENTAGE) 
+	cut2 = int(cut1+(numberOfValues*constants.POINTS_SECOND_GROUP_PERCENTAGE)) 
+	cut3 = int(cut2+(numberOfValues*constants.POINTS_THIRD_GROUP_PERCENTAGE)) 
 
-	firstGroup = listPoints[0:cut1:settings.POINTS_FIRST_GROUP_STEP]
-	secondGroup = listPoints[cut1:cut2:settings.POINTS_SECOND_GROUP_STEP]
-	thirdGroup = listPoints[cut2:cut3:settings.POINTS_THIRD_GROUP_STEP]
-	fourthGroup = listPoints[cut3:numberOfValues:settings.POINTS_FOURTH_GROUP_STEP]
+	firstGroup = listPoints[0:cut1:constants.POINTS_FIRST_GROUP_STEP]
+	secondGroup = listPoints[cut1:cut2:constants.POINTS_SECOND_GROUP_STEP]
+	thirdGroup = listPoints[cut2:cut3:constants.POINTS_THIRD_GROUP_STEP]
+	fourthGroup = listPoints[cut3:numberOfValues:constants.POINTS_FOURTH_GROUP_STEP]
 
 	# Get min and max values needed for the sampling list
 	maxValue = min(listPoints)

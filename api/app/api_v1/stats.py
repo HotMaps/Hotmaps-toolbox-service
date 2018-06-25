@@ -15,7 +15,7 @@ from app.models.statsQueries import LayersNutsLau
 
 import shapely.geometry as shapely_geom
 
-from app import settings
+from app import constants
 
 from app.models import generalData
 from app.models.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator
@@ -55,15 +55,15 @@ class StatsLayersNutsInArea(Resource):
 
 		# Layers filtration and management
 		if type == 'nuts':
-			allLayersTable = generalData.createAllLayers(settings.LAYERS_REF_NUTS_TABLE)
-			allLayers = generalData.createAllLayers(settings.LAYERS_REF_NUTS)
+			allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_NUTS_TABLE)
+			allLayers = generalData.createAllLayers(constants.LAYERS_REF_NUTS)
 
 			noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
 			noDataLayers = generalData.layers_filter(layersPayload, allLayers)
 
 		elif type == 'lau':
-			allLayersTable = generalData.createAllLayers(settings.LAYERS_REF_LAU_TABLE)
-			allLayers = generalData.createAllLayers(settings.LAYERS_REF_LAU)
+			allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_LAU_TABLE)
+			allLayers = generalData.createAllLayers(constants.LAYERS_REF_LAU)
 
 			noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
 			noDataLayers = generalData.layers_filter(layersPayload, allLayers)
@@ -80,10 +80,10 @@ class StatsLayersNutsInArea(Resource):
 
 
 		# compute Cross indicators if both layers are selected
-		pop1ha_name = settings.POPULATION_TOT
-		hdm_name = settings.HEAT_DENSITY_TOT
-		heat_curr_non_res_name = settings.HEAT_DENSITY_NON_RES
-		heat_curr_res_name = settings.HEAT_DENSITY_RES
+		pop1ha_name = constants.POPULATION_TOT
+		hdm_name = constants.HEAT_DENSITY_TOT
+		heat_curr_non_res_name = constants.HEAT_DENSITY_NON_RES
+		heat_curr_res_name = constants.HEAT_DENSITY_RES
 
 
 		retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
@@ -133,8 +133,8 @@ def indicatorsHectares(year,layersPayload,areas):
 		return
 
 		# Layers filtration and management
-	allLayersTable = generalData.createAllLayers(settings.LAYERS_REF_HECTARES_TABLE)
-	allLayers = generalData.createAllLayers(settings.LAYERS_REF_HECTARES)
+	allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_HECTARES_TABLE)
+	allLayers = generalData.createAllLayers(constants.LAYERS_REF_HECTARES)
 	noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
 	noDataLayers = generalData.layers_filter(layersPayload, allLayers)
 
@@ -160,11 +160,11 @@ def indicatorsHectares(year,layersPayload,areas):
 	output = res
 
 	# compute heat consumption/person if both layers are selected
-	pop1ha_name = settings.POPULATION_TOT
-	hdm_name = settings.HEAT_DENSITY_TOT
-	heat_curr_non_res_name = settings.HEAT_DENSITY_NON_RES
-	heat_curr_res_name = settings.HEAT_DENSITY_RES
-	gfa_tot_curr_density_name = settings.GRASS_FLOOR_AREA_TOT
+	pop1ha_name = constants.POPULATION_TOT
+	hdm_name = constants.HEAT_DENSITY_TOT
+	heat_curr_non_res_name = constants.HEAT_DENSITY_NON_RES
+	heat_curr_res_name = constants.HEAT_DENSITY_RES
+	gfa_tot_curr_density_name = constants.GRASS_FLOOR_AREA_TOT
 
 
 	retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)

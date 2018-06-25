@@ -1,7 +1,7 @@
 import datetime
 from app.models import helper
 from app import dbGIS as db
-from app import settings
+from app import constants
 from decimal import *
 
 import generalData

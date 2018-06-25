@@ -13,13 +13,13 @@ from app.decorators.restplus import api as api_rest_plus
 
 
 
-import settings
+import constants
 
 
 dbGIS = SQLAlchemy()
 
-celery = Celery(__name__, backend=settings.CELERY_RESULT_BACKEND,
-                broker=settings.CELERY_BROKER_URL)
+celery = Celery(__name__, backend=constants.CELERY_RESULT_BACKEND,
+                broker=constants.CELERY_BROKER_URL)
 
 # methods
 log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '', 'logging.conf')
