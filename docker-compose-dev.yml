@@ -12,21 +12,9 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    networks:
-          - nginx
-          - backend
-    expose:
-          - 80
     restart: always
-    environment:
-          - VIRTUAL_HOST=api.hotmapsdev.hevs.ch
-          - VIRTUAL_PORT=80
-          - LETSENCRYPT_HOST=api.hotmapsdev.hevs.ch
-          - LETSENCRYPT_EMAIL=foo@example.com
-          - HTTPS_METHOD=nohttps
-    external_links:
-          - postgis-database:postgis
-
+    ports:
+     - "5000:5000"
     links:
          - rabbit
          - redis
