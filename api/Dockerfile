@@ -60,7 +60,7 @@ RUN pip install -r requirements.txt
 
 
 
-EXPOSE 5000
+EXPOSE 80
 
 # Start server
 CMD ["gunicorn", "--config", "gunicorn-config.py", "--log-config", "app/logging.conf", "run_wsgi:application"]

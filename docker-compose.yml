@@ -55,4 +55,13 @@ services:
   redis:
     image: redis
 
+networks:
+    backend:
+        driver: bridge
+        internal: true
+    nginx:
+        external:
+        #use the name of the network created by the proxy (directoryname_nginx)
+            name: nginxproxy_nginx
+
 
