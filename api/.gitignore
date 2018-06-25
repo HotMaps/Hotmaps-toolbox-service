@@ -4,3 +4,4 @@ __pycache__/
 .idea
 
 app/app/secrets\.py
+.idea/workspace.xml
