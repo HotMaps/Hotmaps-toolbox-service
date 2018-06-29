@@ -347,18 +347,37 @@ centroid_from_polygon_input = api.model('get polygon in order to retrieve the ce
 
 })
 
+inputs_module = api.model('inputs_module', {
+    'input_name': fields.String(description='input_name'),
+    'input_type':  fields.String(description='input_type'),
+    'input_parameter_name': fields.String(description='input_parameter_name'),
+    'input_value': fields.Integer(description='input_value'),
+    'input_unit': fields.String(description='input_unit'),
+    'input_min':fields.Integer(description='input_value'),
+    'input_max':fields.Integer(description='input_max'),
+    'cm_id':fields.Integer(description='cm_id'),
+})
+
+
 stats_layers_hectares_input = api.model('Input for statistics on layers, hectares and year', {
     'layers': fields.List(fields.String(description='Layer')),
     'areas': fields.List(fields.Nested(area)),
     'year': fields.Integer(description='Year'),
 })
+
 input_computation_module = api.model('Input for population density for area', {
 
     'cm_id': fields.String(description='cm test'),
-    'inputs':  fields.List(fields.String(description='inputs')),
+    'inputs':  fields.List(fields.Nested(inputs_module)),
     'layers': fields.List(fields.String(description='Layer')),
     'areas': fields.List(fields.Nested(area)),
     'year': fields.Integer(description='Year'),
     'url_file': fields.Integer(description='url_file'),
+
+})
+uploadfile = api.model('getfile to uploads', {
+
+    'filename': fields.String(description='cm test'),
+
 
 })

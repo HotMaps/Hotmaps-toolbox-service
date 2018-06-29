@@ -23,3 +23,4 @@ RESTPLUS_JSON = {
 }
 CELERY_BROKER_URL = 'amqp://localhost//'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+UPLOAD_FOLDER = 'uploaded_file'

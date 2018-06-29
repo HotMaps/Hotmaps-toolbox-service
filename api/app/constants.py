@@ -2,8 +2,8 @@
 #FLASK_SERVER_NAME = '0.0.0.0:80'
 FLASK_SERVER_NAME = '0.0.0.0:5556'
 FLASK_DEBUG = False  # Do not use debug mode in production
-CELERY_BROKER_URL = 'amqp://admin:mypass@rabbit:5672/'
-#CELERY_BROKER_URL = 'amqp://localhost/'
+#CELERY_BROKER_URL = 'amqp://admin:mypass@rabbit:5672/'
+CELERY_BROKER_URL = 'amqp://localhost/'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 
 # Flask-Restplus settings
@@ -18,7 +18,7 @@ RESTPLUS_JSON = {
 CORS_HEADER_API_KEY = 'av7e7d78f93e2af'
 CORS_ORIGIN = 'http://hotmaps.hevs.ch'
 CORS_CREDENTIALS = False
-CORS_HEADERS = (
+"""CORS_HEADERS = (
     CORS_HEADER_API_KEY,
     'X-Fields',
     'Content-Type',
@@ -42,11 +42,11 @@ CORS_HEADERS = (
     'X-Forwarded-For',
     'X-Forwarded-Port',
     'X-Forwarded-Proto'
-)
+)"""
 
 # SQLAlchemy settings
 SQLALCHEMY_TRACK_MODIFICATIONS = False
-
+CRS = 3035
 # Duration curve constants used in heat.load.profile.py
 HOURS_PER_YEAR = 8760
 LIMIT_VALUES_PER_NUTS = 4000

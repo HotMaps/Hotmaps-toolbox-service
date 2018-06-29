@@ -33,7 +33,9 @@ def etag(f):
     def wrapped(*args, **kwargs):
         # invoke the wrapped function and generate a response object from
         # its result
+
         rv = f(*args, **kwargs)
+        rv.direct_passthrough = False
         rv = make_response(rv)
 
         # etags only make sense for request that are cacheable, so only

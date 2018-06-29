@@ -1,6 +1,6 @@
 
 from flask import url_for
-
+from app import dbGIS as db
 
 from app.decorators.exceptions import ValidationError
 from sqlalchemy.ext.declarative import declarative_base
@@ -9,8 +9,11 @@ from sqlalchemy import Index
 from sqlalchemy.orm import relationship, backref
 from datetime import datetime
 import os
-
+import psycopg2
+import sqlalchemy.pool as pool
 import sqlite3
+import uuid
+from app import celery
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 db_path = os.path.join(basedir, '../data.sqlite')
@@ -121,13 +124,16 @@ def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, l
     except sqlite3.IntegrityError as e:
         print e
 
+
+
 def getCMUrl(cm_id):
     try:
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
 
         cm_url = cursor.execute('select cm_url from calculation_module where cm_id = ?',
-                        (cm_id), one=True)
+                                (cm_id))
+        cm_url = str(cm_url.fetchone()[0])
         conn.close()
         return cm_url
 
@@ -135,4 +141,53 @@ def getCMUrl(cm_id):
         print 'error'
     except sqlite3.IntegrityError as e:
         print e
+
+class RasterManager:
+
+    @staticmethod
+    @celery.task(name = 'task-getRasterID')
+    def getRasterID(rasterTable, geom,directory):
+        print geom
+        sql_query = "SET postgis.gdal_enabled_drivers = 'ENABLE_ALL'; SELECT oid, lowrite(lo_open(oid, 131072), tiff) As num_bytes " \
+                    "FROM ( VALUES (lo_create(0)," \
+                    "ST_Astiff((" \
+                    "Select ST_UNION(ST_Clip("+rasterTable+".rast, "+ geom +"))" \
+              " from geo."+rasterTable+" where ST_Intersects("+ geom +","+rasterTable+".rast)) ) " \
+                ")) As v(oid,tiff) ;"
+        print sql_query
+
+
+        mypool = pool.QueuePool(getConnection_db_gis, max_overflow=10, pool_size=5)
+        # get a connection
+        conn = mypool.connect()
+        # use it
+        cursor = conn.cursor()
+        cursor.execute(sql_query)
+        result = cursor.fetchone()
+        iod = result[0]
+        lo = conn.lobject(iod)
+        filename = str(uuid.uuid4()) + '.tif'
+        #save the raster in the working directory and retrieve filename
+        lo.export(directory+'/'+filename)
+        # "close" the connection.  Returns
+        # it to the pool.
+        conn.close()
+        return filename
+@celery.task(name = 'task-getConnection_db_gis')
+def getConnection_db_gis():
+    user = "hotmaps"
+    host = "hotmapsdev.hevs.ch"
+    password = "Dractwatha9"
+    port = "32768"
+    database = "toolboxdb"
+
+    conn_string= "host='" + host + "' " + \
+                 "port='" + port + "' " + \
+                 "dbname='" + database + "' " + \
+                 "user='" + user + "' " + \
+                 "password='" + password + "'"
+
+    c = psycopg2.connect(conn_string)
+    return c
+
 

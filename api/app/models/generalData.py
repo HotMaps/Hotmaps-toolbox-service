@@ -29,7 +29,7 @@ cdd = constants.CDD_CUR
 
 
 
-CRS = 3035
+
 
 # ALL DATA FOR THE STATS
 layersData = {
@@ -545,7 +545,7 @@ def constructWithPartEachLayerHectare(geometry, year, layer, fromPart):
 		w += 'FROM' + \
 		'	public.'+ layersData[layer]['tablename'] +'' + \
 		' WHERE' + \
-		'	ST_Within(public.'+ layersData[layer]['tablename'] +'.geometry,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + ')) ' + \
+		'	ST_Within(public.'+ layersData[layer]['tablename'] +'.geometry,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(constants.CRS) + ')) ' + \
 		'AND date = to_date(\''+ str(year) +'\',\'YYYY\')) '
 	elif layer == indSitesEm:
 		w = ''+fromPart+' AS (SELECT ' + \
@@ -581,12 +581,12 @@ def constructWithPartEachLayerHectare(geometry, year, layer, fromPart):
 		w = ''+fromPart+' AS ( SELECT (' + \
 		'	((ST_SummaryStatsAgg(ST_Clip('+ layersData[layer]['tablename'] + '.rast, 1, ' + \
 		'			st_transform(st_geomfromtext(\'' + \
-						geometry + '\'::text,4326),' + str(CRS) + '),false),true,0))).*) as stats ' + \
+						geometry + '\'::text,4326),' + str(constants.CRS) + '),false),true,0))).*) as stats ' + \
 		'FROM' + \
 		'	geo.'+ layersData[layer]['tablename'] + \
 		' WHERE' + \
 		'	ST_Intersects('+ layersData[layer]['tablename'] + '.rast,' + \
-		'		st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(CRS) + ')) '
+		'		st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(constants.CRS) + ')) '
 		if layer == popDe or layer == heatDe:
 			w += 'AND date = to_date(\''+ str(year) +'\',\'YYYY\')) '
 		else:
