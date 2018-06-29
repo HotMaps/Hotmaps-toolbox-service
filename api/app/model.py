@@ -240,6 +240,7 @@ def getConnection_db_gis():
     password = secrets.dev_password
     port = secrets.dev_port
     database = secrets.dev_database
+
     conn_string= "host='" + host + "' " + \
                  "port='" + port + "' " + \
                  "dbname='" + database + "' " + \
