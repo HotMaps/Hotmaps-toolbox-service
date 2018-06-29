@@ -117,7 +117,50 @@ class StatsLayersHectareMulti(Resource):
 		layersPayload = api.payload['layers']        
 		areas = api.payload['areas']
 
-		output, noTableLayers, noDataLayers = indicatorsHectares.delay(year,layersPayload,areas).wait()
+
+		# Layers filtration and management
+		allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_HECTARES_TABLE)
+		allLayers = generalData.createAllLayers(constants.LAYERS_REF_HECTARES)
+		noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
+		noDataLayers = generalData.layers_filter(layersPayload, allLayers)
+
+		# Keep only existing layers
+		layers = generalData.adapt_layers_list(layersPayload=layersPayload, type='ha', allLayers=allLayers)
+
+		polyArray = []
+		output = []
+
+		# convert to polygon format for each polygon and store them in polyArray
+		for polygon in areas:
+			po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
+			polyArray.append(po)
+
+
+		# convert array of polygon into multipolygon
+		multipolygon = shapely_geom.MultiPolygon(polyArray)
+
+		#geom = "SRID=4326;{}".format(multipolygon.wkt)
+		geom = multipolygon.wkt
+
+		res = LayersHectare.stats_hectares(geometry=geom, year=year, layers=layers)
+		output = res
+
+		# compute heat consumption/person if both layers are selected
+		pop1ha_name = constants.POPULATION_TOT
+		hdm_name = constants.HEAT_DENSITY_TOT
+		heat_curr_non_res_name = constants.HEAT_DENSITY_NON_RES
+		heat_curr_res_name = constants.HEAT_DENSITY_RES
+		gfa_tot_curr_density_name = constants.GRASS_FLOOR_AREA_TOT
+
+
+		retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
+		retrieveCrossIndicator(pop1ha_name, heat_curr_res_name, layers, output)
+		retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
+		retrieveCrossIndicator(gfa_tot_curr_density_name, hdm_name, layers, output)
+
+		# Remove scale for each layer
+		noTableLayers = generalData.removeScaleLayers(noTableLayers, type='ha')
+		noDataLayers = generalData.removeScaleLayers(noDataLayers, type='ha')
 
 		#output
 		return {
@@ -191,8 +234,8 @@ class StatsLayersNutsInArea(Resource):
 		"""
 		# Entrees
 		nuts = api.payload['nuts']
-		task = processGenerationMix.delay(nuts)
-		return task.wait()
+		res = ElectricityMix.getEnergyMixNutsLau(generalData.adapt_nuts_list(nuts))
+		return res
 
 
 		# Remove scale for each layer

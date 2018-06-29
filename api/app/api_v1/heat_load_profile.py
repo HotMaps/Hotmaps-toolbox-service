@@ -51,10 +51,10 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
 
         output = {}
 
-        output = durationCurveNutsLau.delay(year,nuts)
+        output = HeatLoadProfile.duration_curve_nuts_lau(year=year, nuts=nuts)
 
         return {
-            "points": output.wait()
+            "points": output
         }
 
 @celery.task(name = 'duration_curve_nuts_lau')
@@ -81,9 +81,24 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
 
         # Stop execution if areas list is empty 
 
-        output = durationCurveHectare.delay(areas,year)
+        polyArray = []
+        output = {}
+        # TODO: this part must be one methods same in /aggregate/hectares Rules 1 NO DUPLICATE
+        # convert to polygon format for each polygon and store them in polyArray
+        for polygon in areas:
+            po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
+            polyArray.append(po)
+
+
+        # convert array of polygon into multipolygon
+        multipolygon = shapely_geom.MultiPolygon(polyArray)
+
+        #geom = "SRID=4326;{}".format(multipolygon.wkt)
+        geom = multipolygon.wkt
+
+        output = HeatLoadProfile.duration_curve_hectares(year=year, geometry=geom)
         return {
-            "points": output.wait()
+            "points": output
         }
 @celery.task(name = 'duration_curve_hectare')
 def durationCurveHectare(areas,year):

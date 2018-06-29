@@ -381,3 +381,11 @@ uploadfile = api.model('getfile to uploads', {
 
 
 })
+
+cm_id_input = api.model('cm_id_input ', {
+
+    'cm_id': fields.String(description='cm_id_input '),
+
+
+})
+

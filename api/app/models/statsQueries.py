@@ -166,8 +166,8 @@ class ElectricityMix:
 
 	def getEnergyMixNutsLau(nuts):
 		print(nuts)
-		sql_query = "WITH energy_total as (SELECT sum(electricity_generation) as value FROM " + settings.ELECRICITY_MIX + " WHERE nuts0_code IN ("+nuts+") )" + \
-					"SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM " + settings.ELECRICITY_MIX + " ,energy_total WHERE nuts0_code IN ("+nuts+")  GROUP BY energy_carrier ORDER BY energy_carrier ASC" ;
+		sql_query = "WITH energy_total as (SELECT sum(electricity_generation) as value FROM " + constants.ELECRICITY_MIX + " WHERE nuts0_code IN ("+nuts+") )" + \
+					"SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM " + constants.ELECRICITY_MIX + " ,energy_total WHERE nuts0_code IN ("+nuts+")  GROUP BY energy_carrier ORDER BY energy_carrier ASC" ;
 
 		query = db.session.execute(sql_query)
 

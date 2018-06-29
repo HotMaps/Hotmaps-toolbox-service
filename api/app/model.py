@@ -1,12 +1,13 @@
 
 from flask import url_for
 from app import dbGIS as db
-
+import json
 from app.decorators.exceptions import ValidationError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, Boolean
 from sqlalchemy import Index
 from sqlalchemy.orm import relationship, backref
+from app import secrets
 from datetime import datetime
 import os
 import psycopg2
@@ -142,6 +143,65 @@ def getCMUrl(cm_id):
     except sqlite3.IntegrityError as e:
         print e
 
+def getUI(cm_id):
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+
+        results = cursor.execute('select * from inputs_calculation_module where cm_id = ?',
+                                (cm_id))
+        response = []
+        for row in results:
+            print row
+            response.append({'input_id':row[0],
+             'input_name':row[1],
+             'input_type':row[2],
+             'input_parameter_name':row[3],
+             'input_value':row[4],
+             'input_unit':row[5],
+             'input_min':row[6],
+             'input_max':row[7],
+             'createdAt':row[8],
+             'updatedAt':row[9],
+             'cm_id':row[10]})
+
+
+        conn.close()
+        return response
+
+    except ValidationError:
+        print 'error'
+    except sqlite3.IntegrityError as e:
+        print e
+
+def getCMList():
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+
+        results = cursor.execute('select * from calculation_module ')
+        response = []
+        print [key[0] for key in cursor.description]
+        for row in results:
+            print row
+            response.append({'cm_id':row[0],
+                             'cm_name':row[1],
+                             'cm_description':row[2],
+                             'cm_url':row[3],
+                             'category':row[4],
+                             'layers_needed':row[5],
+                             'createdAt':row[6],
+                             'updatedAt':row[7],
+
+                            })
+
+        conn.close()
+        return response
+
+    except ValidationError:
+        print 'error'
+    except sqlite3.IntegrityError as e:
+        print e
 class RasterManager:
 
     @staticmethod
@@ -175,12 +235,11 @@ class RasterManager:
         return filename
 @celery.task(name = 'task-getConnection_db_gis')
 def getConnection_db_gis():
-    user = "hotmaps"
-    host = "hotmapsdev.hevs.ch"
-    password = "Dractwatha9"
-    port = "32768"
-    database = "toolboxdb"
-
+    user = secrets.dev_user
+    host = secrets.dev_host
+    password = secrets.dev_password
+    port = secrets.dev_port
+    database = secrets.dev_database
     conn_string= "host='" + host + "' " + \
                  "port='" + port + "' " + \
                  "dbname='" + database + "' " + \

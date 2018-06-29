@@ -21,6 +21,13 @@ ERROR_404_HELP = False
 RESTPLUS_JSON = {
     'separators': (',', ':')
 }
-CELERY_BROKER_URL = 'amqp://localhost//'
+CELERY_BROKER_URL = 'amqp://admin:mypass@rabbit:5672/'
+#CELERY_BROKER_URL = 'amqp://localhost//'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 UPLOAD_FOLDER = 'uploaded_file'
+
+user = secrets.dev_user
+host = secrets.dev_host
+password = secrets.dev_password
+port = secrets.dev_port
+database = secrets.dev_database

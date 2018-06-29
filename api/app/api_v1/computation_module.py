@@ -1,11 +1,12 @@
 
-from flask import request, current_app,jsonify
+from flask import request, current_app,jsonify,redirect, \
+    url_for
 from app.decorators.restplus import api
 from app.decorators.serializers import  compution_module_class, \
     input_computation_module, test_communication_cm, \
-    compution_module_list, uploadfile
+    compution_module_list, uploadfile, cm_id_input
 from app.decorators.exceptions import ValidationError
-from app.model import register_calulation_module,getCMUrl, RasterManager
+from app.model import register_calulation_module,getCMUrl, RasterManager,getUI,getCMList
 from werkzeug.utils import secure_filename
 from app import constants
 nsCM = api.namespace('cm', description='Operations related to statistisdscs')
@@ -29,24 +30,29 @@ if not os.path.exists(UPLOAD_DIRECTORY):
 
 
 
-@ns.route('/user-interface/')
+@ns.route('/list')
 class ComputationModuleList(Resource):
     #@api.marshal_with(stats_layers_nuts_output)
-    @api.marshal_with(compution_module_list)
     def post(self):
         """
         Returns the statistics for specific layers, area and year
         :return:
         """
-        return {
-            "list": ''}
+        return getCMList()
 
+
+
+@ns.route('/user-interface/', methods=['POST'])
+@api.expect(cm_id_input)
+class ComputationModuleClass(Resource):
+    def post(self):
+        input = request.get_json()
+        cm_id = input["cm_id"]
+        return getUI(cm_id)
 
 
 @ns.route('/register/', methods=['POST'])
 class ComputationModuleClass(Resource):
-    # @api.expect(input_computation_module)
-    #@api.expect(compution_module_class)
     def post(self):
         input = request.get_json()
         registerCM.delay(input)
@@ -55,8 +61,6 @@ class ComputationModuleClass(Resource):
 
 @ns.route('/files/<string:filename>', methods=['GET'])
 class getRasterfile(Resource):
-    # @api.expect(input_computation_module)
-    #@api.expect(compution_module_class)
     def get(self,filename):
         return send_from_directory(UPLOAD_DIRECTORY, filename, as_attachment=True)
 
@@ -65,6 +69,8 @@ class getRasterfile(Resource):
 def registerCM(input):
     print 'input', input
     register_calulation_module(input)
+
+
 
 @celery.task(name = 'task-celery_get_CM_url')
 def celery_get_CM_url(cm_id):
