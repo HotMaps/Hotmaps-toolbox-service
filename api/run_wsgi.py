@@ -1,0 +1,14 @@
+import os
+from flask_cors import CORS
+from app import create_app, log
+
+application = create_app(os.environ.get('FLASK_CONFIG', 'production'))
+
+
+
+log.info(application)
+if __name__ == "__main__":
+    #with application.app_context():
+        #init_sqlite_caculation_module_database()
+    application.run()
+

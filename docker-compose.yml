@@ -1,0 +1,67 @@
+version: "3"
+services:
+  rabbit:
+      hostname: rabbit
+      image: rabbitmq:latest
+      environment:
+          - RABBITMQ_DEFAULT_USER=admin
+          - RABBITMQ_DEFAULT_PASS=mypass
+      ports:
+          - "5672:5672"
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    networks:
+          - nginx
+          - backend
+    expose:
+          - 80
+    restart: always
+    environment:
+          - VIRTUAL_HOST=api.hotmaps.hevs.ch
+          - VIRTUAL_PORT=80
+          - LETSENCRYPT_HOST=api.hotmaps.hevs.ch
+          - LETSENCRYPT_EMAIL=foo@example.com
+          - HTTPS_METHOD=nohttps
+    external_links:
+          - postgis-database:postgis
+
+    links:
+         - rabbit
+         - redis
+    depends_on:
+      - redis
+  worker:
+    build:
+      context: ./api
+      dockerfile: Dockerfile_celery_queue
+    links:
+      - rabbit
+    depends_on:
+      - rabbit
+      - redis
+  monitor:
+    build:
+      context: ./api
+      dockerfile: Dockerfile_flower
+    ports:
+     - "5555:5555"
+    entrypoint: flower
+    command:  -A celery_worker.celery --port=5555 --broker=amqp://admin:mypass@rabbit:5672/
+    depends_on:
+      - redis
+      - rabbit
+  redis:
+    image: redis
+
+networks:
+    backend:
+        driver: bridge
+        internal: true
+    nginx:
+        external:
+        #use the name of the network created by the proxy (directoryname_nginx)
+            name: nginxproxy_nginx
+
+

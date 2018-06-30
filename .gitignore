@@ -3,4 +3,5 @@ __pycache__/
 *.py[cod]
 .idea
 
-app/main_api/secrets\.py
+app/app/secrets\.py
+.idea/workspace.xml
