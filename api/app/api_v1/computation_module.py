@@ -144,8 +144,8 @@ class ComputationModuleCompute(Resource):
         app = current_app._get_current_object()
         with app.app_context():
              #app.app_context().push()
-            res = computeCM.delay(url_cm, data)
-            response = res.wait()
+            res = computeCM(url_cm, data)
+            response = res
 
             print 'type response:',type(response)
             data= json.loads(response)
@@ -160,6 +160,80 @@ class ComputationModuleCompute(Resource):
             print url_download_raster
             print 'tiff_url:',file_path
             return data
+
+#@celery.task(bind=True)
+@celery.task(name = 'Compute-async')
+def computeTask(data,payload,base_url):
+
+    """
+    Returns the statistics for specific layers, area and year
+    :return:
+
+    """
+    #data = request.get_json()
+    #app = current_app._get_current_object()
+    #with app.app_context():
+    cm_id = data["cm_id"]
+    # 1. find the good computation module with the right url in the database from cm db  => generate url
+
+    url_cm = celery_get_CM_url(cm_id)
+    print url_cm
+    #2. get parameters for clipping raster
+
+    layersPayload = payload['layers']
+    areas = payload['areas']
+    if areas is not None:
+        # we will be working on hectare level
+        pass
+    else:
+        nuts = api.payload['nuts']
+        # we will be working on a nuts
+        pass
+    #TODO add this part in an helper
+    polyArray = []
+    # convert to polygon format for each polygon and store them in polyArray
+    for polygon in areas:
+        po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
+        polyArray.append(po)
+    # convert array of polygon into multipolygon
+    multipolygon = shapely_geom.MultiPolygon(polyArray)
+    #geom = "SRID=4326;{}".format(multipolygon.wkt)
+    geom = multipolygon.wkt
+    print 'geom ', geom
+    # Clip the raster from the database
+    filename = RasterManager.getRasterID(layersPayload[0],transformGeo(geom),UPLOAD_DIRECTORY)
+
+    # 1.2.1  url for downloading raster
+    url_download_raster = base_url + filename
+    print url_download_raster
+    # 1.2 build the parameters for the url
+
+    # 2. if this is a raster clip of the raster or provide vector needed => generate link
+    data = generate_payload_for_compute(data,url_download_raster,filename)
+    print 'payload: ',data
+    #res = requests.post(URL_CM + 'computation-module/compute/', data = api.payload)
+    #print current_app.name
+
+    #app.app_context().push()
+    res = computeCM(url_cm, data)
+    response = res
+
+    print 'type response:',type(response)
+    print ' response:',response
+    data_output = json.loads(response)
+
+    print ' data:',data_output
+    tiff_url = data_output["tiff_url"]
+    file_path = savefile(filename,tiff_url)
+
+    url_download_raster = base_url + filename
+    print 'url_download_raster:',url_download_raster
+    data_output['tiff_url'] = url_download_raster
+    data_output['filename'] = filename
+    print data_output
+    print url_download_raster
+    print 'tiff_url:',file_path
+    return data_output
 
 
 def generate_payload_for_compute(data,url,filename):
@@ -178,13 +252,59 @@ def generate_payload_for_compute(data,url,filename):
 
 
 
+@ns.route('/compute-async/', methods=['POST'])
+@api.expect(input_computation_module)
+class ComputationModuleClass(Resource):
+    def post(self):
+        data = request.get_json()
+        payload = api.payload
+        base_url =  request.base_url.replace("compute-async","files")
+        #print data
+        app = current_app._get_current_object()
+        with app.app_context():
+            task = computeTask.delay(data,payload,base_url)
+            return {'id': task.id}
 
 
-@celery.task(name = 'ComputeCM')
+#@celery.task(name = 'ComputeCM')
 def computeCM(url_cm,data):
     headers = {'Content-Type':  'application/json'}
     print 'data ',data
     res = requests.post(str(url_cm)+'computation-module/compute/', data = data, headers=headers)
     reponse = res.text
     return reponse
+
+
+
+
+@ns.route('/status/<string:task_id>', methods=['GET'])
+class ComputationTaskStatus(Resource):
+    def get(self,task_id):
+        task = computeTask.AsyncResult(task_id)
+        if task.state == 'PENDING':
+            response = {
+                'state': task.state,
+                'current': 0,
+                'total': 1,
+                'status': 'Pending...'
+                    }
+        elif task.state != 'FAILURE':
+            response = {
+                'state': task.state,
+                'current': task.info.get('current', 0),
+                'total': task.info.get('total', 1),
+                'status': task.info.get('status', '')
+            }
+        if 'result' in task.info:
+            response['result'] = task.info['result']
+        else:
+        # something went wrong in the background job
+            response = {
+                'state': task.state,
+                'current': 1,
+                'total': 1,
+                'status': str(task.info),  # this is the exception raised
+            }
+        return response
+
 
