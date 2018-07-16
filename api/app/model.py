@@ -57,12 +57,11 @@ def init_sqlite_caculation_module_database(dbname=DB_NAME):
     return conn
 
 def register_calulation_module(data):
-
+    print 'register_calulation_module'
     if data is not None:
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
         cm_name = data['cm_name']
-
         category = data['category']
         cm_description = data['cm_description']
         cm_url = data['cm_url']
@@ -88,6 +87,7 @@ def register_calulation_module(data):
                 conn = sqlite3.connect(DB_NAME)
                 cursor = conn.cursor()
                 cursor.execute("INSERT INTO inputs_calculation_module (input_name, input_type, input_parameter_name, input_value, input_unit, input_min, input_max, cm_id, createdAt,updatedAt) VALUES (?,?,?,?,?,?,?,?,?,?)", (input_name, input_type, input_parameter_name, input_value, input_unit, input_min, input_max, cm_id, createdAt,updatedAt))
+
                 conn.commit()
             conn.close()
 
@@ -99,12 +99,13 @@ def register_calulation_module(data):
 
 
 def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,inputs_calculation_module,cursor,conn):
+    print 'update_calulation_module'
     try:
 
         ln = str(layers_needed)
         cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt,cm_id ))
+        print 'results= ', cursor.fetchone()
         conn.commit()
-        print type(cm_id)
         cursor.execute("DELETE FROM inputs_calculation_module WHERE cm_id = ? ", (str(cm_id)))
         conn.commit()
         for value in inputs_calculation_module:

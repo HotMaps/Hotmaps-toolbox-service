@@ -34,6 +34,6 @@ RUN pip install -U "pip==9.0.1"
 COPY . /api
 WORKDIR /api
 
-RUN pip install -r requirements_celery_queue.txt
+RUN pip install -r requirements/requirements_celery_queue.txt
 
 ENTRYPOINT celery -A celery_worker.celery worker --loglevel=info

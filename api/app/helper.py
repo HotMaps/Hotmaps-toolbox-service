@@ -1,6 +1,7 @@
 import json
 
 
+
 def find_key_in_dict(key, dictionary):
     for k, v in dictionary.items():
         if k == key:
@@ -64,4 +65,5 @@ def getGenerationMixColor(value):
     }
     return switcher.get(value, "#D8BFD8")
 
+    raise Exception(msg)
 

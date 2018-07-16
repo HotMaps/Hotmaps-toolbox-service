@@ -6,9 +6,9 @@ application = create_app(os.environ.get('FLASK_CONFIG', 'development'))
 
 
 
-log.info(application)
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     #with application.app_context():
         #init_sqlite_caculation_module_database()
-    application.run()
+    application.run(host='0.0.0.0')
 

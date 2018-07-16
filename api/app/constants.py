@@ -2,9 +2,11 @@
 #FLASK_SERVER_NAME = '0.0.0.0:80'
 FLASK_SERVER_NAME = '0.0.0.0:5556'
 FLASK_DEBUG = False  # Do not use debug mode in production
-CELERY_BROKER_URL = 'amqp://admin:mypass@rabbit:5672/'
-#CELERY_BROKER_URL = 'amqp://localhost/'
+#CELERY_BROKER_URL = 'amqp://admin:mypass@rabbit:5672/'
+CELERY_BROKER_URL = 'amqp://localhost/'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+
+PORT = 5000
 
 # Flask-Restplus settings
 RESTPLUS_SWAGGER_UI_DOC_EXPANSION = 'list'

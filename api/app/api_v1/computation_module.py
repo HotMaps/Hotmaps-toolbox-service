@@ -18,15 +18,15 @@ import os
 import json
 from flask import send_from_directory
 import shapely.geometry as shapely_geom
+import socket
+import stat
 
 #TODO Add url to find  right computation module
-UPLOAD_DIRECTORY = '/media/lesly/Data/project/api_uploaded_files'
+UPLOAD_DIRECTORY = '/var/hotmaps/api_files_uploaded'
 
 if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
-
-
-
+    os.chmod(UPLOAD_DIRECTORY, 0777)
 
 
 
@@ -35,7 +35,7 @@ class ComputationModuleList(Resource):
     #@api.marshal_with(stats_layers_nuts_output)
     def post(self):
         """
-        Returns the statistics for specific layers, area and year
+        Returns the list of the available calculation module
         :return:
         """
         return getCMList()
@@ -46,6 +46,10 @@ class ComputationModuleList(Resource):
 @api.expect(cm_id_input)
 class ComputationModuleClass(Resource):
     def post(self):
+        """
+       Returns the user interface of a specifique calculation module
+       :return:
+       """
         input = request.get_json()
         cm_id = input["cm_id"]
         return getUI(cm_id)
@@ -54,14 +58,24 @@ class ComputationModuleClass(Resource):
 @ns.route('/register/', methods=['POST'])
 class ComputationModuleClass(Resource):
     def post(self):
+        """
+       Register a calculation module
+       :return:
+       """
         input = request.get_json()
         registerCM.delay(input)
+        print input
+        return json.dumps(input)
 
 
 
 @ns.route('/files/<string:filename>', methods=['GET'])
 class getRasterfile(Resource):
     def get(self,filename):
+        """
+         dowload a file from the main web service
+         :return:
+         """
         return send_from_directory(UPLOAD_DIRECTORY, filename, as_attachment=True)
 
 
@@ -69,6 +83,7 @@ class getRasterfile(Resource):
 def registerCM(input):
     print 'input', input
     register_calulation_module(input)
+    return input
 
 
 
@@ -90,76 +105,6 @@ def savefile(filename,url):
             for chunk in r.iter_content(1024):
                 f.write(chunk)
     return path
-@ns.route('/compute/')
-class ComputationModuleCompute(Resource):
-   # @api.expect(input_computation_module)
-    @api.expect(input_computation_module)
-    def post(self):
-        """
-        Returns the statistics for specific layers, area and year
-        :return:
-
-        """
-        data = request.get_json()
-        cm_id = data["cm_id"]
-    # 1. find the good computation module with the right url in the database from cm db  => generate url
-
-        url_cm = celery_get_CM_url(cm_id)
-        print url_cm
-    #2. get parameters for clipping raster
-
-        layersPayload = api.payload['layers']
-        areas = api.payload['areas']
-        if areas is not None:
-            # we will be working on hectare level
-            pass
-        else:
-            nuts = api.payload['nuts']
-    # we will be working on a nuts
-            pass
-        #TODO add this part in an helper
-        polyArray = []
-        # convert to polygon format for each polygon and store them in polyArray
-        for polygon in areas:
-            po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
-            polyArray.append(po)
-        # convert array of polygon into multipolygon
-        multipolygon = shapely_geom.MultiPolygon(polyArray)
-        #geom = "SRID=4326;{}".format(multipolygon.wkt)
-        geom = multipolygon.wkt
-        print 'geom ', geom
-        # Clip the raster from the database
-        filename = RasterManager.getRasterID(layersPayload[0],transformGeo(geom),UPLOAD_DIRECTORY)
-        base_url =  request.base_url.replace("compute","files")
-        # 1.2.1  url for downloading raster
-        url_download_raster = base_url + filename
-        print url_download_raster
-        # 1.2 build the parameters for the url
-
-        # 2. if this is a raster clip of the raster or provide vector needed => generate link
-        data = generate_payload_for_compute(data,url_download_raster,filename)
-        print 'payload: ',data
-        #res = requests.post(URL_CM + 'computation-module/compute/', data = api.payload)
-        #print current_app.name
-        app = current_app._get_current_object()
-        with app.app_context():
-             #app.app_context().push()
-            res = computeCM(url_cm, data)
-            response = res
-
-            print 'type response:',type(response)
-            data= json.loads(response)
-            tiff_url = data['tiff_url']
-            file_path = savefile(filename,tiff_url)
-
-            url_download_raster = base_url + filename
-            print 'url_download_raster:',url_download_raster
-            data['tiff_url'] = url_download_raster
-            data['filename'] = filename
-            print data
-            print url_download_raster
-            print 'tiff_url:',file_path
-            return data
 
 #@celery.task(bind=True)
 @celery.task(name = 'Compute-async')
@@ -173,6 +118,8 @@ def computeTask(data,payload,base_url):
     #data = request.get_json()
     #app = current_app._get_current_object()
     #with app.app_context():
+
+    print 'base url ', base_url
     cm_id = data["cm_id"]
     # 1. find the good computation module with the right url in the database from cm db  => generate url
 
@@ -225,6 +172,9 @@ def computeTask(data,payload,base_url):
     print ' data:',data_output
     tiff_url = data_output["tiff_url"]
     file_path = savefile(filename,tiff_url)
+    print file_path
+  #  com_string = "gdal_translate -of GTIFF -srcwin " + str(i)+ ", " + str(j) + ", " + str(tile_size_x) + ", " + str(tile_size_y) + " " + str(in_path) + str(input_filename) + " " + str(out_path) + str(output_filename) + str(i) + "_" + str(j) + ".tif"
+   # os.system(com_string)
 
     url_download_raster = base_url + filename
     print 'url_download_raster:',url_download_raster
@@ -256,11 +206,22 @@ def generate_payload_for_compute(data,url,filename):
 @api.expect(input_computation_module)
 class ComputationModuleClass(Resource):
     def post(self):
+        """
+         retrieve a request from the from end
+         :return:
+         """
+        app = current_app._get_current_object()
         data = request.get_json()
         payload = api.payload
-        base_url =  request.base_url.replace("compute-async","files")
+        ip = socket.gethostbyname(socket.gethostname())
+        print 'ip ', ip
+        base_url = 'http://'+ str(ip) +':'+str(constants.PORT)+'/api/cm/files/'
+        #print 'compute base url2 ', base_url_main
+        #print 'base_url', base_url
+
+
         #print data
-        app = current_app._get_current_object()
+
         with app.app_context():
             task = computeTask.delay(data,payload,base_url)
             return {'id': task.id}
