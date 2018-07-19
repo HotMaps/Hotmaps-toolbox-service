@@ -8,10 +8,12 @@ services:
           - RABBITMQ_DEFAULT_PASS=mypass
       ports:
           - "5672:5672"
+      networks:
+            - cm-net
   api:
     build:
       context: ./api
-      dockerfile: Dockerfile
+      dockerfile: dockerfiles/Dockerfile
     restart: always
     ports:
      - "5000:5000"
@@ -20,19 +22,27 @@ services:
          - redis
     depends_on:
       - redis
+    networks:
+      - cm-net
+    volumes:
+         - static-content:/var/tmp
   worker:
     build:
       context: ./api
-      dockerfile: Dockerfile_celery_queue
+      dockerfile: dockerfiles/Dockerfile_celery_queue
     links:
       - rabbit
     depends_on:
       - rabbit
       - redis
+    volumes:
+          - static-content:/var/tmp
+    networks:
+      - cm-net
   monitor:
     build:
       context: ./api
-      dockerfile: Dockerfile_flower
+      dockerfile: dockerfiles/Dockerfile_flower
     ports:
      - "5555:5555"
     entrypoint: flower
@@ -40,7 +50,17 @@ services:
     depends_on:
       - redis
       - rabbit
+    networks:
+      - cm-net
   redis:
     image: redis
+    networks:
+          - cm-net
+networks:
+  cm-net:
+    driver: bridge
+volumes:
+  static-content:
+
 
 

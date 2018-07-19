@@ -42,13 +42,16 @@ RUN apt-get update \
 RUN pip install -U "setuptools==38.5.1"
 RUN pip install -U "pip==9.0.1"
 
-
-
+RUN useradd -ms /bin/bash admin
+run mkdir  -p /var/hotmaps/api_files_uploaded
+RUN chown -R admin:admin /var/hotmaps/api_files_uploaded
+RUN chmod 755 /var/hotmaps/api_files_uploaded
 
 # Setup app server
 RUN mkdir -p /data
 COPY . /api
 WORKDIR /api
+
 
 RUN ls
 RUN pip install gunicorn
@@ -63,8 +66,8 @@ RUN pip install -r requirements/requirements.txt
  EXPOSE 5000
 # EXPOSE 80
 # Start server
-#CMD ["gunicorn", "--config", "gunicorn-config.py", "--log-config", "app/logging.conf", "run_wsgi:application"]
-CMD gunicorn -b 172.25.0.6:5000 --access-logfile - "run_wsgi:application"
+CMD ["gunicorn", "--config", "gunicorn-config.py", "--log-config", "app/logging.conf", "run_wsgi:application"]
+#CMD gunicorn -b 172.25.0.6:5000 --access-logfile - "run_wsgi:application"
 
 
 

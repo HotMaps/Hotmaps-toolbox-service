@@ -14,19 +14,23 @@ ns = nsCM
 from flask_restplus import Resource
 from app import celery
 import requests
+import pika
+
 import os
 import json
 from flask import send_from_directory
 import shapely.geometry as shapely_geom
 import socket
-import stat
+from app import CalculationModuleRpcClient
 
+import stat
 #TODO Add url to find  right computation module
-UPLOAD_DIRECTORY = '/var/hotmaps/api_files_uploaded'
+UPLOAD_DIRECTORY = '/var/tmp'
 
 if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
-    os.chmod(UPLOAD_DIRECTORY, 0777)
+    os.chmod(UPLOAD_DIRECTORY, 0644)
+
 
 
 
@@ -115,11 +119,7 @@ def computeTask(data,payload,base_url):
     :return:
 
     """
-    #data = request.get_json()
-    #app = current_app._get_current_object()
-    #with app.app_context():
 
-    print 'base url ', base_url
     cm_id = data["cm_id"]
     # 1. find the good computation module with the right url in the database from cm db  => generate url
 
@@ -162,9 +162,8 @@ def computeTask(data,payload,base_url):
     #print current_app.name
 
     #app.app_context().push()
-    res = computeCM(url_cm, data)
-    response = res
-
+    calculation_module_rpc = CalculationModuleRpcClient()
+    response = calculation_module_rpc.call(cm_id,data)
     print 'type response:',type(response)
     print ' response:',response
     data_output = json.loads(response)
@@ -173,9 +172,8 @@ def computeTask(data,payload,base_url):
     tiff_url = data_output["tiff_url"]
     file_path = savefile(filename,tiff_url)
     print file_path
-  #  com_string = "gdal_translate -of GTIFF -srcwin " + str(i)+ ", " + str(j) + ", " + str(tile_size_x) + ", " + str(tile_size_y) + " " + str(in_path) + str(input_filename) + " " + str(out_path) + str(output_filename) + str(i) + "_" + str(j) + ".tif"
-   # os.system(com_string)
-
+    #  com_string = "gdal_translate -of GTIFF -srcwin " + str(i)+ ", " + str(j) + ", " + str(tile_size_x) + ", " + str(tile_size_y) + " " + str(in_path) + str(input_filename) + " " + str(out_path) + str(output_filename) + str(i) + "_" + str(j) + ".tif"
+    # os.system(com_string)
     url_download_raster = base_url + filename
     print 'url_download_raster:',url_download_raster
     data_output['tiff_url'] = url_download_raster
@@ -216,24 +214,37 @@ class ComputationModuleClass(Resource):
         ip = socket.gethostbyname(socket.gethostname())
         print 'ip ', ip
         base_url = 'http://'+ str(ip) +':'+str(constants.PORT)+'/api/cm/files/'
-        #print 'compute base url2 ', base_url_main
-        #print 'base_url', base_url
-
-
-        #print data
-
+        print 'base url ', base_url
         with app.app_context():
             task = computeTask.delay(data,payload,base_url)
             return {'id': task.id}
 
 
-#@celery.task(name = 'ComputeCM')
-def computeCM(url_cm,data):
-    headers = {'Content-Type':  'application/json'}
-    print 'data ',data
-    res = requests.post(str(url_cm)+'computation-module/compute/', data = data, headers=headers)
-    reponse = res.text
-    return reponse
+
+def computeCM(cm_id,data,base_url,filename):
+    calculation_module_rpc = CalculationModuleRpcClient()
+    response = calculation_module_rpc.call(cm_id,data)
+    print 'type response:',type(response)
+    print ' response:',response
+    data_output = json.loads(response)
+
+    print ' data:',data_output
+    tiff_url = data_output["tiff_url"]
+    file_path = savefile(filename,tiff_url)
+    print file_path
+    #  com_string = "gdal_translate -of GTIFF -srcwin " + str(i)+ ", " + str(j) + ", " + str(tile_size_x) + ", " + str(tile_size_y) + " " + str(in_path) + str(input_filename) + " " + str(out_path) + str(output_filename) + str(i) + "_" + str(j) + ".tif"
+    # os.system(com_string)
+    url_download_raster = base_url + filename
+    print 'url_download_raster:',url_download_raster
+    data_output['tiff_url'] = url_download_raster
+    data_output['filename'] = filename
+    print data_output
+    print url_download_raster
+    print 'tiff_url:',file_path
+    return data_output
+
+    #messaging the CM
+
 
 
 
@@ -267,5 +278,6 @@ class ComputationTaskStatus(Resource):
                 'status': str(task.info),  # this is the exception raised
             }
         return response
+
 
 
