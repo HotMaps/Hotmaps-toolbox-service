@@ -144,12 +144,15 @@ def computeTask(data,payload,base_url):
     # 1. find the good computation module with the right url in the database from cm db  => generate url
 
     url_cm = celery_get_CM_url(cm_id)
-    print url_cm
+    print payload
     #2. get parameters for clipping raster
+
+
 
     layersPayload = payload['layers']
 
     areas = payload['areas']
+    print 'areas ',areas
     if areas is not None:
         # we will be working on hectare level
         pass
@@ -166,12 +169,26 @@ def computeTask(data,payload,base_url):
     # convert array of polygon into multipolygon
     multipolygon = shapely_geom.MultiPolygon(polyArray)
     #geom = "SRID=4326;{}".format(multipolygon.wkt)
+
     geom = multipolygon.wkt
+
+
+    """eps = 0.01
+
+    omega = cascaded_union([
+        Polygon(component.exterior).buffer(eps).buffer(-eps) for component in multipolygon
+    ])
+    for x,y in zip(*omega.exterior.coords.xy):
+        print(x, y)
     print 'geom ', geom
+    print 'omega ', omega"""
+
     # Clip the raster from the database
     #filename = RasterManager.getRasterID(layersPayload[0],transformGeo(geom),UPLOAD_DIRECTORY)
     #for test
+    #filename = str(uuid.uuid4()) + '.tif'
     filename = RasterManager.getRasterID('heat_tot_curr_density',transformGeo(geom),UPLOAD_DIRECTORY)
+    #savefile(filename,"http://geoserver.hotmaps.hevs.ch/geoserver/hotmaps/wcs?SERVICE=WCS&VERSION=1.0.0 &REQUEST=GetCoverage&COVERAGE=hotmaps:heat_tot_curr_density_tif&CRS=EPSG:4326&RESPONSE_CRS=EPSG:3035&BBOX= http://geoserver.hotmaps.hevs.ch/geoserver/hotmaps/wcs?SERVICE=WCS&VERSION=1.0.0 &REQUEST=GetCoverage&COVERAGE=hotmaps:heat_tot_curr_density_tif&CRS=EPSG:4326&RESPONSE_CRS=EPSG:3035&BBOX=0.6365421639742981,47.50190979433006,0.6378718985257021,47.50280810960713&WIDTH=500&HEIGHT=500&FORMAT=GeoTIFF&WIDTH=500&HEIGHT=500&FORMAT=GeoTIFF")
     # 1.2.1  url for downloading raster
     url_download_raster = base_url + filename
     print url_download_raster
@@ -212,7 +229,9 @@ def computeTask(data,payload,base_url):
     os.system(com_string)
     url_download_raster = base_url + filename
     print 'url_download_raster:',url_download_raster
-    data_output['tile_directory'] = base_url.replace('files', 'tiles') + directory_for_tiles
+    # data_output['tile_directory'] = base_url.replace('files', 'tiles') + directory_for_tiles
+    ## use in the external of the network
+    data_output['tile_directory'] = 'http://api.hotmapsdev.hevs.ch/api/cm/tiles/' + directory_for_tiles
     data_output['filename'] = filename
     print data_output
 
@@ -319,29 +338,6 @@ class ComputationTaskStatus(Resource):
                  'status': task.info,  # this is the exception raised
              }
         return response
-
-
-import os, gdal
-
-def raster2tile(input_filename,out_path):
-    #in_path = 'C:/Users/Marco/Desktop/'
-    #input_filename = 'dtm_5.tif'
-
-    #out_path = 'C:/Users/Marco/Desktop/output_folder/'
-    output_filename = 'tile_'
-
-    tile_size_x = 50
-    tile_size_y = 70
-
-    ds = gdal.Open(input_filename)
-    band = ds.GetRasterBand(1)
-    xsize = band.XSize
-    ysize = band.YSize
-
-    for i in range(0, xsize, tile_size_x):
-        for j in range(0, ysize, tile_size_y):
-            com_string = "gdal_translate -of PNG -srcwin " + str(i)+ ", " + str(j) + ", " + str(tile_size_x) + ", " + str(tile_size_y) + " " +  str(input_filename) + " " + str(out_path) + str(output_filename) + str(i) + "_" + str(j) + ".tif"
-            os.system(com_string)
 
 
 

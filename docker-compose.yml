@@ -8,6 +8,8 @@ services:
           - RABBITMQ_DEFAULT_PASS=mypass
       ports:
           - "5672:5672"
+     networks:
+            - cm-net
   api:
     build:
       context: ./api
@@ -32,6 +34,10 @@ services:
          - redis
     depends_on:
       - redis
+    networks:
+        - cm-net
+    volumes:
+            - static-content:/var/tmp
   worker:
     build:
       context: ./api
@@ -41,6 +47,10 @@ services:
     depends_on:
       - rabbit
       - redis
+     volumes:
+              - static-content:/var/tmp
+     networks:
+       - cm-net
   monitor:
     build:
       context: ./api
@@ -52,8 +62,12 @@ services:
     depends_on:
       - redis
       - rabbit
+    networks:
+       - cm-net
   redis:
     image: redis
+    networks:
+        - cm-net
 
 networks:
     backend:
@@ -63,5 +77,10 @@ networks:
         external:
         #use the name of the network created by the proxy (directoryname_nginx)
             name: nginxproxy_nginx
+    cm-net:
+        driver: bridge
+
+volumes:
+  static-content:
 
 
