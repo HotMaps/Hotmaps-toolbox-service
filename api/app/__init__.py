@@ -4,7 +4,7 @@ import logging.config
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-#from flask_cors import CORS
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 import pika
 
@@ -14,9 +14,9 @@ from app.decorators.restplus import api as api_rest_plus
 class CalculationModuleRpcClient(object):
     def __init__(self):
         credentials = pika.PlainCredentials('admin', 'mypass')
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbit', port =5672 , credentials= credentials))
+        #self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbit', port =5672 , credentials= credentials))
 
-        #self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
         self.channel = self.connection.channel()
 
         result = self.channel.queue_declare(exclusive=True)
@@ -91,9 +91,13 @@ def create_app(config_name):
     app.register_blueprint(api)
     dbGIS.init_app(app)
 
-    """CORS(app, resources={
+    CORS(app, resources={
         r"/api/*": {"origins": {
             "http://hotmaps.hevs.ch",
+            "http://www.hotmaps.hevs.ch",
+            "http://geoserver.hotmaps.hevs.ch",
+            "http://www.hotmapsdev.hevs.ch",
+            "http://geoserver.hotmapsdev.hevs.ch",
             "http://hotmaps.hevs.ch:8080",
             "http://hotmaps.hevs.ch:9006",
             "http://www.hotmapsdev.hevs.ch",
@@ -112,7 +116,7 @@ def create_app(config_name):
             "http://maps.googleapis.com/maps/api/",
             "http://maps.googleapis.com/*"
         }
-        }})"""
+        }})
 
     return app
 
