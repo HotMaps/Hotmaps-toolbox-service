@@ -8,7 +8,7 @@ services:
           - RABBITMQ_DEFAULT_PASS=mypass
       ports:
           - "5672:5672"
-     networks:
+      networks:
             - cm-net
   api:
     build:
@@ -47,9 +47,9 @@ services:
     depends_on:
       - rabbit
       - redis
-     volumes:
-              - static-content:/var/tmp
-     networks:
+    volumes:
+          - static-content:/var/tmp
+    networks:
        - cm-net
   monitor:
     build:
