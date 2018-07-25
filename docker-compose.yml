@@ -78,7 +78,6 @@ networks:
         #use the name of the network created by the proxy (directoryname_nginx)
             name: nginxproxy_nginx
     cm-net:
-        driver: bridge
 
 volumes:
   static-content:
