@@ -75,7 +75,7 @@ layersData = {
 			},
 	grass:{'tablename':grass,
 			'from':'stat_grass',
-			'select':'(stat_grass.sum/stat_grass.count) as '+grass+'_density, stat_grass.count as '+grass+'_cells ',
+			'select':'stat_grass.sum as '+grass+'_density, stat_grass.count as '+grass+'_cells ',
 			'resultsName':{
 				 0:grass+'_density', 1:grass+'_cells'},
 			'resultsUnit':{ 
@@ -83,7 +83,7 @@ layersData = {
 			},
 	grassRes:{'tablename':grassRes,
 			'from':'stat_grassRes',
-			'select':'(stat_grassRes.sum/stat_grassRes.count) as '+grassRes+'_density, stat_grassRes.count as '+grassRes+'_cells ',
+			'select':'stat_grassRes.sum as '+grassRes+'_density, stat_grassRes.count as '+grassRes+'_cells ',
 			'resultsName':{
 				0:grassRes+'_density',  1:grassRes+'_cells'},
 			'resultsUnit':{ 
@@ -91,7 +91,7 @@ layersData = {
 			},
 	grassNonRes:{'tablename':grassNonRes,
 			'from':'stat_grassNonRes',
-			'select':' (stat_grassNonRes.sum/stat_grassNonRes.count) as '+grassNonRes+'_density, stat_grassNonRes.count as '+grassNonRes+'_cells ',
+			'select':' stat_grassNonRes.sum as '+grassNonRes+'_density, stat_grassNonRes.count as '+grassNonRes+'_cells ',
 			'resultsName':{
 				0:grassNonRes+'_density', 1:grassNonRes+'_cells'},
 			'resultsUnit':{ 

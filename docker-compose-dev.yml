@@ -44,7 +44,7 @@ services:
       context: ./api
       dockerfile: dockerfiles/Dockerfile_flower
     ports:
-     - "5555:5555"
+     - "9090:5555"
     entrypoint: flower
     command:  -A celery_worker.celery --port=5555 --broker=amqp://admin:mypass@rabbit:5672/
     depends_on:
