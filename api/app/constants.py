@@ -2,12 +2,18 @@
 #FLASK_SERVER_NAME = '0.0.0.0:80'
 FLASK_SERVER_NAME = '0.0.0.0:5556'
 FLASK_DEBUG = False  # Do not use debug mode in production
-CELERY_BROKER_URL = 'amqp://admin:mypass@rabbit:5672/'
-#CELERY_BROKER_URL = 'amqp://localhost/'
+#CELERY_BROKER_URL = 'amqp://admin:mypass@rabbit:5672/'
+CELERY_BROKER_URL = 'amqp://localhost/'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-RPC_Q = 'rpc_queue_CM'
+RPC_Q = 'rpc_queue_CM_compute'
+TIMEOUT_ALIVE_CM = 3
+TIMEOUT_START_CM = 1
+TIMEOUT_DELETE_CM= 15
+RPC_CM_ALIVE= 'rpc_queue_CM_ALIVE'
+RPC_CM_ALIVE_2= 'rpc_queue_CM_ALIVE_2'
+CM_REGISTER_Q = 'rpc_queue_CM_register'
 PORT = 5000
-
+CM_DB_NAME = "calculation_module.db"
 # Flask-Restplus settings
 RESTPLUS_SWAGGER_UI_DOC_EXPANSION = 'list'
 RESTPLUS_VALIDATE = True

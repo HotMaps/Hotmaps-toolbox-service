@@ -15,11 +15,12 @@ import sqlalchemy.pool as pool
 import sqlite3
 import uuid
 from app import celery
+from constants import CM_DB_NAME
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 db_path = os.path.join(basedir, '../data.sqlite')
 
-DB_NAME="calculation_module.db"
+DB_NAME = CM_DB_NAME
 
 
 
@@ -175,6 +176,44 @@ def getUI(cm_id):
     except sqlite3.IntegrityError as e:
         print e
 
+def delete_cm(cm_id):
+    print cm_id
+    delete_cm_with_id(cm_id)
+    delete_cm_ui_with_id(cm_id)
+
+def delete_cm_ui_with_id(cm_id):
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+
+        results = cursor.execute('DELETE FROM inputs_calculation_module WHERE cm_id = ?',
+                                 (cm_id))
+        print results
+        conn.commit()
+        conn.close()
+        return results
+
+    except ValidationError:
+        print 'error'
+    except sqlite3.IntegrityError as e:
+        print e
+
+def delete_cm_with_id(cm_id):
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+
+        results = cursor.execute('DELETE FROM calculation_module WHERE cm_id = ?',
+                                 (cm_id))
+        print results
+        conn.commit()
+        conn.close()
+        return results
+
+    except ValidationError:
+        print 'error'
+    except sqlite3.IntegrityError as e:
+        print e
 def getCMList():
     try:
         conn = sqlite3.connect(DB_NAME)
@@ -182,9 +221,7 @@ def getCMList():
 
         results = cursor.execute('select * from calculation_module ')
         response = []
-        print [key[0] for key in cursor.description]
         for row in results:
-            print row
             response.append({'cm_id':row[0],
                              'cm_name':row[1],
                              'cm_description':row[2],

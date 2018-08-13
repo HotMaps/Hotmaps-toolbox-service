@@ -7,19 +7,22 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 import pika
-
+import uuid
 from celery import Celery
 from app.decorators.restplus import api as api_rest_plus
+
+
+"""__________________________________producer for COMPUTE_______________________________________________________"""
 
 class CalculationModuleRpcClient(object):
     def __init__(self):
         credentials = pika.PlainCredentials('admin', 'mypass')
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbit', port =5672 , credentials= credentials))
+        #self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbit', port =5672 , credentials= credentials))
 
-        #self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
         self.channel = self.connection.channel()
 
-        result = self.channel.queue_declare(exclusive=True)
+        result = self.channel.queue_declare(exclusive=False)
         self.callback_queue = result.method.queue
 
         self.channel.basic_consume(self.on_response, no_ack=True,
@@ -31,16 +34,33 @@ class CalculationModuleRpcClient(object):
 
     def call(self,cm_id,data):
         self.response = None
-        self.corr_id = str(cm_id)
+        self.corr_id = str(uuid.uuid4())
+
         self.channel.basic_publish(exchange='',
-                                   routing_key=constants.RPC_Q,
+                                   routing_key=constants.RPC_Q + str(cm_id) ,
                                    properties=pika.BasicProperties(
                                        reply_to = self.callback_queue,
-                                       correlation_id = cm_id,
+                                       correlation_id = self.corr_id,
                                    ),
                                    body=data)
         while self.response is None:
             self.connection.process_data_events()
+        return self.response
+
+    def is_calculation_module_alive(self,cm_id):
+        self.response = None
+        self.corr_id = str(cm_id)
+        self.channel.basic_publish(exchange='',
+                                   routing_key=constants.RPC_CM_ALIVE,
+                                   properties=pika.BasicProperties(
+                                       reply_to = self.callback_queue,
+                                       correlation_id = self.corr_id,
+                                   ),
+                                   body='')
+        while self.response is None:
+            #print ('Cm with cm id {} is not connected',cm_id)
+            self.connection.process_data_events()
+        print ('self.response ',self.response)
         return self.response
 
 

@@ -24,6 +24,13 @@ import shapely.geometry as shapely_geom
 import socket
 from app import CalculationModuleRpcClient
 
+import logging
+
+from celery import Celery
+from celery.task import periodic_task
+from datetime import timedelta
+from os import environ
+
 import stat
 #TODO Add url to find  right computation module
 UPLOAD_DIRECTORY = '/var/tmp'
@@ -31,6 +38,8 @@ UPLOAD_DIRECTORY = '/var/tmp'
 if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
     os.chmod(UPLOAD_DIRECTORY, 0644)
+
+
 
 
 
@@ -67,6 +76,7 @@ class ComputationModuleClass(Resource):
        Register a calculation module
        :return:
        """
+        print 'HTAPI will register cm'
         input = request.get_json()
         registerCM.delay(input)
         print input
