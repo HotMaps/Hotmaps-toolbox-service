@@ -66,8 +66,9 @@ RUN pip install -r requirements/requirements.txt
 EXPOSE 5000
 #EXPOSE 80
 # Start server
-CMD ["gunicorn", "--config", "gunicorn-config.py", "--log-config", "app/logging.conf", "run_wsgi:application"]
-#CMD gunicorn -b 172.25.0.6:5000 --access-logfile - "run_wsgi:application"
+#CMD ["gunicorn", "--config", "gunicorn-config.py", "--log-config", "app/logging.conf", "run_wsgi:application"]
 
+RUN chmod a+x run_main_web_services.sh
+CMD ./run_main_web_services.sh
 
 

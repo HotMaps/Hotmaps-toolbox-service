@@ -10,7 +10,7 @@ TIMEOUT_ALIVE_CM = 3
 TIMEOUT_START_CM = 1
 TIMEOUT_DELETE_CM= 15
 RPC_CM_ALIVE= 'rpc_queue_CM_ALIVE'
-RPC_CM_ALIVE_2= 'rpc_queue_CM_ALIVE_2'
+
 CM_REGISTER_Q = 'rpc_queue_CM_register'
 PORT = 5000
 CM_DB_NAME = "calculation_module.db"
