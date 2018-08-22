@@ -1,5 +1,5 @@
 import json
-
+import uuid
 
 
 def find_key_in_dict(key, dictionary):
@@ -67,3 +67,6 @@ def getGenerationMixColor(value):
 
     raise Exception(msg)
 
+def generate_geotif_name():
+    filename = str(uuid.uuid4()) + '.tif'
+    return filename

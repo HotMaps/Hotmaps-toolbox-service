@@ -16,10 +16,8 @@ from app.decorators.restplus import api as api_rest_plus
 
 class CalculationModuleRpcClient(object):
     def __init__(self):
-        credentials = pika.PlainCredentials('admin', 'mypass')
-        #self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbit', port =5672 , credentials= credentials))
-
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        parameters = pika.URLParameters(constants.CELERY_BROKER_URL)
+        self.connection = pika.BlockingConnection(parameters)
         self.channel = self.connection.channel()
 
         result = self.channel.queue_declare(exclusive=False)

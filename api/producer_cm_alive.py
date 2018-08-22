@@ -22,7 +22,8 @@ LOGGER = logging.getLogger(__name__)
 
 class HeartBeatCalculationModuleProducer(object):
     def __init__(self):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        parameters = pika.URLParameters(constants.CELERY_BROKER_URL)
+        self.connection = pika.BlockingConnection(parameters)
 
         self.channel = self.connection.channel()
 
@@ -69,8 +70,9 @@ while True :
             response = heart_cm.call(constants.RPC_CM_ALIVE + str(cm_id))
             if response is not None:
                 print("[HTAPI]  is connected to the Calculation module with id: %s ", str(cm_id))
+                LOGGER.info("[HTAPI]  is connected to the Calculation module with id: %s ", str(cm_id))
             else:
-                print("[HTAPI]  is going to  delete: %s ",str(cm_id))
+                LOGGER.info("[HTAPI]  is going to  delete: %s ",str(cm_id))
                 delete_cm(str(cm_id))
 
 

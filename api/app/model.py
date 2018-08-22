@@ -68,12 +68,14 @@ def register_calulation_module(data):
         cm_url = data['cm_url']
         cm_id = data['cm_id']
         layers_needed = data['layers_needed']
+        print ("layers_needed",layers_needed)
         updatedAt = datetime.utcnow()
         createdAt = datetime.utcnow()
         inputs_calculation_module = data['inputs_calculation_module']
         try:
 
             ln = str(layers_needed)
+            print ("layers_needed string",ln)
             cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt) VALUES (?,?,?,?,?,?,?,?)", ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt ))
             conn.commit()
             for value in inputs_calculation_module:
@@ -135,6 +137,22 @@ def getCMUrl(cm_id):
         cursor = conn.cursor()
 
         cm_url = cursor.execute('select cm_url from calculation_module where cm_id = ?',
+                                (cm_id))
+        cm_url = str(cm_url.fetchone()[0])
+        conn.close()
+        return cm_url
+
+    except ValidationError:
+        print 'error'
+    except sqlite3.IntegrityError as e:
+        print e
+
+def getLayerNeeded(cm_id):
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+
+        cm_url = cursor.execute('select layers_needed from calculation_module where cm_id = ?',
                                 (cm_id))
         cm_url = str(cm_url.fetchone()[0])
         conn.close()

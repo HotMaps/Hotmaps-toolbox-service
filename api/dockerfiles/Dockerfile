@@ -29,6 +29,14 @@ RUN apt-get update \
     ca-certificates \
     gcc \
     git \
+    gdal-bin \
+    ca-certificates \
+    gcc \
+    git \
+    libpq-dev \
+    libgeos-dev \
+    libgdal-dev \
+    python-gdal \
     libpq-dev \
     libgeos-dev \
     make \
@@ -59,6 +67,8 @@ RUN pip install gunicorn
 
 RUN pip install -r requirements/requirements.txt
 
+
+
 # Copy app source code
 
 
@@ -66,9 +76,16 @@ RUN pip install -r requirements/requirements.txt
 EXPOSE 5000
 #EXPOSE 80
 # Start server
-#CMD ["gunicorn", "--config", "gunicorn-config.py", "--log-config", "app/logging.conf", "run_wsgi:application"]
 
-RUN chmod a+x run_main_web_services.sh
-CMD ./run_main_web_services.sh
+
+RUN apt-get update && apt-get install -y supervisor
+RUN mkdir -p /var/log/supervisor
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# CMD ["gunicorn", "--config", "gunicorn-config.py", "--log-config", "app/logging.conf", "run:application"]
+
+# Start processes
+CMD ["/usr/bin/supervisord"]
+
 
 

@@ -248,6 +248,7 @@ class Consumer(object):
         """
         print ('application',application)
         if application is not None:
+            LOGGER.info('Application is ready')
             LOGGER.info('Received message # %s from %s: %s',
                         method.delivery_tag, props.app_id, body)
             self.acknowledge_message(method.delivery_tag)
@@ -256,9 +257,11 @@ class Consumer(object):
             ip = socket.gethostbyname(socket.gethostname())
 
             base_url = 'http://'+ str(ip) +':'+str(constants.PORT)+'/api/cm/register/'
+            LOGGER.info('base_url is %s', base_url)
 
             res = requests.post(base_url, data = body, headers = headers)
             response = res.text
+            LOGGER.info('response is %s', response)
             print (type(props.reply_to))
             if response is None :
                 response = 'not register'
@@ -268,6 +271,8 @@ class Consumer(object):
                              properties=pika.BasicProperties(correlation_id = str(constants.CM_REGISTER_Q)),
                              body=str(response))
             ch.basic_ack(delivery_tag = method.delivery_tag)
+        else:
+            LOGGER.info('Application is not ready')
     def on_cancelok(self, unused_frame):
         """This method is invoked by pika when RabbitMQ acknowledges the
         cancellation of a consumer. At this point we will close the channel.
@@ -360,7 +365,7 @@ class Consumer(object):
 
 def main():
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
-    consumer =Consumer(constants.CELERY_BROKER_URL)
+    consumer = Consumer(constants.CELERY_BROKER_URL)
     try:
         consumer.run()
     except KeyboardInterrupt:
