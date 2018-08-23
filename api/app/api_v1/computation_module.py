@@ -94,6 +94,10 @@ class getRasterfile(Resource):
          """
         return send_from_directory(UPLOAD_DIRECTORY, filename, as_attachment=True)
 
+
+
+
+
 @ns.route('/tiles/<string:directory>/<int:z>/<int:x>/<int:y>/', methods=['GET'])
 class getRasterTile(Resource):
     def get(self,directory,z,x,y):
@@ -112,6 +116,24 @@ class getRasterTile(Resource):
                 os.makedirs(os.path.dirname(tile_filename))
 
         return Response( open(tile_filename).read(), mimetype='image/png')
+
+def retrieve_asyncronous_tiles(directory,z,x,y):
+    print 'getRasterTile '
+
+    """
+     download a file from the main web service
+     :return:
+         """
+    tile_filename = UPLOAD_DIRECTORY +'/'+directory+"/%d/%d/%d.png" % (z,x,y)
+    print 'tile_filename ', tile_filename
+    if not os.path.exists(tile_filename):
+        print'not existing'
+        if not os.path.exists(os.path.dirname(tile_filename)):
+            print'not existing'
+            os.makedirs(os.path.dirname(tile_filename))
+
+    return Response( open(tile_filename).read(), mimetype='image/png')
+
 
 
 @celery.task(name = 'registerCM')
@@ -222,6 +244,7 @@ def computeTask(data,payload,base_url):
     #print current_app.name
 
     #app.app_context().push()
+    # send the result
     calculation_module_rpc = CalculationModuleRpcClient()
     response = calculation_module_rpc.call(cm_id,data)
     print 'type response:',type(response)
@@ -234,7 +257,7 @@ def computeTask(data,payload,base_url):
     print file_path_input
     directory_for_tiles = filename.replace('.tif', '')
     print directory_for_tiles
-    intermediate_raster = helper.generate_geotif_name()
+    intermediate_raster = helper.generate_geotif_name(UPLOAD_DIRECTORY)
     tile_path = UPLOAD_DIRECTORY+'/' + directory_for_tiles
     access_rights = 0o755
 
@@ -264,7 +287,7 @@ def computeTask(data,payload,base_url):
     return data_output
 
 
-def generate_payload_for_compute(data,url,filename):
+def generate_payload_for_compute(data,urls,filename):
     inputs = data["inputs"]
     data_output = {}
     for parameters in inputs:
@@ -272,7 +295,7 @@ def generate_payload_for_compute(data,url,filename):
             parameters['input_parameter_name']: parameters['input_value']
         })
     data_output.update({
-       'url_file': url,
+       'url_file': urls,
        'filename':filename
     })
     data = json.dumps(data_output)

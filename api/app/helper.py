@@ -67,6 +67,8 @@ def getGenerationMixColor(value):
 
     raise Exception(msg)
 
-def generate_geotif_name():
-    filename = str(uuid.uuid4()) + '.tif'
+def generate_geotif_name(directory):
+    filename = directory+'/' + str(uuid.uuid4()) + '.tif'
     return filename
+def generate_directory_name():
+    return str(uuid.uuid4())
