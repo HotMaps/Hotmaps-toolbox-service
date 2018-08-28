@@ -78,7 +78,7 @@ celery = Celery(__name__, backend=constants.CELERY_RESULT_BACKEND,
 
 # methods
 log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '', 'logging.conf')
-#logging.config.fileConfig(log_file_path)
+logging.config.fileConfig(log_file_path)
 log = logging.getLogger(__name__)
 #logging.getLogger('flask_cors').level = logging.DEBUG
 

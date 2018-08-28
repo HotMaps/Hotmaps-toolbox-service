@@ -18,11 +18,20 @@ RUN apt-get update \
     ca-certificates \
     gcc \
     git \
+    gdal-bin \
+    ca-certificates \
+    gcc \
+    git \
+    libpq-dev \
+    libgeos-dev \
+    libgdal-dev \
+    python-gdal \
     libpq-dev \
     libgeos-dev \
     make \
     python-pip \
     python2.7 \
+    sqlite3 \
     python2.7-dev \
     ssh \
     && apt-get autoremove \

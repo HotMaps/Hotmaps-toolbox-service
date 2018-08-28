@@ -25,7 +25,7 @@ services:
     networks:
       - cm-net
     volumes:
-         - static-content:/var/tmp
+         - /var/tmp:/var/tmp
   worker:
     build:
       context: ./api
@@ -36,7 +36,7 @@ services:
       - rabbit
       - redis
     volumes:
-          - static-content:/var/tmp
+          - /var/tmp:/var/tmp
     networks:
       - cm-net
   monitor:

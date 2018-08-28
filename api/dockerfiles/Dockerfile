@@ -42,6 +42,7 @@ RUN apt-get update \
     make \
     python-pip \
     python2.7 \
+    sqlite3 \
     python2.7-dev \
     ssh \
     && apt-get autoremove \

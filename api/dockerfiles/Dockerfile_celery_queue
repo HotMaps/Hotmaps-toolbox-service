@@ -18,15 +18,25 @@ RUN apt-get update \
     ca-certificates \
     gcc \
     git \
+    gdal-bin \
+    ca-certificates \
+    gcc \
+    git \
+    libpq-dev \
+    libgeos-dev \
+    libgdal-dev \
+    python-gdal \
     libpq-dev \
     libgeos-dev \
     make \
     python-pip \
     python2.7 \
+    sqlite3 \
     python2.7-dev \
     ssh \
     && apt-get autoremove \
     && apt-get clean
+
 
 RUN pip install -U "setuptools==38.5.1"
 RUN pip install -U "pip==9.0.1"
@@ -36,4 +46,4 @@ WORKDIR /api
 
 RUN pip install -r requirements/requirements_celery_queue.txt
 
-ENTRYPOINT celery -A celery_worker.celery worker --loglevel=info
+ENTRYPOINT celery -A celery_worker.celery worker --loglevel=info -f /var/log/celery_worker.logs

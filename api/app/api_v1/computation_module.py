@@ -10,6 +10,8 @@ from app.model import register_calulation_module,getCMUrl, RasterManager,getUI,g
 from werkzeug.utils import secure_filename
 from app import constants
 nsCM = api.namespace('cm', description='Operations related to statistisdscs')
+import gdal2tiles
+
 
 ns = nsCM
 from flask_restplus import Resource
@@ -24,7 +26,8 @@ import shapely.geometry as shapely_geom
 import socket
 from app import CalculationModuleRpcClient
 from app import helper
-
+#Import gdal
+from osgeo import gdal
 import logging
 
 from celery import Celery
@@ -79,8 +82,7 @@ class ComputationModuleClass(Resource):
        """
         print 'HTAPI will register cm'
         input = request.get_json()
-        registerCM(input)
-        print input
+        register_calulation_module(input)
         return json.dumps(input)
 
 
@@ -136,7 +138,7 @@ def retrieve_asyncronous_tiles(directory,z,x,y):
 
 
 
-@celery.task(name = 'registerCM')
+#@celery.task(name = 'registerCM')
 def registerCM(input):
     print 'input', input
     register_calulation_module(input)
@@ -165,23 +167,14 @@ def savefile(filename,url):
 
 #@celery.task(bind=True)
 @celery.task(name = 'Compute-async')
-def computeTask(data,payload,base_url):
+def computeTask(data,payload,base_url,cm_id,layerneed):
 
     """
     Returns the statistics for specific layers, area and year
     :return:
 
     """
-    cm_id = data["cm_id"]
-    # 1. find the good computation module with the right url in the database from cm db  => generate url
 
-    url_cm = celery_get_CM_url(cm_id)
-    print payload
-    #2. get parameters for clipping raster
-
-
-    #layersPayload = payload['layers']
-    layerneed = getLayerNeeded(cm_id)
     layer_needed = ast.literal_eval(layerneed)
 
 
@@ -191,7 +184,7 @@ def computeTask(data,payload,base_url):
 
     print ("layerneed ",layer_needed)
     print ("layerneed ",type(layer_needed))
-
+    #2. get parameters for clipping raster
     areas = payload['areas']
     print 'areas ',areas
     if areas is not None:
@@ -253,6 +246,20 @@ def computeTask(data,payload,base_url):
 
     print ' data:',data_output
     tiff_url = data_output["tiff_url"]
+
+
+    url_download_raster, file_path_input, directory_for_tiles = generateTiles(filename,tiff_url,base_url)
+
+    data_output['tile_directory'] = base_url.replace('files', 'tiles') + directory_for_tiles
+    ## use in the external of the network
+    #data_output['tile_directory'] = 'http://api.hotmapsdev.hevs.ch/api/cm/tiles/' + directory_for_tiles
+    data_output['filename'] = filename
+    print data_output
+
+    print 'tiff_url:',file_path_input
+    return data_output
+
+def generateTiles(filename,tiff_url,base_url):
     file_path_input = savefile(filename,tiff_url)
     print file_path_input
     directory_for_tiles = filename.replace('.tif', '')
@@ -268,23 +275,15 @@ def computeTask(data,payload,base_url):
     else:
         print ("Successfully created the directory %s" % tile_path)
 
-    com_string = "gdal_translate -of GTiff -expand rgba {} {} && gdal2tiles.py --profile=mercator -z 0-13   {} {}".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
-    #com_string = "python app/api_v1/gdal2tiles-multiprocess.py -l -p mercator -z 1-15 -w none  {} {}".format(file_path,tile_path)
+
+    com_string = "gdal_translate -of GTiff -expand rgba {} {}".format(file_path_input,intermediate_raster)
+    #com_string = "gdal2tiles.py --profile=mercator -z 0-13   {} {}".format(file_path_input,tile_path)
     os.system(com_string)
 
-    #com_string = "gdal_translate -of vrt -expand rgba {} {} && gdal2tiles.py --profile=mercator -z 0-13   {} {}".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
-    #com_string = "python app/api_v1/gdal2tiles-multiprocess.py -l -p mercator -z 1-15 -w none  {} {}".format(file_path,tile_path)
-    #os.system(com_string)
+    gdal2tiles.generate_tiles(intermediate_raster, tile_path, np_processes=12, zoom='7-9')
     url_download_raster = base_url + filename
     print 'url_download_raster:',url_download_raster
-    data_output['tile_directory'] = base_url.replace('files', 'tiles') + directory_for_tiles
-    ## use in the external of the network
-    #data_output['tile_directory'] = 'http://api.hotmapsdev.hevs.ch/api/cm/tiles/' + directory_for_tiles
-    data_output['filename'] = filename
-    print data_output
-
-    print 'tiff_url:',file_path_input
-    return data_output
+    return url_download_raster, file_path_input, directory_for_tiles
 
 
 def generate_payload_for_compute(data,urls,filename):
@@ -318,36 +317,16 @@ class ComputationModuleClass(Resource):
         print 'ip ', ip
         base_url = 'http://'+ str(ip) +':'+str(constants.PORT)+'/api/cm/files/'
         print 'base url ', base_url
+        cm_id = data["cm_id"]
+         # 1. find the good computation module with the right url in the database from cm db  => generate url
+
+
+
+        #2 inputs layers from the CM
+        layerneed = getLayerNeeded(cm_id)
         with app.app_context():
-            task = computeTask.delay(data,payload,base_url)
+            task = computeTask.delay(data,payload,base_url,cm_id,layerneed)
             return {'status_id': task.id}
-
-
-
-def computeCM(cm_id,data,base_url,filename):
-    calculation_module_rpc = CalculationModuleRpcClient()
-    response = calculation_module_rpc.call(cm_id,data)
-    print 'type response:',type(response)
-    print ' response:',response
-    data_output = json.loads(response)
-
-    print ' data:',data_output
-    tiff_url = data_output["tiff_url"]
-    file_path = savefile(filename,tiff_url)
-    print file_path
-    #  com_string = "gdal_translate -of GTIFF -srcwin " + str(i)+ ", " + str(j) + ", " + str(tile_size_x) + ", " + str(tile_size_y) + " " + str(in_path) + str(input_filename) + " " + str(out_path) + str(output_filename) + str(i) + "_" + str(j) + ".tif"
-    # os.system(com_string)
-    url_download_raster = base_url + filename
-    print 'url_download_raster:',url_download_raster
-    data_output['tiff_url'] = url_download_raster
-    data_output['filename'] = filename
-    print data_output
-    print url_download_raster
-    print 'tiff_url:',file_path
-    return data_output
-
-    #messaging the CM
-
 
 
 
@@ -372,6 +351,10 @@ class ComputationTaskStatus(Resource):
                  'total': task.info.get('total', 1),
                  'status': task.info
              }
+
+
+
+
              """import ipdb; ipdb.set_trace()
              if 'result' in task.info:
                 response['result'] = task.info['result']
