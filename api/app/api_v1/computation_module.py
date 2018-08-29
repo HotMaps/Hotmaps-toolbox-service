@@ -224,7 +224,7 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
 
     url_download_raster, file_path_input, directory_for_tiles = generateTiles(filename,tiff_url,base_url)
 
-    data_output['tile_directory'] = base_url.replace('files', 'tiles') + directory_for_tiles
+    data_output['tile_directory'] =  directory_for_tiles
     ## use in the external of the network
     #data_output['tile_directory'] = 'http://api.hotmapsdev.hevs.ch/api/cm/tiles/' + directory_for_tiles
     data_output['filename'] = filename
