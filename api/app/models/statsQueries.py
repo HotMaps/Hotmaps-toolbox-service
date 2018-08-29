@@ -4,7 +4,7 @@ from app import dbGIS as db
 from app import constants
 from decimal import *
 
-import generalData
+from . import generalData
 
 
 #import logging

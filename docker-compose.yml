@@ -38,19 +38,7 @@ services:
         - cm-net
     volumes:
             - static-content:/var/tmp
-  worker:
-    build:
-      context: ./api
-      dockerfile: dockerfiles/Dockerfile_celery_queue
-    links:
-      - rabbit
-    depends_on:
-      - rabbit
-      - redis
-    volumes:
-          - static-content:/var/tmp
-    networks:
-       - cm-net
+
   monitor:
     build:
       context: ./api

@@ -66,7 +66,7 @@ class CalculationModuleRpcClient(object):
 
 
 
-import constants
+from . import constants
 
 
 dbGIS = SQLAlchemy()

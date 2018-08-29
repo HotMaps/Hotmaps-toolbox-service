@@ -10,8 +10,6 @@ from app.model import register_calulation_module,getCMUrl, RasterManager,getUI,g
 from werkzeug.utils import secure_filename
 from app import constants
 nsCM = api.namespace('cm', description='Operations related to statistisdscs')
-import gdal2tiles
-
 
 ns = nsCM
 from flask_restplus import Resource
@@ -26,8 +24,7 @@ import shapely.geometry as shapely_geom
 import socket
 from app import CalculationModuleRpcClient
 from app import helper
-#Import gdal
-from osgeo import gdal
+
 import logging
 
 from celery import Celery
@@ -41,7 +38,7 @@ UPLOAD_DIRECTORY = '/var/tmp'
 
 if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
-    os.chmod(UPLOAD_DIRECTORY, 0644)
+    os.chmod(UPLOAD_DIRECTORY, 0o644)
 
 
 
@@ -80,7 +77,7 @@ class ComputationModuleClass(Resource):
        Register a calculation module
        :return:
        """
-        print 'HTAPI will register cm'
+        print ('HTAPI will register cm')
         input = request.get_json()
         register_calulation_module(input)
         return json.dumps(input)
@@ -103,35 +100,28 @@ class getRasterfile(Resource):
 @ns.route('/tiles/<string:directory>/<int:z>/<int:x>/<int:y>/', methods=['GET'])
 class getRasterTile(Resource):
     def get(self,directory,z,x,y):
-        print 'getRasterTile '
 
         """
          download a file from the main web service
          :return:
              """
         tile_filename = UPLOAD_DIRECTORY +'/'+directory+"/%d/%d/%d.png" % (z,x,y)
-        print 'tile_filename ', tile_filename
         if not os.path.exists(tile_filename):
-            print'not existing'
             if not os.path.exists(os.path.dirname(tile_filename)):
-                print'not existing'
                 os.makedirs(os.path.dirname(tile_filename))
 
-        return Response( open(tile_filename).read(), mimetype='image/png')
+        return Response(open(tile_filename).read(), mimetype='image/png')
 
 def retrieve_asyncronous_tiles(directory,z,x,y):
-    print 'getRasterTile '
+
 
     """
      download a file from the main web service
      :return:
          """
     tile_filename = UPLOAD_DIRECTORY +'/'+directory+"/%d/%d/%d.png" % (z,x,y)
-    print 'tile_filename ', tile_filename
     if not os.path.exists(tile_filename):
-        print'not existing'
         if not os.path.exists(os.path.dirname(tile_filename)):
-            print'not existing'
             os.makedirs(os.path.dirname(tile_filename))
 
     return Response( open(tile_filename).read(), mimetype='image/png')
@@ -140,7 +130,6 @@ def retrieve_asyncronous_tiles(directory,z,x,y):
 
 #@celery.task(name = 'registerCM')
 def registerCM(input):
-    print 'input', input
     register_calulation_module(input)
     return input
 
@@ -186,7 +175,6 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
     print ("layerneed ",type(layer_needed))
     #2. get parameters for clipping raster
     areas = payload['areas']
-    print 'areas ',areas
     if areas is not None:
         # we will be working on hectare level
         pass
@@ -207,15 +195,6 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
     geom = multipolygon.wkt
 
 
-    """eps = 0.01
-
-    omega = cascaded_union([
-        Polygon(component.exterior).buffer(eps).buffer(-eps) for component in multipolygon
-    ])
-    for x,y in zip(*omega.exterior.coords.xy):
-        print(x, y)
-    print 'geom ', geom
-    print 'omega ', omega"""
 
     # Clip the raster from the database
     #filename = RasterManager.getRasterID(layersPayload[0],transformGeo(geom),UPLOAD_DIRECTORY)
@@ -227,12 +206,10 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
     #savefile(filename,"http://geoserver.hotmaps.hevs.ch/geoserver/hotmaps/wcs?SERVICE=WCS&VERSION=1.0.0 &REQUEST=GetCoverage&COVERAGE=hotmaps:heat_tot_curr_density_tif&CRS=EPSG:4326&RESPONSE_CRS=EPSG:3035&BBOX= http://geoserver.hotmaps.hevs.ch/geoserver/hotmaps/wcs?SERVICE=WCS&VERSION=1.0.0 &REQUEST=GetCoverage&COVERAGE=hotmaps:heat_tot_curr_density_tif&CRS=EPSG:4326&RESPONSE_CRS=EPSG:3035&BBOX=0.6365421639742981,47.50190979433006,0.6378718985257021,47.50280810960713&WIDTH=500&HEIGHT=500&FORMAT=GeoTIFF&WIDTH=500&HEIGHT=500&FORMAT=GeoTIFF")
     # 1.2.1  url for downloading raster
     url_download_raster = base_url + filename
-    print url_download_raster
     # 1.2 build the parameters for the url
 
     # 2. if this is a raster clip of the raster or provide vector needed => generate link
     data = generate_payload_for_compute(data,url_download_raster,filename)
-    print 'payload: ',data
     #res = requests.post(URL_CM + 'computation-module/compute/', data = api.payload)
     #print current_app.name
 
@@ -240,11 +217,8 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
     # send the result
     calculation_module_rpc = CalculationModuleRpcClient()
     response = calculation_module_rpc.call(cm_id,data)
-    print 'type response:',type(response)
-    print ' response:',response
     data_output = json.loads(response)
 
-    print ' data:',data_output
     tiff_url = data_output["tiff_url"]
 
 
@@ -254,16 +228,11 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
     ## use in the external of the network
     #data_output['tile_directory'] = 'http://api.hotmapsdev.hevs.ch/api/cm/tiles/' + directory_for_tiles
     data_output['filename'] = filename
-    print data_output
-
-    print 'tiff_url:',file_path_input
     return data_output
 
 def generateTiles(filename,tiff_url,base_url):
     file_path_input = savefile(filename,tiff_url)
-    print file_path_input
     directory_for_tiles = filename.replace('.tif', '')
-    print directory_for_tiles
     intermediate_raster = helper.generate_geotif_name(UPLOAD_DIRECTORY)
     tile_path = UPLOAD_DIRECTORY+'/' + directory_for_tiles
     access_rights = 0o755
@@ -276,13 +245,12 @@ def generateTiles(filename,tiff_url,base_url):
         print ("Successfully created the directory %s" % tile_path)
 
 
-    com_string = "gdal_translate -of GTiff -expand rgba {} {}".format(file_path_input,intermediate_raster)
-    #com_string = "gdal2tiles.py --profile=mercator -z 0-13   {} {}".format(file_path_input,tile_path)
+    com_string = "gdal_translate -of GTiff -expand rgba {} {} && app/models/gdal2tiles.py --profile=mercator -z 0-13   {} {}".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
+    #com_string = "python app/api_v1/gdal2tiles-multiprocess.py -l -p mercator -z 1-15 -w none  {} {}".format(file_path,tile_path)
     os.system(com_string)
 
-    gdal2tiles.generate_tiles(intermediate_raster, tile_path, np_processes=12, zoom='7-9')
+    # gdal2tiles.generate_tiles(intermediate_raster, tile_path, np_processes=12, zoom='7-9')
     url_download_raster = base_url + filename
-    print 'url_download_raster:',url_download_raster
     return url_download_raster, file_path_input, directory_for_tiles
 
 
@@ -314,9 +282,7 @@ class ComputationModuleClass(Resource):
         data = request.get_json()
         payload = api.payload
         ip = socket.gethostbyname(socket.gethostname())
-        print 'ip ', ip
         base_url = 'http://'+ str(ip) +':'+str(constants.PORT)+'/api/cm/files/'
-        print 'base url ', base_url
         cm_id = data["cm_id"]
          # 1. find the good computation module with the right url in the database from cm db  => generate url
 

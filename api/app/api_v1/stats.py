@@ -21,7 +21,7 @@ from app.models import generalData
 from app.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator
 import app
 
-print dir(app)
+
 import json
 
 

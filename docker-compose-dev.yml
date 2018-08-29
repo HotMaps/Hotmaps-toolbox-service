@@ -24,21 +24,6 @@ services:
       - redis
     networks:
       - cm-net
-    volumes:
-         - /var/tmp:/var/tmp
-  worker:
-    build:
-      context: ./api
-      dockerfile: dockerfiles/Dockerfile_celery_queue
-    links:
-      - rabbit
-    depends_on:
-      - rabbit
-      - redis
-    volumes:
-          - /var/tmp:/var/tmp
-    networks:
-      - cm-net
   monitor:
     build:
       context: ./api

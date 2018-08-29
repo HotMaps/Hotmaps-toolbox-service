@@ -2,7 +2,7 @@ import datetime, logging
 from app import constants
 from app import dbGIS as db
 
-import generalData
+from . import generalData
 
 #logging.basicConfig()
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)

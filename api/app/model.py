@@ -15,7 +15,7 @@ import sqlalchemy.pool as pool
 import sqlite3
 import uuid
 from app import celery
-from constants import CM_DB_NAME
+from app.constants import CM_DB_NAME
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 db_path = os.path.join(basedir, '../data.sqlite')
@@ -58,7 +58,6 @@ def init_sqlite_caculation_module_database(dbname=DB_NAME):
     return conn
 
 def register_calulation_module(data):
-    print 'register_calulation_module'
     if data is not None:
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
@@ -95,19 +94,16 @@ def register_calulation_module(data):
             conn.close()
 
         except ValidationError:
-            print 'error'
+            pass
         except sqlite3.IntegrityError as e:
-            print e
             update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,inputs_calculation_module,cursor,conn)
 
 
 def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,inputs_calculation_module,cursor,conn):
-    print 'update_calulation_module'
     try:
 
         ln = str(layers_needed)
         cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt,cm_id ))
-        print 'results= ', cursor.fetchone()
         conn.commit()
         cursor.execute("DELETE FROM inputs_calculation_module WHERE cm_id = ? ", (str(cm_id)))
         conn.commit()
@@ -125,9 +121,10 @@ def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, l
         conn.close()
 
     except ValidationError:
-        print 'error'
+        pass
     except sqlite3.IntegrityError as e:
-        print e
+        print (e)
+
 
 
 
@@ -143,9 +140,9 @@ def getCMUrl(cm_id):
         return cm_url
 
     except ValidationError:
-        print 'error'
+        print ('error')
     except sqlite3.IntegrityError as e:
-        print e
+        print (e)
 
 def getLayerNeeded(cm_id):
     try:
@@ -159,9 +156,9 @@ def getLayerNeeded(cm_id):
         return cm_url
 
     except ValidationError:
-        print 'error'
+        print ('error')
     except sqlite3.IntegrityError as e:
-        print e
+        print (e)
 
 def getUI(cm_id):
     try:
@@ -172,7 +169,6 @@ def getUI(cm_id):
                                 (cm_id))
         response = []
         for row in results:
-            print row
             response.append({'input_id':row[0],
              'input_name':row[1],
              'input_type':row[2],
@@ -190,12 +186,11 @@ def getUI(cm_id):
         return response
 
     except ValidationError:
-        print 'error'
+        print ('error')
     except sqlite3.IntegrityError as e:
-        print e
+        print (e)
 
 def delete_cm(cm_id):
-    print cm_id
     delete_cm_with_id(cm_id)
     delete_cm_ui_with_id(cm_id)
 
@@ -206,15 +201,14 @@ def delete_cm_ui_with_id(cm_id):
 
         results = cursor.execute('DELETE FROM inputs_calculation_module WHERE cm_id = ?',
                                  (cm_id))
-        print results
         conn.commit()
         conn.close()
         return results
 
     except ValidationError:
-        print 'error'
+        print ('error')
     except sqlite3.IntegrityError as e:
-        print e
+        print (e)
 
 def delete_cm_with_id(cm_id):
     try:
@@ -223,15 +217,14 @@ def delete_cm_with_id(cm_id):
 
         results = cursor.execute('DELETE FROM calculation_module WHERE cm_id = ?',
                                  (cm_id))
-        print results
         conn.commit()
         conn.close()
         return results
 
     except ValidationError:
-        print 'error'
+        print ('error')
     except sqlite3.IntegrityError as e:
-        print e
+        print (e)
 def getCMList():
     try:
         conn = sqlite3.connect(DB_NAME)
@@ -255,22 +248,21 @@ def getCMList():
         return response
 
     except ValidationError:
-        print 'error'
+        print ('error')
     except sqlite3.IntegrityError as e:
-        print e
+        print (e)
 class RasterManager:
 
     @staticmethod
     @celery.task(name = 'task-getRasterID')
     def getRasterID(rasterTable, geom,directory):
-        print geom
+
         sql_query = "SET postgis.gdal_enabled_drivers = 'ENABLE_ALL'; SELECT oid, lowrite(lo_open(oid, 131072), tiff) As num_bytes " \
                     "FROM ( VALUES (lo_create(0)," \
                     "ST_Astiff((" \
                     "Select ST_UNION(ST_Clip("+rasterTable+".rast, "+ geom +"))" \
               " from geo."+rasterTable+" where ST_Intersects("+ geom +","+rasterTable+".rast)) ) " \
                 ")) As v(oid,tiff) ;"
-        print sql_query
 
 
         mypool = pool.QueuePool(getConnection_db_gis, max_overflow=10, pool_size=5)

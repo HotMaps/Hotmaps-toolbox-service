@@ -1,5 +1,5 @@
 import os
-from flask_cors import CORS
+
 from app import create_app, log
 
 application = create_app(os.environ.get('FLASK_CONFIG', 'development'))

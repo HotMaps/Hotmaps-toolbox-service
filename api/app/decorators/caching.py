@@ -50,7 +50,7 @@ def etag(f):
 
         # compute the etag for this request as the MD5 hash of the response
         # text and set it in the response header
-        print 'rv.get_data', rv.get_data
+
         etag = '"' + hashlib.md5(rv.get_data()).hexdigest() + '"'
         rv.headers['ETag'] = etag
 
