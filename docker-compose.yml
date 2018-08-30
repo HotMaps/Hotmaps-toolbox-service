@@ -50,12 +50,12 @@ services:
     environment:
       NGINX_PROXY_CONTAINER: nginx-proxy
       NGINX_DOCKER_GEN_CONTAINER: nginx-proxy-gen
-        volumes:
-        - conf:/etc/nginx/conf.d
-        - vhost:/etc/nginx/vhost.d
-        - html:/usr/share/nginx/html
-        - certs:/etc/nginx/certs
-        - /var/run/docker.sock:/var/run/docker.sock:ro
+    volumes:
+    - conf:/etc/nginx/conf.d
+    - vhost:/etc/nginx/vhost.d
+    - html:/usr/share/nginx/html
+    - certs:/etc/nginx/certs
+    - /var/run/docker.sock:/var/run/docker.sock:ro
   frontend:
     image: toolbox-client-tmp
     expose:
