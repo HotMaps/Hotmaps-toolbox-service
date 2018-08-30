@@ -110,8 +110,8 @@ services:
     networks:
     - nginx
     - backend
-    ports:
-    - "80:5000"
+    expose:
+    - 80
     restart: always
     environment:
     - VIRTUAL_HOST=api.hotmapsdev.hevs.ch

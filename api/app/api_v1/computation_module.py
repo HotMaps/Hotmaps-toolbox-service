@@ -163,16 +163,12 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
     :return:
 
     """
-
     layer_needed = ast.literal_eval(layerneed)
 
 
     for layer in layer_needed:
         print(layer)
 
-
-    print ("layerneed ",layer_needed)
-    print ("layerneed ",type(layer_needed))
     #2. get parameters for clipping raster
     areas = payload['areas']
     if areas is not None:
