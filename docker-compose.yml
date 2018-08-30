@@ -57,7 +57,9 @@ services:
     - certs:/etc/nginx/certs
     - /var/run/docker.sock:/var/run/docker.sock:ro
   frontend:
-    image: toolbox-client-tmp
+    build:
+      context: ./toolbox-client/
+      dockerfile: Dockerfile
     expose:
     - 80
     restart: always
