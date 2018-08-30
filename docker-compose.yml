@@ -159,7 +159,7 @@ services:
     - rabbit
     networks:
     - cm-net
-  district_heating_potential':
+  district_heating_potential:
     build:
       context: ./calculation_module/dh_potential/cm
       dockerfile: Dockerfile
