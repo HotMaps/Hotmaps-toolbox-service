@@ -36,6 +36,10 @@ import stat
 #TODO Add url to find  right computation module
 UPLOAD_DIRECTORY = '/var/tmp'
 
+com_string = "chmod +x app/models/gdal2tiles.py"
+#com_string = "python app/api_v1/gdal2tiles-multiprocess.py -l -p mercator -z 1-15 -w none  {} {}".format(file_path,tile_path)
+os.system(com_string)
+
 if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
     os.chmod(UPLOAD_DIRECTORY, 0o644)
