@@ -132,6 +132,8 @@ services:
     networks:
     - cm-net
     - nginx
+    volumes:
+    - /var/tmp:/var/tmp
 
   monitor:
     build:
@@ -161,6 +163,8 @@ services:
     - rabbit
     networks:
     - cm-net
+    volumes:
+    - /var/tmp:/var/tmp
   district_heating_potential:
     build:
       context: ./calculation_module/dh_potential/cm
@@ -172,6 +176,8 @@ services:
     - rabbit
     networks:
     - cm-net
+    volumes:
+    - /var/tmp:/var/tmp
 #  to define a custem name for network, the version 3.5 of docker-compose is required(docker version 17.12.0+)
 volumes:
   conf:

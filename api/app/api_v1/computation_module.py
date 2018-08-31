@@ -215,10 +215,10 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
     response = calculation_module_rpc.call(cm_id,data)
     data_output = json.loads(response)
 
-    tiff_url = data_output["tiff_url"]
+    cm_computed_raster_filename = data_output["filename"]
 
 
-    url_download_raster, file_path_input, directory_for_tiles = generateTiles(filename,tiff_url,base_url)
+    url_download_raster, file_path_input, directory_for_tiles = generateTiles(filename,cm_computed_raster_filename,base_url)
 
     data_output['tile_directory'] =  directory_for_tiles
     ## use in the external of the network
@@ -226,8 +226,8 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
     data_output['filename'] = filename
     return data_output
 
-def generateTiles(filename,tiff_url,base_url):
-    file_path_input = savefile(filename,tiff_url)
+def generateTiles(filename,cm_computed_raster_filename,base_url):
+    file_path_input = UPLOAD_DIRECTORY+'/'+cm_computed_raster_filename
     directory_for_tiles = filename.replace('.tif', '')
     intermediate_raster = helper.generate_geotif_name(UPLOAD_DIRECTORY)
     tile_path = UPLOAD_DIRECTORY+'/' + directory_for_tiles

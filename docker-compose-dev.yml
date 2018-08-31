@@ -24,6 +24,8 @@ services:
       - redis
     networks:
       - cm-net
+    volumes:
+    - /var/tmp:/var/tmp
   monitor:
     build:
       context: ./api
