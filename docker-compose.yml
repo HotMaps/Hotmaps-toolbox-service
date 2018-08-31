@@ -155,8 +155,8 @@ services:
       context: ./calculation_module/base_calculation_module/cm
       dockerfile: Dockerfile
     restart: always
-    ports:
-    - "5001:5001"
+    expose:
+    - 5001
     external_links:
     - rabbit
     networks:
@@ -166,8 +166,8 @@ services:
       context: ./calculation_module/dh_potential/cm
       dockerfile: Dockerfile
     restart: always
-    ports:
-    - "5002:5002"
+    expose:
+    - 5002
     external_links:
     - rabbit
     networks:
