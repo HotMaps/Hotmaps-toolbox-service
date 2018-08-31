@@ -14,7 +14,7 @@ TIMEOUT_DELETE_CM= 15
 RPC_CM_ALIVE= 'rpc_queue_CM_ALIVE'
 PORT = '5000'
 CM_REGISTER_Q = 'rpc_queue_CM_register'
-PORT = 5000
+PORT = 80
 CM_DB_NAME = "calculation_module.db"
 # Flask-Restplus settings
 RESTPLUS_SWAGGER_UI_DOC_EXPANSION = 'list'
