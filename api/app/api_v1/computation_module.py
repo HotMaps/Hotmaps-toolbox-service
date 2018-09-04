@@ -167,11 +167,15 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
     :return:
 
     """
+    inputs_raster_selection = {}
+    #transforme stringify array to json
     layer_needed = ast.literal_eval(layerneed)
 
 
     for layer in layer_needed:
+        inputs_raster_selection[layer] = "empty"
         print(layer)
+    print ("inputs_raster_selection ", inputs_raster_selection)
 
     #2. get parameters for clipping raster
     areas = payload['areas']
@@ -201,7 +205,7 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
     #for test
     #filename = str(uuid.uuid4()) + '.tif'
 
-
+    # all fresh new layes are stored in /var/hotmaps/repositories
     filename = RasterManager.getRasterID('heat_tot_curr_density',transformGeo(geom),UPLOAD_DIRECTORY)
     #savefile(filename,"http://geoserver.hotmaps.hevs.ch/geoserver/hotmaps/wcs?SERVICE=WCS&VERSION=1.0.0 &REQUEST=GetCoverage&COVERAGE=hotmaps:heat_tot_curr_density_tif&CRS=EPSG:4326&RESPONSE_CRS=EPSG:3035&BBOX= http://geoserver.hotmaps.hevs.ch/geoserver/hotmaps/wcs?SERVICE=WCS&VERSION=1.0.0 &REQUEST=GetCoverage&COVERAGE=hotmaps:heat_tot_curr_density_tif&CRS=EPSG:4326&RESPONSE_CRS=EPSG:3035&BBOX=0.6365421639742981,47.50190979433006,0.6378718985257021,47.50280810960713&WIDTH=500&HEIGHT=500&FORMAT=GeoTIFF&WIDTH=500&HEIGHT=500&FORMAT=GeoTIFF")
     # 1.2.1  url for downloading raster
