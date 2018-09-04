@@ -26,6 +26,8 @@ services:
       - cm-net
     volumes:
     - /var/tmp:/var/tmp
+    - /var/hotmaps/repositories:/var/hotmaps/repositories
+
   monitor:
     build:
       context: ./api

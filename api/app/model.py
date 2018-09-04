@@ -16,6 +16,8 @@ import sqlite3
 import uuid
 from app import celery
 from app.constants import CM_DB_NAME
+from app import helper
+from app import constants
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 db_path = os.path.join(basedir, '../data.sqlite')
@@ -297,5 +299,66 @@ def getConnection_db_gis():
 
     c = psycopg2.connect(conn_string)
     return c
+
+
+def get_shapefile_from_selection(nuts,ouput_directory):
+    print ('nuts selected before', nuts)
+    nuts = adapt_nuts_list(nuts)
+    print ('nuts selected after', nuts)
+    output_shapefile = helper.generate_shapefile_name(ouput_directory)
+    com_string = "ogr2ogr -overwrite -f 'ESRI Shapefile' {} PG:"+getConnection_db_gis()+"-sql 'select ST_Transform(geom,3035) from geo.nuts where nuts_id IN ("+nuts+") AND year = date('2013-01-01')'".format(output_shapefile,nuts)
+    os.system(com_string)
+    return output_shapefile
+
+
+def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed, output_directory):
+    inputs_raster_selection = {}
+    # retrieve all layer neeeded
+    for layer in layer_needed:
+        path_to_dataset = datasets_directory + layer + "/data/" + layer + ".tif"
+        # create a file name as output
+        filename_tif = helper.generate_geotif_name(output_directory)
+        com_string = "gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE  {}".format(shapefile_path,path_to_dataset,filename_tif)
+        os.system(com_string)
+        inputs_raster_selection[layer] = filename_tif
+    return inputs_raster_selection
+
+def clip_raster_from_database( geom,layer_needed,output_directory):
+    inputs_raster_selection = {}
+    # retrieve all layer neeeded
+    for layer in layer_needed:
+        # create a file name as output
+        filename_tif = retrieve_raster_clipped_in_database(layer,geom,output_directory)
+        inputs_raster_selection[layer] = filename_tif
+    return inputs_raster_selection
+def transformGeo(geometry):
+    return 'st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(constants.CRS) + ')'
+
+def retrieve_raster_clipped_in_database(rasterTable, geom,directory):
+
+    geom = transformGeo(geom)
+
+    sql_query = "SET postgis.gdal_enabled_drivers = 'ENABLE_ALL'; SELECT oid, lowrite(lo_open(oid, 131072), tiff) As num_bytes " \
+                "FROM ( VALUES (lo_create(0)," \
+                "ST_Astiff((" \
+                "Select ST_UNION(ST_Clip("+rasterTable+".rast, "+ geom +"))" \
+                                                                        " from geo."+rasterTable+" where ST_Intersects("+ geom +","+rasterTable+".rast)) ) " \
+                                                                                                                                                ")) As v(oid,tiff) ;"
+    mypool = pool.QueuePool(getConnection_db_gis, max_overflow=10, pool_size=5)
+    # get a connection
+    conn = mypool.connect()
+    # use it
+    cursor = conn.cursor()
+    cursor.execute(sql_query)
+    result = cursor.fetchone()
+    iod = result[0]
+    lo = conn.lobject(iod)
+    filename = str(uuid.uuid4()) + '.tif'
+    #save the raster in the working directory and retrieve filename
+    lo.export(directory+'/'+filename)
+    # "close" the connection.  Returns
+    # it to the pool.
+    conn.close()
+    return filename
 
 

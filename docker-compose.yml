@@ -134,6 +134,7 @@ services:
     - nginx
     volumes:
     - /var/tmp:/var/tmp
+    - /var/hotmaps/repositories:/var/hotmaps/repositories
 
   monitor:
     build:

@@ -1,6 +1,6 @@
 import json
 import uuid
-
+import shapely.geometry as shapely_geom
 
 def find_key_in_dict(key, dictionary):
     for k, v in dictionary.items():
@@ -68,7 +68,42 @@ def getGenerationMixColor(value):
     raise Exception(msg)
 
 def generate_geotif_name(directory):
-    filename = directory+'/' + str(uuid.uuid4()) + '.tif'
+    filename = generate_file(directory, '.tif')
     return filename
+
+def generate_shapefile_name(directory):
+    filename = generate_file(directory, '.shp')
+    return filename
+def generate_file(directory,extension):
+    filename = directory+'/' + str(uuid.uuid4()) + extension
+    return filename
+
 def generate_directory_name():
     return str(uuid.uuid4())
+
+def area_to_geom(areas):
+    polyArray = []
+    # convert to polygon format for each polygon and store them in polyArray
+    for polygon in areas:
+        po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
+        polyArray.append(po)
+    # convert array of polygon into multipolygon
+    multipolygon = shapely_geom.MultiPolygon(polyArray)
+    #geom = "SRID=4326;{}".format(multipolygon.wkt)
+
+    geom = multipolygon.wkt
+    return geom
+
+def adapt_nuts_list(nuts):
+    # Store nuts in new custom list
+    nutsPayload = []
+    for n in nuts:
+        if n not in nutsPayload:
+            nutsPayload.append(str(n))
+
+    # Adapt format of list for the query
+    nutsListQuery = str(nutsPayload)
+    nutsListQuery = nutsListQuery[1:] # Remove the left hook
+    nutsListQuery = nutsListQuery[:-1] # Remove the right hook
+
+    return nutsListQuery

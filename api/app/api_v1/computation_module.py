@@ -9,6 +9,7 @@ from app.decorators.exceptions import ValidationError
 from app.model import register_calulation_module,getCMUrl, RasterManager,getUI,getCMList,getLayerNeeded
 from werkzeug.utils import secure_filename
 from app import constants
+from app import model
 nsCM = api.namespace('cm', description='Operations related to statistisdscs')
 
 ns = nsCM
@@ -20,7 +21,7 @@ import ast
 import os
 import json
 from flask import send_from_directory
-import shapely.geometry as shapely_geom
+
 import socket
 from app import CalculationModuleRpcClient
 from app import helper
@@ -35,6 +36,7 @@ from os import environ
 import stat
 #TODO Add url to find  right computation module
 UPLOAD_DIRECTORY = '/var/tmp'
+DATASET_DIRECTORY = '/var/hotmaps/repositories'
 
 com_string = "chmod +x app/models/gdal2tiles.py"
 #com_string = "python app/api_v1/gdal2tiles-multiprocess.py -l -p mercator -z 1-15 -w none  {} {}".format(file_path,tile_path)
@@ -43,6 +45,10 @@ os.system(com_string)
 if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
     os.chmod(UPLOAD_DIRECTORY, 0o644)
+
+if not os.path.exists(DATASET_DIRECTORY):
+    os.makedirs(DATASET_DIRECTORY)
+    os.chmod(DATASET_DIRECTORY, 0o644)
 
 
 
@@ -146,8 +152,7 @@ def celery_get_CM_url(cm_id):
 
     #return {}, 201, {'Location': cm.get_url()}
 
-def transformGeo(geometry):
-   return 'st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(constants.CRS) + ')'
+
 
 def savefile(filename,url):
     r = requests.get(url, stream=True)
@@ -167,71 +172,38 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
     :return:
 
     """
-    inputs_raster_selection = {}
+    inputs_raster_selection = None
     #transforme stringify array to json
     layer_needed = ast.literal_eval(layerneed)
-
-
-    for layer in layer_needed:
-        inputs_raster_selection[layer] = "empty"
-        print(layer)
-    print ("inputs_raster_selection ", inputs_raster_selection)
 
     #2. get parameters for clipping raster
     areas = payload['areas']
     if areas is not None:
+       geom =  helper.area_to_geom(areas)
+       inputs_raster_selection = model.clip_raster_from_database(geom,layer_needed,UPLOAD_DIRECTORY)
+
         # we will be working on hectare level
-        pass
+
     else:
         nuts = api.payload['nuts']
+        shapefile_path = model.get_shapefile_from_selection(nuts,UPLOAD_DIRECTORY)
+        inputs_raster_selection = model.clip_raster_from_shapefile(DATASET_DIRECTORY ,shapefile_path,layer_needed, UPLOAD_DIRECTORY)
         # we will be working on a nuts
-        pass
-    #TODO add this part in an helper
-    polyArray = []
-    # convert to polygon format for each polygon and store them in polyArray
-    for polygon in areas:
-        po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
-        polyArray.append(po)
-    # convert array of polygon into multipolygon
-    multipolygon = shapely_geom.MultiPolygon(polyArray)
-    #geom = "SRID=4326;{}".format(multipolygon.wkt)
 
-    geom = multipolygon.wkt
+    data = generate_payload_for_compute(data,inputs_raster_selection)
 
-
-
-    # Clip the raster from the database
-    #filename = RasterManager.getRasterID(layersPayload[0],transformGeo(geom),UPLOAD_DIRECTORY)
-    #for test
-    #filename = str(uuid.uuid4()) + '.tif'
-
-    # all fresh new layes are stored in /var/hotmaps/repositories
-    filename = RasterManager.getRasterID('heat_tot_curr_density',transformGeo(geom),UPLOAD_DIRECTORY)
-    #savefile(filename,"http://geoserver.hotmaps.hevs.ch/geoserver/hotmaps/wcs?SERVICE=WCS&VERSION=1.0.0 &REQUEST=GetCoverage&COVERAGE=hotmaps:heat_tot_curr_density_tif&CRS=EPSG:4326&RESPONSE_CRS=EPSG:3035&BBOX= http://geoserver.hotmaps.hevs.ch/geoserver/hotmaps/wcs?SERVICE=WCS&VERSION=1.0.0 &REQUEST=GetCoverage&COVERAGE=hotmaps:heat_tot_curr_density_tif&CRS=EPSG:4326&RESPONSE_CRS=EPSG:3035&BBOX=0.6365421639742981,47.50190979433006,0.6378718985257021,47.50280810960713&WIDTH=500&HEIGHT=500&FORMAT=GeoTIFF&WIDTH=500&HEIGHT=500&FORMAT=GeoTIFF")
-    # 1.2.1  url for downloading raster
-    url_download_raster = base_url + filename
-    # 1.2 build the parameters for the url
-
-    # 2. if this is a raster clip of the raster or provide vector needed => generate link
-    data = generate_payload_for_compute(data,url_download_raster,filename)
-    #res = requests.post(URL_CM + 'computation-module/compute/', data = api.payload)
-    #print current_app.name
-
-    #app.app_context().push()
-    # send the result
+    # send the result to the right CM
     calculation_module_rpc = CalculationModuleRpcClient()
     response = calculation_module_rpc.call(cm_id,data)
     data_output = json.loads(response)
 
     cm_computed_raster_filename = data_output["filename"]
-
-
-    url_download_raster, file_path_input, directory_for_tiles = generateTiles(filename,cm_computed_raster_filename,base_url)
-
+    tile_directory_name = model.generate_directory_name()
+    url_download_raster, file_path_input, directory_for_tiles = generateTiles(tile_directory_name,cm_computed_raster_filename,base_url)
     data_output['tile_directory'] =  directory_for_tiles
     ## use in the external of the network
     #data_output['tile_directory'] = 'http://api.hotmapsdev.hevs.ch/api/cm/tiles/' + directory_for_tiles
-    data_output['filename'] = filename
+
     return data_output
 
 def generateTiles(filename,cm_computed_raster_filename,base_url):
@@ -258,7 +230,7 @@ def generateTiles(filename,cm_computed_raster_filename,base_url):
     return url_download_raster, file_path_input, directory_for_tiles
 
 
-def generate_payload_for_compute(data,urls,filename):
+def generate_payload_for_compute(data,inputs_raster_selection):
     inputs = data["inputs"]
     data_output = {}
     for parameters in inputs:
@@ -266,8 +238,8 @@ def generate_payload_for_compute(data,urls,filename):
             parameters['input_parameter_name']: parameters['input_value']
         })
     data_output.update({
-       'url_file': urls,
-       'filename':filename
+
+       'inputs_raster_selection':inputs_raster_selection
     })
     data = json.dumps(data_output)
     return data
