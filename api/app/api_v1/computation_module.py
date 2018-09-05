@@ -36,10 +36,10 @@ from os import environ
 import stat
 #TODO Add url to find  right computation module
 UPLOAD_DIRECTORY = '/var/tmp'
-DATASET_DIRECTORY = '/var/hotmaps/repositories'
+DATASET_DIRECTORY = '/var/hotmaps/repositories/'
 
 com_string = "chmod +x app/models/gdal2tiles.py"
-#com_string = "python app/api_v1/gdal2tiles-multiprocess.py -l -p mercator -z 1-15 -w none  {} {}".format(file_path,tile_path)
+
 os.system(com_string)
 
 if not os.path.exists(UPLOAD_DIRECTORY):
@@ -48,7 +48,7 @@ if not os.path.exists(UPLOAD_DIRECTORY):
 
 if not os.path.exists(DATASET_DIRECTORY):
     os.makedirs(DATASET_DIRECTORY)
-    os.chmod(DATASET_DIRECTORY, 0o644)
+    os.chmod(DATASET_DIRECTORY, 0o777)
 
 
 
@@ -174,18 +174,29 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
     """
     inputs_raster_selection = None
     #transforme stringify array to json
+
     layer_needed = ast.literal_eval(layerneed)
 
-    #2. get parameters for clipping raster
-    areas = payload['areas']
-    if areas is not None:
-       geom =  helper.area_to_geom(areas)
-       inputs_raster_selection = model.clip_raster_from_database(geom,layer_needed,UPLOAD_DIRECTORY)
+    # retriving scale level 3 possiblity hectare,nuts, lau
+
+    scalevalue = data['scalevalue']
+
+    if scalevalue == 'hectare':
+        areas = payload['areas']
+        geom =  helper.area_to_geom(areas)
+        inputs_raster_selection = model.clip_raster_from_database(geom,layer_needed,UPLOAD_DIRECTORY)
 
         # we will be working on hectare level
 
-    else:
-        nuts = api.payload['nuts']
+    elif scalevalue == 'nuts':
+        print ('nuts' , payload)
+        nuts = payload['nuts']
+        print ('nuts ',nuts)
+        shapefile_path = model.get_shapefile_from_selection(nuts,UPLOAD_DIRECTORY)
+        print ('shapefile_path ',shapefile_path)
+        inputs_raster_selection = model.clip_raster_from_shapefile(DATASET_DIRECTORY ,shapefile_path,layer_needed, UPLOAD_DIRECTORY)
+    elif scalevalue == 'lau':
+        nuts = payload['nuts']
         shapefile_path = model.get_shapefile_from_selection(nuts,UPLOAD_DIRECTORY)
         inputs_raster_selection = model.clip_raster_from_shapefile(DATASET_DIRECTORY ,shapefile_path,layer_needed, UPLOAD_DIRECTORY)
         # we will be working on a nuts
@@ -198,7 +209,7 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
     data_output = json.loads(response)
 
     cm_computed_raster_filename = data_output["filename"]
-    tile_directory_name = model.generate_directory_name()
+    tile_directory_name = helper.generate_directory_name()
     url_download_raster, file_path_input, directory_for_tiles = generateTiles(tile_directory_name,cm_computed_raster_filename,base_url)
     data_output['tile_directory'] =  directory_for_tiles
     ## use in the external of the network
@@ -221,7 +232,7 @@ def generateTiles(filename,cm_computed_raster_filename,base_url):
         print ("Successfully created the directory %s" % tile_path)
 
 
-    com_string = "gdal_translate -of GTiff -expand rgba {} {} && app/models/gdal2tiles.py --profile=mercator -z 0-13   {} {}".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
+    com_string = "gdal_translate -of GTiff -expand rgba {} {} && app/models/gdal2tiles.py --profile=mercator -z 0-13  {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
     #com_string = "python app/api_v1/gdal2tiles-multiprocess.py -l -p mercator -z 1-15 -w none  {} {}".format(file_path,tile_path)
     os.system(com_string)
 
@@ -241,6 +252,7 @@ def generate_payload_for_compute(data,inputs_raster_selection):
 
        'inputs_raster_selection':inputs_raster_selection
     })
+    print ('data_output',data_output)
     data = json.dumps(data_output)
     return data
 
@@ -256,10 +268,12 @@ class ComputationModuleClass(Resource):
          """
         app = current_app._get_current_object()
         data = request.get_json()
-        payload = api.payload
+        payload = api.payload['payload']
         ip = socket.gethostbyname(socket.gethostname())
         base_url = 'http://'+ str(ip) +':'+str(constants.PORT)+'/api/cm/files/'
         cm_id = data["cm_id"]
+        print ('payload',payload)
+        print ('payload',payload)
          # 1. find the good computation module with the right url in the database from cm db  => generate url
 
 

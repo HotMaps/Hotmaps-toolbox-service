@@ -12,6 +12,7 @@ grassNonRes = constants.GRASS_FLOOR_AREA_NON_RES
 bVolTot = constants.BUILDING_VOLUMES_TOT
 bVolRes = constants.BUILDING_VOLUMES_RES
 bVolNonRes = constants.BUILDING_VOLUMES_NON_RES
+
 heatRes = constants.HEAT_DENSITY_RES
 heatNonRes = constants.HEAT_DENSITY_NON_RES
 indSites = constants.INDUSTRIAL_SITES
@@ -27,13 +28,13 @@ hdd = constants.HDD_CUR
 cdd = constants.CDD_CUR
 
 
-
+heatDe = 'heat_tot_curr_density_tif'
 
 
 
 # ALL DATA FOR THE STATS
 layersData = {
-	heatDe:{'tablename':'heat_tot_curr_density',
+	heatDe:{'tablename':heatDe,
 			'from':'stat_heat',
 			'select':'stat_heat.sum as heat_consumption, (stat_heat.sum/stat_heat.count) as heat_density, stat_heat.count as count_cell_heat ',
 			'resultsName':{
@@ -41,7 +42,7 @@ layersData = {
 			'resultsUnit':{
 				0:'MWh', 1:'MWh/ha', 2:'cells'}
 			},
-	popDe:{'tablename':'pop_tot_curr_density',
+	popDe:{'tablename':popDe,
 			'from':'stat_pop',
 			'select':'stat_pop.sum as population, (stat_pop.sum/stat_pop.count) as population_density, stat_pop.count as count_cell_pop ',
 			'resultsName':{
@@ -301,11 +302,11 @@ def createQueryDataLPHectares(year, month, day, geometry):
 						"nuts.gid " +\
 						"FROM geo.nuts " +\
 						"where ST_Intersects(nuts.geom,ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258)) " + \
-						"AND STAT_LEVL_=2 AND year = to_date('" + str(year) + "','YYYY')), " +\
-					"statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density.rast,1, " +\
+						"AND STAT_LEVL_=2), " +\
+					"statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density_tif.rast,1, " +\
 						"ST_Transform(subAreas.soustracteGeom,3035),0,true),1,true)).* as stat, subAreas.gid " +\
-						"FROM subAreas, geo.heat_tot_curr_density " +\
-						"WHERE ST_Intersects(heat_tot_curr_density.rast,ST_Transform(subAreas.soustracteGeom,3035)) group by subAreas.gid), " +\
+						"FROM subAreas, geo.heat_tot_curr_density_tif " +\
+						"WHERE ST_Intersects(heat_tot_curr_density_tif.rast,ST_Transform(subAreas.soustracteGeom,3035)) group by subAreas.gid), " +\
 					"statLoadProfilBySubarea as (select stat.load_profile.nuts_id as load_profile_nutsid, stat.load_profile.value as val_load_profile, " +\
 						"stat.time.month as month_of_year, " +\
 						"stat.time.hour_of_year as hour_of_year, " +\
@@ -355,14 +356,14 @@ def createQueryDataLPHectares(year, month, day, geometry):
 # ALL QUERIES DATA FOR THE HEAT LOAD PROFILE BY NUTS 
 def createQueryDataLPNutsLau(year, month, day, nuts):
 
-	withPart = "WITH nutsSelection as (select nuts_id FROM stat.heat_tot_curr_density_nuts_test WHERE nuts_id IN ("+nuts+")), " +\
+	withPart = "WITH nutsSelection as (select nuts_id FROM stat.heat_tot_curr_density_tif_nuts WHERE nuts_id IN ("+nuts+")), " +\
 					"loadprofile as (SELECT sum(stat.load_profile.value) as valtot, stat.load_profile.nuts_id from stat.load_profile " +\
 						"INNER JOIN nutsSelection on stat.load_profile.nuts_id = nutsSelection.nuts_id " +\
 						"where stat.load_profile.nuts_id = nutsSelection.nuts_id " +\
 						"group by  nutsSelection.nuts_id, stat.load_profile.nuts_id), " +\
-					"heatdemand as (SELECT sum as HDtotal, stat.heat_tot_curr_density_nuts_test.nuts_id from stat.heat_tot_curr_density_nuts_test " +\
-						"INNER JOIN nutsSelection on stat.heat_tot_curr_density_nuts_test.nuts_id = nutsSelection.nuts_id " +\
-						"where stat.heat_tot_curr_density_nuts_test.nuts_id = nutsSelection.nuts_id), " +\
+					"heatdemand as (SELECT sum as HDtotal, stat.heat_tot_curr_density_tif_nuts.nuts_id from stat.heat_tot_curr_density_tif_nuts " +\
+						"INNER JOIN nutsSelection on stat.heat_tot_curr_density_tif_nuts.nuts_id = nutsSelection.nuts_id " +\
+						"where stat.heat_tot_curr_density_tif_nuts.nuts_id = nutsSelection.nuts_id), " +\
 					"normalizedData as (SELECT avg(stat.load_profile.value/valtot*HDtotal) AS avg_1, min(stat.load_profile.value/valtot*HDtotal) AS min_1, " +\
 						"max(stat.load_profile.value/valtot*HDtotal) AS max_1, sum(stat.load_profile.value/valtot*HDtotal) as sum_1, " +\
 						"stat.time.month AS statmonth, stat.time.year AS statyear "
@@ -399,19 +400,21 @@ def createQueryDataLPNutsLau(year, month, day, nuts):
 	# Dictionary with query data
 	queryData = {'byYear':{'with':withPart, 'time':'', 'from':fromPart, 'select':selectYear},
 						'byMonth':{'with':withPart, 'time':timeMonth, 'from':fromPart, 'select':selectMonth},
-						'byDay':{'with':withPart, 'time':timeDay, 'from':fromPart, 'select':selectDay}}					
+						'byDay':{'with':withPart, 'time':timeDay, 'from':fromPart, 'select':selectDay}}
+
+
 
 	return queryData
 
 # ALL QUERIES DATA FOR THE DURATION CURVE BY NUTS
 def createQueryDataDCNutsLau(year, nuts):
-	sql_query =	"WITH nutsSelection as (select nuts_id FROM stat.heat_tot_curr_density_nuts_test WHERE nuts_id IN ("+nuts+")), " +\
+	sql_query =	"WITH nutsSelection as (select nuts_id FROM stat.heat_tot_curr_density_tif_nuts WHERE nuts_id IN ("+nuts+")), " +\
 						"loadprofile as (SELECT sum(stat.load_profile.value) as valtot, stat.load_profile.nuts_id from stat.load_profile " +\
 							"INNER JOIN nutsSelection on stat.load_profile.nuts_id = nutsSelection.nuts_id " +\
 							"where stat.load_profile.nuts_id = nutsSelection.nuts_id group by nutsSelection.nuts_id, stat.load_profile.nuts_id), " +\
-						"heatdemand as (SELECT sum as HDtotal, stat.heat_tot_curr_density_nuts_test.nuts_id from stat.heat_tot_curr_density_nuts_test " +\
-							"INNER JOIN nutsSelection on stat.heat_tot_curr_density_nuts_test.nuts_id = nutsSelection.nuts_id " +\
-							"where stat.heat_tot_curr_density_nuts_test.nuts_id = nutsSelection.nuts_id) " +\
+						"heatdemand as (SELECT sum as HDtotal, stat.heat_tot_curr_density_tif_nuts.nuts_id from stat.heat_tot_curr_density_tif_nuts " +\
+							"INNER JOIN nutsSelection on stat.heat_tot_curr_density_tif_nuts.nuts_id = nutsSelection.nuts_id " +\
+							"where stat.heat_tot_curr_density_tif_nuts.nuts_id = nutsSelection.nuts_id) " +\
 						"SELECT sum(stat.load_profile.value/valtot*HDtotal) as val, stat.time.hour_of_year as hoy from stat.load_profile " +\
 							"INNER JOIN nutsSelection on stat.load_profile.nuts_id = nutsSelection.nuts_id " +\
 							"INNER JOIN stat.time on stat.load_profile.fk_time_id = stat.time.id " +\
@@ -431,11 +434,11 @@ def createQueryDataDCHectares(year, geometry):
 							"nuts.gid " +\
 							"FROM geo.nuts " +\
 							"where ST_Intersects(nuts.geom,ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258)) " + \
-							"AND STAT_LEVL_=2 AND year = to_date('" + str(year) + "','YYYY')), " +\
-						"statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density.rast,1, " +\
+							"AND STAT_LEVL_=2 ), " +\
+						"statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density_tif.rast,1, " +\
 							"ST_Transform(subAreas.soustracteGeom,3035),0,true),1,true)).* as stat, subAreas.gid " +\
-							"FROM subAreas, geo.heat_tot_curr_density " +\
-							"WHERE ST_Intersects(heat_tot_curr_density.rast,ST_Transform(subAreas.soustracteGeom,3035)) group by subAreas.gid), " +\
+							"FROM subAreas, geo.heat_tot_curr_density_tif " +\
+							"WHERE ST_Intersects(heat_tot_curr_density_tif.rast,ST_Transform(subAreas.soustracteGeom,3035)) group by subAreas.gid), " +\
 						"statLoadProfilBySubarea as (select stat.load_profile.nuts_id as load_profile_nutsid, stat.load_profile.value as val_load_profile, " +\
 							"stat.time.month as month_of_year, " +\
 							"stat.time.hour_of_year as hour_of_year, " +\
@@ -546,7 +549,7 @@ def constructWithPartEachLayerHectare(geometry, year, layer, fromPart):
 		'	public.'+ layersData[layer]['tablename'] +'' + \
 		' WHERE' + \
 		'	ST_Within(public.'+ layersData[layer]['tablename'] +'.geometry,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(constants.CRS) + ')) ' + \
-		'AND date = to_date(\''+ str(year) +'\',\'YYYY\')) '
+		') '
 	elif layer == indSitesEm:
 		w = ''+fromPart+' AS (SELECT ' + \
 		'		sum(emissions_ets_2014) as sum ' + \
@@ -588,7 +591,7 @@ def constructWithPartEachLayerHectare(geometry, year, layer, fromPart):
 		'	ST_Intersects('+ layersData[layer]['tablename'] + '.rast,' + \
 		'		st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(constants.CRS) + ')) '
 		if layer == popDe or layer == heatDe:
-			w += 'AND date = to_date(\''+ str(year) +'\',\'YYYY\')) '
+			w += ') '
 		else:
 			w += ') '
 
@@ -612,10 +615,10 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
 				"from nutsSelection_"+ layer +", public.wwtp_power " +\
 				"where st_within(public.wwtp_power.geometry, st_transform(nutsSelection_"+ layer +".geom,3035)))"
 	elif layer == heatDe or layer == popDe:
-		w = ""+fromPart+" as (SELECT sum(stat."+layersData[layer]['tablename']+"_"+type+"_test.sum) AS sum, " +\
-					"sum(stat."+ layersData[layer]['tablename'] +"_"+type+"_test.count) AS count " +\
-				"FROM stat."+layersData[layer]['tablename']+"_"+type+"_test " +\
-				"WHERE stat."+layersData[layer]['tablename']+"_"+type+"_test."+id_type+" IN ("+nuts+")) "
+		w = ""+fromPart+" as (SELECT sum(stat."+layersData[layer]['tablename']+"_"+type+".sum) AS sum, " +\
+					"sum(stat."+ layersData[layer]['tablename'] +"_"+type+".count) AS count " +\
+				"FROM stat."+layersData[layer]['tablename']+"_"+type+" " +\
+				"WHERE stat."+layersData[layer]['tablename']+"_"+type+"."+id_type+" IN ("+nuts+")) "
 	elif layer == indSitesEm:
 		w = "nutsSelection_indSitesEm as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), " +\
 				""+fromPart+" as (SELECT sum(emissions_ets_2014) as sum " +\
@@ -639,6 +642,7 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
 			"from  public."+ layersData[layer]['tablename'] +" " + \
 			"where public."+ layersData[layer]['tablename'] +".nuts_code  in ("+nuts+")) "
 	else:
+
 		w = ""+fromPart+" as (SELECT sum(stat."+layersData[layer]['tablename']+"_"+type+".sum) AS sum, " +\
 					"sum(stat."+ layersData[layer]['tablename'] +"_"+type+".count) AS count " +\
 				"FROM stat."+layersData[layer]['tablename']+"_"+type+" " +\

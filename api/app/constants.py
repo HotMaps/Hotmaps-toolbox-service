@@ -4,7 +4,7 @@ FLASK_SERVER_NAME = '0.0.0.0:5556'
 FLASK_DEBUG = False  # Do not use debug mode in production
 CELERY_BROKER_URL_DOCKER= 'amqp://admin:mypass@rabbit:5672/'
 CELERY_BROKER_URL_LOCAL  = 'amqp://localhost/'
-CELERY_BROKER_URL = CELERY_BROKER_URL_DOCKER
+CELERY_BROKER_URL = CELERY_BROKER_URL_LOCAL
 CELERY_ALWAYS_EAGER = False
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 RPC_Q = 'rpc_queue_CM_compute'
@@ -14,7 +14,7 @@ TIMEOUT_DELETE_CM= 15
 RPC_CM_ALIVE= 'rpc_queue_CM_ALIVE'
 PORT = '5000'
 CM_REGISTER_Q = 'rpc_queue_CM_register'
-PORT = 80
+PORT = 5000
 CM_DB_NAME = "calculation_module.db"
 # Flask-Restplus settings
 RESTPLUS_SWAGGER_UI_DOC_EXPANSION = 'list'
@@ -73,9 +73,9 @@ POINTS_FOURTH_GROUP_STEP = 39
 NUMBER_DECIMAL_DATA = 2
 
 # All repositories
-POPULATION_TOT = 'pop_tot_curr_density'
-HEAT_DENSITY_TOT = 'heat_tot_curr_density'
-HEAT_DENSITY_NON_RES = 'heat_nonres_curr_density'
+POPULATION_TOT = 'pop_tot_curr_density_tif'
+HEAT_DENSITY_TOT = 'heat_tot_curr_density_tif'
+HEAT_DENSITY_NON_RES = 'heat_nonres_curr_density_tif'
 HEAT_DENSITY_RES = 'heat_res_curr_density_tif'
 WWTP = 'wwtp'
 WWTP_CAPACITY = 'wwtp_capacity'

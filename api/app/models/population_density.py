@@ -67,7 +67,7 @@ class PopulationDensityLauModel(db.Model):
     Population Density layer as nuts
 """
 class PopulationDensityNutsModel(db.Model):
-    __tablename__ = 'pop_tot_curr_density_nuts_test'
+    __tablename__ = 'pop_tot_curr_density_tif_nuts'
     __table_args__ = (
         db.ForeignKeyConstraint(['nuts_id'], ['geo.nuts_rg_01m.nuts_id']),
         {"schema": 'stat'}

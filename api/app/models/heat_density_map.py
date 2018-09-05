@@ -42,7 +42,7 @@ class HeatDensityHaModel(db.Model):
 
 
 class HeatDensityLauModel(db.Model):
-    __tablename__ = 'heat_tot_curr_density_lau_test'
+    __tablename__ = 'heat_tot_curr_density_tif_lau'
     __table_args__ = (
         db.ForeignKeyConstraint(['fk_lau_gid'], ['public.lau.gid']),
         {"schema": 'stat'}
@@ -88,7 +88,7 @@ class HeatDensityNutsModel(db.Model):
             filter(NutsRG01M.stat_levl_ == nuts_level). \
             filter(func.ST_Within(NutsRG01M.geom,
                                   func.ST_Transform(func.ST_GeomFromEWKT(geometry), HeatDensityNuts.CRS))).first()"""
-    __tablename__ = 'heat_tot_curr_density_nuts_test'
+    __tablename__ = 'heat_tot_curr_density_tif_nuts'
     __table_args__ = (
         db.ForeignKeyConstraint(['nuts_id'], ['geo.nuts_rg_01m.nuts_id']),
         {"schema": 'stat'}

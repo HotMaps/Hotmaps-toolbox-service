@@ -285,28 +285,30 @@ class RasterManager:
         return filename
 @celery.task(name = 'task-getConnection_db_gis')
 def getConnection_db_gis():
+
+    c = psycopg2.connect(get_connection_string())
+    return c
+
+def get_connection_string():
     user = secrets.dev_user
     host = secrets.dev_host
     password = secrets.dev_password
     port = secrets.dev_port
     database = secrets.dev_database
+    con = "host=" + host + " user=" + user + " dbname=" + database + " port=" + port + " password=" + password + ""
 
-    conn_string= "host='" + host + "' " + \
-                 "port='" + port + "' " + \
-                 "dbname='" + database + "' " + \
-                 "user='" + user + "' " + \
-                 "password='" + password + "'"
 
-    c = psycopg2.connect(conn_string)
-    return c
 
+    return con
 
 def get_shapefile_from_selection(nuts,ouput_directory):
     print ('nuts selected before', nuts)
-    nuts = adapt_nuts_list(nuts)
+    nuts = helper.adapt_nuts_list(nuts)
     print ('nuts selected after', nuts)
     output_shapefile = helper.generate_shapefile_name(ouput_directory)
-    com_string = "ogr2ogr -overwrite -f 'ESRI Shapefile' {} PG:"+getConnection_db_gis()+"-sql 'select ST_Transform(geom,3035) from geo.nuts where nuts_id IN ("+nuts+") AND year = date('2013-01-01')'".format(output_shapefile,nuts)
+    con = "host=hotmapsdev.hevs.ch user=hotmaps dbname=toolboxdb port=32768 password=Dractwatha9"
+    com_string = 'ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,3035) from geo.nuts where nuts_id IN ('+ nuts +') AND year = date({})"'.format("'2013-01-01'")
+    print (com_string)
     os.system(com_string)
     return output_shapefile
 
@@ -317,9 +319,12 @@ def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed, 
     for layer in layer_needed:
         path_to_dataset = datasets_directory + layer + "/data/" + layer + ".tif"
         # create a file name as output
+        print ('path_to_dataset ',path_to_dataset)
         filename_tif = helper.generate_geotif_name(output_directory)
-        com_string = "gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE  {}".format(shapefile_path,path_to_dataset,filename_tif)
+        com_string = "gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(shapefile_path,path_to_dataset,filename_tif)
+
         os.system(com_string)
+        print ('com_string ',filename_tif)
         inputs_raster_selection[layer] = filename_tif
     return inputs_raster_selection
 

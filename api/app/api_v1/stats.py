@@ -42,6 +42,7 @@ class StatsLayersNutsInArea(Resource):
 		:return:
 		"""
 		# Entrees
+		print ('/layers/nuts-lau')
 		year = api.payload['year']
 		layersPayload = api.payload['layers']
 		nuts = api.payload['nuts']

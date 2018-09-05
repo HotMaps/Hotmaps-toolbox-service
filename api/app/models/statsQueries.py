@@ -16,6 +16,7 @@ class LayersNutsLau:
 	@staticmethod
 	def stats_nuts_lau(nuts, year, layers, type): #/stats/layers/nuts-lau
 
+
 		# Get the data
 		layersQueryData = generalData.createQueryDataStatsNutsLau(nuts=nuts, year=year, type=type)
 		layersData = generalData.layersData
@@ -32,6 +33,7 @@ class LayersNutsLau:
 
 			for c, layer in enumerate(layers):
 				sql_query += layersQueryData[layer]['with']
+
 				# Add a comma when the query needs one	
 				if nbLayers > 1 and c < nbLayers-1:
 					sql_query += ', '
@@ -53,6 +55,7 @@ class LayersNutsLau:
 					sql_query += ', '	
 				
 			sql_query += ';'
+
 
 			# Execution of the query
 			query = db.session.execute(sql_query).first()
@@ -165,7 +168,7 @@ class ElectricityMix:
 	@staticmethod
 
 	def getEnergyMixNutsLau(nuts):
-		print(nuts)
+
 		sql_query = "WITH energy_total as (SELECT sum(electricity_generation) as value FROM " + constants.ELECRICITY_MIX + " WHERE nuts0_code IN ("+nuts+") )" + \
 					"SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM " + constants.ELECRICITY_MIX + " ,energy_total WHERE nuts0_code IN ("+nuts+")  GROUP BY energy_carrier ORDER BY energy_carrier ASC" ;
 
