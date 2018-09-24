@@ -1,7 +1,7 @@
 import json
 import uuid
 import shapely.geometry as shapely_geom
-
+import ast
 def find_key_in_dict(key, dictionary):
     for k, v in dictionary.items():
         if k == key:
@@ -40,7 +40,15 @@ def getValuesFromName(name, output):
             values = i['values'][0]
             break
     return values
+def unicode_array_to_string(unicode_string):
+    return ast.literal_eval(unicode_string)
+def unicode_string_to_string(unicode_string):
+    return str(unicode_string).encode('ascii','ignore')
 
+
+def test_display(value):
+    print ('value ', value)
+    print ('type ', type(value))
 def getDictFromJson(output):
     outputdumps = json.dumps(output)
     outputloads = json.loads(outputdumps)[0]
@@ -107,3 +115,20 @@ def adapt_nuts_list(nuts):
     nutsListQuery = nutsListQuery[:-1] # Remove the right hook
 
     return nutsListQuery
+
+def generate_payload_for_compute(inputs_raster_selection,inputs_parameter_selection):
+
+    data_output = {}
+
+    data_output.update({
+
+        'inputs_parameter_selection':inputs_parameter_selection
+    })
+    data_output.update({
+
+        'inputs_raster_selection':inputs_raster_selection
+    })
+    print ('data_output',data_output)
+    data = json.dumps(data_output)
+    return data
+

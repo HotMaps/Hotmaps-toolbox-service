@@ -11,13 +11,13 @@ from werkzeug.utils import secure_filename
 from app import constants
 from app import model
 nsCM = api.namespace('cm', description='Operations related to statistisdscs')
-
+from app import helper
 ns = nsCM
 from flask_restplus import Resource
 from app import celery
 import requests
 import pika
-import ast
+
 import os
 import json
 from flask import send_from_directory
@@ -173,14 +173,18 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
 
     """
     inputs_raster_selection = None
+    inputs_parameter_selection = None
     #transforme stringify array to json
 
-    layer_needed = ast.literal_eval(layerneed)
+
+    print ('layerneed ',layerneed)
+    layer_needed = helper.unicode_array_to_string(layerneed)
+    print ('layer_needed ',layer_needed)
 
     # retriving scale level 3 possiblity hectare,nuts, lau
 
     scalevalue = data['scalevalue']
-
+    print ('payloads ',payload)
     if scalevalue == 'hectare':
         areas = payload['areas']
         geom =  helper.area_to_geom(areas)
@@ -201,56 +205,81 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
         inputs_raster_selection = model.clip_raster_from_shapefile(DATASET_DIRECTORY ,shapefile_path,layer_needed, UPLOAD_DIRECTORY)
         # we will be working on a nuts
 
-    data = generate_payload_for_compute(data,inputs_raster_selection)
+    data = generate_payload_for_compute(data,inputs_raster_selection,cm_id)
+
 
     # send the result to the right CM
     calculation_module_rpc = CalculationModuleRpcClient()
     response = calculation_module_rpc.call(cm_id,data)
     data_output = json.loads(response)
+    helper.test_display(data_output)
 
-    cm_computed_raster_filename = data_output["filename"]
-    tile_directory_name = helper.generate_directory_name()
-    url_download_raster, file_path_input, directory_for_tiles = generateTiles(tile_directory_name,cm_computed_raster_filename,base_url)
-    data_output['tile_directory'] =  directory_for_tiles
+    if data_output['result']['raster_layers'] is not None:
+        raster_layers = data_output['result']['raster_layers']
+        generateTiles(raster_layers)
+    if data_output['result']['vector_layers'] is not None:
+        vector_layers = data_output['result']['vector_layers']
+        generate_shape(vector_layers)
+
+
     ## use in the external of the network
     #data_output['tile_directory'] = 'http://api.hotmapsdev.hevs.ch/api/cm/tiles/' + directory_for_tiles
+    helper.test_display(data_output)
 
     return data_output
 
-def generateTiles(filename,cm_computed_raster_filename,base_url):
-    file_path_input = UPLOAD_DIRECTORY+'/'+cm_computed_raster_filename
-    directory_for_tiles = filename.replace('.tif', '')
-    intermediate_raster = helper.generate_geotif_name(UPLOAD_DIRECTORY)
-    tile_path = UPLOAD_DIRECTORY+'/' + directory_for_tiles
-    access_rights = 0o755
+def generateTiles(raster_layers):
 
-    try:
-        os.mkdir(tile_path, access_rights)
-    except OSError:
-        print ("Creation of the directory %s failed" % tile_path)
-    else:
-        print ("Successfully created the directory %s" % tile_path)
+    for layers in raster_layers:
+        file_path_input = layers['path']
+        directory_for_tiles = file_path_input.replace('.tif', '')
 
+        intermediate_raster = helper.generate_geotif_name(UPLOAD_DIRECTORY)
+        tile_path = directory_for_tiles
+        access_rights = 0o755
 
-    com_string = "gdal_translate -of GTiff -expand rgba {} {} && app/models/gdal2tiles.py --profile=mercator -z 0-13  {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
-    #com_string = "python app/api_v1/gdal2tiles-multiprocess.py -l -p mercator -z 1-15 -w none  {} {}".format(file_path,tile_path)
-    os.system(com_string)
-
-    # gdal2tiles.generate_tiles(intermediate_raster, tile_path, np_processes=12, zoom='7-9')
-    url_download_raster = base_url + filename
-    return url_download_raster, file_path_input, directory_for_tiles
+        try:
+            os.mkdir(tile_path, access_rights)
+        except OSError:
+            print ("Creation of the directory %s failed" % tile_path)
+        else:
+            print ("Successfully created the directory %s" % tile_path)
 
 
-def generate_payload_for_compute(data,inputs_raster_selection):
+        com_string = "gdal_translate -of GTiff -expand rgba {} {} && gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 0-13 {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
+        #com_string = "python app/api_v1/gdal2tiles-multiprocess.py -l -p mercator -z 1-15 -w none  {} {}".format(file_path,tile_path)
+        os.system(com_string)
+        directory_for_tiles = directory_for_tiles.replace(UPLOAD_DIRECTORY+'/', '')
+        layers['path'] = directory_for_tiles
+
+        # gdal2tiles.generate_tiles(intermediate_raster, tile_path, np_processes=12, zoom='7-9')
+
+    return file_path_input, directory_for_tiles
+
+
+def generate_shape(vector_layers):
+    for layers in vector_layers:
+        file_path_input = layers['path']
+        directory_for_tiles = file_path_input.replace(UPLOAD_DIRECTORY+'/', '')
+        layers['path'] = directory_for_tiles
+
+    return file_path_input, directory_for_tiles
+
+
+def generate_payload_for_compute(data,inputs_raster_selection,cm_id):
     inputs = data["inputs"]
+    print ('inputs', inputs)
+    inputs_parameter_selection = {}
     data_output = {}
     for parameters in inputs:
-        data_output.update({
-            parameters['input_parameter_name']: parameters['input_value']
+        inputs_parameter_selection.update({
+         helper.unicode_string_to_string(parameters['input_parameter_name']): helper.unicode_string_to_string(parameters['input_value'])
         })
-    data_output.update({
 
-       'inputs_raster_selection':inputs_raster_selection
+
+    data_output.update({
+        'inputs_parameter_selection':inputs_parameter_selection,
+        'inputs_raster_selection':inputs_raster_selection
     })
     print ('data_output',data_output)
     data = json.dumps(data_output)

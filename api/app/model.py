@@ -1,12 +1,11 @@
 
-from flask import url_for
-from app import dbGIS as db
-import json
+
+
+
 from app.decorators.exceptions import ValidationError
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, ForeignKey, Integer, String, Float, Boolean
-from sqlalchemy import Index
-from sqlalchemy.orm import relationship, backref
+
+
+
 from app import secrets
 from datetime import datetime
 import os
@@ -191,7 +190,25 @@ def getUI(cm_id):
         print ('error')
     except sqlite3.IntegrityError as e:
         print (e)
+def get_parameters_needed(cm_id):
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
 
+        results = cursor.execute('select input_parameter_name from inputs_calculation_module where cm_id = ?',
+                                 (cm_id))
+        response = []
+        print ('results', results)
+        for row in results:
+            response.append(row[0])
+
+        conn.close()
+        return response
+
+    except ValidationError:
+        print ('error')
+    except sqlite3.IntegrityError as e:
+        print (e)
 def delete_cm(cm_id):
     delete_cm_with_id(cm_id)
     delete_cm_ui_with_id(cm_id)
@@ -336,6 +353,12 @@ def clip_raster_from_database( geom,layer_needed,output_directory):
         filename_tif = retrieve_raster_clipped_in_database(layer,geom,output_directory)
         inputs_raster_selection[layer] = filename_tif
     return inputs_raster_selection
+
+
+
+
+    return inputs_parameter_selection
+
 def transformGeo(geometry):
     return 'st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(constants.CRS) + ')'
 
