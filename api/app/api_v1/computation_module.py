@@ -224,7 +224,7 @@ def computeTask(data,payload,base_url,cm_id,layerneed):
 
     ## use in the external of the network
     #data_output['tile_directory'] = 'http://api.hotmapsdev.hevs.ch/api/cm/tiles/' + directory_for_tiles
-    helper.test_display(data_output)
+    #helper.test_display(data_output)
 
     return data_output
 
@@ -246,7 +246,7 @@ def generateTiles(raster_layers):
             print ("Successfully created the directory %s" % tile_path)
 
 
-        com_string = "gdal_translate -of GTiff -expand rgba {} {} && gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 0-13 {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
+        com_string = "gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE && python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-13 {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
         #com_string = "python app/api_v1/gdal2tiles-multiprocess.py -l -p mercator -z 1-15 -w none  {} {}".format(file_path,tile_path)
         os.system(com_string)
         directory_for_tiles = directory_for_tiles.replace(UPLOAD_DIRECTORY+'/', '')
