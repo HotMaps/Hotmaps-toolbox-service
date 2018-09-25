@@ -50,14 +50,13 @@ RUN mkdir -p /data
 COPY . /api
 WORKDIR /api
 
-RUN ls
-RUN pip install gunicorn
 # Install required python modules
-
+COPY requirements.txt /api/requirements.txt
+WORKDIR /api
 RUN pip install -r requirements.txt
 
-# Copy app source code
-
+RUN ls
+RUN pip install gunicorn
 
 
 EXPOSE 80

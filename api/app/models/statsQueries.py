@@ -7,9 +7,8 @@ from decimal import *
 import generalData
 
 
-#import logging
-#logging.basicConfig()
-#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+import logging
+log = logging.getLogger(__name__)
 
 
 class LayersNutsLau: 
