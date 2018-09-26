@@ -556,7 +556,7 @@ def constructWithPartEachLayerHectare(geometry, year, layer, fromPart):
 		'FROM' + \
 		'	public.'+ layersData[layer]['tablename'] + \
 		' WHERE' + \
-		'	ST_Within(public.'+ layersData[layer]['tablename'] +'.geometry,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),4326))) '
+		'	ST_Within(public.'+ layersData[layer]['tablename'] +'.geom,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),4326))) '
 
 	elif layer == geothermalPotHeatCond:
 		w = ''+fromPart+' AS (SELECT ' + \
@@ -572,7 +572,7 @@ def constructWithPartEachLayerHectare(geometry, year, layer, fromPart):
 		'FROM' + \
 		'	public.'+ layersData[layer]['tablename'] + \
 		' WHERE' + \
-		'	ST_Within(public.'+ layersData[layer]['tablename'] +'.geometry,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),4326))) '
+		'	ST_Within(public.'+ layersData[layer]['tablename'] +'.geom,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),4326))) '
 	elif layer == electricityCo2EmisionsFactor:
 		w = ''+fromPart+' AS (SELECT ' + \
 			'		sum(value) as sum1, sum(unit) as sum2,' + \
@@ -623,7 +623,7 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
 		w = "nutsSelection_indSitesEm as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), " +\
 				""+fromPart+" as (SELECT sum(emissions_ets_2014) as sum " +\
 				"from nutsSelection_indSitesEm, public."+ layersData[layer]['tablename'] +" " +\
-				"where st_within(public."+ layersData[layer]['tablename'] +".geometry, st_transform(nutsSelection_indSitesEm.geom,4326))) "
+				"where st_within(public."+ layersData[layer]['tablename'] +".geom, st_transform(nutsSelection_indSitesEm.geom,4326))) "
 	elif layer == geothermalPotHeatCond:
 		w = "nutsSelection_Em as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), " + \
 			""+fromPart+" as (SELECT SUM(CAST(heat_cond as DECIMAL(9,2)) * CAST(ST_Area(geometry) as DECIMAL(9,2))) / SUM(ST_Area(geometry)) as sum " + \
@@ -635,7 +635,7 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
 				""+fromPart+" as (SELECT sum(excess_heat_100_200c) as sum1, sum(excess_heat_200_500c) as sum2, " +\
 				"sum(excess_heat_500c) as sum3, sum(excess_heat_total) as total " +\
 				"from nutsSelection_Exc, public."+ layersData[layer]['tablename'] +" " +\
-				"where st_within(public."+ layersData[layer]['tablename'] +".geometry, st_transform(nutsSelection_Exc.geom,4326))) "
+				"where st_within(public."+ layersData[layer]['tablename'] +".geom, st_transform(nutsSelection_Exc.geom,4326))) "
 	elif layer == electricityCo2EmisionsFactor:
 		w = "nutsSelection as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), " + \
 			""+fromPart+" as (SELECT sum(value) as sum, count(value) as count " + \

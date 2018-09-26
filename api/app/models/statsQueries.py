@@ -5,11 +5,12 @@ from app import constants
 from decimal import *
 
 from . import generalData
-
+from app import model
 
 #import logging
 #logging.basicConfig()
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
 
 
 class LayersNutsLau: 
@@ -58,36 +59,55 @@ class LayersNutsLau:
 
 
 			# Execution of the query
-			query = db.session.execute(sql_query).first()
+			#query2 = db.session.execute(sql_query)
+			#print ('query 456', query2)
 
-			# Storing the results only if there is data			
-			if query[0] == None:
+			query_geographic_database_first = model.query_geographic_database_first(sql_query)
+
+
+			# Execution of the query
+			#query = db.session.execute(sql_query).first()
+
+			#print ('query session', query)
+
+
+			# Storing the results only if there is data
+			cpt_value_used = 0
+			"""if query[0] == None:
 				result = []
-			else:
-				for layer in layers:
-					values = []
-					for c, l in enumerate(layersData[layer]['resultsName']):
+			else:"""
+			for layer in layers:
+				values = []
 
-						currentValue = query[layersData[layer]['resultsName'][c]]
-						if currentValue == None:
-							currentValue = 0
+				for c, l in enumerate(layersData[layer]['resultsName']):
+					print ('c', c)
+					currentValue = query_geographic_database_first[cpt_value_used]
 
 
-						try:
-							values.append({
-									'name':layersData[layer]['resultsName'][c],
-									'value':currentValue,
-									'unit':layersData[layer]['resultsUnit'][c]
-								})
-						except KeyError: # Special case we retrieve only one value for an hectare
-							pass
 
-					result.append({
-							'name':layer,
-							'values':values
+
+					#print ('currentValue', query)
+					if currentValue == None:
+						currentValue = 0
+
+
+					try:
+						values.append({
+							'name':layersData[layer]['resultsName'][c],
+							'value':currentValue,
+							'unit':layersData[layer]['resultsUnit'][c]
 						})
-		
+					except KeyError: # Special case we retrieve only one value for an hectare
+						pass
+					cpt_value_used = cpt_value_used + 1
+
+				result.append({
+					'name':layer,
+					'values':values
+				})
+
 		return result
+
 
 class LayersHectare:
 
@@ -159,7 +179,7 @@ class LayersHectare:
 							'name':layer,
 							'values':values
 						})
-		
+
 		return result
 
 
@@ -172,12 +192,16 @@ class ElectricityMix:
 		sql_query = "WITH energy_total as (SELECT sum(electricity_generation) as value FROM " + constants.ELECRICITY_MIX + " WHERE nuts0_code IN ("+nuts+") )" + \
 					"SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM " + constants.ELECRICITY_MIX + " ,energy_total WHERE nuts0_code IN ("+nuts+")  GROUP BY energy_carrier ORDER BY energy_carrier ASC" ;
 
-		query = db.session.execute(sql_query)
+
+
+		query = model.query_geographic_database(sql_query)
 
 		labels = []
 		data = []
 		backgroundColor = []
+
 		for c, l in enumerate(query):
+
 			labels.append(l[0])
 			data.append(helper.roundValue(l[1]))
 			backgroundColor.append(helper.getGenerationMixColor(l[0]))

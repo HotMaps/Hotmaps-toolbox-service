@@ -16,7 +16,16 @@ import uuid
 from app import celery
 from app.constants import CM_DB_NAME
 from app import helper
-from app import constants
+import os
+try:
+    import ogr
+except ImportError:
+    from osgeo import ogr
+
+try:
+    import osr
+except ImportError:
+    from osgeo import osr
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 db_path = os.path.join(basedir, '../data.sqlite')
@@ -136,6 +145,7 @@ def getCMUrl(cm_id):
 
         cm_url = cursor.execute('select cm_url from calculation_module where cm_id = ?',
                                 (cm_id))
+        conn.commit()
         cm_url = str(cm_url.fetchone()[0])
         conn.close()
         return cm_url
@@ -152,6 +162,7 @@ def getLayerNeeded(cm_id):
 
         cm_url = cursor.execute('select layers_needed from calculation_module where cm_id = ?',
                                 (cm_id))
+        conn.commit()
         cm_url = str(cm_url.fetchone()[0])
         conn.close()
         return cm_url
@@ -168,6 +179,7 @@ def getUI(cm_id):
 
         results = cursor.execute('select * from inputs_calculation_module where cm_id = ?',
                                 (cm_id))
+        conn.commit()
         response = []
         for row in results:
             response.append({'input_id':row[0],
@@ -197,6 +209,7 @@ def get_parameters_needed(cm_id):
 
         results = cursor.execute('select input_parameter_name from inputs_calculation_module where cm_id = ?',
                                  (cm_id))
+        conn.commit()
         response = []
         print ('results', results)
         for row in results:
@@ -250,6 +263,7 @@ def getCMList():
         cursor = conn.cursor()
 
         results = cursor.execute('select * from calculation_module ')
+        conn.commit()
         response = []
         for row in results:
             response.append({'cm_id':row[0],
@@ -270,36 +284,7 @@ def getCMList():
         print ('error')
     except sqlite3.IntegrityError as e:
         print (e)
-class RasterManager:
 
-    @staticmethod
-    @celery.task(name = 'task-getRasterID')
-    def getRasterID(rasterTable, geom,directory):
-
-        sql_query = "SET postgis.gdal_enabled_drivers = 'ENABLE_ALL'; SELECT oid, lowrite(lo_open(oid, 131072), tiff) As num_bytes " \
-                    "FROM ( VALUES (lo_create(0)," \
-                    "ST_Astiff((" \
-                    "Select ST_UNION(ST_Clip("+rasterTable+".rast, "+ geom +"))" \
-              " from geo."+rasterTable+" where ST_Intersects("+ geom +","+rasterTable+".rast)) ) " \
-                ")) As v(oid,tiff) ;"
-
-
-        mypool = pool.QueuePool(getConnection_db_gis, max_overflow=10, pool_size=5)
-        # get a connection
-        conn = mypool.connect()
-        # use it
-        cursor = conn.cursor()
-        cursor.execute(sql_query)
-        result = cursor.fetchone()
-        iod = result[0]
-        lo = conn.lobject(iod)
-        filename = str(uuid.uuid4()) + '.tif'
-        #save the raster in the working directory and retrieve filename
-        lo.export(directory+'/'+filename)
-        # "close" the connection.  Returns
-        # it to the pool.
-        conn.close()
-        return filename
 @celery.task(name = 'task-getConnection_db_gis')
 def getConnection_db_gis():
 
@@ -318,17 +303,37 @@ def get_connection_string():
 
     return con
 
-def get_shapefile_from_selection(nuts,ouput_directory):
-    print ('nuts selected before', nuts)
-    nuts = helper.adapt_nuts_list(nuts)
-    print ('nuts selected after', nuts)
+def get_shapefile_from_selection(scalevalue,id_selected_list,ouput_directory):
+    print ('id_selected_list selected before', id_selected_list)
+    id_selected_list = helper.adapt_nuts_list(id_selected_list)
+    print ('id_selected_list selected after', id_selected_list)
     output_shapefile = helper.generate_shapefile_name(ouput_directory)
-    con = "host=hotmapsdev.hevs.ch user=hotmaps dbname=toolboxdb port=32768 password=Dractwatha9"
-    com_string = 'ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,3035) from geo.nuts where nuts_id IN ('+ nuts +') AND year = date({})"'.format("'2013-01-01'")
-    print (com_string)
+    com_string = None
+    if scalevalue == 'nuts':
+        com_string = 'ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,3035) from geo.nuts where nuts_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'")
+    else:
+        com_string = 'ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,3035) from geo.lau where comm_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'")
     os.system(com_string)
     return output_shapefile
 
+def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed, output_directory):
+    inputs_raster_selection = {}
+    #wkt_point_3035 = helper.projection_4326_to_3035(wkt_point)
+    #print ('wkt_point_3035 ',wkt_point_3035)
+
+    filename_csv = helper.write_wkt_csv(helper.generate_csv_name(output_directory),wkt_point)
+    print ('filename_csv ',filename_csv)
+    # retrieve all layer neeeded
+    for layer in layer_needed:
+        path_to_dataset = datasets_directory + layer + "/data/" + layer + ".tif"
+        # create a file name as output
+        print ('path_to_dataset ',path_to_dataset)
+        filename_tif = helper.generate_geotif_name(output_directory)
+        com_string = "gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(filename_csv,path_to_dataset,filename_tif)
+        os.system(com_string)
+        print ('com_string ',filename_tif)
+        inputs_raster_selection[layer] = filename_tif
+    return inputs_raster_selection
 
 def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed, output_directory):
     inputs_raster_selection = {}
@@ -357,8 +362,6 @@ def clip_raster_from_database( geom,layer_needed,output_directory):
 
 
 
-    return inputs_parameter_selection
-
 def transformGeo(geometry):
     return 'st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(constants.CRS) + ')'
 
@@ -366,12 +369,13 @@ def retrieve_raster_clipped_in_database(rasterTable, geom,directory):
 
     geom = transformGeo(geom)
 
-    sql_query = "SET postgis.gdal_enabled_drivers = 'ENABLE_ALL'; SELECT oid, lowrite(lo_open(oid, 131072), tiff) As num_bytes " \
+    sql_query = "SELECT oid, lowrite(lo_open(oid, 131072), tiff) As num_bytes " \
                 "FROM ( VALUES (lo_create(0)," \
                 "ST_Astiff((" \
                 "Select ST_UNION(ST_Clip("+rasterTable+".rast, "+ geom +"))" \
                                                                         " from geo."+rasterTable+" where ST_Intersects("+ geom +","+rasterTable+".rast)) ) " \
                                                                                                                                                 ")) As v(oid,tiff) ;"
+    print ('sql_query ',sql_query)
     mypool = pool.QueuePool(getConnection_db_gis, max_overflow=10, pool_size=5)
     # get a connection
     conn = mypool.connect()
@@ -388,5 +392,34 @@ def retrieve_raster_clipped_in_database(rasterTable, geom,directory):
     # it to the pool.
     conn.close()
     return filename
+
+
+
+def query_geographic_database(sql_query):
+
+    mypool = pool.QueuePool(getConnection_db_gis, max_overflow=10, pool_size=5)
+    # get a connection
+    conn = mypool.connect()
+    # use it
+    cursor = conn.cursor()
+
+    cursor.execute(sql_query)
+    conn.commit()
+
+    return cursor
+
+
+def query_geographic_database_first(sql_query):
+    cursor = query_geographic_database(sql_query)
+
+    result = cursor.fetchone()
+
+    #result = helper.remove_None_in_turple(result)
+
+
+    return result
+
+
+
 
 

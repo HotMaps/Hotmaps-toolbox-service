@@ -1,7 +1,15 @@
+
+import shapely.geometry as shapely_geom
+
+from geoalchemy2 import shape
+from geoalchemy2.functions import ST_Transform
 import json
 import uuid
 import shapely.geometry as shapely_geom
 import ast
+
+from geoalchemy2 import functions
+import csv
 def find_key_in_dict(key, dictionary):
     for k, v in dictionary.items():
         if k == key:
@@ -82,6 +90,9 @@ def generate_geotif_name(directory):
 def generate_shapefile_name(directory):
     filename = generate_file(directory, '.shp')
     return filename
+def generate_csv_name(directory):
+    filename = generate_file(directory, '.csv')
+    return filename
 def generate_file(directory,extension):
     filename = directory+'/' + str(uuid.uuid4()) + extension
     return filename
@@ -131,4 +142,32 @@ def generate_payload_for_compute(inputs_raster_selection,inputs_parameter_select
     print ('data_output',data_output)
     data = json.dumps(data_output)
     return data
+
+def remove_None_in_turple(tupleX):
+    tupleX = [x for x in tupleX if x is not None]
+    return tupleX
+
+def write_wkt_csv(output_file,content):
+    print content
+    with open(output_file, mode='w') as csv_file:
+        fieldnames = ['id', 'WKT']
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        writer.writerow({'id': '1', 'WKT': content})
+    return output_file
+def projection_4326_to_3035(wkt):
+    # use the database to transform the geometry from 3857 to 4326
+
+
+    transformed_geometry = functions.ST_Transform((wkt, 4326),3035)
+
+    #transformed_geometry = str(transformed_geometry)
+
+
+
+
+
+    return transformed_geometry
+
 
