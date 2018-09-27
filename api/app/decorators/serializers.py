@@ -295,7 +295,7 @@ load_profile_aggregation_curve = api.model('Input for load profile duration curv
     'nuts': fields.List(fields.String(descriptions='List of NUTS'))
 })
 load_profile_aggregation_curve_output = api.model('Output for load profile duration curve', {
-    'points': fields.List(fields.Nested(point_curve))
+    'points': fields.List(fields.Nested(point))
 })
 
 load_profile_aggregation_curve_hectares = api.model('Input for load profile duration curve', {
