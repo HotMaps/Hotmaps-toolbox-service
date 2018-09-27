@@ -7,6 +7,7 @@ from app.decorators.serializers import  stats_layers_hectares_output,\
 	stats_layers_nuts_input, stats_layers_nuts_output,\
 	stats_layers_hectares_input, stats_list_nuts_input, stats_list_label_dataset
 from app.decorators.restplus import api
+from app.decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, ParameterException
 
 from app.models.statsQueries import LayersHectare
 from app.models.statsQueries import ElectricityMix
@@ -27,12 +28,13 @@ import json
 
 log = logging.getLogger(__name__)
 
-nsStats = api.namespace('stats', description='Operations related to statistisdscs')
+nsStats = api.namespace('stats', description='Operations related to statistics')
 ns = nsStats
 
 
 @ns.route('/layers/nuts-lau')
 @api.response(404, 'No data found for that specific list of NUTS.')
+@api.response(500, 'Missing parameter.')
 class StatsLayersNutsInArea(Resource):
 	@api.marshal_with(stats_layers_nuts_output)
 	@api.expect(stats_layers_nuts_input)
@@ -42,17 +44,34 @@ class StatsLayersNutsInArea(Resource):
 		:return:
 		"""
 		# Entrees
-		print ('/layers/nuts-lau')
-		year = api.payload['year']
-		layersPayload = api.payload['layers']
-		nuts = api.payload['nuts']
+		wrong_parameter = [];
+		try:
+			year = api.payload['year']
+		except:
+			wrong_parameter.append('year')
+		try:
+			layersPayload = api.payload['layers']
+		except:
+			wrong_parameter.append('layers')
+		try:
+			nuts = api.payload['nuts']
+		except:
+			wrong_parameter.append('nuts')
+		# raise exception if parameters are false
+		if len(wrong_parameter) > 0:
+			exception_message = ''
+			for i in range(len(wrong_parameter)):
+				exception_message += wrong_parameter[i]
+				if (i != len(wrong_parameter) - 1):
+					exception_message += ', '
+			raise ParameterException(exception_message + '')
 
-		# Stop execution if layers list or nuts list is empty 
+		# Stop execution if layers list or nuts list is empty
 		if not layersPayload or not nuts:
 			return
 
 		# Get type
-		type = generalData.getTypeScale(layersPayload)		
+		type = generalData.getTypeScale(layersPayload)
 
 		# Layers filtration and management
 		if type == 'nuts':
@@ -104,7 +123,10 @@ class StatsLayersNutsInArea(Resource):
 
 
 @ns.route('/layers/hectares')
+@api.response(0, 'Request too big')
 @api.response(404, 'No data found for that specific area.')
+@api.response(500, 'Missing parameter.')
+@api.response(502, 'SQL Error.')
 class StatsLayersHectareMulti(Resource):
 	@api.marshal_with(stats_layers_hectares_output)
 	@api.expect(stats_layers_hectares_input)
@@ -114,9 +136,42 @@ class StatsLayersHectareMulti(Resource):
 		:return:
 		"""
 		# Entrees
-		year = api.payload['year']
-		layersPayload = api.payload['layers']        
-		areas = api.payload['areas']
+		wrong_parameter = [];
+		layersPayload = api.payload['layers']
+		try:
+			year = api.payload['year']
+		except:
+			wrong_parameter.append('year')
+		try:
+			layersPayload = api.payload['layers']
+		except:
+			wrong_parameter.append('layers')
+		try:
+			areas = api.payload['areas']
+			for test_area in areas:
+				try:
+					for test_point in test_area['points']:
+						try:
+							test_lng = test_point['lng']
+						except:
+							wrong_parameter.append('lng')
+						try:
+							test_lat = test_point['lat']
+						except:
+							wrong_parameter.append('lat')
+				except:
+					wrong_parameter.append('points')
+		except:
+			wrong_parameter.append('areas')
+		# raise exception if parameters are false
+		if len(wrong_parameter) > 0:
+			exception_message = ''
+			for i in range(len(wrong_parameter)):
+				exception_message += wrong_parameter[i]
+				if (i != len(wrong_parameter) - 1):
+					exception_message += ', '
+			raise ParameterException(exception_message + '')
+
 
 
 		# Layers filtration and management
@@ -132,20 +187,23 @@ class StatsLayersHectareMulti(Resource):
 		output = []
 
 		# convert to polygon format for each polygon and store them in polyArray
-		for polygon in areas:
-			po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
-			polyArray.append(po)
-
+		try:
+			for polygon in areas:
+				po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
+				polyArray.append(po)
+		except:
+			raise NotEnoughPointsException
 
 		# convert array of polygon into multipolygon
 		multipolygon = shapely_geom.MultiPolygon(polyArray)
 
 		#geom = "SRID=4326;{}".format(multipolygon.wkt)
 		geom = multipolygon.wkt
-
-		res = LayersHectare.stats_hectares(geometry=geom, year=year, layers=layers)
-		output = res
-
+		try:
+			res = LayersHectare.stats_hectares(geometry=geom, year=year, layers=layers)
+			output = res
+		except:
+			raise IntersectionException()
 		# compute heat consumption/person if both layers are selected
 		pop1ha_name = constants.POPULATION_TOT
 		hdm_name = constants.HEAT_DENSITY_TOT
@@ -200,7 +258,10 @@ def indicatorsHectares(year,layersPayload,areas):
 	#geom = "SRID=4326;{}".format(multipolygon.wkt)
 	geom = multipolygon.wkt
 
-	res = LayersHectare.stats_hectares(geometry=geom, year=year, layers=layers)
+	try:
+		res = LayersHectare.stats_hectares(geometry=geom, year=year, layers=layers)
+	except:
+		raise IntersectionException
 	output = res
 
 	# compute heat consumption/person if both layers are selected
@@ -225,6 +286,7 @@ def indicatorsHectares(year,layersPayload,areas):
 
 @ns.route('/energy-mix/nuts-lau')
 @api.response(404, 'No data found for that specific list of NUTS.')
+@api.response(500, 'Missing parameter.')
 class StatsLayersNutsInArea(Resource):
 	@api.marshal_with(stats_list_label_dataset)
 	@api.expect(stats_list_nuts_input)
@@ -234,14 +296,25 @@ class StatsLayersNutsInArea(Resource):
 		:return:
 		"""
 		# Entrees
-		nuts = api.payload['nuts']
+		wrong_parameter = [];
+		try:
+			nuts = api.payload['nuts']
+		except:
+			wrong_parameter.append('nuts')
+
+		# raise exception if parameters are false
+		if len(wrong_parameter) > 0:
+			exception_message = ''
+			for i in range(len(wrong_parameter)):
+				exception_message += wrong_parameter[i]
+				if (i != len(wrong_parameter) - 1):
+					exception_message += ', '
+			raise ParameterException(exception_message + '')
+
 		res = ElectricityMix.getEnergyMixNutsLau(generalData.adapt_nuts_list(nuts))
 		return res
 
-
 		# Remove scale for each layer
-
-
 
 
 @celery.task(name = 'energy_mix_nuts_lau')
@@ -251,4 +324,3 @@ def processGenerationMix(nuts):
 	res = ElectricityMix.getEnergyMixNutsLau(generalData.adapt_nuts_list(nuts))
 
 	return res
-

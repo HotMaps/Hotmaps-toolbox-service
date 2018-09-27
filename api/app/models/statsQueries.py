@@ -7,9 +7,8 @@ from decimal import *
 from . import generalData
 from app import model
 
-#import logging
-#logging.basicConfig()
-#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+import logging
+log = logging.getLogger(__name__)
 
 
 
