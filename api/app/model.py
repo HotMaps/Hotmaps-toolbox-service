@@ -318,10 +318,10 @@ def get_shapefile_from_selection(scalevalue,id_selected_list,ouput_directory):
 
 def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed, output_directory):
     inputs_raster_selection = {}
-    #wkt_point_3035 = helper.projection_4326_to_3035(wkt_point)
+    wkt_point_3035 = helper.projection_4326_to_3035(wkt_point)
     #print ('wkt_point_3035 ',wkt_point_3035)
 
-    filename_csv = helper.write_wkt_csv(helper.generate_csv_name(output_directory),wkt_point)
+    filename_csv = helper.write_wkt_csv(helper.generate_csv_name(output_directory),wkt_point_3035)
     print ('filename_csv ',filename_csv)
     # retrieve all layer neeeded
     for layer in layer_needed:

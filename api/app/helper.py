@@ -1,14 +1,12 @@
 
-import shapely.geometry as shapely_geom
 
-from geoalchemy2 import shape
-from geoalchemy2.functions import ST_Transform
 import json
 import uuid
 import shapely.geometry as shapely_geom
 import ast
+from osgeo import ogr
+from osgeo import osr
 
-from geoalchemy2 import functions
 import csv
 def find_key_in_dict(key, dictionary):
     for k, v in dictionary.items():
@@ -148,7 +146,7 @@ def remove_None_in_turple(tupleX):
     return tupleX
 
 def write_wkt_csv(output_file,content):
-    print content
+
     with open(output_file, mode='w') as csv_file:
         fieldnames = ['id', 'WKT']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
@@ -158,16 +156,18 @@ def write_wkt_csv(output_file,content):
     return output_file
 def projection_4326_to_3035(wkt):
     # use the database to transform the geometry from 3857 to 4326
+    source = osr.SpatialReference()
+    source.ImportFromEPSG(4326)
 
+    target = osr.SpatialReference()
+    target.ImportFromEPSG(3035)
 
-    transformed_geometry = functions.ST_Transform((wkt, 4326),3035)
+    transform = osr.CoordinateTransformation(source, target)
 
-    #transformed_geometry = str(transformed_geometry)
+    point = ogr.CreateGeometryFromWkt(wkt)
+    point.Transform(transform)
 
+    return point.ExportToWkt()
 
-
-
-
-    return transformed_geometry
 
 
