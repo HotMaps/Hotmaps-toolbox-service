@@ -79,7 +79,7 @@ RUN pip install gunicorn
 
 
 
-EXPOSE 5000
+EXPOSE 80
 
 # Start server
 
