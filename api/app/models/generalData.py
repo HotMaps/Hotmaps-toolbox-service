@@ -523,7 +523,7 @@ def computeConsPerPerson(l1, l2, output):
 					population = v
 
 	if heat_cons != None and population != None:
-		pop_val = float(population.get('value', 1))1
+		pop_val = float(population.get('value', 1))
 		pop_val = pop_val if pop_val > 0 else 1
 		hea_val = float(heat_cons.get('value', 0))
 

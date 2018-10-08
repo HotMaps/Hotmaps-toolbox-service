@@ -259,11 +259,7 @@ def delete_cm_with_id(cm_id):
         print (e)
 def getCMList():
     try:
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
-
-        results = cursor.execute('select * from calculation_module ')
-        conn.commit()
+        results = query_calculation_module_database('select * from calculation_module ')
         response = []
         for row in results:
             response.append({'cm_id':row[0],
@@ -277,7 +273,6 @@ def getCMList():
 
                             })
 
-        conn.close()
         return response
 
     except ValidationError:
@@ -395,19 +390,40 @@ def retrieve_raster_clipped_in_database(rasterTable, geom,directory):
 
 
 
+def getConnection_db_CM():
+    c = sqlite3.connect(DB_NAME)
+    return c
+
 def query_geographic_database(sql_query):
 
     mypool = pool.QueuePool(getConnection_db_gis, max_overflow=10, pool_size=5)
     # get a connection
     conn = mypool.connect()
     # use it
+    cursor = query(sql_query,conn)
+
+    return cursor
+
+def query_calculation_module_database(sql_query):
+
+    mypool = pool.QueuePool(getConnection_db_CM, max_overflow=10, pool_size=5)
+    # get a connection
+    conn = mypool.connect()
+    # use it
+    cursor = query(sql_query,conn)
+
+    return cursor
+
+def query(sql_query,conn):
+
+    # use it
     cursor = conn.cursor()
 
     cursor.execute(sql_query)
     conn.commit()
+    conn.close()
 
     return cursor
-
 
 def query_geographic_database_first(sql_query):
     cursor = query_geographic_database(sql_query)
