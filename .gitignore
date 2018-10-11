@@ -5,3 +5,5 @@ __pycache__/
 
 app/app/secrets\.py
 .idea/workspace.xml
+ api/.fuse_hidden00000f0000000005
+ api/.fuse_hidden00000f0000000006
