@@ -197,10 +197,10 @@ def computeTask(data,payload,cm_id,layerneed):
     data_output = json.loads(response)
     helper.test_display(data_output)
     print ('****************** WILL GENERATE TILES ***************************************************'.format(cm_id))
-    if data_output['result']['raster_layers'] is not None:
+    if data_output['result']['raster_layers'] is not None and len(data_output['result']['raster_layers'])>0:
         raster_layers = data_output['result']['raster_layers']
         generateTiles(raster_layers)
-    if data_output['result']['vector_layers'] is not None:
+    if data_output['result']['vector_layers'] is not None and len(data_output['result']['vector_layers'])>0:
         vector_layers = data_output['result']['vector_layers']
         generate_shape(vector_layers)
 
@@ -259,8 +259,10 @@ def generate_payload_for_compute(data,inputs_raster_selection,cm_id):
     inputs_parameter_selection = {}
     data_output = {}
     for parameters in inputs:
+        print ('parameters[input_parameter_name]',parameters['input_parameter_name'])
+        print ('parameters[input_parameter_name]',parameters['input_value'])
         inputs_parameter_selection.update({
-         helper.unicode_string_to_string(parameters['input_parameter_name']): helper.unicode_string_to_string(parameters['input_value'])
+         parameters['input_parameter_name']: parameters['input_value']
         })
 
 

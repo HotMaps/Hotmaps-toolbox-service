@@ -161,17 +161,22 @@ class HeatLoadProfile:
 		# Execution of the query
 		#query = db.session.execute(sql_query)
 		query = model.query_geographic_database(sql_query)
+		query2 = db.session.execute(sql_query)
 
 		# Store query results in a list
 		listAllValues = []
 		for q in query:
+
 			listAllValues.append(q[0])
+
+
 
 		# Creation of points and sampling of the values only if there is data
 		if listAllValues:
 			finalListPoints = generalData.sampling_data(listAllValues)
 		else:
-			finalListPoints = []	
+			finalListPoints = []
+
 
 		return finalListPoints
 
