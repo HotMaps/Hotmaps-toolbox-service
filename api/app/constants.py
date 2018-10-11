@@ -15,7 +15,7 @@ RPC_CM_ALIVE= 'rpc_queue_CM_ALIVE'
 PORT_LOCAL = 5000
 PORT_DOCKER = 80
 CM_REGISTER_Q = 'rpc_queue_CM_register'
-PORT = PORT_LOCAL
+PORT = PORT_DOCKER
 CM_DB_NAME = "calculation_module.db"
 # Flask-Restplus settings
 RESTPLUS_SWAGGER_UI_DOC_EXPANSION = 'list'
