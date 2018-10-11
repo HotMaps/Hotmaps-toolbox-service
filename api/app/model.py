@@ -271,8 +271,11 @@ def getCMList():
     try:
         results = query_calculation_module_database('select * from calculation_module ')
         response = []
+
+
         for row in results:
-            print ('row ',row)
+            print ('row ',row[8])
+            print ('type_layer_needed', helper.unicode_string_to_string(row[8]))
             response.append({'cm_id':row[0],
                              'cm_name':row[1],
                              'cm_description':row[2],
@@ -281,12 +284,13 @@ def getCMList():
                              'layers_needed':row[5],
                              'createdAt':row[6],
                              'updatedAt':row[7],
-                             'type_layer_needed':row[8],
+                             'type_layer_needed':helper.unicode_array_to_string(row[8]),
 
 
                             })
 
         return response
+        print ('response ' , response)
 
     except ValidationError:
         print ('error')
