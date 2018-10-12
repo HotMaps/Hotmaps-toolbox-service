@@ -230,7 +230,7 @@ def generateTiles(raster_layers):
             print ("Successfully created the directory %s" % tile_path)
 
 
-        com_string = "gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE && python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-13 {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
+        com_string = "gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE && python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
 
         #com_string = "gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE && python app/helper/gdal2tiles-multiprocess.py -d -p 'mercator' -r 'near' -n -l -z 4-13 {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
 
