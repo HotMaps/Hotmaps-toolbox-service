@@ -32,6 +32,11 @@ class TimeoutException(Exception):
     '''
     pass
 
+class RequestException(Exception):
+    '''
+    Exception raised by default when a request fail
+    '''
+    pass
 
 class ValidationError(ValueError):
     pass

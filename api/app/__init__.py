@@ -61,20 +61,12 @@ class CalculationModuleRpcClient(object):
         print ('self.response ',self.response)
         return self.response
 
-
-
-
-
-
 from . import constants
-
 
 dbGIS = SQLAlchemy()
 
 celery = Celery(__name__, backend=constants.CELERY_RESULT_BACKEND,
                 broker=constants.CELERY_BROKER_URL)
-
-
 
 # methods
 log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '', 'logging.conf')
@@ -82,6 +74,12 @@ logging.config.fileConfig(log_file_path)
 log = logging.getLogger(__name__)
 #logging.getLogger('flask_cors').level = logging.DEBUG
 
+from flask_security import SQLAlchemySessionUserDatastore
+from models.user import User
+from models.role import Role
+
+# Setup Flask-Security
+user_datastore = SQLAlchemySessionUserDatastore(dbGIS.session, User, Role)
 
 def create_app(config_name):
     """
@@ -91,7 +89,10 @@ def create_app(config_name):
     cfg = os.path.join(os.getcwd(), 'config', config_name + '.py')
     app.config.from_pyfile(cfg)
 
+    # set up security
+    from flask_security import Security
 
+    security = Security(app, user_datastore)
 
     # initialize extensions
     from .api_v1 import api
@@ -107,6 +108,13 @@ def create_app(config_name):
     api_rest_plus.add_namespace(main_heat_load_profile_namespace)
 
     app.register_blueprint(api)
+
+    def init_db():
+        # import all modules here that might define models so that
+        # they will be registered properly on the metadata.  Otherwise
+        # you will have to import them first before calling init_db()
+        Base.metadata.create_all(bind=engine)
+
     dbGIS.init_app(app)
 
     CORS(app, resources={
@@ -137,9 +145,5 @@ def create_app(config_name):
         }})
 
     return app
-
-
-
-
 
 #log.info(app)

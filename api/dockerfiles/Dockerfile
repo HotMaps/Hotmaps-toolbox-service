@@ -3,13 +3,21 @@
 #
 #
 
-FROM ubuntu:16.04
+
+#
+# hotmaps/cm image Dockerfile
+#
+#
+
+
+FROM geographica/gdal2:latest
 
 ENV CELERY_BROKER_URL amqp://admin:mypass@rabbit:5672/
 ENV CELERY_RESULT_BACKEND redis://redis:6379/0
 ENV C_FORCE_ROOT true
 
-MAINTAINER Daniel Hunacek <daniel.hunacek@hevs.ch>
+MAINTAINER lesly Houndole <lesly.houndole@crem.ch>
+
 
 # setup volume
 RUN mkdir -p /data
@@ -20,6 +28,7 @@ VOLUME /data
 RUN apt-get update && apt-get dist-upgrade -y && apt-get autoremove -y
 
 # Install required software
+
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y \
@@ -29,63 +38,45 @@ RUN apt-get update \
     ca-certificates \
     gcc \
     git \
-    gdal-bin \
-    ca-certificates \
-    gcc \
-    git \
-    libpq-dev \
-    libgeos-dev \
-    libgdal-dev \
-    python-gdal \
-    libpq-dev \
-    libgeos-dev \
-    make \
-    python-pip \
-    python2.7 \
-    python2.7-dev \
-    ssh \
     && apt-get autoremove \
     && apt-get clean
 
-RUN pip install -U "setuptools==38.5.1"
-RUN pip install -U "pip==9.0.1"
-
-RUN useradd -ms /bin/bash admin
-run mkdir  -p /var/hotmaps/api_files_uploaded
-RUN chown -R admin:admin /var/hotmaps/api_files_uploaded
-RUN chmod 755 /var/hotmaps/api_files_uploaded
-
 # Setup app server
 RUN mkdir -p /data
+
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y \
+    build-essential \
+    software-properties-common \
+    wget
+
+RUN apt-get update && apt-get install -y supervisor
+RUN wget https://bootstrap.pypa.io/get-pip.py
+RUN python get-pip.py
+
+# Install required python modules
+RUN mkdir /api
+RUN mkdir /api/requirements
+COPY requirements/requirements.txt /api/requirements/requirements.txt
+
+RUN pip install -r /api/requirements/requirements.txt
+RUN pip install gunicorn
+
+RUN mkdir -p /var/log/supervisor
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copy app source code
 COPY . /api
 WORKDIR /api
 
-
-RUN ls
-RUN pip install gunicorn
-# Install required python modules
-
-RUN pip install -r requirements/requirements.txt
-
-
-
-# Copy app source code
-
-
-
 EXPOSE 5000
-#EXPOSE 80
+
 # Start server
-
-
-RUN apt-get update && apt-get install -y supervisor
-RUN mkdir -p /var/log/supervisor
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # CMD ["gunicorn", "--config", "gunicorn-config.py", "--log-config", "app/logging.conf", "run:application"]
 
 # Start processes
 CMD ["/usr/bin/supervisord"]
-
 
 

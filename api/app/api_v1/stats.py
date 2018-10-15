@@ -7,7 +7,7 @@ from app.decorators.serializers import  stats_layers_hectares_output,\
 	stats_layers_nuts_input, stats_layers_nuts_output,\
 	stats_layers_hectares_input, stats_list_nuts_input, stats_list_label_dataset
 from app.decorators.restplus import api
-from app.decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, ParameterException
+from app.decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, ParameterException, RequestException
 
 from app.models.statsQueries import LayersHectare
 from app.models.statsQueries import ElectricityMix
@@ -34,7 +34,8 @@ ns = nsStats
 
 @ns.route('/layers/nuts-lau')
 @api.response(404, 'No data found for that specific list of NUTS.')
-@api.response(500, 'Missing parameter.')
+@api.response(530, 'Request Error')
+@api.response(531, 'Missing parameter.')
 class StatsLayersNutsInArea(Resource):
 	@api.marshal_with(stats_layers_nuts_output)
 	@api.expect(stats_layers_nuts_input)
@@ -43,90 +44,94 @@ class StatsLayersNutsInArea(Resource):
 		Returns the statistics for specific layers, area and year
 		:return:
 		"""
-		# Entrees
-		wrong_parameter = [];
 		try:
-			year = api.payload['year']
-		except:
-			wrong_parameter.append('year')
-		try:
-			layersPayload = api.payload['layers']
-		except:
-			wrong_parameter.append('layers')
-		try:
-			nuts = api.payload['nuts']
-		except:
-			wrong_parameter.append('nuts')
-		# raise exception if parameters are false
-		if len(wrong_parameter) > 0:
-			exception_message = ''
-			for i in range(len(wrong_parameter)):
-				exception_message += wrong_parameter[i]
-				if (i != len(wrong_parameter) - 1):
-					exception_message += ', '
-			raise ParameterException(exception_message + '')
+			# Entrees
+			wrong_parameter = [];
+			try:
+				year = api.payload['year']
+			except:
+				wrong_parameter.append('year')
+			try:
+				layersPayload = api.payload['layers']
+			except:
+				wrong_parameter.append('layers')
+			try:
+				nuts = api.payload['nuts']
+			except:
+				wrong_parameter.append('nuts')
+			# raise exception if parameters are false
+			if len(wrong_parameter) > 0:
+				exception_message = ''
+				for i in range(len(wrong_parameter)):
+					exception_message += wrong_parameter[i]
+					if (i != len(wrong_parameter) - 1):
+						exception_message += ', '
+				raise ParameterException(exception_message + '')
 
-		# Stop execution if layers list or nuts list is empty
-		if not layersPayload or not nuts:
-			return
+			# Stop execution if layers list or nuts list is empty
+			if not layersPayload or not nuts:
+				return
 
-		# Get type
-		type = generalData.getTypeScale(layersPayload)
+			# Get type
+			type = generalData.getTypeScale(layersPayload)
 
-		# Layers filtration and management
-		if type == 'nuts':
-			allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_NUTS_TABLE)
-			allLayers = generalData.createAllLayers(constants.LAYERS_REF_NUTS)
+			# Layers filtration and management
+			if type == 'nuts':
+				allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_NUTS_TABLE)
+				allLayers = generalData.createAllLayers(constants.LAYERS_REF_NUTS)
 
-			noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
-			noDataLayers = generalData.layers_filter(layersPayload, allLayers)
+				noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
+				noDataLayers = generalData.layers_filter(layersPayload, allLayers)
 
-		elif type == 'lau':
-			allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_LAU_TABLE)
-			allLayers = generalData.createAllLayers(constants.LAYERS_REF_LAU)
+			elif type == 'lau':
+				allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_LAU_TABLE)
+				allLayers = generalData.createAllLayers(constants.LAYERS_REF_LAU)
 
-			noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
-			noDataLayers = generalData.layers_filter(layersPayload, allLayers)
-		else:
-			return
+				noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
+				noDataLayers = generalData.layers_filter(layersPayload, allLayers)
+			else:
+				return
 
-		# Keep only existing layers
-		layers = generalData.adapt_layers_list(layersPayload=layersPayload, type=type, allLayers=allLayers)
+			# Keep only existing layers
+			layers = generalData.adapt_layers_list(layersPayload=layersPayload, type=type, allLayers=allLayers)
 
-		output = []
+			output = []
 
-		res = LayersNutsLau.stats_nuts_lau(nuts=generalData.adapt_nuts_list(nuts), year=year, layers=layers, type=type)
-		output = res
-
-
-		# compute Cross indicators if both layers are selected
-		pop1ha_name = constants.POPULATION_TOT
-		hdm_name = constants.HEAT_DENSITY_TOT
-		heat_curr_non_res_name = constants.HEAT_DENSITY_NON_RES
-		heat_curr_res_name = constants.HEAT_DENSITY_RES
+			res = LayersNutsLau.stats_nuts_lau(nuts=generalData.adapt_nuts_list(nuts), year=year, layers=layers, type=type)
+			output = res
 
 
-		retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
-		retrieveCrossIndicator(pop1ha_name, heat_curr_res_name, layers, output)
-		retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
+			# compute Cross indicators if both layers are selected
+			pop1ha_name = constants.POPULATION_TOT
+			hdm_name = constants.HEAT_DENSITY_TOT
+			heat_curr_non_res_name = constants.HEAT_DENSITY_NON_RES
+			heat_curr_res_name = constants.HEAT_DENSITY_RES
 
-		# Remove scale for each layer
-		noTableLayers = generalData.removeScaleLayers(noTableLayers, type)
-		noDataLayers = generalData.removeScaleLayers(noDataLayers, type)
 
-		# output
-		return {
-			"layers": output,
-			"no_data_layers": noDataLayers,
-			"no_table_layers": noTableLayers
-		}
+			retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
+			retrieveCrossIndicator(pop1ha_name, heat_curr_res_name, layers, output)
+			retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
 
+			# Remove scale for each layer
+			noTableLayers = generalData.removeScaleLayers(noTableLayers, type)
+			noDataLayers = generalData.removeScaleLayers(noDataLayers, type)
+
+			# output
+			return {
+				"layers": output,
+				"no_data_layers": noDataLayers,
+				"no_table_layers": noTableLayers
+			}
+		except Exception, e:
+			raise RequestException(str(e))
 
 @ns.route('/layers/hectares')
 @api.response(0, 'Request too big')
 @api.response(404, 'No data found for that specific area.')
-@api.response(500, 'Missing parameter.')
-@api.response(502, 'SQL Error.')
+@api.response(530, 'Request error.')
+@api.response(531, 'Missing parameter.')
+@api.response(533, 'SQL error.')
+#@api.response(534, 'Not enough points error.')
 class StatsLayersHectareMulti(Resource):
 	@api.marshal_with(stats_layers_hectares_output)
 	@api.expect(stats_layers_hectares_input)
@@ -136,97 +141,100 @@ class StatsLayersHectareMulti(Resource):
 		:return:
 		"""
 		# Entrees
-		wrong_parameter = [];
-		layersPayload = api.payload['layers']
 		try:
-			year = api.payload['year']
-		except:
-			wrong_parameter.append('year')
-		try:
+			wrong_parameter = [];
 			layersPayload = api.payload['layers']
-		except:
-			wrong_parameter.append('layers')
-		try:
-			areas = api.payload['areas']
-			for test_area in areas:
-				try:
-					for test_point in test_area['points']:
-						try:
-							test_lng = test_point['lng']
-						except:
-							wrong_parameter.append('lng')
-						try:
-							test_lat = test_point['lat']
-						except:
-							wrong_parameter.append('lat')
-				except:
-					wrong_parameter.append('points')
-		except:
-			wrong_parameter.append('areas')
-		# raise exception if parameters are false
-		if len(wrong_parameter) > 0:
-			exception_message = ''
-			for i in range(len(wrong_parameter)):
-				exception_message += wrong_parameter[i]
-				if (i != len(wrong_parameter) - 1):
-					exception_message += ', '
-			raise ParameterException(exception_message + '')
+			try:
+				year = api.payload['year']
+			except:
+				wrong_parameter.append('year')
+			try:
+				layersPayload = api.payload['layers']
+			except:
+				wrong_parameter.append('layers')
+			try:
+				areas = api.payload['areas']
+				for test_area in areas:
+					try:
+						for test_point in test_area['points']:
+							try:
+								test_lng = test_point['lng']
+							except:
+								wrong_parameter.append('lng')
+							try:
+								test_lat = test_point['lat']
+							except:
+								wrong_parameter.append('lat')
+					except:
+						wrong_parameter.append('points')
+			except:
+				wrong_parameter.append('areas')
+			# raise exception if parameters are false
+			if len(wrong_parameter) > 0:
+				exception_message = ''
+				for i in range(len(wrong_parameter)):
+					exception_message += wrong_parameter[i]
+					if (i != len(wrong_parameter) - 1):
+						exception_message += ', '
+				raise ParameterException(str(exception_message))
 
 
 
-		# Layers filtration and management
-		allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_HECTARES_TABLE)
-		allLayers = generalData.createAllLayers(constants.LAYERS_REF_HECTARES)
-		noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
-		noDataLayers = generalData.layers_filter(layersPayload, allLayers)
+			# Layers filtration and management
+			allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_HECTARES_TABLE)
+			allLayers = generalData.createAllLayers(constants.LAYERS_REF_HECTARES)
+			noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
+			noDataLayers = generalData.layers_filter(layersPayload, allLayers)
 
-		# Keep only existing layers
-		layers = generalData.adapt_layers_list(layersPayload=layersPayload, type='ha', allLayers=allLayers)
+			# Keep only existing layers
+			layers = generalData.adapt_layers_list(layersPayload=layersPayload, type='ha', allLayers=allLayers)
 
-		polyArray = []
-		output = []
+			polyArray = []
+			output = []
 
-		# convert to polygon format for each polygon and store them in polyArray
-		try:
-			for polygon in areas:
-				po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
-				polyArray.append(po)
-		except:
-			raise NotEnoughPointsException
+			# convert to polygon format for each polygon and store them in polyArray
+			try:
+				for polygon in areas:
+					po = shapely_geom.Polygon([[p['lngsg'], p['lat']] for p in polygon['points']])
+					polyArray.append(po)
+			except:
+				raise NotEnoughPointsException
 
-		# convert array of polygon into multipolygon
-		multipolygon = shapely_geom.MultiPolygon(polyArray)
+			# convert array of polygon into multipolygon
+			multipolygon = shapely_geom.MultiPolygon(polyArray)
 
-		#geom = "SRID=4326;{}".format(multipolygon.wkt)
-		geom = multipolygon.wkt
-		try:
-			res = LayersHectare.stats_hectares(geometry=geom, year=year, layers=layers)
-			output = res
-		except:
-			raise IntersectionException()
-		# compute heat consumption/person if both layers are selected
-		pop1ha_name = constants.POPULATION_TOT
-		hdm_name = constants.HEAT_DENSITY_TOT
-		heat_curr_non_res_name = constants.HEAT_DENSITY_NON_RES
-		heat_curr_res_name = constants.HEAT_DENSITY_RES
-		gfa_tot_curr_density_name = constants.GRASS_FLOOR_AREA_TOT
+			#geom = "SRID=4326;{}".format(multipolygon.wkt)
+			geom = multipolygon.wkt
+			try:
+				res = LayersHectare.stats_hectares(geometry=geom, year=year, layers=layers)
+				output = res
+			except:
+				raise IntersectionException()
+			# compute heat consumption/person if both layers are selected
+			pop1ha_name = constants.POPULATION_TOT
+			hdm_name = constants.HEAT_DENSITY_TOT
+			heat_curr_non_res_name = constants.HEAT_DENSITY_NON_RES
+			heat_curr_res_name = constants.HEAT_DENSITY_RES
+			gfa_tot_curr_density_name = constants.GRASS_FLOOR_AREA_TOT
 
 
-		retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
-		retrieveCrossIndicator(pop1ha_name, heat_curr_res_name, layers, output)
-		retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
-		retrieveCrossIndicator(gfa_tot_curr_density_name, hdm_name, layers, output)
+			retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
+			retrieveCrossIndicator(pop1ha_name, heat_curr_res_name, layers, output)
+			retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
+			retrieveCrossIndicator(gfa_tot_curr_density_name, hdm_name, layers, output)
 
-		# Remove scale for each layer
-		noTableLayers = generalData.removeScaleLayers(noTableLayers, type='ha')
-		noDataLayers = generalData.removeScaleLayers(noDataLayers, type='ha')
+			# Remove scale for each layer
+			noTableLayers = generalData.removeScaleLayers(noTableLayers, type='ha')
+			noDataLayers = generalData.removeScaleLayers(noDataLayers, type='ha')
 
-		#output
-		return {
-			"layers": output,
-			"no_data_layers": noDataLayers,
-			"no_table_layers": noTableLayers
-		}
+			#output
+			return {
+				"layers": output,
+				"no_data_layers": noDataLayers,
+				"no_table_layers": noTableLayers
+			}
+		except Exception, e:
+			raise RequestException(str(e))
 
 
 @celery.task(name = 'layer_hectare')
@@ -285,8 +293,10 @@ def indicatorsHectares(year,layersPayload,areas):
 
 
 @ns.route('/energy-mix/nuts-lau')
+@api.response(0, 'Request too big')
 @api.response(404, 'No data found for that specific list of NUTS.')
-@api.response(500, 'Missing parameter.')
+@api.response(530, 'Request error.')
+@api.response(531, 'Missing parameter.')
 class StatsLayersNutsInArea(Resource):
 	@api.marshal_with(stats_list_label_dataset)
 	@api.expect(stats_list_nuts_input)
@@ -295,27 +305,27 @@ class StatsLayersNutsInArea(Resource):
 		Returns the statistics for specific layers, area and year
 		:return:
 		"""
-		# Entrees
-		wrong_parameter = [];
 		try:
-			nuts = api.payload['nuts']
-		except:
-			wrong_parameter.append('nuts')
+			# Entrees
+			wrong_parameter = [];
+			try:
+				nuts = api.payload['nuts']
+			except:
+				wrong_parameter.append('nuts')
 
-		# raise exception if parameters are false
-		if len(wrong_parameter) > 0:
-			exception_message = ''
-			for i in range(len(wrong_parameter)):
-				exception_message += wrong_parameter[i]
-				if (i != len(wrong_parameter) - 1):
-					exception_message += ', '
-			raise ParameterException(exception_message + '')
+			# raise exception if parameters are false
+			if len(wrong_parameter) > 0:
+				exception_message = ''
+				for i in range(len(wrong_parameter)):
+					exception_message += wrong_parameter[i]
+					if (i != len(wrong_parameter) - 1):
+						exception_message += ', '
+				raise ParameterException(str(exception_message))
 
-		res = ElectricityMix.getEnergyMixNutsLau(generalData.adapt_nuts_list(nuts))
-		return res
-
-		# Remove scale for each layer
-
+			res = ElectricityMix.getEnergyMixNutsLau(generalData.adapt_nuts_list(nuts))
+			return res
+		except Exception, e:
+			raise RequestException(str(e))
 
 @celery.task(name = 'energy_mix_nuts_lau')
 def processGenerationMix(nuts):

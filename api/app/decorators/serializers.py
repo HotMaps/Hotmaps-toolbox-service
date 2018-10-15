@@ -376,16 +376,19 @@ input_computation_module = api.model('Input for population density for area', {
 
 })
 uploadfile = api.model('getfile to uploads', {
-
     'filename': fields.String(description='cm test'),
-
-
 })
 
 cm_id_input = api.model('cm_id_input ', {
-
     'cm_id': fields.String(description='cm_id_input '),
-
-
 })
 
+user_register_input = api.model('input for user registration', {
+    'first_name': fields.String(description='first name'),
+    'last_name': fields.String(description='last name'),
+    'email': fields.String(description='email'),
+    'password': fields.String(description='password'),
+})
+user_register_output = api.model('output for user registration', {
+    'message': fields.String(description='message'),
+})
