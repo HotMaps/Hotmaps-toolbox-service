@@ -160,7 +160,26 @@ def computeTask(data,payload,cm_id,layerneed):
 
     print ('****************** RETRIVE INPUT DATA ***************************************************')
     #transforme stringify array to json
+    print ('layer_needed', layerneed)
     layer_needed = helper.unicode_array_to_string(layerneed)
+
+
+    newlist = []
+    for item in layer_needed:
+        if item == 'heat':
+            item = 'heat_tot_curr_density'
+        newlist.append(item)
+    layer_needed = newlist
+
+    newlist = []
+    for item in layer_needed:
+        if item == 'gross_floor_area':
+            item = 'gfa_tot_curr_density'
+        newlist.append(item)
+    layer_needed = newlist
+
+
+    print ('layer_needed', layer_needed)
 
 
     # retriving scale level 3 possiblity hectare,nuts, lau
@@ -247,10 +266,10 @@ def generateTiles(raster_layers):
 def generate_shape(vector_layers):
     for layers in vector_layers:
         file_path_input = layers['path']
-        directory_for_tiles = file_path_input.replace(UPLOAD_DIRECTORY+'/', '')
-        layers['path'] = directory_for_tiles
+        print ('file_path_input',file_path_input)
 
-    return file_path_input, directory_for_tiles
+
+    return file_path_input, file_path_input
 
 
 def generate_payload_for_compute(data,inputs_raster_selection,cm_id):

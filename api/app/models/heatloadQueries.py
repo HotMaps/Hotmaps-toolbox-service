@@ -160,8 +160,9 @@ class HeatLoadProfile:
 
 		# Execution of the query
 		#query = db.session.execute(sql_query)
+		print ('duration_curve_nuts_lau sql_query',sql_query)
 		query = model.query_geographic_database(sql_query)
-		query2 = db.session.execute(sql_query)
+
 
 		# Store query results in a list
 		listAllValues = []
@@ -169,7 +170,7 @@ class HeatLoadProfile:
 
 			listAllValues.append(q[0])
 
-
+		print ('listAllValues',listAllValues)
 
 		# Creation of points and sampling of the values only if there is data
 		if listAllValues:

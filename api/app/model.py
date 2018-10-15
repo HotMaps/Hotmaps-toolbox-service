@@ -348,6 +348,7 @@ def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed, output_direc
     return inputs_raster_selection
 
 def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed, output_directory):
+    print('layer_needed',layer_needed)
     inputs_raster_selection = {}
     # retrieve all layer neeeded
     for layer in layer_needed:

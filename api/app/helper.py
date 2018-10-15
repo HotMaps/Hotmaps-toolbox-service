@@ -91,6 +91,9 @@ def generate_shapefile_name(directory):
 def generate_csv_name(directory):
     filename = generate_file(directory, '.csv')
     return filename
+def generate_archive(directory):
+    filename = generate_file(directory, '.zip')
+    return filename
 def generate_file(directory,extension):
     filename = directory+'/' + str(uuid.uuid4()) + extension
     return filename
@@ -171,3 +174,8 @@ def projection_4326_to_3035(wkt):
 
 
 
+def zipdir(path, ziph):
+    # ziph is zipfile handle
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            ziph.write(os.path.join(root, file))
