@@ -158,28 +158,17 @@ def computeTask(data,payload,cm_id,layerneed):
     inputs_raster_selection = None
     inputs_parameter_selection = None
 
+
     print ('****************** RETRIVE INPUT DATA ***************************************************')
     #transforme stringify array to json
-    print ('layer_needed', layerneed)
+    print ('layer_needed', payload)
     #layer_needed = helper.unicode_array_to_string(layerneed)
 
-
-    newlist = []
-    for item in layer_needed:
-        if item == 'heat':
-            item = 'heat_tot_curr_density'
-        newlist.append(item)
-    layer_needed = newlist
-
-    newlist = []
-    for item in layer_needed:
-        if item == 'gross_floor_area':
-            item = 'gfa_tot_curr_density'
-        newlist.append(item)
-    layer_needed = newlist
+    layer_needed = payload['layers_needed']
 
 
-    print ('layer_needed', layer_needed)
+
+    print ('layer_needed_inside', layer_needed)
 
 
     # retriving scale level 3 possiblity hectare,nuts, lau
