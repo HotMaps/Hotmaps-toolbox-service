@@ -161,7 +161,7 @@ def computeTask(data,payload,cm_id,layerneed):
     print ('****************** RETRIVE INPUT DATA ***************************************************')
     #transforme stringify array to json
     print ('layer_needed', layerneed)
-    layer_needed = helper.unicode_array_to_string(layerneed)
+    #layer_needed = helper.unicode_array_to_string(layerneed)
 
 
     newlist = []
@@ -221,7 +221,7 @@ def computeTask(data,payload,cm_id,layerneed):
         generateTiles(raster_layers)
     if data_output['result']['vector_layers'] is not None and len(data_output['result']['vector_layers'])>0:
         vector_layers = data_output['result']['vector_layers']
-        generate_shape(vector_layers)
+        #generate_shape(vector_layers)
 
 
 

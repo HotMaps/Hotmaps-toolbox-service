@@ -70,7 +70,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         output = {}
 
         output = HeatLoadProfile.duration_curve_nuts_lau(year=year, nuts=nuts)
-        print ("duration_curve_nuts_lau ",output)
+
 
         return {
             "points": output

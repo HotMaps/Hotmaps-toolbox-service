@@ -170,7 +170,7 @@ class HeatLoadProfile:
 
 			listAllValues.append(q[0])
 
-		print ('listAllValues',listAllValues)
+
 
 		# Creation of points and sampling of the values only if there is data
 		if listAllValues:
