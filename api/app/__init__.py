@@ -90,9 +90,9 @@ def create_app(config_name):
     app.config.from_pyfile(cfg)
 
     # set up security
-    from flask_security import Security
+#    from flask_security import Security
 
-    security = Security(app, user_datastore)
+#    security = Security(app, user_datastore)
 
     # initialize extensions
     from .api_v1 import api
