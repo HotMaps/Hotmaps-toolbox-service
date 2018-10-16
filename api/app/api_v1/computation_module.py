@@ -158,9 +158,17 @@ def computeTask(data,payload,cm_id,layerneed):
     inputs_raster_selection = None
     inputs_parameter_selection = None
 
+
     print ('****************** RETRIVE INPUT DATA ***************************************************')
     #transforme stringify array to json
-    layer_needed = helper.unicode_array_to_string(layerneed)
+    print ('layer_needed', payload)
+    #layer_needed = helper.unicode_array_to_string(layerneed)
+
+    layer_needed = payload['layers_needed']
+
+
+
+    print ('layer_needed_inside', layer_needed)
 
 
     # retriving scale level 3 possiblity hectare,nuts, lau
@@ -202,7 +210,7 @@ def computeTask(data,payload,cm_id,layerneed):
         generateTiles(raster_layers)
     if data_output['result']['vector_layers'] is not None and len(data_output['result']['vector_layers'])>0:
         vector_layers = data_output['result']['vector_layers']
-        generate_shape(vector_layers)
+        #generate_shape(vector_layers)
 
 
 
@@ -247,10 +255,10 @@ def generateTiles(raster_layers):
 def generate_shape(vector_layers):
     for layers in vector_layers:
         file_path_input = layers['path']
-        directory_for_tiles = file_path_input.replace(UPLOAD_DIRECTORY+'/', '')
-        layers['path'] = directory_for_tiles
+        print ('file_path_input',file_path_input)
 
-    return file_path_input, directory_for_tiles
+
+    return file_path_input, file_path_input
 
 
 def generate_payload_for_compute(data,inputs_raster_selection,cm_id):

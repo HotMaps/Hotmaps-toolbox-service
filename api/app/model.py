@@ -337,7 +337,8 @@ def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed, output_direc
     print ('filename_csv ',filename_csv)
     # retrieve all layer neeeded
     for layer in layer_needed:
-        path_to_dataset = datasets_directory + layer + "/data/" + layer + ".tif"
+        directory = layer.replace('_tif', '')
+        path_to_dataset = datasets_directory + layer.replace('_tif', '')+ "/data/" + layer + ".tif"
         # create a file name as output
         print ('path_to_dataset ',path_to_dataset)
         filename_tif = helper.generate_geotif_name(output_directory)
@@ -348,10 +349,12 @@ def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed, output_direc
     return inputs_raster_selection
 
 def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed, output_directory):
+    print('layer_needed',layer_needed)
     inputs_raster_selection = {}
     # retrieve all layer neeeded
     for layer in layer_needed:
-        path_to_dataset = datasets_directory + layer + "/data/" + layer + ".tif"
+        directory = layer.replace('_tif', '')
+        path_to_dataset = datasets_directory + directory + "/data/" + layer + ".tif"
         # create a file name as output
         print ('path_to_dataset ',path_to_dataset)
         filename_tif = helper.generate_geotif_name(output_directory)

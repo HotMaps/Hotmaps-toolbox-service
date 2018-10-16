@@ -47,53 +47,19 @@ services:
     depends_on:
     - nginx
     - dockergen
-    environment:
-      NGINX_PROXY_CONTAINER: nginx-proxy
-      NGINX_DOCKER_GEN_CONTAINER: nginx-proxy-gen
-    volumes:
-    - conf:/etc/nginx/conf.d
-    - vhost:/etc/nginx/vhost.d
-    - html:/usr/share/nginx/html
-    - certs:/etc/nginx/certs
-    - /var/run/docker.sock:/var/run/docker.sock:ro
-  frontend:
-    build:
-      context: ./toolbox-client/
-      dockerfile: Dockerfile
-    expose:
-    - 80
-    restart: always
-    networks:
-    - nginx
-    - backend
-    environment:
-    - VIRTUAL_HOST=www.hotmapsdev.hevs.ch
-    - VIRTUAL_PORT=80
-    - LETSENCRYPT_HOST=www.hotmapsdev.hevs.ch
-    - LETSENCRYPT_EMAIL=foo@example.com
-    - HTTPS_METHOD=nohttps
-
-  geoserver:
-    image: hotmaps-geoserver-dev3
-    networks:
-    - nginx
-    - backend
-    expose:
-    - 8080
-    restart: always
-    environment:
-    - VIRTUAL_HOST=geoserver.hotmapsdev.hevs.ch
-    - VIRTUAL_PORT=8080
-    - LETSENCRYPT_HOST=geoserver.hotmapsdev.hevs.ch
-    - LETSENCRYPT_EMAIL=foo@example.com
-    - HTTPS_METHOD=nohttps
-    volumes:
-    - /var/hotmaps/geoserver-dev/web.xml:/usr/local/tomcat/webapps/geoserver/WEB-INF/web.xml
-    - /var/hotmaps/geoserver-dev/setenv.sh:/usr/local/tomcat/bin/setenv.sh
-    - /var/hotmaps/geoserver-dev:/opt/geoserver/data_dir
-    - /var/hotmaps/geoserver-dev/plugins/lib:/usr/local/tomcat/webapps/geoserver/WEB-INF/lib
-    external_links:
-    - postgis-database:postgis
+  environment:
+  - VIRTUAL_HOST=geoserver.hotmaps.hevs.ch
+  - VIRTUAL_PORT=8080
+  - LETSENCRYPT_HOST=geoserver.hotmaps.hevs.ch
+  - LETSENCRYPT_EMAIL=foo@example.com
+  - HTTPS_METHOD=nohttps
+  volumes:
+  - /var/hotmaps/geoserver-dev/web.xml:/usr/local/tomcat/webapps/geoserver/WEB-INF/web.xml
+  - /var/hotmaps/geoserver-dev/setenv.sh:/usr/local/tomcat/bin/setenv.sh
+  - /var/hotmaps/geoserver-dev:/opt/geoserver/data_dir
+  - /var/hotmaps/geoserver-dev/plugins/lib:/usr/local/tomcat/webapps/geoserver/WEB-INF/lib
+  external_links:
+  - postgis-database:postgis
 
   rabbit:
     hostname: rabbit
@@ -103,22 +69,17 @@ services:
     - RABBITMQ_DEFAULT_PASS=mypass
     ports:
     - "5672:5672"
-    networks:
-    - cm-net
   api:
     build:
       context: ./HotMaps-toolbox-service/api
-      dockerfile: dockerfiles/Dockerfile
-    networks:
-    - nginx
-    - backend
+      dockerfile: Dockerfile
     expose:
     - 80
     restart: always
     environment:
-    - VIRTUAL_HOST=api.hotmapsdev.hevs.ch
+    - VIRTUAL_HOST=api.hotmaps.hevs.ch
     - VIRTUAL_PORT=80
-    - LETSENCRYPT_HOST=api.hotmapsdev.hevs.ch
+    - LETSENCRYPT_HOST=api.hotmaps.hevs.ch
     - LETSENCRYPT_EMAIL=foo@example.com
     - HTTPS_METHOD=nohttps
     external_links:
@@ -130,18 +91,27 @@ services:
     depends_on:
     - redis
     networks:
+    - backend
     - cm-net
     - nginx
     volumes:
     - /var/tmp:/var/tmp
     - /var/hotmaps/repositories:/var/hotmaps/repositories
-
+  worker:
+    build:
+      context: ./HotMaps-toolbox-service/api
+      dockerfile: Dockerfile_celery_queue
+    links:
+    - rabbit
+    depends_on:
+    - rabbit
+    - redis
   monitor:
     build:
       context: ./HotMaps-toolbox-service/api
-      dockerfile: dockerfiles/Dockerfile_flower
+      dockerfile: Dockerfile_flower
     ports:
-    - "9090:5555"
+    - "5555:5555"
     entrypoint: flower
     command:  -A celery_worker.celery --port=5555 --broker=amqp://admin:mypass@rabbit:5672/
     depends_on:
@@ -149,27 +119,12 @@ services:
     - rabbit
   redis:
     image: redis
-    networks:
-    - cm-net
-# release calculation module
+
+  release calculation module
 
   calculation_module_test:
     build:
       context: ./calculation_module/base_calculation_module/cm
-      dockerfile: Dockerfile
-    restart: always
-    expose:
-    - 80
-    external_links:
-    - rabbit
-    networks:
-    - cm-net
-    volumes:
-    - /var/tmp:/var/tmp
-
-  dh_grid:
-    build:
-      context: ./calculation_module/dh_grid/cm
       dockerfile: Dockerfile
     restart: always
     expose:
@@ -193,13 +148,28 @@ services:
     - cm-net
     volumes:
     - /var/tmp:/var/tmp
+
+  dh_grid:
+    build:
+      context: ./calculation_module/dh_grid/cm
+      dockerfile: Dockerfile
+    restart: always
+    expose:
+    - 80
+    external_links:
+    - rabbit
+    networks:
+    - cm-net
+  networks:
+    hotmaps-toolbox-service_cm-net:
+      external: true
+  #  to define a custem name for network, the version 3.5 of docker-compose is required(docker version 17.12.0+)
 #  to define a custem name for network, the version 3.5 of docker-compose is required(docker version 17.12.0+)
 volumes:
   conf:
   vhost:
   html:
   certs:
-  static-content:
 
 networks:
   nginx:
@@ -207,9 +177,4 @@ networks:
   backend:
     driver: bridge
     internal: true
-  cm-net:
-    driver: bridge
-
-
-
 
