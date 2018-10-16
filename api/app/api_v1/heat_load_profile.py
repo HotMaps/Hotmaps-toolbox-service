@@ -5,7 +5,7 @@ from app.decorators.serializers import  load_profile_aggregation_day_input, \
     load_profile_aggregation_curve_output, load_profile_aggregation_curve, load_profile_aggregation_hectares, \
     load_profile_aggregation_curve_hectares
 from app.decorators.restplus import api
-from app.decorators.exceptions import IntersectionException, HugeRequestException, ParameterException
+from app.decorators.exceptions import IntersectionException, HugeRequestException, ParameterException, RequestException
 from app.models.heatloadQueries import HeatLoadProfile
 
 
@@ -31,8 +31,10 @@ class HeatLoadProfileResource(Resource):
 
 
 @ns.route('/duration-curve/nuts-lau')
-@api.response(404, 'No data found')
-@api.response(500, 'Missing parameter.')
+@api.response(0, 'Request too big')
+@api.response(404, 'No data found for that specific list of NUTS.')
+@api.response(530, 'Request error.')
+@api.response(531, 'Missing parameter.')
 class HeatLoadProfileAggregation(HeatLoadProfileResource):
     @api.marshal_with(load_profile_aggregation_curve_output)
     @api.expect(load_profile_aggregation_curve)
@@ -41,9 +43,6 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         Returns the statistics for specific layers, area and year
         :return:
         """
-        # Entries
-
-        wrong_parameter = [];
         try:
             year = api.payload['year']
         except:
@@ -61,7 +60,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
                     exception_message += ', '
             raise ParameterException(exception_message + '')
 
-        # Stop execution if nuts list is empty 
+        # Stop execution if nuts list is empty
         if not nuts:
             return
 
@@ -87,9 +86,12 @@ def durationCurveNutsLau(year, nuts):
 
 
 @ns.route('/duration-curve/hectares')
-@api.response(404, 'No data found')
-@api.response(500, 'Missing parameter.')
-@api.response(502, 'SQL Error.')
+@api.response(0, 'Request too big')
+@api.response(404, 'No data found for that specific area.')
+@api.response(530, 'Request error.')
+@api.response(531, 'Missing parameter.')
+@api.response(533, 'SQL error.')
+#@api.response(534, 'Not enough points error.')
 class HeatLoadProfileAggregation(HeatLoadProfileResource):
     @api.marshal_with(load_profile_aggregation_curve_output)
     @api.expect(load_profile_aggregation_curve_hectares)
@@ -130,7 +132,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
                     exception_message += ', '
             raise ParameterException(exception_message + '')
 
-        # Stop execution if areas list is empty 
+        # Stop execution if areas list is empty
 
         polyArray = []
         output = {}
@@ -180,9 +182,11 @@ def durationCurveHectare(areas,year):
 
 @ns.route('/hectares')
 @api.response(0, 'Request too big')
-@api.response(404, 'No data found')
-@api.response(500, 'Missing parameter.')
-@api.response(502, 'SQL Error.')
+@api.response(404, 'No data found for that specific area.')
+@api.response(530, 'Request error.')
+@api.response(531, 'Missing parameter.')
+@api.response(533, 'SQL error.')
+#@api.response(534, 'Not enough points error.')
 class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
     #@api.marshal_with(load_profile_aggregation_hectares_output)
     @api.expect(load_profile_aggregation_hectares)
@@ -191,7 +195,6 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
         Returns the heat load data by hectare
         :return:
         """
-
         # Entrees
         wrong_parameter = [];
         try:
@@ -259,13 +262,13 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
             raise IntersectionException()
         return res
 
-
-
-
-
 @ns.route('/nuts-lau')
-@api.response(404, 'No data found')
-@api.response(500, 'Missing parameter.')
+@api.response(0, 'Request too big')
+@api.response(404, 'No data found for that specific list of NUTS.')
+@api.response(530, 'Request error.')
+@api.response(531, 'Missing parameter.')
+@api.response(533, 'SQL error.')
+#@api.response(534, 'Not enough points error.')
 class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
     #@api.marshal_with(load_profile_aggregation_hectares_output)
     @api.expect(load_profile_aggregation_day_input) #TODO Nuts level asked but not used in the app
@@ -274,7 +277,6 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
         Returns the heat load data by nuts or lau
         :return:
         """
-
         # Entrees
         wrong_parameter = [];
         try:
@@ -293,12 +295,12 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
                 if (i != len(wrong_parameter) - 1):
                     exception_message += ', '
             raise ParameterException(exception_message + '')
-        # Stop execution if nuts list is empty 
+        # Stop execution if nuts list is empty
         if not nuts:
             return
-            
+
         nuts = generalData.transform_nuts_list(nuts)
-        
+
         if 'month' in api.payload.keys():
           month = api.payload["month"]
         else:
