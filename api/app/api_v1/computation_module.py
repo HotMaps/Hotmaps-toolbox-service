@@ -16,24 +16,17 @@ ns = nsCM
 from flask_restplus import Resource
 from app import celery
 import requests
-import pika
+
 
 import os
 import json
 from flask import send_from_directory
 
-import socket
+
 from app import CalculationModuleRpcClient
 from app import helper
 
-import logging
 
-from celery import Celery
-from celery.task import periodic_task
-from datetime import timedelta
-from os import environ
-
-import stat
 #TODO Add url to find  right computation module
 UPLOAD_DIRECTORY = '/var/tmp'
 DATASET_DIRECTORY = '/var/hotmaps/repositories/'
@@ -151,7 +144,7 @@ def savefile(filename,url):
 def computeTask(data,payload,cm_id,layerneed):
 
     """
-    Returns the calculation of a calculation module
+    Rdeturns the calculation of a calculation module
     :return:
 
     """

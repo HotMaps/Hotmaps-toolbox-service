@@ -95,8 +95,9 @@ class StatsLayersNutsInArea(Resource):
 
 		output = []
 
+
 		res = LayersNutsLau.stats_nuts_lau(nuts=generalData.adapt_nuts_list(nuts), year=year, layers=layers, type=type)
-		output = res
+		output = res.get()
 
 
 		# compute Cross indicators if both layers are selected

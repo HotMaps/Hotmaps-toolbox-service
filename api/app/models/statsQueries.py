@@ -4,6 +4,7 @@ from app import dbGIS as db
 from app import constants
 from decimal import *
 
+from app import celery
 from . import generalData
 from app import model
 
@@ -12,8 +13,10 @@ log = logging.getLogger(__name__)
 
 
 
-class LayersNutsLau: 
+class LayersNutsLau:
+
 	@staticmethod
+	@celery.task(name = 'stats_nuts_lau')
 	def stats_nuts_lau(nuts, year, layers, type): #/stats/layers/nuts-lau
 
 

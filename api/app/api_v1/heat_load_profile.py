@@ -70,11 +70,11 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         output = {}
 
         output = HeatLoadProfile.duration_curve_nuts_lau(year=year, nuts=nuts)
-
-
-        return {
+        result = {
             "points": output
         }
+
+        return result
 
 @celery.task(name = 'duration_curve_nuts_lau')
 def durationCurveNutsLau(year, nuts):
@@ -149,10 +149,12 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         try:
             output = HeatLoadProfile.duration_curve_hectares(year=year, geometry=geom)
         except:
+
             raise IntersectionException()
-        return {
+        result = {
             "points": output
         }
+        return result
 
 @celery.task(name = 'duration_curve_hectare')
 def durationCurveHectare(areas,year):
@@ -256,6 +258,7 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
         try:
             res = HeatLoadProfile.heatloadprofile_hectares(year=year, month=month, day=day, geometry=geom)
         except:
+            print('IntersectionException')
             raise IntersectionException()
         return res
 
