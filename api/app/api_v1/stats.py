@@ -7,7 +7,7 @@ from app.decorators.serializers import  stats_layers_hectares_output,\
 	stats_layers_nuts_input, stats_layers_nuts_output,\
 	stats_layers_hectares_input, stats_list_nuts_input, stats_list_label_dataset
 from app.decorators.restplus import api
-from app.decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, ParameterException
+from app.decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, ParameterException, RequestException
 
 from app.models.statsQueries import LayersHectare
 from app.models.statsQueries import ElectricityMix
@@ -34,7 +34,8 @@ ns = nsStats
 
 @ns.route('/layers/nuts-lau')
 @api.response(404, 'No data found for that specific list of NUTS.')
-@api.response(500, 'Missing parameter.')
+@api.response(530, 'Request Error')
+@api.response(531, 'Missing parameter.')
 class StatsLayersNutsInArea(Resource):
 	@api.marshal_with(stats_layers_nuts_output)
 	@api.expect(stats_layers_nuts_input)
@@ -64,7 +65,7 @@ class StatsLayersNutsInArea(Resource):
 				exception_message += wrong_parameter[i]
 				if (i != len(wrong_parameter) - 1):
 					exception_message += ', '
-			raise ParameterException(exception_message + '')
+			raise ParameterException(str(exception_message))
 
 		# Stop execution if layers list or nuts list is empty
 		if not layersPayload or not nuts:
@@ -122,12 +123,13 @@ class StatsLayersNutsInArea(Resource):
 			"no_table_layers": noTableLayers
 		}
 
-
 @ns.route('/layers/hectares')
 @api.response(0, 'Request too big')
 @api.response(404, 'No data found for that specific area.')
-@api.response(500, 'Missing parameter.')
-@api.response(502, 'SQL Error.')
+@api.response(530, 'Request error.')
+@api.response(531, 'Missing parameter.')
+@api.response(533, 'SQL error.')
+#@api.response(534, 'Not enough points error.')
 class StatsLayersHectareMulti(Resource):
 	@api.marshal_with(stats_layers_hectares_output)
 	@api.expect(stats_layers_hectares_input)
@@ -171,7 +173,7 @@ class StatsLayersHectareMulti(Resource):
 				exception_message += wrong_parameter[i]
 				if (i != len(wrong_parameter) - 1):
 					exception_message += ', '
-			raise ParameterException(exception_message + '')
+			raise ParameterException(str(exception_message))
 
 
 
@@ -286,8 +288,10 @@ def indicatorsHectares(year,layersPayload,areas):
 
 
 @ns.route('/energy-mix/nuts-lau')
+@api.response(0, 'Request too big')
 @api.response(404, 'No data found for that specific list of NUTS.')
-@api.response(500, 'Missing parameter.')
+@api.response(530, 'Request error.')
+@api.response(531, 'Missing parameter.')
 class StatsLayersNutsInArea(Resource):
 	@api.marshal_with(stats_list_label_dataset)
 	@api.expect(stats_list_nuts_input)
@@ -310,13 +314,10 @@ class StatsLayersNutsInArea(Resource):
 				exception_message += wrong_parameter[i]
 				if (i != len(wrong_parameter) - 1):
 					exception_message += ', '
-			raise ParameterException(exception_message + '')
+			raise ParameterException(str(exception_message))
 
 		res = ElectricityMix.getEnergyMixNutsLau(generalData.adapt_nuts_list(nuts))
 		return res
-
-		# Remove scale for each layer
-
 
 @celery.task(name = 'energy_mix_nuts_lau')
 def processGenerationMix(nuts):
