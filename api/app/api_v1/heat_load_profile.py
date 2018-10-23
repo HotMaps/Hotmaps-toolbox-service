@@ -197,80 +197,80 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
     #@api.marshal_with(load_profile_aggregation_hectares_output)
     @api.expect(load_profile_aggregation_hectares)
     def post(self):
+        """
+        Returns the heat load data by hectare
+        :return:
+        """
+        #        try:
+
+        # Entrees
+        wrong_parameter = [];
         try:
-            """
-            Returns the heat load data by hectare
-            :return:
-            """
+            year = api.payload['year']
+        except:
+            wrong_parameter.append('year')
+        try:
+            areas = api.payload['areas']
+            for test_area in areas:
+                try:
+                    for test_point in test_area['points']:
+                        try:
+                            test_lng = test_point['lng']
+                        except:
+                            wrong_parameter.append('lng')
+                        try:
+                            test_lat = test_point['lat']
+                        except:
+                            wrong_parameter.append('lat')
+                except:
+                    wrong_parameter.append('points')
+        except:
+            wrong_parameter.append('areas')
+        # raise exception if parameters are false
+        if len(wrong_parameter) > 0:
+            exception_message = ''
+            for i in range(len(wrong_parameter)):
+                exception_message += wrong_parameter[i]
+                if (i != len(wrong_parameter) - 1):
+                    exception_message += ', '
+            raise ParameterException(exception_message + '')
 
-            # Entrees
-            wrong_parameter = [];
-            try:
-                year = api.payload['year']
-            except:
-                wrong_parameter.append('year')
-            try:
-                areas = api.payload['areas']
-                for test_area in areas:
-                    try:
-                        for test_point in test_area['points']:
-                            try:
-                                test_lng = test_point['lng']
-                            except:
-                                wrong_parameter.append('lng')
-                            try:
-                                test_lat = test_point['lat']
-                            except:
-                                wrong_parameter.append('lat')
-                    except:
-                        wrong_parameter.append('points')
-            except:
-                wrong_parameter.append('areas')
-            # raise exception if parameters are false
-            if len(wrong_parameter) > 0:
-                exception_message = ''
-                for i in range(len(wrong_parameter)):
-                    exception_message += wrong_parameter[i]
-                    if (i != len(wrong_parameter) - 1):
-                        exception_message += ', '
-                raise ParameterException(exception_message + '')
+        # Stop execution if areas list is empty
+        if not areas:
+            return
+        # TODO no error management on month & day entry
+        if 'month' in api.payload.keys():
+            month = api.payload["month"]
+        else:
+            month = 0
 
-            # Stop execution if areas list is empty
-            if not areas:
-                return
-            # TODO no error management on month & day entry
-            if 'month' in api.payload.keys():
-                month = api.payload["month"]
-            else:
-                month = 0
-
-            if 'day' in api.payload.keys():
-                day = api.payload["day"]
-            else:
-                day = 0
+        if 'day' in api.payload.keys():
+            day = api.payload["day"]
+        else:
+            day = 0
 
 
-            polyArray = []
-            output = {}
-            # TODO: this part must be one methods same in /aggregate/duration_curve/hectares Rules 1 NO DUPLICATE
-            # convert to polygon format for each polygon and store them in polyArray
-            for polygon in areas:
-                po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
-                polyArray.append(po)
+        polyArray = []
+        output = {}
+        # TODO: this part must be one methods same in /aggregate/duration_curve/hectares Rules 1 NO DUPLICATE
+        # convert to polygon format for each polygon and store them in polyArray
+        for polygon in areas:
+            po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
+            polyArray.append(po)
 
 
-            # convert array of polygon into multipolygon
-            multipolygon = shapely_geom.MultiPolygon(polyArray)
+        # convert array of polygon into multipolygon
+        multipolygon = shapely_geom.MultiPolygon(polyArray)
 
-            #geom = "SRID=4326;{}".format(multipolygon.wkt)
-            geom = multipolygon.wkt
-            try:
-                res = HeatLoadProfile.heatloadprofile_hectares(year=year, month=month, day=day, geometry=geom)
-            except:
-                raise IntersectionException()
-            return res
-        except Exception, e:
-            raise RequestException(str(e))
+        #geom = "SRID=4326;{}".format(multipolygon.wkt)
+        geom = multipolygon.wkt
+        try:
+            res = HeatLoadProfile.heatloadprofile_hectares(year=year, month=month, day=day, geometry=geom)
+        except:
+            raise IntersectionException()
+        return res
+#        except Exception, e:
+#            raise RequestException(str(e))
 
 @ns.route('/nuts-lau')
 @api.response(0, 'Request too big')
@@ -287,47 +287,47 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
         Returns the heat load data by nuts or lau
         :return:
         """
+#        try:
+        # Entrees
+        wrong_parameter = [];
         try:
-            # Entrees
-            wrong_parameter = [];
-            try:
-                year = api.payload['year']
-            except:
-                wrong_parameter.append('year')
-            try:
-                nuts = api.payload['nuts']
-            except:
-                wrong_parameter.append('nuts')
-            # raise exception if parameters are false
-            if len(wrong_parameter) > 0:
-                exception_message = ''
-                for i in range(len(wrong_parameter)):
-                    exception_message += wrong_parameter[i]
-                    if (i != len(wrong_parameter) - 1):
-                        exception_message += ', '
-                raise ParameterException(exception_message + '')
-            # Stop execution if nuts list is empty
-            if not nuts:
-                return
+            year = api.payload['year']
+        except:
+            wrong_parameter.append('year')
+        try:
+            nuts = api.payload['nuts']
+        except:
+            wrong_parameter.append('nuts')
+        # raise exception if parameters are false
+        if len(wrong_parameter) > 0:
+            exception_message = ''
+            for i in range(len(wrong_parameter)):
+                exception_message += wrong_parameter[i]
+                if (i != len(wrong_parameter) - 1):
+                    exception_message += ', '
+            raise ParameterException(exception_message + '')
+        # Stop execution if nuts list is empty
+        if not nuts:
+            return
 
-            nuts = generalData.transform_nuts_list(nuts)
+        nuts = generalData.transform_nuts_list(nuts)
 
-            if 'month' in api.payload.keys():
-              month = api.payload["month"]
-            else:
-              month = 0
+        if 'month' in api.payload.keys():
+          month = api.payload["month"]
+        else:
+          month = 0
 
-            if 'day' in api.payload.keys():
-              day = api.payload["day"]
-            else:
-              day = 0
+        if 'day' in api.payload.keys():
+          day = api.payload["day"]
+        else:
+          day = 0
 
-            output = {}
+        output = {}
 
-            res = HeatLoadProfile.heatloadprofile_nuts_lau(nuts=nuts, year=year, month=month, day=day)
+        res = HeatLoadProfile.heatloadprofile_nuts_lau(nuts=nuts, year=year, month=month, day=day)
 
-            output = res
+        output = res
 
-            return output
-        except Exception, e:
-            raise RequestException(str(e))
+        return output
+#        except Exception, e:
+#            raise RequestException(str(e))

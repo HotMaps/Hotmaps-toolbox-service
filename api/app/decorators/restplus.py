@@ -21,7 +21,16 @@ def handle_too_big_request(error):
     :return:
     '''
     message = 'Your request is too big for the server'
-    return {'message': message}, 532
+    response = {
+        "message": message,
+           "error":{
+              "message":message,
+              "status":"532",
+              "statusText":"HUGEREQUEST"
+           }
+        }
+    return response, 532
+
 @api.errorhandler(IntersectionException)
 def handle_intersection_request(error):
     '''
@@ -30,7 +39,15 @@ def handle_intersection_request(error):
     :return:
     '''
     message = 'Problem with your point selection'
-    return {'message': message}, 533
+    response = {
+        "message": message,
+           "error":{
+              "message":message,
+              "status":"533",
+              "statusText":"INTERSECTION"
+           }
+        }
+    return response, 533
 @api.errorhandler(NotEnoughPointsException)
 def handle_not_enough_point(error):
     '''
@@ -39,7 +56,15 @@ def handle_not_enough_point(error):
     :return:
     '''
     message = 'Please specify more than 2 coordinates'
-    return {'message': message}, 534
+    response = {
+        "message": message,
+           "error":{
+              "message":message,
+              "status":"534",
+              "statusText":"NOTENOUGHPOINTS"
+           }
+        }
+    return response, 534
 @api.errorhandler(ParameterException)
 def handle_false_parameters(error):
     '''
@@ -48,7 +73,15 @@ def handle_false_parameters(error):
     :return:
     '''
     message = 'Missing Parameter: ' + error.message
-    return {'message': message}, 531
+    response = {
+        "message":message,
+        "error":{
+              "message":message,
+              "status":"531",
+              "statusText":"PARAMETERS"
+           }
+        }
+    return response, 531
 
 @api.errorhandler(RequestException)
 def handle_request_exception(error):
@@ -58,7 +91,15 @@ def handle_request_exception(error):
     :return:
     '''
     message = error.message
-    return {'message': message}, 530
+    response = {
+           "message":message,
+           "error":{
+              "message":message,
+              "status":"530",
+              "statusText":"REQUEST"
+           }
+        }
+    return response, 530
 
 @api.errorhandler
 def default_error_handler(e):
