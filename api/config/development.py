@@ -26,6 +26,19 @@ CELERY_BROKER_URL = 'amqp://admin:mypass@rabbit:5672/'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 UPLOAD_FOLDER = 'uploaded_file'
 
+#TODO set up mail basic configuration
+# MAIL_SERVER
+# MAIL_PORT
+# MAIL_USE_TLS
+# MAIL_USE_SSL
+# MAIL_DEBUG
+# MAIL_USERNAME
+# MAIL_PASSWORD
+# MAIL_DEFAULT_SENDER
+# MAIL_MAX_EMAILS
+# MAIL_SUPPRESS_SEND
+# MAIL_ASCII_ATTACHMENTS
+
 user = secrets.dev_user
 host = secrets.dev_host
 password = secrets.dev_password

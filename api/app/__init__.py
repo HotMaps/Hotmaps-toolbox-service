@@ -77,10 +77,11 @@ log = logging.getLogger(__name__)
 from flask_security import SQLAlchemySessionUserDatastore
 from models.user import User
 from models.role import Role
-
 # Setup Flask-Security
 user_datastore = SQLAlchemySessionUserDatastore(dbGIS.session, User, Role)
 
+from flask_mail import Mail
+mail =Mail()
 def create_app(config_name):
     """
     Create app instance
@@ -89,10 +90,7 @@ def create_app(config_name):
     cfg = os.path.join(os.getcwd(), 'config', config_name + '.py')
     app.config.from_pyfile(cfg)
 
-    # set up security
-    from flask_security import Security
-
-    security = Security(app, user_datastore)
+    mail.init_app(app)
 
     # initialize extensions
     from .api_v1 import api
@@ -106,6 +104,9 @@ def create_app(config_name):
     api_rest_plus.add_namespace(main_heat_load_profile_namespace)
     from .api_v1 import nsCM
     api_rest_plus.add_namespace(main_heat_load_profile_namespace)
+
+    from .api_v1 import nsUsers
+    api_rest_plus.add_namespace(nsUsers)
 
     app.register_blueprint(api)
 
@@ -143,7 +144,4 @@ def create_app(config_name):
             "http://maps.googleapis.com/*"
         }
         }})
-
     return app
-
-#log.info(app)

@@ -12,16 +12,17 @@ from app.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicat
 from ..models.user import User
 import app
 from .. import dbGIS as db
-from .. import user_datastore
+from .. import user_datastore, mail
 from celery.utils.log import get_task_logger
 import json
-from flask.ext.security.utils import hash_password
+from passlib.hash import pbkdf2_sha256
+from flask_mail import Message
 
-logger = get_task_logger(__name__)
-log = logging.getLogger(__name__)
+from app import log
 
 nsUsers = api.namespace('users', description='Operations related to users')
 ns = nsUsers
+
 
 @ns.route('/register')
 @api.response(530, 'Request error')
@@ -61,23 +62,28 @@ class UserRegistering(Resource):
 					exception_message += ', '
 			raise ParameterException(exception_message + '')
 		# TODO we need https to avoid the password being passed in the request body clearly
-		#password_encryption
 		try:
-			password = unencrypted_password
-#			password = hash_password(str(unencrypted_password))
-		except Exception, e:
-			raise RequestException(str(e))
+			#password_encryption
+			password = pbkdf2_sha256.hash(str(unencrypted_password))
 
-		#user model creation
-		try:
-			registered_user = User(first_name=first_name, last_name=last_name, email=email, password=password)
-		except Exception, e:
-			raise RequestException(str(e))
-		#user registered in the DB
-		try:
-			user_datastore.create_user(registered_user)
+			#we check if the email has already been used
+			if(User.get_by_email(email) is not None):
+				return {
+					"message": 'the user '+email+' already exists !'
+				}
+			#user creation in the DB
+			user_datastore.create_user(email=email, password=password)
 			db.session.commit()
 			output = 'user registered'
+
+			#mail creation
+			# msg = Message()
+			# msg.body = "Testing"
+			# msg.add_recipient(email)
+			#TODO set up the default mail sender on the MAIL_DEFAULT_SENDER parameter
+
+			#mail.send(msg)
+
 		except Exception, e:
 			raise RequestException(str(e))
 

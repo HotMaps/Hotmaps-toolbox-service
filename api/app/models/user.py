@@ -1,5 +1,6 @@
 from .. import dbGIS as db
 from flask_security import UserMixin
+from .role import Role
 
 class User(db.Model, UserMixin):
     '''
@@ -23,22 +24,24 @@ class User(db.Model, UserMixin):
     current_login_ip = db.Column(db.String(100))
     active = db.Column(db.Boolean, default=False)
     confirmed_at = db.Column(db.DateTime())
-    roles = db.relationship('Role', secondary='roles_users',
-                         backref=db.backref('users', lazy='dynamic'))
-    def __repr__(self):
-        return "<User(first_name='%s', last_name='%s', email='%s')>" % (
-            self.first_name, self.last_name, self.email)
+    roles = db.relationship('Role', secondary='user.roles_users', backref=db.backref('user_id', lazy='dynamic'))
 
-    def get_id(self):
-        """Return the email address to satisfy Flask-Login's requirements."""
-        return self.email
+    @classmethod
+    def get_by_email(cls, email):
+        '''
+        return a user by its email
+        :param cls:
+        :param email:
+        :return: the user
+        '''
+        return db.session.query(User).filter(User.email == email).first()
 
-    def is_authenticated(self):
-        """Return True if the user is authenticated."""
-        return self.authenticated
 
 class RolesUsers(db.Model):
     __tablename__ = 'roles_users'
+    __table_args__ = (
+        {"schema": 'user'}
+    )
     id = db.Column(db.Integer(), primary_key=True)
-    user_id = db.Column('user_id', db.Integer(), db.ForeignKey('user.id'))
-    role_id = db.Column('role_id', db.Integer(), db.ForeignKey('role.id'))
+    user_id = db.Column('user_id', db.Integer(), db.ForeignKey('user.users.id'))
+    role_id = db.Column('role_id', db.Integer(), db.ForeignKey('user.roles.id'))

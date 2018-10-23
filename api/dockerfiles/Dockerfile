@@ -70,7 +70,7 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY . /api
 WORKDIR /api
 
-EXPOSE 5000
+EXPOSE 80
 
 # Start server
 
