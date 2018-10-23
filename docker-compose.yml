@@ -193,6 +193,20 @@ services:
     - cm-net
     volumes:
     - /var/tmp:/var/tmp
+
+  solar_potential:
+    build:
+      context: ./calculation_module/solar_potential/cm
+      dockerfile: Dockerfile
+    restart: always
+    expose:
+    - 80
+    external_links:
+    - rabbit
+    networks:
+    - cm-net
+    volumes:
+    - /var/tmp:/var/tmp
 #  to define a custem name for network, the version 3.5 of docker-compose is required(docker version 17.12.0+)
 volumes:
   conf:
