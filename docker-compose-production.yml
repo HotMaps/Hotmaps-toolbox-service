@@ -120,7 +120,7 @@ services:
   redis:
     image: redis
 
-  release calculation module
+  #release calculation module
 
   calculation_module_test:
     build:
@@ -160,6 +160,26 @@ services:
     - rabbit
     networks:
     - cm-net
+    volumes:
+    - /var/tmp:/var/tmp
+
+  solar_potential:
+    build:
+      context: ./calculation_module/solar_potential/cm
+      dockerfile: Dockerfile
+    restart: always
+    expose:
+    - 80
+    external_links:
+    - rabbit
+    networks:
+    - cm-net
+    volumes:
+    - /var/tmp:/var/tmp
+
+
+
+
   networks:
     hotmaps-toolbox-service_cm-net:
       external: true
