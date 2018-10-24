@@ -1,0 +1,200 @@
+version: '3.2'
+
+services:
+  nginx:
+    container_name: nginx-proxy
+    build: ./nginx-proxy/
+    environment:
+    - HTTPS_METHOD=nohttps
+    networks:
+    - nginx
+    ports:
+    - "80:80"
+    - "443:443"
+    volumes:
+    - conf:/etc/nginx/conf.d
+    - type: volume
+      source: vhost
+      target: /etc/nginx/vhost.d
+      volume:
+        nocopy: true
+    - html:/usr/share/nginx/html
+    - certs:/etc/nginx/certs
+    restart: always
+    labels:
+    - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true"
+  dockergen:
+    image: jwilder/docker-gen:0.7.3
+    container_name: nginx-proxy-gen
+    networks:
+    - nginx
+    depends_on:
+    - nginx
+    command: -notify-sighup nginx-proxy -watch -wait 5s:30s /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
+    volumes:
+    - conf:/etc/nginx/conf.d
+    - vhost:/etc/nginx/vhost.d
+    - html:/usr/share/nginx/html
+    - certs:/etc/nginx/certs
+    - /var/run/docker.sock:/tmp/docker.sock:ro
+    - ./nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl:ro
+
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: nginx-proxy-le
+    networks:
+    - nginx
+    depends_on:
+    - nginx
+    - dockergen
+  environment:
+  - VIRTUAL_HOST=geoserver.hotmaps.hevs.ch
+  - VIRTUAL_PORT=8080
+  - LETSENCRYPT_HOST=geoserver.hotmaps.hevs.ch
+  - LETSENCRYPT_EMAIL=foo@example.com
+  - HTTPS_METHOD=nohttps
+  volumes:
+  - /var/hotmaps/geoserver-dev/web.xml:/usr/local/tomcat/webapps/geoserver/WEB-INF/web.xml
+  - /var/hotmaps/geoserver-dev/setenv.sh:/usr/local/tomcat/bin/setenv.sh
+  - /var/hotmaps/geoserver-dev:/opt/geoserver/data_dir
+  - /var/hotmaps/geoserver-dev/plugins/lib:/usr/local/tomcat/webapps/geoserver/WEB-INF/lib
+  external_links:
+  - postgis-database:postgis
+
+  rabbit:
+    hostname: rabbit
+    image: rabbitmq:latest
+    environment:
+    - RABBITMQ_DEFAULT_USER=admin
+    - RABBITMQ_DEFAULT_PASS=mypass
+    ports:
+    - "5672:5672"
+  api:
+    build:
+      context: ./HotMaps-toolbox-service/api
+      dockerfile: Dockerfile
+    expose:
+    - 80
+    restart: always
+    environment:
+    - VIRTUAL_HOST=api.hotmaps.hevs.ch
+    - VIRTUAL_PORT=80
+    - LETSENCRYPT_HOST=api.hotmaps.hevs.ch
+    - LETSENCRYPT_EMAIL=foo@example.com
+    - HTTPS_METHOD=nohttps
+    external_links:
+    - postgis-database:postgis
+
+    links:
+    - rabbit
+    - redis
+    depends_on:
+    - redis
+    networks:
+    - backend
+    - cm-net
+    - nginx
+    volumes:
+    - /var/tmp:/var/tmp
+    - /var/hotmaps/repositories:/var/hotmaps/repositories
+  worker:
+    build:
+      context: ./HotMaps-toolbox-service/api
+      dockerfile: Dockerfile_celery_queue
+    links:
+    - rabbit
+    depends_on:
+    - rabbit
+    - redis
+  monitor:
+    build:
+      context: ./HotMaps-toolbox-service/api
+      dockerfile: Dockerfile_flower
+    ports:
+    - "5555:5555"
+    entrypoint: flower
+    command:  -A celery_worker.celery --port=5555 --broker=amqp://admin:mypass@rabbit:5672/
+    depends_on:
+    - redis
+    - rabbit
+  redis:
+    image: redis
+
+  #release calculation module
+
+  calculation_module_test:
+    build:
+      context: ./calculation_module/base_calculation_module/cm
+      dockerfile: Dockerfile
+    restart: always
+    expose:
+    - 80
+    external_links:
+    - rabbit
+    networks:
+    - cm-net
+    volumes:
+    - /var/tmp:/var/tmp
+  district_heating_potential:
+    build:
+      context: ./calculation_module/dh_potential/cm
+      dockerfile: Dockerfile
+    restart: always
+    expose:
+    - 80
+    external_links:
+    - rabbit
+    networks:
+    - cm-net
+    volumes:
+    - /var/tmp:/var/tmp
+
+  dh_grid:
+    build:
+      context: ./calculation_module/dh_grid/cm
+      dockerfile: Dockerfile
+    restart: always
+    expose:
+    - 80
+    external_links:
+    - rabbit
+    networks:
+    - cm-net
+    volumes:
+    - /var/tmp:/var/tmp
+
+  solar_potential:
+    build:
+      context: ./calculation_module/solar_potential/cm
+      dockerfile: Dockerfile
+    restart: always
+    expose:
+    - 80
+    external_links:
+    - rabbit
+    networks:
+    - cm-net
+    volumes:
+    - /var/tmp:/var/tmp
+
+
+
+
+  networks:
+    hotmaps-toolbox-service_cm-net:
+      external: true
+  #  to define a custem name for network, the version 3.5 of docker-compose is required(docker version 17.12.0+)
+#  to define a custem name for network, the version 3.5 of docker-compose is required(docker version 17.12.0+)
+volumes:
+  conf:
+  vhost:
+  html:
+  certs:
+
+networks:
+  nginx:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true
+
