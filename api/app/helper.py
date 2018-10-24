@@ -1,7 +1,13 @@
+
+
 import json
 import uuid
 import shapely.geometry as shapely_geom
 import ast
+from osgeo import ogr
+from osgeo import osr
+
+import csv
 def find_key_in_dict(key, dictionary):
     for k, v in dictionary.items():
         if k == key:
@@ -82,6 +88,12 @@ def generate_geotif_name(directory):
 def generate_shapefile_name(directory):
     filename = generate_file(directory, '.shp')
     return filename
+def generate_csv_name(directory):
+    filename = generate_file(directory, '.csv')
+    return filename
+def generate_archive(directory):
+    filename = generate_file(directory, '.zip')
+    return filename
 def generate_file(directory,extension):
     filename = directory+'/' + str(uuid.uuid4()) + extension
     return filename
@@ -132,3 +144,38 @@ def generate_payload_for_compute(inputs_raster_selection,inputs_parameter_select
     data = json.dumps(data_output)
     return data
 
+def remove_None_in_turple(tupleX):
+    tupleX = [x for x in tupleX if x is not None]
+    return tupleX
+
+def write_wkt_csv(output_file,content):
+
+    with open(output_file, mode='w') as csv_file:
+        fieldnames = ['id', 'WKT']
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        writer.writerow({'id': '1', 'WKT': content})
+    return output_file
+def projection_4326_to_3035(wkt):
+    # use the database to transform the geometry from 3857 to 4326
+    source = osr.SpatialReference()
+    source.ImportFromEPSG(4326)
+
+    target = osr.SpatialReference()
+    target.ImportFromEPSG(3035)
+
+    transform = osr.CoordinateTransformation(source, target)
+
+    point = ogr.CreateGeometryFromWkt(wkt)
+    point.Transform(transform)
+
+    return point.ExportToWkt()
+
+
+
+def zipdir(path, ziph):
+    # ziph is zipfile handle
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            ziph.write(os.path.join(root, file))
