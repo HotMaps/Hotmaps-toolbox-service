@@ -166,9 +166,37 @@ services:
     - cm-net
     volumes:
     - /var/tmp:/var/tmp
+
+  dh_grid:
+    build:
+      context: ./calculation_module/dh_grid/cm
+      dockerfile: Dockerfile
+    restart: always
+    expose:
+    - 80
+    external_links:
+    - rabbit
+    networks:
+    - cm-net
+    volumes:
+    - /var/tmp:/var/tmp
   district_heating_potential:
     build:
       context: ./calculation_module/dh_potential/cm
+      dockerfile: Dockerfile
+    restart: always
+    expose:
+    - 80
+    external_links:
+    - rabbit
+    networks:
+    - cm-net
+    volumes:
+    - /var/tmp:/var/tmp
+
+  solar_potential:
+    build:
+      context: ./calculation_module/solar_potential/cm
       dockerfile: Dockerfile
     restart: always
     expose:
