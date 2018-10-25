@@ -1,7 +1,7 @@
 import datetime, logging
 from app import constants
 from app import dbGIS as db
-
+from app import model
 from . import generalData
 
 #logging.basicConfig()
@@ -26,7 +26,9 @@ class HeatLoadProfile:
 		sql_query = queryData[by]['with'] + queryData[by]['time'] + queryData[by]['from'] + queryData[by]['select']
 
 		# Execution of the query
-		query = db.session.execute(sql_query)
+		#query = db.session.execute(sql_query)
+
+		query = model.query_geographic_database(sql_query)
 
 		# Storing the results only if there is data
 		output = []
@@ -97,7 +99,8 @@ class HeatLoadProfile:
 		sql_query = queryData[by]['with'] + queryData[by]['select']
 
 		# Execution of the query
-		query = db.session.execute(sql_query)
+		#query = db.session.execute(sql_query)
+		query = model.query_geographic_database(sql_query)
 
 		# Storing the results only if there is data
 		output = []
@@ -156,18 +159,25 @@ class HeatLoadProfile:
 		sql_query = generalData.createQueryDataDCNutsLau(year=year, nuts=nuts)
 
 		# Execution of the query
-		query = db.session.execute(sql_query)
+		#query = db.session.execute(sql_query)
+
+		query = model.query_geographic_database(sql_query)
+
 
 		# Store query results in a list
 		listAllValues = []
 		for q in query:
+
 			listAllValues.append(q[0])
+
+
 
 		# Creation of points and sampling of the values only if there is data
 		if listAllValues:
 			finalListPoints = generalData.sampling_data(listAllValues)
 		else:
-			finalListPoints = []	
+			finalListPoints = []
+
 
 		return finalListPoints
 
@@ -178,8 +188,8 @@ class HeatLoadProfile:
 		sql_query = generalData.createQueryDataDCHectares(year=year, geometry=geometry)
 
 		# Execution of the query
-		query = db.session.execute(sql_query)
-
+		#query = db.session.execute(sql_query)
+		query = model.query_geographic_database(sql_query)
 		# Store query results in a list
 		listAllValues = []
 		for q in query:
