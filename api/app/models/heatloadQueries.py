@@ -3,12 +3,13 @@ from app import constants
 from app import dbGIS as db
 from app import model
 from . import generalData
-
+from app import celery
 #logging.basicConfig()
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 class HeatLoadProfile:
 	@staticmethod
+	@celery.task(name = 'heatloadprofile_nuts_lau')
 	def heatloadprofile_nuts_lau(year, month, day, nuts): #/heat-load-profile/nuts-lau
 
 		# Check the type of the query
@@ -82,6 +83,7 @@ class HeatLoadProfile:
 
 
 	@staticmethod
+	@celery.task(name = 'heatloadprofile_hectares')
 	def heatloadprofile_hectares(year, month, day, geometry): #/heat-load-profile/hectares
 
 		# Check the type of the query

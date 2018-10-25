@@ -76,8 +76,8 @@ class StatsLayersNutsInArea(Resource):
 
 		output = []
 
-		res = LayersNutsLau.stats_nuts_lau(nuts=generalData.adapt_nuts_list(nuts), year=year, layers=layers, type=type)
-		output = res
+		res = LayersNutsLau.stats_nuts_lau.delay(nuts=generalData.adapt_nuts_list(nuts), year=year, layers=layers, type=type)
+		output = res.get()
 
 
 		# compute Cross indicators if both layers are selected
@@ -143,8 +143,8 @@ class StatsLayersHectareMulti(Resource):
 		#geom = "SRID=4326;{}".format(multipolygon.wkt)
 		geom = multipolygon.wkt
 
-		res = LayersHectare.stats_hectares(geometry=geom, year=year, layers=layers)
-		output = res
+		res = LayersHectare.stats_hectares.delay(geometry=geom, year=year, layers=layers)
+		output = res.get()
 
 		# compute heat consumption/person if both layers are selected
 		pop1ha_name = constants.POPULATION_TOT

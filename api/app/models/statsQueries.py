@@ -114,6 +114,7 @@ class LayersNutsLau:
 class LayersHectare:
 
 	@staticmethod
+	@celery.task(name = 'stats_hectares')
 	def stats_hectares(geometry, year, layers): #/stats/layers/hectares
 
 		# Get the data

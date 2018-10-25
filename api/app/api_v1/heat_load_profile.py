@@ -169,9 +169,9 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
         #geom = "SRID=4326;{}".format(multipolygon.wkt)
         geom = multipolygon.wkt
 
-        res = HeatLoadProfile.heatloadprofile_hectares(year=year, month=month, day=day, geometry=geom)
+        res = HeatLoadProfile.heatloadprofile_hectares.delay(year=year, month=month, day=day, geometry=geom)
 
-        return res
+        return res.get()
 
 
 
@@ -210,8 +210,8 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
 
         output = {}
 
-        res = HeatLoadProfile.heatloadprofile_nuts_lau(nuts=nuts, year=year, month=month, day=day)
+        res = HeatLoadProfile.heatloadprofile_nuts_lau.delay(nuts=nuts, year=year, month=month, day=day)
 
-        output = res
+        output = res.get()
 
         return output
