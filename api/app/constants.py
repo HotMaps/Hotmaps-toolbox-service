@@ -26,6 +26,10 @@ RESTPLUS_JSON = {
     'separators': (',', ':')
 }
 
+API_URL_PROD = 'api.hotmaps.hevs.ch/api'
+API_URL_DEV = 'api.hotmapsdev.hevs.ch/api'
+API_URL_LOCAL_DOCKER = '192.168.99.100/api'
+
 CORS_HEADER_API_KEY = 'av7e7d78f93e2af'
 CORS_ORIGIN = 'http://hotmaps.hevs.ch'
 CORS_CREDENTIALS = False

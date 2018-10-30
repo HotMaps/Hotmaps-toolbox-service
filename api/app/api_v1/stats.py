@@ -45,7 +45,7 @@ class StatsLayersNutsInArea(Resource):
 		:return:
 		"""
 		#try:
-		# Entrees
+		# Entries
 		wrong_parameter = [];
 		try:
 			year = api.payload['year']
@@ -141,7 +141,7 @@ class StatsLayersHectareMulti(Resource):
 		:return:
 		"""
 		#try:
-		# Entrees
+		# Entries
 		wrong_parameter = [];
 		layersPayload = api.payload['layers']
 		try:
@@ -306,7 +306,7 @@ class StatsLayersNutsInArea(Resource):
 		:return:
 		"""
 		#try:
-		# Entrees
+		# Entries
 		wrong_parameter = [];
 		try:
 			nuts = api.payload['nuts']

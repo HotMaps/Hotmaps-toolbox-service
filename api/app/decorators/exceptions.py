@@ -38,6 +38,24 @@ class RequestException(Exception):
     '''
     pass
 
+class ActivationException(Exception):
+    '''
+    Exception raised when an error occured during the user activation
+    '''
+    pass
+
+class UserExistingException(Exception):
+    '''
+    Exception raised when someone try to register the same e-mail twice
+    '''
+    pass
+
+class UserNotExistingException(Exception):
+    '''
+    Exception raised when trying to reach a non existing user
+    '''
+    pass
+
 class ValidationError(ValueError):
     pass
 

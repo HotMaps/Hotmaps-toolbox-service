@@ -4,7 +4,8 @@ import logging
 from flask_restplus import Api
 from app import constants
 from sqlalchemy.orm.exc import NoResultFound
-from app.decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, ParameterException, RequestException
+from app.decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, \
+    ParameterException, RequestException, ActivationException, UserExistingException, UserNotExistingException
 
 log = logging.getLogger(__name__)
 
@@ -12,6 +13,42 @@ api = Api(version='1.0',
           title='HotMaps Main API',
           description='HotMaps main API that serves data and computations to the app.'
 )
+
+@api.errorhandler(RequestException)
+def handle_request_exception(error):
+    '''
+    decorator called by default when an error occured in the api
+    :param error -- the called error:
+    :return:
+    '''
+    message = error.message
+    response = {
+           "message":message,
+           "error":{
+              "message":message,
+              "status":"530",
+              "statusText":"REQUEST"
+           }
+        }
+    return response, 530
+
+@api.errorhandler(ParameterException)
+def handle_false_parameters(error):
+    '''
+    decorator called with an error caused by wrong parameters
+    :param error -- the called error:
+    :return:
+    '''
+    message = 'Missing Parameter: ' + error.message
+    response = {
+        "message":message,
+        "error":{
+              "message":message,
+              "status":"531",
+              "statusText":"PARAMETERS"
+           }
+        }
+    return response, 531
 
 @api.errorhandler(HugeRequestException)
 def handle_too_big_request(error):
@@ -26,7 +63,7 @@ def handle_too_big_request(error):
            "error":{
               "message":message,
               "status":"532",
-              "statusText":"HUGEREQUEST"
+              "statusText":"HUGE REQUEST"
            }
         }
     return response, 532
@@ -61,45 +98,64 @@ def handle_not_enough_point(error):
            "error":{
               "message":message,
               "status":"534",
-              "statusText":"NOTENOUGHPOINTS"
+              "statusText":"NOT ENOUGH POINTS"
            }
         }
     return response, 534
-@api.errorhandler(ParameterException)
-def handle_false_parameters(error):
-    '''
-    decorator called with an error caused by wrong parameters
-    :param error -- the called error:
-    :return:
-    '''
-    message = 'Missing Parameter: ' + error.message
-    response = {
-        "message":message,
-        "error":{
-              "message":message,
-              "status":"531",
-              "statusText":"PARAMETERS"
-           }
-        }
-    return response, 531
 
-@api.errorhandler(RequestException)
-def handle_request_exception(error):
+@api.errorhandler(UserExistingException)
+def handle_mail_existing(error):
     '''
-    decorator called by default when an error occured in the api
+    decorator called with an error caused trying to create a second account with the same email
     :param error -- the called error:
     :return:
     '''
-    message = error.message
+    message = 'the user '+error.message+' already exists !'
     response = {
-           "message":message,
+        "message": message,
            "error":{
               "message":message,
-              "status":"530",
-              "statusText":"REQUEST"
+              "status":"535",
+              "statusText":"USER EXISTING"
            }
         }
-    return response, 530
+    return response, 535
+
+@api.errorhandler(ActivationException)
+def handle_activation_failure(error):
+    '''
+    decorator called with an error caused when the activation of a user fail
+    :param error -- the called error:
+    :return:
+    '''
+    message = 'Can\'t activate the user'
+    response = {
+        "message": message,
+           "error":{
+              "message":message,
+              "status":"536",
+              "statusText":"ACTIVATION"
+           }
+        }
+    return response, 536
+
+@api.errorhandler(ActivationException)
+def handle_inexisting_user(error):
+    '''
+    decorator called with an error caused when trying to reach a non-existing user
+    :param error -- the called error:
+    :return:
+    '''
+    message = 'User ' + error.message + 'does not exists'
+    response = {
+        "message": message,
+           "error":{
+              "message":message,
+              "status":"537",
+              "statusText":"USER NOT EXISTING"
+           }
+        }
+    return response, 537
 
 @api.errorhandler
 def default_error_handler(e):
