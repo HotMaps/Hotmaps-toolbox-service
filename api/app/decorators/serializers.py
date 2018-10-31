@@ -411,3 +411,15 @@ user_recovery_input = api.model('input for user password recovery', {
 user_recovery_output = api.model('output for user password recovery', {
     'message': fields.String(description='message'),
 })
+user_login_input = api.model('input for user login', {
+    'email': fields.String(description='email'),
+    'password': fields.String(description='password'),
+})
+user_login_output = api.model('output for user login', {
+    'message': fields.String(description='message'),
+})
+user_logout_output = api.model('output for user login', {
+    'message': fields.String(description='message'),
+})
+
+

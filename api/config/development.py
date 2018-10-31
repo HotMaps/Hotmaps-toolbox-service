@@ -6,7 +6,7 @@ db_path = os.path.join(basedir, '../data-dev.sqlite')
 
 from app import secrets
 DEBUG = True
-FLASK_SECRET_KEY = 'paPTvnNME5NBHHuIOlFqG6zS77vHadbo'
+FLASK_SECRET_KEY = secrets.FLASK_SECRET_KEY
 SQLALCHEMY_DATABASE_URI = secrets.SQLALCHEMY_DATABASE_URI_DEVELOPMENT
 SQLALCHEMY_BINDS = {
     'cm_db':      os.environ.get('DATABASE_URL') or \

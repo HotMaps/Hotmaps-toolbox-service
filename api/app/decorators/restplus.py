@@ -2,17 +2,20 @@ import traceback
 import logging
 
 from flask_restplus import Api
-from app import constants
+from .. import constants
 from sqlalchemy.orm.exc import NoResultFound
-from app.decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, \
-    ParameterException, RequestException, ActivationException, UserExistingException, UserNotExistingException
+from ..decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, \
+    ParameterException, RequestException, ActivationException, UserExistingException, UserNotExistingException, \
+    WrongPasswordException, UserUnidentifiedException
 
 log = logging.getLogger(__name__)
 
-api = Api(version='1.0',
-          title='HotMaps Main API',
-          description='HotMaps main API that serves data and computations to the app.'
+api = Api(
+    version='1.0',
+    title='HotMaps Main API',
+    description='HotMaps main API that serves data and computations to the app.'
 )
+
 
 @api.errorhandler(RequestException)
 def handle_request_exception(error):
@@ -32,6 +35,7 @@ def handle_request_exception(error):
         }
     return response, 530
 
+
 @api.errorhandler(ParameterException)
 def handle_false_parameters(error):
     '''
@@ -49,6 +53,7 @@ def handle_false_parameters(error):
            }
         }
     return response, 531
+
 
 @api.errorhandler(HugeRequestException)
 def handle_too_big_request(error):
@@ -68,6 +73,7 @@ def handle_too_big_request(error):
         }
     return response, 532
 
+
 @api.errorhandler(IntersectionException)
 def handle_intersection_request(error):
     '''
@@ -85,6 +91,8 @@ def handle_intersection_request(error):
            }
         }
     return response, 533
+
+
 @api.errorhandler(NotEnoughPointsException)
 def handle_not_enough_point(error):
     '''
@@ -102,6 +110,7 @@ def handle_not_enough_point(error):
            }
         }
     return response, 534
+
 
 @api.errorhandler(UserExistingException)
 def handle_mail_existing(error):
@@ -121,6 +130,7 @@ def handle_mail_existing(error):
         }
     return response, 535
 
+
 @api.errorhandler(ActivationException)
 def handle_activation_failure(error):
     '''
@@ -139,7 +149,8 @@ def handle_activation_failure(error):
         }
     return response, 536
 
-@api.errorhandler(ActivationException)
+
+@api.errorhandler(UserNotExistingException)
 def handle_inexisting_user(error):
     '''
     decorator called with an error caused when trying to reach a non-existing user
@@ -157,12 +168,51 @@ def handle_inexisting_user(error):
         }
     return response, 537
 
+
+@api.errorhandler(WrongPasswordException)
+def handle_inexisting_user(error):
+    '''
+    decorator called with an error caused when trying to reach a non-existing user
+    :param error -- the called error:
+    :return:
+    '''
+    message = 'The password does not match the user'
+    response = {
+        "message": message,
+           "error":{
+              "message":message,
+              "status":"538",
+              "statusText":"WRONG PASSWORD"
+           }
+        }
+    return response, 538
+
+
+@api.errorhandler(UserUnidentifiedException)
+def handle_inexisting_user(error):
+    '''
+    decorator called with an error caused when trying to reach a non-existing user
+    :param error -- the called error:
+    :return:
+    '''
+    message = 'There is no authenticated user'
+    response = {
+        "message": message,
+           "error":{
+              "message":message,
+              "status":"539",
+              "statusText":"USER UNIDENTIFIED"
+           }
+        }
+    return response, 539
+
+
 @api.errorhandler
 def default_error_handler(e):
     message = 'An unhandled exception occurred.'
     log.exception(message)
 
-    if not settings.FLASK_DEBUG:
+    if not constants.FLASK_DEBUG:
         return {'message': message}, 500
 
 

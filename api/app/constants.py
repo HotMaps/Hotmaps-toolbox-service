@@ -1,7 +1,7 @@
 # Flask settings
 #FLASK_SERVER_NAME = '0.0.0.0:80'
 FLASK_SERVER_NAME = '0.0.0.0:5556'
-FLASK_DEBUG = False  # Do not use debug mode in production
+FLASK_DEBUG = True  # Do not use debug mode in production
 CELERY_BROKER_URL_DOCKER= 'amqp://admin:mypass@rabbit:5672/'
 CELERY_BROKER_URL_LOCAL  = 'amqp://localhost/'
 CELERY_BROKER_URL = CELERY_BROKER_URL_DOCKER

@@ -1,12 +1,13 @@
 from flask import Blueprint
-api = Blueprint('api', __name__, url_prefix='/api')
-# from .stats import nsStats
-# from .heat_load_profile import  load_profile_namespace
-# from .computation_module import nsCM
+from .stats import nsStats
+from .heat_load_profile import  load_profile_namespace
+from .computation_module import nsCM
 from .users import nsUsers
 from ..decorators import etag
-#from . import computation_module
-#from . import  computation, errors
+from . import computation_module
+# from . import  computation, errors
+
+api = Blueprint('api', __name__, url_prefix='/api')
 
 @api.before_request
 def before_request():
