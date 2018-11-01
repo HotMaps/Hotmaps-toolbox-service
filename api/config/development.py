@@ -6,7 +6,7 @@ db_path = os.path.join(basedir, '../data-dev.sqlite')
 
 from app import secrets
 DEBUG = True
-FLASK_SECRET_KEY = 'paPTvnNME5NBHHuIOlFqG6zS77vHadbo'
+FLASK_SECRET_KEY = secrets.FLASK_SECRET_KEY
 SQLALCHEMY_DATABASE_URI = secrets.SQLALCHEMY_DATABASE_URI_DEVELOPMENT
 SQLALCHEMY_BINDS = {
     'cm_db':      os.environ.get('DATABASE_URL') or \
@@ -25,6 +25,13 @@ CELERY_BROKER_URL = 'amqp://admin:mypass@rabbit:5672/'
 #CELERY_BROKER_URL = 'amqp://localhost//'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 UPLOAD_FOLDER = 'uploaded_file'
+
+MAIL_SERVER = 'smtp.gmail.com'
+MAIL_PORT = 465
+MAIL_USE_SSL = True
+MAIL_USERNAME = secrets.MAIL_USERNAME
+MAIL_PASSWORD = secrets.MAIL_PASSWORD
+MAIL_DEFAULT_SENDER = secrets.MAIL_USERNAME
 
 user = secrets.dev_user
 host = secrets.dev_host

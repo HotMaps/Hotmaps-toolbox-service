@@ -197,7 +197,7 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
         Returns the heat load data by hectare
         :return:
         """
-        # Entrees
+        # Entries
         wrong_parameter = [];
         try:
             year = api.payload['year']
@@ -232,7 +232,6 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
         # Stop execution if areas list is empty
         if not areas:
             return
-        # TODO no error management on month & day entry
         if 'month' in api.payload.keys():
             month = api.payload["month"]
         else:
@@ -280,7 +279,7 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
         Returns the heat load data by nuts or lau
         :return:
         """
-        # Entrees
+        # Entries
         wrong_parameter = [];
         try:
             year = api.payload['year']

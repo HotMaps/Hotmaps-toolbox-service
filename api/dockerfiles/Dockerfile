@@ -77,8 +77,6 @@ RUN pip install gunicorn
 
 # Copy app source code
 
-
-
 EXPOSE 80
 
 # Start server

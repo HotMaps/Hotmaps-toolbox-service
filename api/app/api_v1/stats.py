@@ -44,7 +44,7 @@ class StatsLayersNutsInArea(Resource):
 		Returns the statistics for specific layers, area and year
 		:return:
 		"""
-		# Entrees
+		# Entries
 		wrong_parameter = [];
 		try:
 			year = api.payload['year']
@@ -138,7 +138,7 @@ class StatsLayersHectareMulti(Resource):
 		Returns the statistics for specific layers, hectares and year
 		:return:
 		"""
-		# Entrees
+		# Entries
 		wrong_parameter = [];
 		layersPayload = api.payload['layers']
 		try:
@@ -300,7 +300,7 @@ class StatsLayersNutsInArea(Resource):
 		Returns the statistics for specific layers, area and year
 		:return:
 		"""
-		# Entrees
+		# Entries
 		wrong_parameter = [];
 		try:
 			nuts = api.payload['nuts']

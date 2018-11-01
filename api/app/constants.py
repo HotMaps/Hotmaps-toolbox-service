@@ -1,7 +1,7 @@
 # Flask settings
 #FLASK_SERVER_NAME = '0.0.0.0:80'
 FLASK_SERVER_NAME = '0.0.0.0:5556'
-FLASK_DEBUG = False  # Do not use debug mode in production
+FLASK_DEBUG = True  # Do not use debug mode in production
 CELERY_BROKER_URL_DOCKER= 'amqp://admin:mypass@rabbit:5672/'
 CELERY_BROKER_URL_LOCAL  = 'amqp://localhost/'
 CELERY_BROKER_URL = CELERY_BROKER_URL_DOCKER
@@ -25,6 +25,10 @@ RESTPLUS_ERROR_404_HELP = False
 RESTPLUS_JSON = {
     'separators': (',', ':')
 }
+
+API_URL_PROD = 'api.hotmaps.hevs.ch/api'
+API_URL_DEV = 'api.hotmapsdev.hevs.ch/api'
+API_URL_LOCAL_DOCKER = '192.168.99.100/api'
 
 CORS_HEADER_API_KEY = 'av7e7d78f93e2af'
 CORS_ORIGIN = 'http://hotmaps.hevs.ch'

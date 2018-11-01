@@ -32,11 +32,48 @@ class TimeoutException(Exception):
     '''
     pass
 
+
 class RequestException(Exception):
     '''
     Exception raised by default when a request fail
     '''
     pass
+
+
+class ActivationException(Exception):
+    '''
+    Exception raised when an error occured during the user activation
+    '''
+    pass
+
+
+class UserExistingException(Exception):
+    '''
+    Exception raised when someone try to register the same e-mail twice
+    '''
+    pass
+
+
+class UserNotExistingException(Exception):
+    '''
+    Exception raised when trying to reach a non existing user
+    '''
+    pass
+
+
+class WrongPasswordException(Exception):
+    '''
+    Exception raised when the password does not correspond to the user
+    '''
+    pass
+
+
+class UserUnidentifiedException(Exception):
+    '''
+    Exception raised when the user is not connected and has to be
+    '''
+    pass
+
 
 class ValidationError(ValueError):
     pass

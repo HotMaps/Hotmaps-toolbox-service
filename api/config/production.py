@@ -26,6 +26,13 @@ CELERY_BROKER_URL = 'amqp://admin:mypass@rabbit:5672/'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 UPLOAD_FOLDER = 'uploaded_file'
 
+MAIL_SERVER = 'smtp.gmail.com'
+MAIL_PORT = 465
+MAIL_USE_SSL = True
+MAIL_USERNAME = secrets.MAIL_USERNAME
+MAIL_PASSWORD = secrets.MAIL_PASSWORD
+MAIL_DEFAULT_SENDER = secrets.MAIL_USERNAME
+
 user = secrets.prod_user
 host = secrets.prod_host
 password = secrets.prod_password

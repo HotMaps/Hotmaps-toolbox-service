@@ -385,7 +385,43 @@ uploadfile = api.model('getfile to uploads', {
 cm_id_input = api.model('cm_id_input ', {
 
     'cm_id': fields.String(description='cm_id_input '),
-
-
+})
+user_register_input = api.model('input for user registration', {
+    'first_name': fields.String(description='first name'),
+    'last_name': fields.String(description='last name'),
+    'email': fields.String(description='email'),
+    'password': fields.String(description='password'),
+})
+user_register_output = api.model('output for user registration', {
+    'message': fields.String(description='message'),
+})
+user_activate_input = api.model('input for user activation', {
+    'token': fields.String(description='token'),
+})
+user_activate_output = api.model('output for user activation', {
+    'message': fields.String(description='message'),
+})
+user_ask_recovery_input = api.model('input for user password recovery request', {
+    'email': fields.String(description='email'),
+})
+user_ask_recovery_output = api.model('output for user password recovery request', {
+    'message': fields.String(description='message'),
+})
+user_recovery_input = api.model('input for user password recovery', {
+    'token': fields.String(description='token'),
+    'password': fields.String(description='password'),
+})
+user_recovery_output = api.model('output for user password recovery', {
+    'message': fields.String(description='message'),
+})
+user_login_input = api.model('input for user login', {
+    'email': fields.String(description='email'),
+    'password': fields.String(description='password'),
+})
+user_login_output = api.model('output for user login', {
+    'message': fields.String(description='message'),
+})
+user_logout_output = api.model('output for user login', {
+    'message': fields.String(description='message'),
 })
 
