@@ -1,10 +1,11 @@
 from flask import Blueprint
-from .stats import nsStats
-from .heat_load_profile import  load_profile_namespace
-from .computation_module import nsCM
+# from .stats import nsStats
+# from .heat_load_profile import  load_profile_namespace
+# from .computation_module import nsCM
 from .users import nsUsers
+from.upload import nsUpload
 from ..decorators import etag
-from . import computation_module
+# from . import computation_module
 # from . import  computation, errors
 
 api = Blueprint('api', __name__, url_prefix='/api')

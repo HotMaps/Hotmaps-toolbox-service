@@ -382,7 +382,6 @@ uploadfile = api.model('getfile to uploads', {
 cm_id_input = api.model('cm_id_input ', {
     'cm_id': fields.String(description='cm_id_input '),
 })
-
 user_register_input = api.model('input for user registration', {
     'first_name': fields.String(description='first name'),
     'last_name': fields.String(description='last name'),
@@ -418,8 +417,39 @@ user_login_input = api.model('input for user login', {
 user_login_output = api.model('output for user login', {
     'message': fields.String(description='message'),
 })
-user_logout_output = api.model('output for user login', {
+user_logout_output = api.model('output for user logout', {
     'message': fields.String(description='message'),
 })
-
-
+user_profile_input = api.model('input for user profile modifying', {
+    'first_name': fields.String(description='first name'),
+    'last_name': fields.String(description='last name'),
+})
+user_profile_output = api.model('output for user profile modifying', {
+    'message': fields.String(description='message'),
+})
+upload_add_input = api.model('input for uploads adding', {
+    'file_name': fields.String(description='file name'),
+    'url': fields.String(description='url'),
+    'size': fields.Float(description='size'),
+})
+upload_add_output = api.model('output for uploads adding', {
+    'message': fields.String(description='message'),
+})
+upload_model = api.model('all upload fields', {
+    'file_name': fields.String(description='file name'),
+    'url': fields.String(description='url'),
+    'size': fields.Float(description='size'),
+})
+upload_list_output = api.model('output for uploads listing', {
+    'uploads': fields.List(fields.Nested(upload_model)),
+})
+upload_space_used_output = api.model('output for uploads space used function', {
+    "used_size": fields.Float(description='used size'),
+    "max_size": fields.Float(description='maximum size'),
+})
+upload_delete_input = api.model('input for uploads deleting', {
+    "url": fields.String(description='URL'),
+})
+upload_delete_output = api.model('output for uploads deleting', {
+    "message": fields.String(description='used size'),
+})
