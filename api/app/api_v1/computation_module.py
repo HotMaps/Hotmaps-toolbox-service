@@ -17,7 +17,7 @@ from flask_restplus import Resource
 from app import celery
 import requests
 
-
+from app.decorators.exceptions import ValidationError, ComputationalModuleError
 import os
 import json
 from flask import send_from_directory
@@ -198,20 +198,26 @@ def computeTask(data,payload,cm_id,layerneed):
     data_output = json.loads(response)
     helper.test_display(data_output)
     print ('****************** WILL GENERATE TILES ***************************************************'.format(cm_id))
-    if data_output['result']['raster_layers'] is not None and len(data_output['result']['raster_layers'])>0:
-        raster_layers = data_output['result']['raster_layers']
-        generateTiles(raster_layers)
-    if data_output['result']['vector_layers'] is not None and len(data_output['result']['vector_layers'])>0:
-        vector_layers = data_output['result']['vector_layers']
-        #generate_shape(vector_layers)
+    try:
+        if data_output['result']['raster_layers'] is not None and len(data_output['result']['raster_layers'])>0:
+            raster_layers = data_output['result']['raster_layers']
+            generateTiles(raster_layers)
+    except:
+        # no raster_layers
+        pass
+    try:
 
-
-
-    ## use in the external of the network
-    #data_output['tile_directory'] = 'http://api.hotmapsdev.hevs.ch/api/cm/tiles/' + directory_for_tiles
-    #helper.test_display(data_output)
+        if data_output['result']['vector_layers'] is not None and len(data_output['result']['vector_layers'])>0:
+            vector_layers = data_output['result']['vector_layers']
+    except:
+        # no vector_layers
+        pass
 
     return data_output
+
+
+
+
 
 def generateTiles(raster_layers):
 

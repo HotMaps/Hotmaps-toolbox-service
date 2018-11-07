@@ -1,5 +1,5 @@
 from flask import jsonify
-from ..exceptions import ValidationError
+from app.decorators.exceptions import ValidationError, ComputationalModuleError
 from . import api
 
 
@@ -8,6 +8,13 @@ def bad_request(e):
     response = jsonify({'status': 400, 'error': 'bad request',
                         'message': e.args[0]})
     response.status_code = 400
+    return response
+
+@api.errorhandler(ComputationalModuleError)
+def error_from_cm(e):
+    response = jsonify({'status': e.status, 'error': e.error,'statusText': 'Calculation Module error',
+                        'message': e.message}, )
+    response.status_code = e.status
     return response
 
 
