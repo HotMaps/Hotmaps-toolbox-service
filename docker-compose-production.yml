@@ -47,19 +47,27 @@ services:
     depends_on:
     - nginx
     - dockergen
-  environment:
-  - VIRTUAL_HOST=geoserver.hotmaps.hevs.ch
-  - VIRTUAL_PORT=8080
-  - LETSENCRYPT_HOST=geoserver.hotmaps.hevs.ch
-  - LETSENCRYPT_EMAIL=foo@example.com
-  - HTTPS_METHOD=nohttps
-  volumes:
-  - /var/hotmaps/geoserver-dev/web.xml:/usr/local/tomcat/webapps/geoserver/WEB-INF/web.xml
-  - /var/hotmaps/geoserver-dev/setenv.sh:/usr/local/tomcat/bin/setenv.sh
-  - /var/hotmaps/geoserver-dev:/opt/geoserver/data_dir
-  - /var/hotmaps/geoserver-dev/plugins/lib:/usr/local/tomcat/webapps/geoserver/WEB-INF/lib
-  external_links:
-  - postgis-database:postgis
+  geoserver:
+    image: hotmaps-geoserver-dev3
+    networks:
+    - nginx
+    - backend
+    expose:
+    - 8080
+    restart: always
+    environment:
+    - VIRTUAL_HOST=geoserver.hotmapsdev.hevs.ch
+    - VIRTUAL_PORT=8080
+    - LETSENCRYPT_HOST=geoserver.hotmapsdev.hevs.ch
+    - LETSENCRYPT_EMAIL=foo@example.com
+    - HTTPS_METHOD=nohttps
+    volumes:
+    - /var/hotmaps/geoserver-dev/web.xml:/usr/local/tomcat/webapps/geoserver/WEB-INF/web.xml
+    - /var/hotmaps/geoserver-dev/setenv.sh:/usr/local/tomcat/bin/setenv.sh
+    - /var/hotmaps/geoserver-dev:/opt/geoserver/data_dir
+    - /var/hotmaps/geoserver-dev/plugins/lib:/usr/local/tomcat/webapps/geoserver/WEB-INF/lib
+    external_links:
+    - postgis-database:postgis
 
   rabbit:
     hostname: rabbit

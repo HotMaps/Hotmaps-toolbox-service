@@ -43,7 +43,7 @@ def addRegisterCalulationModule(data):
     cm_name = data['cm_name']
     category = data['category']
     type_layer_needed = data['type_layer_needed']
-    authorized_scale = ""
+    authorized_scale = "[]"
     try:
         authorized_scale = data['authorized_scale']
     except:
@@ -88,7 +88,7 @@ def register_calulation_module(data):
         cm_url = data['cm_url']
         cm_id = data['cm_id']
         layers_needed = data['layers_needed']
-        authorized_scale = ""
+        authorized_scale = "[]"
         try:
             authorized_scale = data['authorized_scale']
         except:
