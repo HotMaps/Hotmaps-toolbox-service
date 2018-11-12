@@ -1,25 +1,21 @@
 from app import celery
 import logging
 from flask_restplus import Resource
-from app.decorators.serializers import  load_profile_aggregation_day_input, \
+from app.decorators.serializers import load_profile_aggregation_day_input, \
     load_profile_aggregation_curve_output, load_profile_aggregation_curve, load_profile_aggregation_hectares, \
     load_profile_aggregation_curve_hectares
 from app.decorators.restplus import api
 from app.decorators.exceptions import IntersectionException, HugeRequestException, ParameterException, RequestException
 from app.models.heatloadQueries import HeatLoadProfile
-
-
-
 import shapely.geometry as shapely_geom
-
 from app.models import generalData
 
 
 log = logging.getLogger(__name__)
-
 load_profile_namespace = api.namespace('heat-load-profile', description='Operations related to heat load profile')
-
 ns = load_profile_namespace
+
+
 class HeatLoadProfileResource(Resource):
     def normalize_nuts(self, nuts):
         list_nuts_id = []
@@ -43,6 +39,8 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         Returns the statistics for specific layers, area and year
         :return:
         """
+        #Entries
+        wrong_parameter = [];
         try:
             year = api.payload['year']
         except:
@@ -56,7 +54,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
             exception_message = ''
             for i in range(len(wrong_parameter)):
                 exception_message += wrong_parameter[i]
-                if (i != len(wrong_parameter) - 1):
+                if i != len(wrong_parameter) - 1:
                     exception_message += ', '
             raise ParameterException(exception_message + '')
 
@@ -75,6 +73,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
 
         return result
 
+
 @celery.task(name = 'duration_curve_nuts_lau')
 def durationCurveNutsLau(year, nuts):
     if not nuts and year:
@@ -91,7 +90,7 @@ def durationCurveNutsLau(year, nuts):
 @api.response(530, 'Request error.')
 @api.response(531, 'Missing parameter.')
 @api.response(533, 'SQL error.')
-#@api.response(534, 'Not enough points error.')
+# @api.response(534, 'Not enough points error.')
 class HeatLoadProfileAggregation(HeatLoadProfileResource):
     @api.marshal_with(load_profile_aggregation_curve_output)
     @api.expect(load_profile_aggregation_curve_hectares)
@@ -123,12 +122,12 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
                     wrong_parameter.append('points')
         except:
             wrong_parameter.append('areas')
-        #raise exception if parameters are false
+        # raise exception if parameters are false
         if len(wrong_parameter) > 0:
             exception_message = ''
             for i in range(len(wrong_parameter)):
                 exception_message += wrong_parameter[i]
-                if (i != len(wrong_parameter) - 1):
+                if i != len(wrong_parameter) - 1:
                     exception_message += ', '
             raise ParameterException(exception_message + '')
 
@@ -142,11 +141,10 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
             po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
             polyArray.append(po)
 
-
         # convert array of polygon into multipolygon
         multipolygon = shapely_geom.MultiPolygon(polyArray)
 
-        #geom = "SRID=4326;{}".format(multipolygon.wkt)
+        # geom = "SRID=4326;{}".format(multipolygon.wkt)
         geom = multipolygon.wkt
         try:
             output = HeatLoadProfile.duration_curve_hectares(year=year, geometry=geom)
@@ -157,6 +155,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
             "points": output
         }
         return result
+
 
 @celery.task(name = 'duration_curve_hectare')
 def durationCurveHectare(areas,year):
@@ -171,16 +170,16 @@ def durationCurveHectare(areas,year):
         po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
         polyArray.append(po)
 
-
     # convert array of polygon into multipolygon
     multipolygon = shapely_geom.MultiPolygon(polyArray)
 
-    #geom = "SRID=4326;{}".format(multipolygon.wkt)
+    # geom = "SRID=4326;{}".format(multipolygon.wkt)
     geom = multipolygon.wkt
 
     output = HeatLoadProfile.duration_curve_hectares(year=year, geometry=geom)
 
     return output
+
 
 @ns.route('/hectares')
 @api.response(0, 'Request too big')
@@ -188,9 +187,9 @@ def durationCurveHectare(areas,year):
 @api.response(530, 'Request error.')
 @api.response(531, 'Missing parameter.')
 @api.response(533, 'SQL error.')
-#@api.response(534, 'Not enough points error.')
+# @api.response(534, 'Not enough points error.')
 class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
-    #@api.marshal_with(load_profile_aggregation_hectares_output)
+    # @api.marshal_with(load_profile_aggregation_hectares_output)
     @api.expect(load_profile_aggregation_hectares)
     def post(self):
         """
@@ -251,11 +250,10 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
             po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
             polyArray.append(po)
 
-
         # convert array of polygon into multipolygon
         multipolygon = shapely_geom.MultiPolygon(polyArray)
 
-        #geom = "SRID=4326;{}".format(multipolygon.wkt)
+        # geom = "SRID=4326;{}".format(multipolygon.wkt)
         geom = multipolygon.wkt
         try:
             res = HeatLoadProfile.heatloadprofile_hectares(year=year, month=month, day=day, geometry=geom)
@@ -264,15 +262,16 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
             raise IntersectionException()
         return res
 
+
 @ns.route('/nuts-lau')
 @api.response(0, 'Request too big')
 @api.response(404, 'No data found for that specific list of NUTS.')
 @api.response(530, 'Request error.')
 @api.response(531, 'Missing parameter.')
 @api.response(533, 'SQL error.')
-#@api.response(534, 'Not enough points error.')
+# @api.response(534, 'Not enough points error.')
 class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
-    #@api.marshal_with(load_profile_aggregation_hectares_output)
+    # @api.marshal_with(load_profile_aggregation_hectares_output)
     @api.expect(load_profile_aggregation_day_input) #TODO Nuts level asked but not used in the app
     def post(self):
         """
@@ -294,7 +293,7 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
             exception_message = ''
             for i in range(len(wrong_parameter)):
                 exception_message += wrong_parameter[i]
-                if (i != len(wrong_parameter) - 1):
+                if i != len(wrong_parameter) - 1:
                     exception_message += ', '
             raise ParameterException(exception_message + '')
         # Stop execution if nuts list is empty
