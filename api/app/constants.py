@@ -26,6 +26,9 @@ RESTPLUS_JSON = {
     'separators': (',', ':')
 }
 
+# disc space available for every users (in MegaOctet)
+USER_DISC_SPACE_AVAILABLE = 500
+
 API_URL_PROD = 'api.hotmaps.hevs.ch/api'
 API_URL_DEV = 'api.hotmapsdev.hevs.ch/api'
 API_URL_LOCAL_DOCKER = '192.168.99.100/api'

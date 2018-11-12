@@ -26,6 +26,7 @@ class User(db.Model, UserMixin):
     confirmed_at = db.Column(db.DateTime())
     roles = db.relationship('Role', secondary='user.roles_users', backref=db.backref('user_id', lazy='dynamic'))
 
+
     @classmethod
     def get_by_email(cls, email):
         '''

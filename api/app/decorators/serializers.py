@@ -421,7 +421,13 @@ user_login_input = api.model('input for user login', {
 user_login_output = api.model('output for user login', {
     'message': fields.String(description='message'),
 })
-user_logout_output = api.model('output for user login', {
+user_logout_output = api.model('output for user logout', {
     'message': fields.String(description='message'),
 })
-
+user_profile_input = api.model('input for user profile modifying', {
+    'first_name': fields.String(description='first name'),
+    'last_name': fields.String(description='last name'),
+})
+user_profile_output = api.model('output for user profile modifying', {
+    'message': fields.String(description='message'),
+})

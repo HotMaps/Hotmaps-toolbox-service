@@ -75,6 +75,34 @@ class UserUnidentifiedException(Exception):
     pass
 
 
+class UserDoesntOwnUploadsException(Exception):
+    '''
+    Exception raised when the user try to interact with an uploads that does not belongs to him
+    '''
+    pass
+
+
+class UploadExistingUrlException(Exception):
+    '''
+    Exception raised when we try to create an upload with an existing URL
+    '''
+    pass
+
+
+class NotEnoughSpaceException(Exception):
+    '''
+    Exception raised when there is not enough space for the new upload
+    '''
+    pass
+
+
+class UploadNotExistingException(Exception):
+    '''
+    Exception raised when we try to access a non existing upload
+    '''
+    pass
+
+
 class ValidationError(ValueError):
     pass
 
