@@ -416,11 +416,16 @@ user_login_input = api.model('input for user login', {
 })
 user_login_output = api.model('output for user login', {
     'message': fields.String(description='message'),
+    'token': fields.String(description='authentification token'),
+})
+user_logout_input = api.model('input for the user logout', {
+    'token': fields.String(description='authentification token'),
 })
 user_logout_output = api.model('output for user logout', {
     'message': fields.String(description='message'),
 })
 user_profile_input = api.model('input for user profile modifying', {
+    'token': fields.String(description='authentification token'),
     'first_name': fields.String(description='first name'),
     'last_name': fields.String(description='last name'),
 })
@@ -428,6 +433,7 @@ user_profile_output = api.model('output for user profile modifying', {
     'message': fields.String(description='message'),
 })
 upload_add_input = api.model('input for uploads adding', {
+    'token': fields.String(description='authentification token'),
     'file_name': fields.String(description='file name'),
     'url': fields.String(description='url'),
     'size': fields.Float(description='size'),
@@ -440,14 +446,21 @@ upload_model = api.model('all upload fields', {
     'url': fields.String(description='url'),
     'size': fields.Float(description='size'),
 })
+upload_list_input = api.model('input for uploads listing', {
+    'token': fields.String(description='authentification token'),
+})
 upload_list_output = api.model('output for uploads listing', {
     'uploads': fields.List(fields.Nested(upload_model)),
+})
+upload_space_used_input = api.model('input for uploads space used function', {
+    'token': fields.String(description='authentification token'),
 })
 upload_space_used_output = api.model('output for uploads space used function', {
     "used_size": fields.Float(description='used size'),
     "max_size": fields.Float(description='maximum size'),
 })
 upload_delete_input = api.model('input for uploads deleting', {
+    'token': fields.String(description='authentification token'),
     "url": fields.String(description='URL'),
 })
 upload_delete_output = api.model('output for uploads deleting', {

@@ -7,7 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from ..decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, \
     ParameterException, RequestException, ActivationException, UserExistingException, UserNotExistingException, \
     WrongPasswordException, UserUnidentifiedException, UserDoesntOwnUploadsException, UploadExistingUrlException, \
-    NotEnoughSpaceException, UploadNotExistingException
+    NotEnoughSpaceException, UploadNotExistingException, UserNotActivatedException
 
 log = logging.getLogger(__name__)
 
@@ -282,6 +282,25 @@ def handle_not_enough_space(error):
             }
         }
     return response, 543
+
+
+@api.errorhandler(UserNotActivatedException)
+def handle_user_not_activated(error):
+    '''
+    decorator called with an error caused when a non activated user try to connect
+    :param error -- the called error:
+    :return:
+    '''
+    message = 'Please activate your user before connection'
+    response = {
+        "message": message,
+        "error": {
+            "message": message,
+            "status": "544",
+            "statusText": "USER NOT ACTIVATED"
+            }
+        }
+    return response, 544
 
 
 @api.errorhandler

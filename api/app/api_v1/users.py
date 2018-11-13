@@ -1,14 +1,15 @@
 from .. import constants
 from ..decorators.exceptions import ParameterException, RequestException, ActivationException, \
-    UserExistingException, UserNotExistingException, WrongPasswordException, UserUnidentifiedException
+    UserExistingException, UserNotExistingException, WrongPasswordException, UserUnidentifiedException,\
+    UserNotActivatedException
 from ..decorators.restplus import api
 from ..decorators.serializers import user_register_input, user_register_output, user_activate_input, \
     user_activate_output, user_ask_recovery_input, user_ask_recovery_output, user_recovery_output, \
-    user_recovery_input, user_login_input, user_login_output, user_logout_output, user_profile_input, \
+    user_recovery_input, user_login_input, user_login_output, user_logout_input, user_logout_output, user_profile_input, \
     user_profile_output
 from flask_mail import Message
 from flask_restplus import Resource
-from flask_login import login_user, logout_user, login_required, current_user
+from flask_login import login_user, logout_user, login_required
 from flask_security import SQLAlchemySessionUserDatastore
 from itsdangerous import URLSafeTimedSerializer
 from passlib.hash import bcrypt
@@ -48,20 +49,18 @@ class AskingPasswordRecovery(Resource):
         # we check if the email has already been used
         if User.get_by_email(email) is None:
             raise UserNotExistingException(email)
-        try:
-            # mail creation
-            user = User.query.filter_by(email=email).first()
-            link = constants.API_URL_LOCAL_DOCKER + '/recovery/' + generate_confirmation_token(email)
-            msg = Message()
-            msg.add_recipient(email)
-            msg.subject = 'Password recovery for the HotMaps toolbox'
-            msg.body = 'Hello ' + user.first_name + ' ' + user.last_name + ' you asked for a password recovery ' \
-                                                                           'on your HotMaps account,\n to reset your password, please click on the following link: ' \
-                                                                           '\n' + link + '\n if you haven\'t ask for this modification, please delete this email.'
+        # mail creation
+        user = User.query.filter_by(email=email).first()
+        link = generate_confirmation_token(email)
+        msg = Message()
+        msg.add_recipient(email)
+        msg.subject = 'Password recovery for the HotMaps toolbox'
+        msg.body = 'Hello ' + user.first_name + ' ' + user.last_name + ' you asked for a password recovery ' \
+                                                                       'on your HotMaps account,\n to reset your password, please click on the following link: ' \
+                                                                       '\n' + link + '\n if you haven\'t ask for this modification, please delete this email.'
 
-            mail.send(msg)
-        except Exception, e:
-            raise RequestException(str(e))
+        mail.send(msg)
+
         output = 'request for recovery successful'
 
         # output
@@ -109,14 +108,11 @@ class AskingPasswordRecovery(Resource):
         if not mail_to_reset:
             raise ActivationException()
         else:
-            try:
-                # reset user password
-                user_to_reset = User.query.filter_by(email=mail_to_reset).first()
-                user_to_reset.password = password
-                db.session.commit()
-                output = 'user password reset'
-            except Exception, e:
-                raise RequestException(str(e))
+            # reset user password
+            user_to_reset = User.query.filter_by(email=mail_to_reset).first()
+            user_to_reset.password = password
+            db.session.commit()
+            output = 'user password reset'
         # output
         return {
             "message": output
@@ -162,31 +158,26 @@ class UserRegistering(Resource):
                     exception_message += ', '
             raise ParameterException(exception_message + '')
         # password_encryption
-        try:
-            password = bcrypt.using(salt=FLASK_SALT).hash(str(unencrypted_password))
-        except Exception, e:
-            raise RequestException(str(e))
+        password = bcrypt.using(salt=FLASK_SALT).hash(str(unencrypted_password))
         # we check if the email has already been used
         if User.get_by_email(email) is not None:
             raise UserExistingException(email)
-        try:
-            # user creation in the DB
-            user_datastore.create_user(email=email, password=password, active=False, first_name=first_name,
-                                       last_name=last_name)
-            db.session.commit()
+        # user creation in the DB
+        user_datastore.create_user(email=email, password=password, active=False, first_name=first_name,
+                                   last_name=last_name)
+        db.session.commit()
 
-            # mail creation
-            link = constants.API_URL_LOCAL_DOCKER + '/confirm/' + generate_confirmation_token(email)
-            msg = Message()
-            msg.add_recipient(email)
-            msg.subject = 'Your registration on the HotMaps toolbox'
-            msg.body = 'Welcome ' + first_name + ' ' + last_name + ' on the HotMaps toolbox,\n' \
-                                                                   'To finalize your registration on the toolbox, please click on the following link: \n' \
-                       + link
+        # mail creation
+        link = generate_confirmation_token(email)
+        msg = Message()
+        msg.add_recipient(email)
+        msg.subject = 'Your registration on the HotMaps toolbox'
+        msg.body = 'Welcome ' + first_name + ' ' + last_name + ' on the HotMaps toolbox,\n' \
+                                                               'To finalize your registration on the toolbox, please click on the following link: \n' \
+                   + link
 
-            mail.send(msg)
-        except Exception, e:
-            raise RequestException(str(e))
+        mail.send(msg)
+
         output = 'user registered'
 
         # output
@@ -271,15 +262,18 @@ class LoginUser(Resource):
         # check password
         if not bcrypt.using(salt=FLASK_SALT).verify(password, connecting_user.password):
             raise WrongPasswordException
-        try:
-            login_user(connecting_user)
-        except Exception, e:
-            raise RequestException(str(e))
+
+        if connecting_user.active is False:
+            raise UserNotActivatedException
+
+        token = User.generate_auth_token(connecting_user)
+
         # output
         output = 'user connected'
 
         return {
-            "message": output
+            "message": output,
+            "token": token
         }
 
 
@@ -288,14 +282,24 @@ class LoginUser(Resource):
 @api.response(539, 'User Unidentified')
 class LogoutUser(Resource):
     @api.marshal_with(user_logout_output)
+    @api.expect(user_logout_input)
     def post(self):
         '''
 		The method called to logout a user
 		:return:
 		'''
-        if not current_user.is_authenticated:
+        try:
+            token = api.payload['token']
+        except:
+            raise ParameterException('token')
+
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
             raise UserUnidentifiedException
-        logout_user()
+        user.active_token = None
+        db.session.commit()
+
         # output
         output = 'user disconnected'
 
@@ -316,8 +320,15 @@ class ProfileUser(Resource):
         The method called to update the profile of a user
         :return:
         '''
-        # check if the user is connected
-        if not current_user.is_authenticated:
+        # Entries
+        try:
+            token = api.payload['token']
+        except:
+            raise ParameterException('token')
+
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
             raise UserUnidentifiedException
 
         # Entries
@@ -340,10 +351,11 @@ class ProfileUser(Resource):
             raise ParameterException(str(exception_message))
 
         # select and update the user
-        user_to_modify = User.query.filter_by(email = current_user.email).first()
+        user_to_modify = User.query.filter_by(email=user.email).first()
         user_to_modify.first_name = first_name
         user_to_modify.last_name = last_name
-        db.session.commit();
+        db.session.commit()
+
         # output
         output = 'User ' + last_name + ' ' + first_name + ' updated'
 

@@ -2,15 +2,14 @@ from .. import constants
 from ..decorators.restplus import api
 from ..decorators.restplus import UserUnidentifiedException, ParameterException, RequestException, \
     UserDoesntOwnUploadsException, UploadExistingUrlException, NotEnoughSpaceException, UploadNotExistingException
-from ..decorators.serializers import upload_add_input, upload_add_output, upload_list_output, upload_space_used_output\
-    , upload_delete_input, upload_delete_output
+from ..decorators.serializers import upload_add_input, upload_add_output, upload_list_input, upload_list_output,\
+    upload_space_used_input, upload_space_used_output, upload_delete_input, upload_delete_output
 
 from flask_restplus import Resource
-from flask_login import current_user
 
 from .. import dbGIS as db
 from ..models.uploads import Uploads
-
+from ..models.user import User
 nsUpload = api.namespace('upload', description='Operations related to file upload')
 ns = nsUpload
 
@@ -29,10 +28,6 @@ class AddUploads(Resource):
         The method called to add an upload
         :return:
         """
-        # check if the user is connected
-        if not current_user.is_authenticated:
-            raise UserUnidentifiedException
-
         # Entries
         wrong_parameter = []
         try:
@@ -47,6 +42,10 @@ class AddUploads(Resource):
             size = api.payload['size']
         except:
             wrong_parameter.append('size')
+        try:
+            token = api.payload['token']
+        except:
+            wrong_parameter.append('token')
         # raise exception if parameters are false
         if len(wrong_parameter) > 0:
             exception_message = ''
@@ -56,21 +55,26 @@ class AddUploads(Resource):
                     exception_message += ', '
             raise ParameterException(str(exception_message))
 
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise UserUnidentifiedException
+
         # we need to check if the URL is already taken
         if Uploads.query.filter_by(url=url).first() is not None:
             raise UploadExistingUrlException
 
         # we need to check if there is enough disk space for the dataset
-        used_size = calculate_total_space(current_user.uploads) + size
+        used_size = calculate_total_space(user.uploads) + size
         if used_size > constants.USER_DISC_SPACE_AVAILABLE:
             raise NotEnoughSpaceException
 
         # add the upload on the db
-        upload = Uploads(file_name=file_name, url=url, size=size, user_id=current_user.id)
+        upload = Uploads(file_name=file_name, url=url, size=size, user_id=user.id)
         db.session.add(upload)
         db.session.commit()
         # output
-        output = 'file '+file_name+' added for the user '+current_user.first_name
+        output = 'file '+file_name+' added for the user '+user.first_name
         return {
             "message": output
         }
@@ -82,17 +86,25 @@ class AddUploads(Resource):
 @api.response(537, 'User Unidentified')
 class ListUploads(Resource):
     @api.marshal_with(upload_list_output)
-    def get(self):
+    @api.expect(upload_list_input)
+    def post(self):
         """
         The method called to list the uploads of the connected user
         :return:
         """
-        # check if the user is connected
-        if not current_user.is_authenticated:
+        # Entries
+        try:
+            token = api.payload['token']
+        except:
+            raise ParameterException('token')
+
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
             raise UserUnidentifiedException
 
         # get the user uploads
-        uploads = current_user.uploads
+        uploads = user.uploads
 
         try:
             return {
@@ -109,17 +121,25 @@ class ListUploads(Resource):
 @api.response(537, 'User Unidentified')
 class SpaceUsedUploads(Resource):
     @api.marshal_with(upload_space_used_output)
-    def get(self):
+    @api.expect(upload_space_used_input)
+    def post(self):
         """
         The method called to see the space used by an user
         :return:
         """
-        # check if the user is connected
-        if not current_user.is_authenticated:
+        # Entries
+        try:
+            token = api.payload['token']
+        except:
+            raise ParameterException('token')
+
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
             raise UserUnidentifiedException
 
         # get the user uploads
-        uploads = current_user.uploads
+        uploads = user.uploads
         used_size = calculate_total_space(uploads)
 
         # output
@@ -143,15 +163,29 @@ class DeleteUploads(Resource):
         The method called to remove an upload
         :return:
         """
-        # check if the user is connected
-        if not current_user.is_authenticated:
-            raise UserUnidentifiedException
-
         # Entries
+        wrong_parameter = []
         try:
             url = api.payload['url']
         except:
-            raise ParameterException('url')
+            wrong_parameter.append('url')
+        try:
+            token = api.payload['token']
+        except:
+            wrong_parameter.append('token')
+        # raise exception if parameters are false
+        if len(wrong_parameter) > 0:
+            exception_message = ''
+            for i in range(len(wrong_parameter)):
+                exception_message += wrong_parameter[i]
+                if i != len(wrong_parameter) - 1:
+                    exception_message += ', '
+            raise ParameterException(str(exception_message))
+
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise UserUnidentifiedException
 
         # find upload to delete
         upload_to_delete = Uploads.query.filter_by(url=url).first()
@@ -159,7 +193,7 @@ class DeleteUploads(Resource):
             raise UploadNotExistingException
 
         # check if the user can delete the
-        if upload_to_delete.user_id != current_user.id:
+        if upload_to_delete.user_id != user.id:
             raise UserDoesntOwnUploadsException
 
         # delete the upload

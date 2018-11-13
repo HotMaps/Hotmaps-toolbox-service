@@ -103,6 +103,13 @@ class UploadNotExistingException(Exception):
     pass
 
 
+class UserNotActivatedException(Exception):
+    '''
+    Exception raised when trying to reach a non existing user
+    '''
+    pass
+
+
 class ValidationError(ValueError):
     pass
 
