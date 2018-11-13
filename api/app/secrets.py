@@ -19,8 +19,3 @@ dev_host = "hotmapsdev.hevs.ch"
 dev_password = "Dractwatha9"
 dev_port = "32768"
 dev_database = "toolboxdb"
-
-FLASK_SALT = 'JEhHjgtJjfTZuHJEWiUfGd'
-#Mail Settings
-MAIL_USERNAME = 'hotmapslucien@gmail.com'
-MAIL_PASSWORD = 'soleil14*'
