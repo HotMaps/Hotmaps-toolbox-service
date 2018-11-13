@@ -108,11 +108,14 @@ class AskingPasswordRecovery(Resource):
         if not mail_to_reset:
             raise ActivationException()
         else:
-            # reset user password
-            user_to_reset = User.query.filter_by(email=mail_to_reset).first()
-            user_to_reset.password = password
-            db.session.commit()
-            output = 'user password reset'
+            try:
+                # reset user password
+                user_to_reset = User.query.filter_by(email=mail_to_reset).first()
+                user_to_reset.password = password
+                db.session.commit()
+                output = 'user password reset'
+            except Exception, e:
+                raise RequestException(str(e))
         # output
         return {
             "message": output
@@ -158,7 +161,10 @@ class UserRegistering(Resource):
                     exception_message += ', '
             raise ParameterException(exception_message + '')
         # password_encryption
-        password = bcrypt.using(salt=FLASK_SALT).hash(str(unencrypted_password))
+        try:
+            password = bcrypt.using(salt=FLASK_SALT).hash(str(unencrypted_password))
+        except Exception, e:
+            raise RequestException(str(e))
         # we check if the email has already been used
         if User.get_by_email(email) is not None:
             raise UserExistingException(email)
@@ -393,4 +399,9 @@ def confirm_token(token, expiration=3600):
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.filter_by(id=user_id).first()
+	'''
+	this method will return the current user
+	:param user_id:
+	:return:
+	'''
+	return User.query.filter_by(id=user_id).first()

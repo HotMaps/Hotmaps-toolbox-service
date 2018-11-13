@@ -2,7 +2,9 @@
 __pycache__/
 *.py[cod]
 .idea
+venv/
 
 api/app/secrets.py
 .idea/workspace.xml
-venv/
+ api/.fuse_hidden00000f0000000005
+ api/.fuse_hidden00000f0000000006
