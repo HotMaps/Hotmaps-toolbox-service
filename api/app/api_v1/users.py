@@ -73,7 +73,7 @@ class AskingPasswordRecovery(Resource):
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(537, 'Activation failed')
-class AskingPasswordRecovery(Resource):
+class RecoverPassword(Resource):
     @api.marshal_with(user_recovery_output)
     @api.expect(user_recovery_input)
     def post(self):

@@ -4,6 +4,7 @@ from .role import Role
 from itsdangerous import (TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired)
 import sys
 from ..secrets import FLASK_SECRET_KEY
+import datetime
 
 
 class User(db.Model, UserMixin):
@@ -49,7 +50,11 @@ class User(db.Model, UserMixin):
         :return: the serialized token
         '''
         s = TimedJSONWebSignatureSerializer(FLASK_SECRET_KEY, expires_in=expiration)
-        token = s.dumps({'id': self.id})
+        token = s.dumps(
+            {
+                'id': self.id,
+                'date': str(datetime.datetime.now())
+            })
         self.active_token = token
         db.session.commit();
         return token
@@ -69,8 +74,8 @@ class User(db.Model, UserMixin):
         except BadSignature:
             return None  # invalid token
         user = User.query.filter_by(id=data['id']).first()
-        if user.active_token is None:
-            return None # the user has been logout
+        if user.active_token != token:
+            return None  # the user has been logout
         return user
 
 
