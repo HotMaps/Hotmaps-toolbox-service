@@ -5,8 +5,8 @@ from ..decorators.exceptions import ParameterException, RequestException, Activa
 from ..decorators.restplus import api
 from ..decorators.serializers import user_register_input, user_register_output, user_activate_input, \
     user_activate_output, user_ask_recovery_input, user_ask_recovery_output, user_recovery_output, \
-    user_recovery_input, user_login_input, user_login_output, user_logout_input, user_logout_output, user_profile_input, \
-    user_profile_output
+    user_recovery_input, user_login_input, user_login_output, user_logout_input, user_logout_output, \
+    user_profile_input, user_profile_output, user_get_information_output, user_get_information_input
 from flask_mail import Message
 from flask_restplus import Resource
 from flask_login import login_user, logout_user, login_required
@@ -327,18 +327,11 @@ class ProfileUser(Resource):
         :return:
         '''
         # Entries
+        wrong_parameter = []
         try:
             token = api.payload['token']
         except:
-            raise ParameterException('token')
-
-        # check token
-        user = User.verify_auth_token(token)
-        if user is None:
-            raise UserUnidentifiedException
-
-        # Entries
-        wrong_parameter = []
+            wrong_parameter.append('token')
         try:
             first_name = api.payload['first_name']
         except:
@@ -356,6 +349,11 @@ class ProfileUser(Resource):
                     exception_message += ', '
             raise ParameterException(str(exception_message))
 
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise UserUnidentifiedException
+
         # select and update the user
         user_to_modify = User.query.filter_by(email=user.email).first()
         user_to_modify.first_name = first_name
@@ -367,6 +365,42 @@ class ProfileUser(Resource):
 
         return {
             "message": output
+        }
+
+
+@ns.route('/information')
+@api.response(530, 'Request error')
+@api.response(531, 'Missing parameter')
+@api.response(537, 'User Unidentified')
+class GetUserInformation(Resource):
+    @api.marshal_with(user_get_information_output)
+    @api.expect(user_get_information_input)
+    def post(self):
+        '''
+        The method called to return the infos of a user by its token
+        :return:
+        '''
+        # Entries
+        try:
+            token = api.payload['token']
+        except:
+            raise ParameterException('token')
+
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise UserUnidentifiedException
+
+        # get the user informations
+        first_name = user.first_name
+        last_name = user.last_name
+        email = user.email
+
+        # output
+        return {
+            'first_name': first_name,
+            'last_name': last_name,
+            'email': email
         }
 
 

@@ -432,6 +432,14 @@ user_profile_input = api.model('input for user profile modifying', {
 user_profile_output = api.model('output for user profile modifying', {
     'message': fields.String(description='message'),
 })
+user_get_information_output = api.model('output for getting user information', {
+    'first_name': fields.String(description='first name'),
+    'last_name': fields.String(description='last name'),
+    'email': fields.String(description='email'),
+})
+user_get_information_input = api.model('input for getting user information', {
+    'token': fields.String(description='authentification token'),
+})
 upload_add_input = api.model('input for uploads adding', {
     'token': fields.String(description='authentification token'),
     'file_name': fields.String(description='file name'),
