@@ -4,6 +4,7 @@ from app import dbGIS as db
 from app import model
 from . import generalData
 from app import celery
+from .. import helper
 #logging.basicConfig()
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
@@ -176,7 +177,7 @@ class HeatLoadProfile:
 
 		# Creation of points and sampling of the values only if there is data
 		if listAllValues:
-			finalListPoints = generalData.sampling_data(listAllValues)
+			finalListPoints = helper.sampling_data(listAllValues)
 		else:
 			finalListPoints = []
 
@@ -199,7 +200,7 @@ class HeatLoadProfile:
 
 		# Creation of points and sampling of the values only if there is data
 		if listAllValues:
-			finalListPoints = generalData.sampling_data(listAllValues)
+			finalListPoints = helper.sampling_data(listAllValues)
 		else:
 			finalListPoints = []		
 

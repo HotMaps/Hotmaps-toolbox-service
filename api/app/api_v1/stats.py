@@ -18,9 +18,9 @@ import shapely.geometry as shapely_geom
 from app import constants
 
 from app.models import generalData
-from app.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator
+from app.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator, createAllLayers,\
+	getTypeScale, adapt_layers_list, adapt_nuts_list, removeScaleLayers, layers_filter, getTypeScale
 import app
-
 
 import json
 
@@ -52,31 +52,32 @@ class StatsLayersNutsInArea(Resource):
 			return
 
 		# Get type
-		type = generalData.getTypeScale(layersPayload)		
+		type = getTypeScale(layersPayload)		
 
 		# Layers filtration and management
 		if type == 'nuts':
-			allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_NUTS_TABLE)
-			allLayers = generalData.createAllLayers(constants.LAYERS_REF_NUTS)
+			allLayersTable = createAllLayers(constants.LAYERS_REF_NUTS_TABLE)
+			allLayers = createAllLayers(constants.LAYERS_REF_NUTS)
 
-			noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
-			noDataLayers = generalData.layers_filter(layersPayload, allLayers)
+			noTableLayers = layers_filter(layersPayload, allLayersTable)
+			noDataLayers = layers_filter(layersPayload, allLayers)
 
 		elif type == 'lau':
-			allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_LAU_TABLE)
-			allLayers = generalData.createAllLayers(constants.LAYERS_REF_LAU)
+			allLayersTable = createAllLayers(constants.LAYERS_REF_LAU_TABLE)
+			allLayers = createAllLayers(constants.LAYERS_REF_LAU)
 
-			noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
-			noDataLayers = generalData.layers_filter(layersPayload, allLayers)
+			noTableLayers = layers_filter(layersPayload, allLayersTable)
+			noDataLayers = layers_filter(layersPayload, allLayers)
 		else:
 			return
 
 		# Keep only existing layers
-		layers = generalData.adapt_layers_list(layersPayload=layersPayload, type=type, allLayers=allLayers)
+		
+		layers = adapt_layers_list(layersPayload=layersPayload, type=type, allLayers=allLayers)
 
 		output = []
 
-		res = LayersNutsLau.stats_nuts_lau.delay(nuts=generalData.adapt_nuts_list(nuts), year=year, layers=layers, type=type)
+		res = LayersNutsLau.stats_nuts_lau.delay(nuts=adapt_nuts_list(nuts), year=year, layers=layers, type=type)
 		output = res.get()
 
 
@@ -92,8 +93,8 @@ class StatsLayersNutsInArea(Resource):
 		retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
 
 		# Remove scale for each layer
-		noTableLayers = generalData.removeScaleLayers(noTableLayers, type)
-		noDataLayers = generalData.removeScaleLayers(noDataLayers, type)
+		noTableLayers = removeScaleLayers(noTableLayers, type)
+		noDataLayers = removeScaleLayers(noDataLayers, type)
 
 		# output
 		return {
@@ -120,13 +121,13 @@ class StatsLayersHectareMulti(Resource):
 
 
 		# Layers filtration and management
-		allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_HECTARES_TABLE)
-		allLayers = generalData.createAllLayers(constants.LAYERS_REF_HECTARES)
-		noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
-		noDataLayers = generalData.layers_filter(layersPayload, allLayers)
+		allLayersTable = createAllLayers(constants.LAYERS_REF_HECTARES_TABLE)
+		allLayers = createAllLayers(constants.LAYERS_REF_HECTARES)
+		noTableLayers = layers_filter(layersPayload, allLayersTable)
+		noDataLayers = layers_filter(layersPayload, allLayers)
 
 		# Keep only existing layers
-		layers = generalData.adapt_layers_list(layersPayload=layersPayload, type='ha', allLayers=allLayers)
+		layers = adapt_layers_list(layersPayload=layersPayload, type='ha', allLayers=allLayers)
 
 		polyArray = []
 		output = []
@@ -160,8 +161,8 @@ class StatsLayersHectareMulti(Resource):
 		retrieveCrossIndicator(gfa_tot_curr_density_name, hdm_name, layers, output)
 
 		# Remove scale for each layer
-		noTableLayers = generalData.removeScaleLayers(noTableLayers, type='ha')
-		noDataLayers = generalData.removeScaleLayers(noDataLayers, type='ha')
+		noTableLayers = removeScaleLayers(noTableLayers, type='ha')
+		noDataLayers = removeScaleLayers(noDataLayers, type='ha')
 
 		#output
 		return {
@@ -177,13 +178,13 @@ def indicatorsHectares(year,layersPayload,areas):
 		return
 
 		# Layers filtration and management
-	allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_HECTARES_TABLE)
-	allLayers = generalData.createAllLayers(constants.LAYERS_REF_HECTARES)
-	noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
-	noDataLayers = generalData.layers_filter(layersPayload, allLayers)
+	allLayersTable = createAllLayers(constants.LAYERS_REF_HECTARES_TABLE)
+	allLayers = createAllLayers(constants.LAYERS_REF_HECTARES)
+	noTableLayers = layers_filter(layersPayload, allLayersTable)
+	noDataLayers = layers_filter(layersPayload, allLayers)
 
 	# Keep only existing layers
-	layers = generalData.adapt_layers_list(layersPayload=layersPayload, type='ha', allLayers=allLayers)
+	layers = adapt_layers_list(layersPayload=layersPayload, type='ha', allLayers=allLayers)
 
 	polyArray = []
 	output = []
@@ -217,8 +218,8 @@ def indicatorsHectares(year,layersPayload,areas):
 	retrieveCrossIndicator(gfa_tot_curr_density_name, hdm_name, layers, output)
 
 	# Remove scale for each layer
-	noTableLayers = generalData.removeScaleLayers(noTableLayers, type='ha')
-	noDataLayers = generalData.removeScaleLayers(noDataLayers, type='ha')
+	noTableLayers = removeScaleLayers(noTableLayers, type='ha')
+	noDataLayers = removeScaleLayers(noDataLayers, type='ha')
 
 	return output, noTableLayers, noDataLayers
 
@@ -235,7 +236,7 @@ class StatsLayersNutsInArea(Resource):
 		"""
 		# Entrees
 		nuts = api.payload['nuts']
-		res = ElectricityMix.getEnergyMixNutsLau(generalData.adapt_nuts_list(nuts))
+		res = ElectricityMix.getEnergyMixNutsLau(adapt_nuts_list(nuts))
 		return res
 
 
@@ -248,7 +249,7 @@ class StatsLayersNutsInArea(Resource):
 def processGenerationMix(nuts):
 	if not nuts:
 		return
-	res = ElectricityMix.getEnergyMixNutsLau(generalData.adapt_nuts_list(nuts))
+	res = ElectricityMix.getEnergyMixNutsLau(adapt_nuts_list(nuts))
 
 	return res
 

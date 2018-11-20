@@ -26,8 +26,6 @@ geothermalPotHeatCond = constants.GEOTHERMAL_POTENTIAL_HEAT_COND
 electricityCo2EmisionsFactor = constants.ELECRICITY_CO2_EMISSION_FACTOR
 hdd = constants.HDD_CUR
 cdd = constants.CDD_CUR
-
-
 heatDe = 'heat_tot_curr_density_tif'
 
 
@@ -47,7 +45,7 @@ layersData = {
 			'select':'stat_pop.sum as population, (stat_pop.sum/stat_pop.count) as population_density, stat_pop.count as count_cell_pop ',
 			'resultsName':{
 				0:'population', 1:'population_density', 2:'count_cell_pop'},
-			'resultsUnit':{ 
+			'resultsUnit':{
 				0:'person', 1:'person/ha', 2:'cells'}
 			},
 	wwtp:{'tablename':'wwtp',
@@ -79,7 +77,7 @@ layersData = {
 			'select':'stat_grass.sum as '+grass+'_density, stat_grass.count as '+grass+'_cells ',
 			'resultsName':{
 				 0:grass+'_density', 1:grass+'_cells'},
-			'resultsUnit':{ 
+			'resultsUnit':{
 				 0:'m2', 1:'cells'}
 			},
 	grassRes:{'tablename':grassRes,
@@ -87,7 +85,7 @@ layersData = {
 			'select':'stat_grassRes.sum as '+grassRes+'_density, stat_grassRes.count as '+grassRes+'_cells ',
 			'resultsName':{
 				0:grassRes+'_density',  1:grassRes+'_cells'},
-			'resultsUnit':{ 
+			'resultsUnit':{
 				0:'m2', 2:'cells'}
 			},
 	grassNonRes:{'tablename':grassNonRes,
@@ -95,7 +93,7 @@ layersData = {
 			'select':' stat_grassNonRes.sum as '+grassNonRes+'_density, stat_grassNonRes.count as '+grassNonRes+'_cells ',
 			'resultsName':{
 				0:grassNonRes+'_density', 1:grassNonRes+'_cells'},
-			'resultsUnit':{ 
+			'resultsUnit':{
 				0:'m2', 2:'cells'}
 			},
 	bVolTot:{'tablename':bVolTot,
@@ -103,7 +101,7 @@ layersData = {
 			'select':'stat_bVolTot.sum as '+bVolTot+'_value, (stat_bVolTot.sum/stat_bVolTot.count) as '+bVolTot+'_density, stat_bVolTot.count as '+bVolTot+'_cells ',
 			'resultsName':{
 				0:bVolTot+'_value', 1:bVolTot+'_density', 2:bVolTot+'_cells'},
-			'resultsUnit':{ 
+			'resultsUnit':{
 				0:'m3', 1:'m3/ha', 2:'cells'}
 			},
 	bVolRes:{'tablename':bVolRes,
@@ -111,7 +109,7 @@ layersData = {
 			'select':'stat_bVolRes.sum as '+bVolRes+'_value, (stat_bVolRes.sum/stat_bVolRes.count) as '+bVolRes+'_density, stat_bVolRes.count as '+bVolRes+'_cells ',
 			'resultsName':{
 				0:bVolRes+'_value', 1:bVolRes+'_density', 2:bVolRes+'_cells'},
-			'resultsUnit':{ 
+			'resultsUnit':{
 				0:'m3', 1:'m3/ha', 2:'cells'}
 			},
 	bVolNonRes:{'tablename':bVolNonRes,
@@ -119,7 +117,7 @@ layersData = {
 			'select':'stat_bVolNonRes.sum as '+bVolNonRes+'_value, (stat_bVolNonRes.sum/stat_bVolNonRes.count) as '+bVolNonRes+'_density, stat_bVolNonRes.count as '+bVolNonRes+'_cells ',
 			'resultsName':{
 				0:bVolNonRes+'_value', 1:bVolNonRes+'_density', 2:bVolNonRes+'_cells'},
-			'resultsUnit':{ 
+			'resultsUnit':{
 				0:'m3', 1:'m3/ha', 2:'cells'}
 			},
 	heatRes:{'tablename':'heat_res_curr_density',
@@ -127,7 +125,7 @@ layersData = {
 			'select':'stat_heatRes.sum as '+heatRes+'_value, (stat_heatRes.sum/stat_heatRes.count) as '+heatRes+'_density, stat_heatRes.count as '+heatRes+'_cells ',
 			'resultsName':{
 				0:heatRes+'_value', 1:heatRes+'_density', 2:heatRes+'_cells'},
-			'resultsUnit':{ 
+			'resultsUnit':{
 				0:'MWh', 1:'MWh/ha', 2:'cells'}
 			},
 	heatNonRes:{'tablename':'heat_nonres_curr_density',
@@ -135,7 +133,7 @@ layersData = {
 			'select':'stat_heatNonRes.sum as '+heatNonRes+'_value, (stat_heatNonRes.sum/stat_heatNonRes.count) as '+heatNonRes+'_density, stat_heatNonRes.count as '+heatNonRes+'_cells ',
 			'resultsName':{
 				0:heatNonRes+'_value', 1:heatNonRes+'_density', 2:heatNonRes+'_cells'},
-			'resultsUnit':{ 
+			'resultsUnit':{
 				0:'MWh', 1:'MWh/ha', 2:'cells'}
 			},
 	geothermalPotHeatCond:{'tablename':'potential_shallowgeothermal_heat_cond',
@@ -197,7 +195,7 @@ layersData = {
 		 }
 }
 
-# ALL QUERIES DATA FOR THE STATS BY LAYERS 
+# ALL QUERIES DATA FOR THE STATS BY LAYERS
 def createQueryDataStatsHectares(geometry, year):
 	# 'with' parts
 	withPop = constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=popDe, fromPart=layersData[popDe]['from'])
@@ -296,7 +294,10 @@ def createQueryDataStatsNutsLau(nuts, year, type):
 
 	return layersQueryData
 
-# ALL QUERIES DATA FOR THE HEAT LOAD PROFILE BY HECTARES 
+
+# ================================================================
+# HEATLOAD PROFILE 
+# ALL QUERIES DATA FOR THE HEAT LOAD PROFILE BY HECTARES
 def createQueryDataLPHectares(year, month, day, geometry):
 	withPart = "with subAreas as (SELECT ST_Intersection(ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258),nuts.geom) as soustracteGeom, " +\
 						"nuts.gid " +\
@@ -353,7 +354,7 @@ def createQueryDataLPHectares(year, month, day, geometry):
 
 	return queryData
 
-# ALL QUERIES DATA FOR THE HEAT LOAD PROFILE BY NUTS 
+# ALL QUERIES DATA FOR THE HEAT LOAD PROFILE BY NUTS
 def createQueryDataLPNutsLau(year, month, day, nuts):
 
 	withPart = "WITH nutsSelection as (select nuts_id FROM stat.heat_tot_curr_density_tif_nuts WHERE nuts_id IN ("+nuts+")), " +\
@@ -462,80 +463,7 @@ def createQueryDataDCHectares(year, geometry):
 
 	return sql_query
 
-def sampling_data(listValues):
-	# Get number of values
-	numberOfValues = len(listValues)
 
-	# Create the points for the curve with the X and Y axis
-	listPoints = []
-	for n, l in enumerate(listValues):
-		listPoints.append({
-			'X':n+1,
-			'Y':listValues[n]
-		})
-
-	# Sampling of the values
-	cut1 = int(numberOfValues*constants.POINTS_FIRST_GROUP_PERCENTAGE) 
-	cut2 = int(cut1+(numberOfValues*constants.POINTS_SECOND_GROUP_PERCENTAGE)) 
-	cut3 = int(cut2+(numberOfValues*constants.POINTS_THIRD_GROUP_PERCENTAGE)) 
-
-	firstGroup = listPoints[0:cut1:constants.POINTS_FIRST_GROUP_STEP]
-	secondGroup = listPoints[cut1:cut2:constants.POINTS_SECOND_GROUP_STEP]
-	thirdGroup = listPoints[cut2:cut3:constants.POINTS_THIRD_GROUP_STEP]
-	fourthGroup = listPoints[cut3:numberOfValues:constants.POINTS_FOURTH_GROUP_STEP]
-
-	# Get min and max values needed for the sampling list
-	maxValue = min(listPoints)
-	minValue = max(listPoints)
-
-	# Concatenate the groups to a new list of points (sampling list)
-	finalListPoints = firstGroup+secondGroup+thirdGroup+fourthGroup
-
-	# Add max value at the beginning if the list doesn't contain it
-	if maxValue not in finalListPoints:
-		finalListPoints.insert(0, maxValue)
-
-	# Add min value at the end if the list doesn't contain it
-	if minValue not in finalListPoints:
-		finalListPoints.append(minValue)
-
-	return finalListPoints
-
-
-
-
-def computeConsPerPerson(l1, l2, output):
-	"""
-	Compute the heat consumption/person if population_density and heat_density layers are selected
-	"""
-	hdm = None
-	heat_cons = None
-	population = None
-	for l in output:
-		if l == l2:
-			hdm = l
-			for v in l.get('values', []):
-				if v.get('name') == 'heat_consumption':
-					heat_cons = v
-		if l.get('name') == l1:
-			for v in l.get('values', []):
-				if v.get('name') == 'population':
-					population = v
-
-	if heat_cons != None and population != None:
-		pop_val = float(population.get('value', 1))
-		pop_val = pop_val if pop_val > 0 else 1
-		hea_val = float(heat_cons.get('value', 0))
-
-		v = {
-			'name': 'consumption_per_citizen',
-			'value': hea_val / pop_val,
-			'unit': heat_cons.get('unit') + '/' + population.get('unit')
-		}
-
-		hdm.get('values').append(v)
-
-	return hdm
 
 def constructWithPartEachLayerHectare(geometry, year, layer, fromPart):
 	if layer == wwtpCapacity or layer == wwtpPower:
@@ -649,102 +577,3 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
 				"WHERE stat."+layersData[layer]['tablename']+"_"+type+"."+id_type+" IN ("+nuts+")) "
 
 	return w
-
-
-
-def transform_nuts_list(nuts):
-		# Store nuts in new custom list
-		nutsPayload = []
-		for n in nuts:
-			n = n[:4]
-			if n not in nutsPayload:
-				nutsPayload.append(str(n))
-
-		# Adapt format of list for the query
-		nutsListQuery = str(nutsPayload)
-		nutsListQuery = nutsListQuery[1:] # Remove the left hook
-		nutsListQuery = nutsListQuery[:-1] # Remove the right hook
-
-		return nutsListQuery
-
-def adapt_nuts_list(nuts):
-		# Store nuts in new custom list
-		nutsPayload = []
-		for n in nuts:
-			if n not in nutsPayload:
-				nutsPayload.append(str(n))
-
-		# Adapt format of list for the query
-		nutsListQuery = str(nutsPayload)
-		nutsListQuery = nutsListQuery[1:] # Remove the left hook
-		nutsListQuery = nutsListQuery[:-1] # Remove the right hook
-
-		return nutsListQuery
-
-def createAllLayers(layers):
-	allLayers = []
-	for l in layers:
-		allLayers.append(l)
-		allLayers.append(l+'_ha')
-		allLayers.append(l+'_nuts3')
-		allLayers.append(l+'_nuts2')
-		allLayers.append(l+'_nuts1')
-		allLayers.append(l+'_nuts0')
-		allLayers.append(l+'_lau2')
-
-	return allLayers
-
-def getTypeScale(layers):
-	if layers:		
-		if layers[0].endswith('lau2'):
-			return 'lau'
-		else:
-			return 'nuts'
-	else:
-		return ''
-
-
-def adapt_layers_list(layersPayload, type, allLayers):
-	layers = []
-	if type == 'lau':
-		for layer in layersPayload:
-			if layer in allLayers:
-				layer = layer[:-5] # Remove the type for each layer 
-				layers.append(layer)
-	elif type == 'ha':
-		for layer in layersPayload:
-			if layer in allLayers:
-				layer = layer[:-3] # Remove the type for each layer 
-				layers.append(layer)
-	else:
-		for layer in layersPayload:
-			if layer in allLayers:
-				layer = layer[:-6] # Remove the type for each layer 
-				layers.append(layer)
-
-	return layers
-
-def removeScaleLayers(layersList, type):
-	layers = []
-	if type == 'lau':
-		for layer in layersList:
-			layer = layer[:-5] # Remove the type for each layer 
-			layers.append(layer)
-	elif type == 'ha':
-		for layer in layersList:
-			layer = layer[:-3] # Remove the type for each layer 
-			layers.append(layer)
-	else:
-		for layer in layersList:
-			layer = layer[:-6] # Remove the type for each layer 
-			layers.append(layer)
-
-	return layers
-
-def layers_filter(layersPayload, list):
-	layers = []
-	for l in layersPayload:
-		if l not in list:
-			layers.append(l)
-
-	return layers

@@ -7,6 +7,7 @@ from app.decorators.serializers import  load_profile_aggregation_day_input, \
 from app.decorators.restplus import api
 
 from app.models.heatloadQueries import HeatLoadProfile
+from .. import helper
 
 
 
@@ -30,6 +31,7 @@ class HeatLoadProfileResource(Resource):
         return list_nuts_id
 
 
+
 @ns.route('/duration-curve/nuts-lau')
 @api.response(404, 'No data found')
 class HeatLoadProfileAggregation(HeatLoadProfileResource):
@@ -47,7 +49,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         if not nuts:
             return
 
-        nuts = generalData.transform_nuts_list(nuts)
+        nuts = helper.transform_nuts_list(nuts)
 
         output = {}
 
@@ -196,7 +198,7 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
         if not nuts:
             return
             
-        nuts = generalData.transform_nuts_list(nuts)
+        nuts = helper.transform_nuts_list(nuts)
         
         if 'month' in api.payload.keys():
           month = api.payload["month"]

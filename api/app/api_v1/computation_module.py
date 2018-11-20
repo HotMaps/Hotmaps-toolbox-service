@@ -24,7 +24,7 @@ from flask import send_from_directory
 
 
 from app import CalculationModuleRpcClient
-from app import helper
+
 
 
 #TODO Add url to find  right computation module
