@@ -54,16 +54,9 @@ class UserExistingException(Exception):
     pass
 
 
-class UserNotExistingException(Exception):
+class WrongCredentialException(Exception):
     '''
-    Exception raised when trying to reach a non existing user
-    '''
-    pass
-
-
-class WrongPasswordException(Exception):
-    '''
-    Exception raised when the password does not correspond to the user
+    Exception raised when the credentials are not correct
     '''
     pass
 

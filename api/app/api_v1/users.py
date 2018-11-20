@@ -1,6 +1,6 @@
 from .. import constants
 from ..decorators.exceptions import ParameterException, RequestException, ActivationException, \
-    UserExistingException, UserNotExistingException, WrongPasswordException, UserUnidentifiedException,\
+    UserExistingException, WrongCredentialException, UserUnidentifiedException,\
     UserNotActivatedException
 from ..decorators.restplus import api
 from ..decorators.serializers import user_register_input, user_register_output, user_activate_input, \
@@ -31,7 +31,6 @@ ns = nsUsers
 @ns.route('/recovery/ask')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
-@api.response(537, 'Users not existing')
 class AskingPasswordRecovery(Resource):
     @api.marshal_with(user_ask_recovery_output)
     @api.expect(user_ask_recovery_input)
@@ -46,9 +45,11 @@ class AskingPasswordRecovery(Resource):
         except:
             raise ParameterException('email')
 
-        # we check if the email has already been used
+        # if the user is not existing, we return a standard error
         if User.get_by_email(email) is None:
-            raise UserNotExistingException(email)
+            return {
+                "message": 'request for recovery successful'
+            }
         # mail creation
         user = User.query.filter_by(email=email).first()
         link = generate_confirmation_token(email)
@@ -72,7 +73,7 @@ class AskingPasswordRecovery(Resource):
 @ns.route('/recovery')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
-@api.response(537, 'Activation failed')
+@api.response(536, 'Activation failed')
 class RecoverPassword(Resource):
     @api.marshal_with(user_recovery_output)
     @api.expect(user_recovery_input)
@@ -174,15 +175,19 @@ class UserRegistering(Resource):
         db.session.commit()
 
         # mail creation
-        link = generate_confirmation_token(email)
-        msg = Message()
-        msg.add_recipient(email)
-        msg.subject = 'Your registration on the HotMaps toolbox'
-        msg.body = 'Welcome ' + first_name + ' ' + last_name + ' on the HotMaps toolbox,\n' \
-                                                               'To finalize your registration on the toolbox, please click on the following link: \n' \
-                   + link
+        try:
+            link = generate_confirmation_token(email)
+            msg = Message()
+            msg.add_recipient(email)
+            msg.subject = 'Your registration on the HotMaps toolbox'
+            msg.body = 'Welcome ' + first_name + ' ' + last_name + ' on the HotMaps toolbox,\n' \
+                                                                   'To finalize your registration on the toolbox, please click on the following link: \n' \
+                       + link
 
-        mail.send(msg)
+            mail.send(msg)
+
+        except Exception, e:
+            raise RequestException(str(e))
 
         output = 'user registered'
 
@@ -264,10 +269,10 @@ class LoginUser(Resource):
         # find the user in the db
         connecting_user = User.query.filter_by(email=email).first()
         if connecting_user is None:
-            raise UserNotExistingException
+            raise WrongCredentialException
         # check password
         if not bcrypt.using(salt=FLASK_SALT).verify(password, connecting_user.password):
-            raise WrongPasswordException
+            raise WrongCredentialException
 
         if connecting_user.active is False:
             raise UserNotActivatedException
@@ -285,6 +290,7 @@ class LoginUser(Resource):
 
 @ns.route('/logout')
 @api.response(530, 'Request error')
+@api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class LogoutUser(Resource):
     @api.marshal_with(user_logout_output)
@@ -317,7 +323,7 @@ class LogoutUser(Resource):
 @ns.route('/profile/update')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
-@api.response(537, 'User Unidentified')
+@api.response(539, 'User Unidentified')
 class ProfileUser(Resource):
     @api.marshal_with(user_profile_output)
     @api.expect(user_profile_input)
@@ -371,7 +377,7 @@ class ProfileUser(Resource):
 @ns.route('/information')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
-@api.response(537, 'User Unidentified')
+@api.response(539, 'User Unidentified')
 class GetUserInformation(Resource):
     @api.marshal_with(user_get_information_output)
     @api.expect(user_get_information_input)

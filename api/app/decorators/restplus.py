@@ -5,8 +5,8 @@ from flask_restplus import Api
 from .. import constants
 from sqlalchemy.orm.exc import NoResultFound
 from ..decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, \
-    ParameterException, RequestException, ActivationException, UserExistingException, UserNotExistingException, \
-    WrongPasswordException, UserUnidentifiedException, UserDoesntOwnUploadsException, UploadExistingUrlException, \
+    ParameterException, RequestException, ActivationException, UserExistingException, \
+    WrongCredentialException, UserUnidentifiedException, UserDoesntOwnUploadsException, UploadExistingUrlException, \
     NotEnoughSpaceException, UploadNotExistingException, UserNotActivatedException
 
 log = logging.getLogger(__name__)
@@ -151,39 +151,20 @@ def handle_activation_failure(error):
     return response, 536
 
 
-@api.errorhandler(UserNotExistingException)
-def handle_inexisting_user(error):
+@api.errorhandler(WrongCredentialException)
+def handle_wrong_credential(error):
     '''
-    decorator called with an error caused when trying to reach a non-existing user
+    decorator called with an error caused when the credentials entered are wrong
     :param error -- the called error:
     :return:
     '''
-    message = 'User ' + error.message + 'does not exists'
-    response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "537",
-            "statusText": "USER NOT EXISTING"
-        }
-    }
-    return response, 537
-
-
-@api.errorhandler(WrongPasswordException)
-def handle_wrong_password(error):
-    '''
-    decorator called with an error caused when the password entered is wrong
-    :param error -- the called error:
-    :return:
-    '''
-    message = 'The password does not match the user'
+    message = 'The credentials are wrong'
     response = {
         "message": message,
         "error": {
             "message": message,
             "status": "538",
-            "statusText": "WRONG PASSWORD"
+            "statusText": "WRONG CREDENTIAL"
         }
     }
     return response, 538
