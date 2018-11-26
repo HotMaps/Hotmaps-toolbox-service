@@ -1,4 +1,5 @@
 from unittest import TestCase
+from .. import BASE_URL
 import requests
 
 
@@ -9,7 +10,7 @@ class TestUserRegistering(TestCase):
         '''
         this test will fail to register a new user because the user is already created
         '''
-        url = "http://192.168.99.100/api/users/register"
+        url = BASE_URL + "/users/register"
 
         payload = {
             "password": "this",
@@ -30,7 +31,7 @@ class TestUserRegistering(TestCase):
         '''
         this test will fail to register a new user because the parameters are not complete
         '''
-        url = "http://192.168.99.100/api/users/register"
+        url = BASE_URL + "/users/register"
 
         payload = {
             "passwordfds": "this",

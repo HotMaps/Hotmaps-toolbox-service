@@ -440,37 +440,3 @@ user_get_information_output = api.model('output for getting user information', {
 user_get_information_input = api.model('input for getting user information', {
     'token': fields.String(description='authentification token'),
 })
-upload_add_input = api.model('input for uploads adding', {
-    'token': fields.String(description='authentification token'),
-    'file_name': fields.String(description='file name'),
-    'url': fields.String(description='url'),
-    'size': fields.Float(description='size'),
-})
-upload_add_output = api.model('output for uploads adding', {
-    'message': fields.String(description='message'),
-})
-upload_model = api.model('all upload fields', {
-    'file_name': fields.String(description='file name'),
-    'url': fields.String(description='url'),
-    'size': fields.Float(description='size'),
-})
-upload_list_input = api.model('input for uploads listing', {
-    'token': fields.String(description='authentification token'),
-})
-upload_list_output = api.model('output for uploads listing', {
-    'uploads': fields.List(fields.Nested(upload_model)),
-})
-upload_space_used_input = api.model('input for uploads space used function', {
-    'token': fields.String(description='authentification token'),
-})
-upload_space_used_output = api.model('output for uploads space used function', {
-    "used_size": fields.Float(description='used size'),
-    "max_size": fields.Float(description='maximum size'),
-})
-upload_delete_input = api.model('input for uploads deleting', {
-    'token': fields.String(description='authentification token'),
-    "url": fields.String(description='URL'),
-})
-upload_delete_output = api.model('output for uploads deleting', {
-    "message": fields.String(description='used size'),
-})

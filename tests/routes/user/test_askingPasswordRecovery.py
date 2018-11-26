@@ -1,4 +1,5 @@
 from unittest import TestCase
+from .. import BASE_URL
 import requests
 
 class TestAskingPasswordRecovery(TestCase):
@@ -6,7 +7,7 @@ class TestAskingPasswordRecovery(TestCase):
         '''
         this test will ask for a user recovery
         '''
-        url = "http://192.168.99.100/api/users/recovery/ask"
+        url = BASE_URL + "/users/recovery/ask"
 
         payload = {
             "email": "hotmapstest@gmail.com"
@@ -22,7 +23,7 @@ class TestAskingPasswordRecovery(TestCase):
         '''
         this test will fail to activate a user because the parameters are not complete
         '''
-        url = "http://192.168.99.100/api/users/recovery/ask"
+        url = BASE_URL + "/users/recovery/ask"
 
         payload = {
             "youcantspellemail": "hotmapstest@gmail.com"
@@ -40,7 +41,7 @@ class TestAskingPasswordRecovery(TestCase):
         '''
         this test will fail to activate a user because the parameters are not complete
         '''
-        url = "http://192.168.99.100/api/users/recovery/ask"
+        url = BASE_URL + "/users/recovery/ask"
 
         payload = {
             "email": "hotmapstest2@gmail.com"

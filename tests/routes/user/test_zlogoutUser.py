@@ -1,6 +1,8 @@
 import requests
 from unittest import TestCase
 from . import test_token
+from .. import BASE_URL
+
 
 # the z in the name is to run this test last to logout (but before the 2nd login that will change the valid token
 class TestLogoutUser(TestCase):
@@ -8,7 +10,7 @@ class TestLogoutUser(TestCase):
         '''
         This test will test that a user is correctly logout
         '''
-        url = "http://192.168.99.100/api/users/logout"
+        url = BASE_URL + "/users/logout"
 
         payload = {
             "token": test_token
@@ -24,7 +26,7 @@ class TestLogoutUser(TestCase):
         '''
         this test will fail to log in a user because the parameters are wrong
         '''
-        url = "http://192.168.99.100/api/users/logout"
+        url = BASE_URL + "/users/logout"
 
         payload = {
             "tokentoto": 'asdgsdgsdgsdaffds'
@@ -40,7 +42,7 @@ class TestLogoutUser(TestCase):
         '''
         this test will fail to log in a user because the user name is wrong
         '''
-        url = "http://192.168.99.100/api/users/logout"
+        url = BASE_URL + "/users/logout"
 
         payload = {
             "token": 'wowoosdifapsdgasd'

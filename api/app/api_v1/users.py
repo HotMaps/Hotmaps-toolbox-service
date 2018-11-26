@@ -9,7 +9,6 @@ from ..decorators.serializers import user_register_input, user_register_output, 
     user_profile_input, user_profile_output, user_get_information_output, user_get_information_input
 from flask_mail import Message
 from flask_restplus import Resource
-from flask_login import login_user, logout_user, login_required
 from flask_security import SQLAlchemySessionUserDatastore
 from itsdangerous import URLSafeTimedSerializer
 from passlib.hash import bcrypt
@@ -19,7 +18,6 @@ from .. import mail, login_manager
 from ..secrets import FLASK_SECRET_KEY, FLASK_SALT
 from ..models.user import User
 from ..models.role import Role
-from ..models.uploads import Uploads
 
 # Setup Flask-Security
 user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
@@ -44,7 +42,6 @@ class AskingPasswordRecovery(Resource):
             email = api.payload['email']
         except:
             raise ParameterException('email')
-
         # if the user is not existing, we return a standard error
         if User.get_by_email(email) is None:
             return {
@@ -59,11 +56,12 @@ class AskingPasswordRecovery(Resource):
         msg.body = 'Hello ' + user.first_name + ' ' + user.last_name + ' you asked for a password recovery ' \
                                                                        'on your HotMaps account,\n to reset your password, please click on the following link: ' \
                                                                        '\n' + link + '\n if you haven\'t ask for this modification, please delete this email.'
-
-        mail.send(msg)
+        try:
+            mail.send(msg)
+        except Exception, e:
+            raise RequestException(str(e))
 
         output = 'request for recovery successful'
-
         # output
         return {
             "message": output

@@ -2,6 +2,7 @@ import requests
 
 from unittest import TestCase
 from . import test_token
+from .. import BASE_URL
 
 
 class TestProfileUser(TestCase):
@@ -9,7 +10,7 @@ class TestProfileUser(TestCase):
         """
         this test will pass the user/information method
         """
-        url = "http://192.168.99.100/api/users/profile/update"
+        url = BASE_URL + "/users/profile/update"
         test_last_name = 'toto'
         test_first_name = 'tata'
         payload = {
@@ -28,7 +29,7 @@ class TestProfileUser(TestCase):
         """
         this test will fail because of missing parameters
         """
-        url = "http://192.168.99.100/api/users/profile/update"
+        url = BASE_URL + "/users/profile/update"
 
         payload = {
             "tokentoto": test_token
@@ -44,7 +45,7 @@ class TestProfileUser(TestCase):
         """
         this test will fail because of wrong user token
         """
-        url = "http://192.168.99.100/api/users/profile/update"
+        url = BASE_URL + "/users/profile/update"
 
         payload = {
             "token": "mybeautifultoken",

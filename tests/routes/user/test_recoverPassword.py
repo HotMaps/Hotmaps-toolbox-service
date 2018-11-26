@@ -1,5 +1,6 @@
 import requests
 from unittest import TestCase
+from .. import BASE_URL
 
 
 class TestRecoverPassword(TestCase):
@@ -7,7 +8,7 @@ class TestRecoverPassword(TestCase):
         '''
         This test will fail to recover the password because the parameters are wrong
         '''
-        url = "http://192.168.99.100/api/users/recovery"
+        url = BASE_URL + "/users/recovery"
 
         payload = {
             "tokentoto": "thisismynicetoken",
@@ -26,7 +27,7 @@ class TestRecoverPassword(TestCase):
         '''
         This test will fail to recover the password because the token is wrong
         '''
-        url = "http://192.168.99.100/api/users/recovery"
+        url = BASE_URL + "/users/recovery"
 
         payload = {
             "token": "thisismynicetoken",

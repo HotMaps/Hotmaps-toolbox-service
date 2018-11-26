@@ -64,7 +64,7 @@ class StatsLayersNutsInArea(Resource):
 			exception_message = ''
 			for i in range(len(wrong_parameter)):
 				exception_message += wrong_parameter[i]
-				if (i != len(wrong_parameter) - 1):
+				if i != len(wrong_parameter) - 1:
 					exception_message += ', '
 			raise ParameterException(exception_message + '')
 
@@ -205,10 +205,10 @@ class StatsLayersHectareMulti(Resource):
 		#geom = "SRID=4326;{}".format(multipolygon.wkt)
 		geom = multipolygon.wkt
 		try:
-            res = LayersHectare.stats_hectares.delay(geometry=geom, year=year, layers=layers)
-            output = res.get()
-        except:
-            raise IntersectionException()
+			res = LayersHectare.stats_hectares.delay(geometry=geom, year=year, layers=layers)
+			output = res.get()
+		except:
+			raise IntersectionException()
 		# compute heat consumption/person if both layers are selected
 		pop1ha_name = constants.POPULATION_TOT
 		hdm_name = constants.HEAT_DENSITY_TOT

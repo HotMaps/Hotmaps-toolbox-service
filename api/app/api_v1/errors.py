@@ -11,6 +11,7 @@ def bad_request(e):
     response.status_code = 400
     return response
 
+
 @api.errorhandler(ComputationalModuleError)
 def error_from_cm(e):
     response = jsonify({'status': e.status, 'error': e.error,'statusText': 'Calculation Module error',

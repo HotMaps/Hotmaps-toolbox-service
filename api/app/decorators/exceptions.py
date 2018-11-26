@@ -106,6 +106,7 @@ class UserNotActivatedException(Exception):
 class ValidationError(ValueError):
     pass
 
+
 class ComputationalModuleError(ValueError):
     pass
 

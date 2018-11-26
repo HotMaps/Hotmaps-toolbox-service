@@ -1,4 +1,5 @@
 from unittest import TestCase
+from .. import BASE_URL
 import requests
 
 
@@ -9,7 +10,7 @@ class TestActivateUser(TestCase):
         '''
         this test will fail to activate a user because the parameters are not complete
         '''
-        url = "http://192.168.99.100/api/users/register/activate"
+        url = BASE_URL + "/users/register/activate"
 
         payload = {
             "tokentoto": "did you really expected it to work ?"
@@ -27,7 +28,7 @@ class TestActivateUser(TestCase):
         '''
         this test will fail to activate a user because the parameters are not complete
         '''
-        url = "http://192.168.99.100/api/users/register/activate"
+        url = BASE_URL + "/users/register/activate"
 
         payload = {
             "token": "did you really expected it to work ?"

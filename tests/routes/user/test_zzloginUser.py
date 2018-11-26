@@ -1,5 +1,7 @@
 import requests
 from unittest import TestCase
+from .. import BASE_URL
+
 
 # we need to run the second login after logging out as the token will be changed
 class TestLoginUser(TestCase):
@@ -8,7 +10,7 @@ class TestLoginUser(TestCase):
         '''
         this test will log in the user
         '''
-        url = "http://192.168.99.100/api/users/login"
+        url = BASE_URL + "/users/login"
 
         payload = {
             "email": "hotmapstest@gmail.com",
@@ -25,7 +27,7 @@ class TestLoginUser(TestCase):
         '''
         this test will fail to log in a user because the parameters are wrong
         '''
-        url = "http://192.168.99.100/api/users/login"
+        url = BASE_URL + "/users/login"
 
         payload = {
             "emailsdaf": "hotmapstest@gmail.com",
@@ -42,7 +44,7 @@ class TestLoginUser(TestCase):
         '''
         this test will fail to log in a user because the user name is wrong
         '''
-        url = "http://192.168.99.100/api/users/login"
+        url = BASE_URL + "/users/login"
 
         payload = {
             "email": "notme@gmail.com",
@@ -59,7 +61,7 @@ class TestLoginUser(TestCase):
         '''
         this test will fail to log in a user because the user password is wrong
         '''
-        url = "http://192.168.99.100/api/users/login"
+        url = BASE_URL + "/users/login"
 
         payload = {
             "email": "hotmapstest@gmail.com",

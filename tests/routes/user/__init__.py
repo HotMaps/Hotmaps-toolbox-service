@@ -1,6 +1,7 @@
 import requests
+from .. import BASE_URL
 
-url = "http://192.168.99.100/api/users/login"
+url = BASE_URL + "/users/login"
 
 payload = {
     "email": "hotmapstest@gmail.com",
