@@ -295,7 +295,7 @@ load_profile_aggregation_curve = api.model('Input for load profile duration curv
     'nuts': fields.List(fields.String(descriptions='List of NUTS'))
 })
 load_profile_aggregation_curve_output = api.model('Output for load profile duration curve', {
-    'points': fields.List(fields.Nested(point_curve))
+    'points': fields.List(fields.Nested(point))
 })
 
 load_profile_aggregation_curve_hectares = api.model('Input for load profile duration curve', {
@@ -376,16 +376,101 @@ input_computation_module = api.model('Input for population density for area', {
 
 })
 uploadfile = api.model('getfile to uploads', {
-
     'filename': fields.String(description='cm test'),
-
-
 })
 
 cm_id_input = api.model('cm_id_input ', {
-
     'cm_id': fields.String(description='cm_id_input '),
-
-
 })
-
+user_register_input = api.model('input for user registration', {
+    'first_name': fields.String(description='first name'),
+    'last_name': fields.String(description='last name'),
+    'email': fields.String(description='email'),
+    'password': fields.String(description='password'),
+})
+user_register_output = api.model('output for user registration', {
+    'message': fields.String(description='message'),
+})
+user_activate_input = api.model('input for user activation', {
+    'token': fields.String(description='token'),
+})
+user_activate_output = api.model('output for user activation', {
+    'message': fields.String(description='message'),
+})
+user_ask_recovery_input = api.model('input for user password recovery request', {
+    'email': fields.String(description='email'),
+})
+user_ask_recovery_output = api.model('output for user password recovery request', {
+    'message': fields.String(description='message'),
+})
+user_recovery_input = api.model('input for user password recovery', {
+    'token': fields.String(description='token'),
+    'password': fields.String(description='password'),
+})
+user_recovery_output = api.model('output for user password recovery', {
+    'message': fields.String(description='message'),
+})
+user_login_input = api.model('input for user login', {
+    'email': fields.String(description='email'),
+    'password': fields.String(description='password'),
+})
+user_login_output = api.model('output for user login', {
+    'message': fields.String(description='message'),
+    'token': fields.String(description='authentification token'),
+})
+user_logout_input = api.model('input for the user logout', {
+    'token': fields.String(description='authentification token'),
+})
+user_logout_output = api.model('output for user logout', {
+    'message': fields.String(description='message'),
+})
+user_profile_input = api.model('input for user profile modifying', {
+    'token': fields.String(description='authentification token'),
+    'first_name': fields.String(description='first name'),
+    'last_name': fields.String(description='last name'),
+})
+user_profile_output = api.model('output for user profile modifying', {
+    'message': fields.String(description='message'),
+})
+user_get_information_output = api.model('output for getting user information', {
+    'first_name': fields.String(description='first name'),
+    'last_name': fields.String(description='last name'),
+    'email': fields.String(description='email'),
+})
+user_get_information_input = api.model('input for getting user information', {
+    'token': fields.String(description='authentification token'),
+})
+upload_add_input = api.model('input for uploads adding', {
+    'token': fields.String(description='authentification token'),
+    'file_name': fields.String(description='file name'),
+    'url': fields.String(description='url'),
+    'size': fields.Float(description='size'),
+})
+upload_add_output = api.model('output for uploads adding', {
+    'message': fields.String(description='message'),
+})
+upload_model = api.model('all upload fields', {
+    'file_name': fields.String(description='file name'),
+    'url': fields.String(description='url'),
+    'size': fields.Float(description='size'),
+})
+upload_list_input = api.model('input for uploads listing', {
+    'token': fields.String(description='authentification token'),
+})
+upload_list_output = api.model('output for uploads listing', {
+    'uploads': fields.List(fields.Nested(upload_model)),
+})
+upload_space_used_input = api.model('input for uploads space used function', {
+    'token': fields.String(description='authentification token'),
+})
+upload_space_used_output = api.model('output for uploads space used function', {
+    "used_size": fields.Float(description='used size'),
+    "max_size": fields.Float(description='maximum size'),
+})
+upload_delete_input = api.model('input for uploads deleting', {
+    'token': fields.String(description='authentification token'),
+    "url": fields.String(description='URL'),
+})
+upload_delete_output = api.model('output for uploads deleting', {
+    "message": fields.String(description='used size'),
+})
