@@ -31,3 +31,6 @@ redis==2.10.6
 SQLAlchemy==1.0.11
 Pika==0.12.0
 bcrypt
+flask_security
+bcrypt
+Flask-Login
