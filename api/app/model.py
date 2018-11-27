@@ -388,7 +388,6 @@ def query_geographic_database_first(sql_query):
     cursor = query_geographic_database(sql_query)
 
     result = cursor.fetchone()
-
     #result = helper.remove_None_in_turple(result)
 
 

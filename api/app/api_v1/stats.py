@@ -8,9 +8,9 @@ from app.decorators.serializers import  stats_layers_hectares_output,\
 	stats_layers_hectares_input, stats_list_nuts_input, stats_list_label_dataset
 from app.decorators.restplus import api
 
-from app.models.statsQueries import LayersHectare
 from app.models.statsQueries import ElectricityMix
-from app.models.statsQueries import LayersNutsLau
+from app.models.statsQueries import LayersStats
+
 
 
 import shapely.geometry as shapely_geom
@@ -46,7 +46,6 @@ class StatsLayersNutsInArea(Resource):
 		year = api.payload['year']
 		layersPayload = api.payload['layers']
 		nuts = api.payload['nuts']
-
 		# Stop execution if layers list or nuts list is empty 
 		if not layersPayload or not nuts:
 			return
@@ -61,7 +60,7 @@ class StatsLayersNutsInArea(Resource):
 
 			noTableLayers = layers_filter(layersPayload, allLayersTable)
 			noDataLayers = layers_filter(layersPayload, allLayers)
-
+			
 		elif type == 'lau':
 			allLayersTable = createAllLayers(constants.LAYERS_REF_LAU_TABLE)
 			allLayers = createAllLayers(constants.LAYERS_REF_LAU)
@@ -74,10 +73,8 @@ class StatsLayersNutsInArea(Resource):
 		# Keep only existing layers
 		
 		layers = adapt_layers_list(layersPayload=layersPayload, type=type, allLayers=allLayers)
-
 		output = []
-
-		res = LayersNutsLau.stats_nuts_lau.delay(nuts=adapt_nuts_list(nuts), year=year, layers=layers, type=type)
+		res = LayersStats.stats_nuts_lau.delay(nuts=adapt_nuts_list(nuts), year=year, layers=layers, type=type)
 		output = res.get()
 
 
@@ -144,7 +141,7 @@ class StatsLayersHectareMulti(Resource):
 		#geom = "SRID=4326;{}".format(multipolygon.wkt)
 		geom = multipolygon.wkt
 
-		res = LayersHectare.stats_hectares.delay(geometry=geom, year=year, layers=layers)
+		res = LayersStats.stats_hectares.delay(geometry=geom, year=year, layers=layers)
 		output = res.get()
 
 		# compute heat consumption/person if both layers are selected
@@ -170,59 +167,6 @@ class StatsLayersHectareMulti(Resource):
 			"no_data_layers": noDataLayers,
 			"no_table_layers": noTableLayers
 		}
-
-
-@celery.task(name = 'layer_hectare')
-def indicatorsHectares(year,layersPayload,areas):
-	if not layersPayload or not areas:
-		return
-
-		# Layers filtration and management
-	allLayersTable = createAllLayers(constants.LAYERS_REF_HECTARES_TABLE)
-	allLayers = createAllLayers(constants.LAYERS_REF_HECTARES)
-	noTableLayers = layers_filter(layersPayload, allLayersTable)
-	noDataLayers = layers_filter(layersPayload, allLayers)
-
-	# Keep only existing layers
-	layers = adapt_layers_list(layersPayload=layersPayload, type='ha', allLayers=allLayers)
-
-	polyArray = []
-	output = []
-
-	# convert to polygon format for each polygon and store them in polyArray
-	for polygon in areas:
-		po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
-		polyArray.append(po)
-
-
-	# convert array of polygon into multipolygon
-	multipolygon = shapely_geom.MultiPolygon(polyArray)
-
-	#geom = "SRID=4326;{}".format(multipolygon.wkt)
-	geom = multipolygon.wkt
-
-	res = LayersHectare.stats_hectares(geometry=geom, year=year, layers=layers)
-	output = res
-
-	# compute heat consumption/person if both layers are selected
-	pop1ha_name = constants.POPULATION_TOT
-	hdm_name = constants.HEAT_DENSITY_TOT
-	heat_curr_non_res_name = constants.HEAT_DENSITY_NON_RES
-	heat_curr_res_name = constants.HEAT_DENSITY_RES
-	gfa_tot_curr_density_name = constants.GRASS_FLOOR_AREA_TOT
-
-
-	retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
-	retrieveCrossIndicator(pop1ha_name, heat_curr_res_name, layers, output)
-	retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
-	retrieveCrossIndicator(gfa_tot_curr_density_name, hdm_name, layers, output)
-
-	# Remove scale for each layer
-	noTableLayers = removeScaleLayers(noTableLayers, type='ha')
-	noDataLayers = removeScaleLayers(noDataLayers, type='ha')
-
-	return output, noTableLayers, noDataLayers
-
 
 @ns.route('/energy-mix/nuts-lau')
 @api.response(404, 'No data found for that specific list of NUTS.')

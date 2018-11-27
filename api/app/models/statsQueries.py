@@ -11,19 +11,11 @@ from app import model
 import logging
 log = logging.getLogger(__name__)
 
+class LayersStats:
 
-
-class LayersNutsLau:
-
+	
 	@staticmethod
-	@celery.task(name = 'stats_nuts_lau')
-	def stats_nuts_lau(nuts, year, layers, type): #/stats/layers/nuts-lau
-
-
-		# Get the data
-		layersQueryData = generalData.createQueryDataStatsNutsLau(nuts=nuts, year=year, type=type)
-		layersData = generalData.layersData
-		
+	def get_stats(year, layers, layersQueryData):
 		# Get the number of layers
 		nbLayers = len(layers)
 
@@ -32,158 +24,69 @@ class LayersNutsLau:
 		# Check if there is at least one layer
 		if layers:
 			# Construction of the query 
-			sql_query = 'WITH '
-
-			for c, layer in enumerate(layers):
-				sql_query += layersQueryData[layer]['with']
-
-				# Add a comma when the query needs one	
+			sql_query = ''
+			sql_with = ' WITH '
+			sql_select = ' SELECT '
+			sql_from = ' FROM '
+			for c, layer in enumerate(layersQueryData):
+				sql_with += layersQueryData[layer]['with']
+				for indicator in layersQueryData[layer]['indicators']:
+					sql_select += indicator['select'] + ' as ' + indicator['name']+','
+				sql_from += layersQueryData[layer]['from']
 				if nbLayers > 1 and c < nbLayers-1:
-					sql_query += ', '
-
-			sql_query += 'SELECT '
-
-			for c, layer in enumerate(layers):
-				sql_query += layersQueryData[layer]['select']
-				# Add a comma when the query needs one
-				if nbLayers > 1 and c < nbLayers-1:
-					sql_query += ', '
-
-			sql_query += 'FROM '
-
-			for c, layer in enumerate(layers):
-				sql_query += layersQueryData[layer]['from']
-				# Add a comma when the query needs one
-				if nbLayers > 1 and c < nbLayers-1:
-					sql_query += ', '	
-				
-			sql_query += ';'
-
-
-			# Execution of the query
-			#query2 = db.session.execute(sql_query)
-			#print ('query 456', query2)
-
+					sql_with += ', '
+					sql_from += ', '
+				else:
+					sql_select = sql_select[:-1]
+			sql_query = sql_with + sql_select + sql_from + ';'
+			print(sql_query)
 			query_geographic_database_first = model.query_geographic_database_first(sql_query)
 
-
-			# Execution of the query
-			#query = db.session.execute(sql_query).first()
-
-			#print ('query session', query)
-
-
 			# Storing the results only if there is data
-			cpt_value_used = 0
-			"""if query[0] == None:
-				result = []
-			else:"""
-			for layer in layers:
+			count_indic=0
+			for layer in layersQueryData:
 				values = []
+				for indicator in layersQueryData[layer]['indicators']:
+					currentValue = query_geographic_database_first[count_indic]
+					count_indic += 1
 
-				for c, l in enumerate(layersData[layer]['resultsName']):
-					print ('c', c)
-					currentValue = query_geographic_database_first[cpt_value_used]
-
-
-
-
-					#print ('currentValue', query)
 					if currentValue == None:
 						currentValue = 0
 
 
 					try:
 						values.append({
-							'name':layersData[layer]['resultsName'][c],
+							'name':indicator['name'],
 							'value':currentValue,
-							'unit':layersData[layer]['resultsUnit'][c]
+							'unit':indicator['unit']
 						})
 					except KeyError: # Special case we retrieve only one value for an hectare
 						pass
-					cpt_value_used = cpt_value_used + 1
-
 				result.append({
 					'name':layer,
 					'values':values
 				})
-
 		return result
-
-
-class LayersHectare:
-
+	
 	@staticmethod
 	@celery.task(name = 'stats_hectares')
 	def stats_hectares(geometry, year, layers): #/stats/layers/hectares
-
 		# Get the data
-		layersQueryData = generalData.createQueryDataStatsHectares(geometry=geometry, year=year)
-		layersData = generalData.layersData
+		layersQueryData = {}
+		for layer in layers:
+			layersQueryData[layer] = generalData.createQueryDataStatsHectares(layer=layer,geometry=geometry, year=year)
+			
+		
+		return LayersStats.get_stats(year,layers, layersQueryData)
 
-		# Get the number of layers
-		nbLayers = len(layers)
-
-		result = []
-
-		# Check if there is at least one layer
-		if layers:
-			# Construction of the query 
-			sql_query = 'WITH '
-
-			for c, layer in enumerate(layers):
-				sql_query += layersQueryData[layer]['with']
-				# Add a comma when the query needs one	
-				if nbLayers > 1 and c < nbLayers-1:
-					sql_query += ', '
-
-			sql_query += 'SELECT '
-
-			for c, layer in enumerate(layers):
-				sql_query += layersQueryData[layer]['select']
-				# Add a comma when the query needs one
-				if nbLayers > 1 and c < nbLayers-1:
-					sql_query += ', '
-
-			sql_query += 'FROM '
-
-			for c, layer in enumerate(layers):
-				sql_query += layersQueryData[layer]['from']
-				# Add a comma when the query needs one
-				if nbLayers > 1 and c < nbLayers-1:
-					sql_query += ', '	
-				
-			sql_query += ';'
-
-			# Execution of the query
-			query = db.session.execute(sql_query).first()
-
-			# Storing the results only if there is data
-			if query[0] == None:
-				result = []
-			else:
-				for layer in layers:
-					values = []
-					for c, l in enumerate(layersData[layer]['resultsName']):
-						try:
-							currentValue = query[layersData[layer]['resultsName'][c]]
-							if currentValue == None:
-								currentValue = 0
-
-							values.append({
-									'name':layersData[layer]['resultsName'][c],
-									'value':currentValue,
-									'unit':layersData[layer]['resultsUnit'][c]
-								})
-						except KeyError: # Special case we retrieve only one value for an hectare
-							pass
-
-					result.append({
-							'name':layer,
-							'values':values
-						})
-
-		return result
+	@staticmethod
+	@celery.task(name = 'stats_nuts_lau')
+	def stats_nuts_lau(nuts, year, layers, type): #/stats/layers/nuts-lau
+		# Get the data
+		layersQueryData = {}
+		for layer in layers:
+			layersQueryData[layer] = generalData.createQueryDataStatsNutsLau(layer=layer, nuts=nuts, year=year, type=type)
+		return LayersStats.get_stats(year,layers, layersQueryData)
 
 
 class ElectricityMix:
