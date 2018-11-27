@@ -49,7 +49,7 @@ class AskingPasswordRecovery(Resource):
             }
         # mail creation
         user = User.query.filter_by(email=email).first()
-        link = generate_confirmation_token(email)
+        link = constants.CLIENT_URL + "/recover;token_recover=" + generate_confirmation_token(email)
         msg = Message()
         msg.add_recipient(email)
         msg.subject = 'Password recovery for the HotMaps toolbox'
@@ -174,7 +174,7 @@ class UserRegistering(Resource):
 
         # mail creation
         try:
-            link = generate_confirmation_token(email)
+            link = constants.CLIENT_URL + "/register;token_activation=" + generate_confirmation_token(email)
             msg = Message()
             msg.add_recipient(email)
             msg.subject = 'Your registration on the HotMaps toolbox'
