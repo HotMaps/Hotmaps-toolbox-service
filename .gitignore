@@ -5,3 +5,7 @@ __pycache__/
 
 app/app/secrets\.py
 .idea/workspace.xml
+.vscode
+venv
+test-python.py
+venv3
