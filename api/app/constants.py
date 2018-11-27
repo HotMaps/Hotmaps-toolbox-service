@@ -7,6 +7,12 @@ CELERY_BROKER_URL_LOCAL  = 'amqp://localhost/'
 CELERY_BROKER_URL = CELERY_BROKER_URL_DOCKER
 CELERY_ALWAYS_EAGER = False
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CLIENT_URL_PROD = 'http://hotmaps.hevs.ch'
+CLIENT_URL_DEV = 'http://hotmapsdev.hevs.ch'
+CLIENT_URL_LOCAL = 'http://localhost:4200'
+#TODO setup this URL depending on which version you are running
+CLIENT_URL = CLIENT_URL_LOCAL
+
 RPC_Q = 'rpc_queue_CM_compute'
 TIMEOUT_ALIVE_CM = 3
 TIMEOUT_START_CM = 1
