@@ -5,9 +5,9 @@ It is based on Ubuntu 16.04.
 
 ### Software installed:
 #### Basic software
-* GRASS GIS 7.2
-* Python 3.6
-* Python 2.7 (to be compatible with GRASS GIS that currently only supports Python 2.7)
+
+
+* Python 2.7 (some functionalitie are only compatible with python 2.7)
 * Flask 0.12
 * Flask-RESTful 0.3.5
 * Flask-Login 0.4.0
