@@ -4,9 +4,9 @@ from .stats import nsStats
 from .heat_load_profile import  load_profile_namespace
 from ..decorators import etag
 from .computation_module import nsCM
+from .users import nsUsers
 
 @api.before_request
-
 def before_request():
     """All routes in this blueprint require authentication."""
     pass
@@ -20,4 +20,4 @@ def after_request(rv):
     return rv
 
 from . import computation_module
-#from . import  computation, errors
+# from . import  computation, errors

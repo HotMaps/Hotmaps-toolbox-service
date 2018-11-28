@@ -358,7 +358,6 @@ inputs_module = api.model('inputs_module', {
     'cm_id':fields.Integer(description='cm_id'),
 })
 
-
 stats_layers_hectares_input = api.model('Input for statistics on layers, hectares and year', {
     'layers': fields.List(fields.String(description='Layer')),
     'areas': fields.List(fields.Nested(area)),
@@ -366,26 +365,93 @@ stats_layers_hectares_input = api.model('Input for statistics on layers, hectare
 })
 
 input_computation_module = api.model('Input for population density for area', {
-
     'cm_id': fields.String(description='cm test'),
     'inputs':  fields.List(fields.Nested(inputs_module)),
     'layers': fields.List(fields.String(description='Layer')),
     'areas': fields.List(fields.Nested(area)),
     'year': fields.Integer(description='Year'),
     'url_file': fields.Integer(description='url_file'),
-
-})
-uploadfile = api.model('getfile to uploads', {
-
-    'filename': fields.String(description='cm test'),
-
-
 })
 
 cm_id_input = api.model('cm_id_input ', {
-
     'cm_id': fields.String(description='cm_id_input '),
+})
 
+uploadfile = api.model('getfile to uploads', {
+    'filename': fields.String(description='cm test'),
+})
 
+user_register_input = api.model('input for user registration', {
+    'first_name': fields.String(description='first name'),
+    'last_name': fields.String(description='last name'),
+    'email': fields.String(description='email'),
+    'password': fields.String(description='password'),
+})
+
+user_register_output = api.model('output for user registration', {
+    'message': fields.String(description='message'),
+})
+
+user_activate_input = api.model('input for user activation', {
+    'token': fields.String(description='token'),
+})
+
+user_activate_output = api.model('output for user activation', {
+    'message': fields.String(description='message'),
+})
+
+user_ask_recovery_input = api.model('input for user password recovery request', {
+    'email': fields.String(description='email'),
+})
+
+user_ask_recovery_output = api.model('output for user password recovery request', {
+    'message': fields.String(description='message'),
+})
+
+user_recovery_input = api.model('input for user password recovery', {
+    'token': fields.String(description='token'),
+    'password': fields.String(description='password'),
+})
+
+user_recovery_output = api.model('output for user password recovery', {
+    'message': fields.String(description='message'),
+})
+
+user_login_input = api.model('input for user login', {
+    'email': fields.String(description='email'),
+    'password': fields.String(description='password'),
+})
+
+user_login_output = api.model('output for user login', {
+    'message': fields.String(description='message'),
+    'token': fields.String(description='authentification token'),
+})
+
+user_logout_input = api.model('input for the user logout', {
+    'token': fields.String(description='authentification token'),
+})
+
+user_logout_output = api.model('output for user logout', {
+    'message': fields.String(description='message'),
+})
+
+user_profile_input = api.model('input for user profile modifying', {
+    'token': fields.String(description='authentification token'),
+    'first_name': fields.String(description='first name'),
+    'last_name': fields.String(description='last name'),
+})
+
+user_profile_output = api.model('output for user profile modifying', {
+    'message': fields.String(description='message'),
+})
+
+user_get_information_output = api.model('output for getting user information', {
+    'first_name': fields.String(description='first name'),
+    'last_name': fields.String(description='last name'),
+    'email': fields.String(description='email'),
+})
+
+user_get_information_input = api.model('input for getting user information', {
+    'token': fields.String(description='authentification token'),
 })
 

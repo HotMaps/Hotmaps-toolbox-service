@@ -10,7 +10,8 @@ import pika
 import uuid
 from celery import Celery
 from app.decorators.restplus import api as api_rest_plus
-
+from flask_login import LoginManager
+from flask_mail import Mail
 
 """__________________________________producer for COMPUTE_______________________________________________________"""
 
@@ -74,13 +75,16 @@ dbGIS = SQLAlchemy()
 celery = Celery(__name__, backend=constants.CELERY_RESULT_BACKEND,
                 broker=constants.CELERY_BROKER_URL)
 
-
-
 # methods
 log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '', 'logging.conf')
 logging.config.fileConfig(log_file_path)
 log = logging.getLogger(__name__)
-#logging.getLogger('flask_cors').level = logging.DEBUG
+# logging.getLogger('flask_cors').level = logging.DEBUG
+
+# Instantiate extra modules
+dbGIS = SQLAlchemy()
+mail = Mail()
+login_manager = LoginManager()
 
 
 def create_app(config_name):
@@ -91,8 +95,6 @@ def create_app(config_name):
     cfg = os.path.join(os.getcwd(), 'config', config_name + '.py')
     app.config.from_pyfile(cfg)
 
-
-
     # initialize extensions
     from .api_v1 import api
     api_rest_plus.init_app(api)
@@ -100,14 +102,19 @@ def create_app(config_name):
     from .api_v1 import nsStats as main_stats_namespace
     api_rest_plus.add_namespace(main_stats_namespace)
 
+    from .api_v1 import nsUsers
+    api_rest_plus.add_namespace(nsUsers)
 
     from .api_v1 import load_profile_namespace as main_heat_load_profile_namespace
     api_rest_plus.add_namespace(main_heat_load_profile_namespace)
+
     from .api_v1 import nsCM
     api_rest_plus.add_namespace(main_heat_load_profile_namespace)
 
     app.register_blueprint(api)
     dbGIS.init_app(app)
+    mail.init_app(app)
+    login_manager.init_app(app, add_context_processor=False)
 
     CORS(app, resources={
         r"/api/*": {"origins": {
@@ -135,11 +142,4 @@ def create_app(config_name):
             "http://maps.googleapis.com/*"
         }
         }})
-
     return app
-
-
-
-
-
-#log.info(app)

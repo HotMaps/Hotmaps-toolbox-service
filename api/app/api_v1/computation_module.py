@@ -5,13 +5,13 @@ from app.decorators.restplus import api
 from app.decorators.serializers import  compution_module_class, \
     input_computation_module, test_communication_cm, \
     compution_module_list, uploadfile, cm_id_input
-from app.decorators.exceptions import ValidationError
+
 from app.model import register_calulation_module,getCMUrl,getUI,getCMList,getLayerNeeded
-from werkzeug.utils import secure_filename
-from app import constants
+
+
 from app import model
 nsCM = api.namespace('cm', description='Operations related to statistisdscs')
-from app import helper
+
 ns = nsCM
 from flask_restplus import Resource
 from app import celery
@@ -68,6 +68,8 @@ class ComputationModuleClass(Resource):
        """
         input = request.get_json()
         cm_id = input["cm_id"]
+
+        print ('user-interface',getUI(cm_id))
         return getUI(cm_id)
 
 
@@ -150,6 +152,8 @@ def computeTask(data,payload,cm_id,layerneed):
     """
     inputs_raster_selection = None
     inputs_parameter_selection = None
+    inputs_vector_selection = None
+
 
 
     print ('****************** RETRIVE INPUT DATA ***************************************************')
@@ -158,6 +162,9 @@ def computeTask(data,payload,cm_id,layerneed):
     #layer_needed = helper.unicode_array_to_string(layerneed)
 
     layer_needed = payload['layers_needed']
+
+    vectors_needed = model.get_vectors_needed(cm_id)
+
 
 
 
@@ -170,9 +177,13 @@ def computeTask(data,payload,cm_id,layerneed):
     if scalevalue == 'hectare':
         print ('****************** BEGIN RASTER CLIP FOR HECTAR ***************************************************')
         areas = payload['areas']
-        print ('areas',areas)
         geom =  helper.area_to_geom(areas)
+        #get the rasters selected
         inputs_raster_selection = model.get_raster_from_csv(DATASET_DIRECTORY ,geom,layer_needed, UPLOAD_DIRECTORY)
+
+        inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, geom)
+        #get the vectors selected
+
         print ('inputs_raster_selection',inputs_raster_selection)
         print ('****************** FINISH RASTER CLIP FOR HECTAR ***************************************************')
 
@@ -183,11 +194,13 @@ def computeTask(data,payload,cm_id,layerneed):
         id_list = payload['nuts']
         shapefile_path = model.get_shapefile_from_selection(scalevalue,id_list,UPLOAD_DIRECTORY)
         inputs_raster_selection = model.clip_raster_from_shapefile(DATASET_DIRECTORY ,shapefile_path,layer_needed, UPLOAD_DIRECTORY)
+        if vectors_needed != None:
+            inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, id_list)
         print ('****************** FINISH RASTER CLIP FOR NUTS  OR LAU ***************************************************')
 
         # we will be working on a nuts
 
-    data = generate_payload_for_compute(data,inputs_raster_selection,cm_id)
+    data = generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection)
 
 
     # send the result to the right CM
@@ -260,7 +273,7 @@ def generate_shape(vector_layers):
     return file_path_input, file_path_input
 
 
-def generate_payload_for_compute(data,inputs_raster_selection,cm_id):
+def generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection):
     inputs = data["inputs"]
     print ('inputs', inputs)
     inputs_parameter_selection = {}
@@ -275,7 +288,8 @@ def generate_payload_for_compute(data,inputs_raster_selection,cm_id):
 
     data_output.update({
         'inputs_parameter_selection':inputs_parameter_selection,
-        'inputs_raster_selection':inputs_raster_selection
+        'inputs_raster_selection':inputs_raster_selection,
+        'inputs_vector_selection':inputs_vector_selection
     })
     print ('data_output',data_output)
     data = json.dumps(data_output)

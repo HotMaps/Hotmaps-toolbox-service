@@ -5,7 +5,7 @@
 from app.decorators.exceptions import ValidationError
 
 
-
+import json
 from app import secrets
 from datetime import datetime
 import psycopg2
@@ -14,6 +14,7 @@ import sqlite3
 from app import celery
 from app.constants import CM_DB_NAME
 from app import helper
+from app import sql_queries
 import os
 try:
     import ogr
@@ -48,6 +49,17 @@ def addRegisterCalulationModule(data):
         authorized_scale = data['authorized_scale']
     except:
         pass
+
+
+    vectors_needed = "[]"
+    try:
+        vectors_needed = data['vectors_needed']
+    except:
+        pass
+
+
+
+
     cm_description = data['cm_description']
     cm_url = data['cm_url']
     cm_Id = data['id']
@@ -57,7 +69,7 @@ def addRegisterCalulationModule(data):
     conn = myCMpool.connect()
     cursor = conn.cursor()
     #c.execute("INSERT INTO calculation_module(cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt) VALUES ({},{},{},{},{},{},{},{})".format(cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt))
-    cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt,type_layer_needed,authorized_scale) VALUES (?,?,?,?,?,?,?,?,?,?)", ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ,type_layer_needed,authorized_scale))
+    cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt,type_layer_needed,authorized_scale,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?)", ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ,type_layer_needed,authorized_scale,vectors_needed))
     cursor.close()
 
 def init_sqlite_caculation_module_database(dbname=DB_NAME):
@@ -65,12 +77,12 @@ def init_sqlite_caculation_module_database(dbname=DB_NAME):
     cursor = conn.cursor()
     cursor.execute("DROP TABLE IF EXISTS calculation_module")
     cursor.execute("CREATE TABLE calculation_module (cm_id INTEGER NOT NULL, cm_name VARCHAR(255), "
-                   "cm_description VARCHAR(255),cm_url VARCHAR(255),category VARCHAR(255),layers_needed VARCHAR(255),authorized_scale VARCHAR(255),createdAt REAL(255),updatedAt REAL(255),type_layer_needed REAL(255),"
+                   "cm_description VARCHAR(255),cm_url VARCHAR(255),category VARCHAR(255),layers_needed VARCHAR(255),authorized_scale VARCHAR(255),createdAt REAL(255),updatedAt REAL(255),type_layer_needed REAL(255),vectors_needed REAL(255),"
                    " PRIMARY KEY(cm_id))")
     conn.commit()
     cursor.execute("DROP TABLE IF EXISTS inputs_calculation_module")
     cursor.execute("CREATE TABLE inputs_calculation_module (input_id INTEGER NOT NULL, input_name VARCHAR(255), "
-                   "input_type VARCHAR(255),input_parameter_name VARCHAR(255),input_value INTEGER,input_priority INTEGER, input_unit VARCHAR(255),"
+                   "input_type VARCHAR(255),input_parameter_name VARCHAR(255),input_value  VARCHAR(255),input_priority INTEGER, input_unit VARCHAR(255),"
                    "input_min INTEGER,input_max INTEGER,createdAt REAL(255),updatedAt REAL(255),cm_id INTEGER NOT NULL,"
                    " PRIMARY KEY(input_id),FOREIGN KEY(cm_id) REFERENCES calculation_module(cm_id))")
     conn.commit()
@@ -93,7 +105,14 @@ def register_calulation_module(data):
             authorized_scale = data['authorized_scale']
         except:
             pass
-        
+        vectors_needed = "[]"
+        try:
+            vectors_needed = data['vectors_needed']
+        except:
+            pass
+
+
+
         print ("layers_needed",layers_needed)
         updatedAt = datetime.utcnow()
         createdAt = datetime.utcnow()
@@ -103,15 +122,17 @@ def register_calulation_module(data):
             ln = str(layers_needed)
             tn = str(type_layer_needed)
             authorized_scale = str(authorized_scale)
-            
+            vectors_needed = str(vectors_needed)
+
+
             print ("layers_needed string",ln)
-            cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale) VALUES (?,?,?,?,?,?,?,?,?,?)", ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt,tn,authorized_scale ))
+            cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?)", ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt,tn,authorized_scale,vectors_needed ))
             conn.commit()
             for value in inputs_calculation_module:
                 input_name = value['input_name']
                 input_type = value['input_type']
                 input_parameter_name = value['input_parameter_name']
-                input_value = value['input_value']
+                input_value = str(value['input_value'])
                 input_priority = 0
                 try:
                     input_priority = value['input_priority'] 
@@ -131,17 +152,19 @@ def register_calulation_module(data):
         except ValidationError:
             pass
         except sqlite3.IntegrityError as e:
-            update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,type_layer_needed,authorized_scale,inputs_calculation_module,cursor,conn)
+            update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,type_layer_needed,authorized_scale,vectors_needed,inputs_calculation_module,cursor,conn)
 
 
-def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale ,inputs_calculation_module,cursor,conn):
+def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,vectors_needed ,inputs_calculation_module,cursor,conn):
     try:
 
         ln = str(layers_needed)
         tn = str(type_layer_needed)
         auth_s = str(authorized_scale)
-        
-        cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? ,  type_layer_needed = ?, authorized_scale = ?  WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt, tn,auth_s,cm_id ))
+        vn = str(vectors_needed)
+
+
+        cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? ,  type_layer_needed = ?, authorized_scale = ?, vectors_needed = ?   WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt, tn,auth_s, vn,cm_id ))
         conn.commit()
         cursor.execute("DELETE FROM inputs_calculation_module WHERE cm_id = ? ", (str(cm_id)))
         conn.commit()
@@ -149,7 +172,7 @@ def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, l
             input_name = value['input_name']
             input_type = value['input_type']
             input_parameter_name = value['input_parameter_name']
-            input_value = value['input_value']
+            input_value = str(value['input_value'])
             input_priority = 0
             try:
                 input_priority = value['input_priority']
@@ -159,6 +182,7 @@ def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, l
             input_min = value['input_min']
             input_max = value['input_max']
             cm_id = value['cm_id']
+
             cursor.execute("INSERT INTO inputs_calculation_module (input_name, input_type, input_parameter_name, input_value, input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt) VALUES (?,?,?,?,?,?,?,?,?,?,?)", (input_name, input_type, input_parameter_name, input_value,input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt))
             conn.commit()
         conn.close()
@@ -172,6 +196,7 @@ def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, l
 
 
 def getCMUrl(cm_id):
+
     try:
         conn = myCMpool.connect()
         cursor = conn.cursor()
@@ -276,8 +301,6 @@ def getCMList():
     print ('response ' , response)
     return response
 
-
-
 @celery.task(name = 'task-getConnection_db_gis')
 def getConnection_db_gis():
     c = psycopg2.connect(get_connection_string())
@@ -290,15 +313,10 @@ def get_connection_string():
     port = secrets.dev_port
     database = secrets.dev_database
     con = "host=" + host + " user=" + user + " dbname=" + database + " port=" + port + " password=" + password + ""
-
-
-
     return con
 
 def get_shapefile_from_selection(scalevalue,id_selected_list,ouput_directory):
-    print ('id_selected_list selected before', id_selected_list)
     id_selected_list = helper.adapt_nuts_list(id_selected_list)
-    print ('id_selected_list selected after', id_selected_list)
     output_shapefile = helper.generate_shapefile_name(ouput_directory)
     com_string = None
     if scalevalue == 'nuts':
@@ -346,8 +364,39 @@ def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed, 
     return inputs_raster_selection
 
 
-def transformGeo(geometry):
-    return 'st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(constants.CRS) + ')'
+
+
+def retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, area_selected):
+    """
+    this function will return an array of vectors from the database
+    :param vectors_needed:
+    :param scalevalue:
+    :param area_selected: list of nut or geometry
+    :return:
+    """
+    inputs_vectors_selection = {}
+
+    for vector_table_requested in vectors_needed:
+        toCRS = 4258
+        sql_query = sql_queries.vector_query(scalevalue,vector_table_requested, area_selected,toCRS)
+        result = query_geographic_database(sql_query)
+        result = helper.retrieve_list_from_sql_result(result)
+        print("result type", result)
+        inputs_vectors_selection[vector_table_requested] = result
+    return inputs_vectors_selection
+
+def get_vectors_needed(cm_id):
+    conn = myCMpool.connect()
+    cursor = conn.cursor()
+    vectors_needed = cursor.execute('select vectors_needed from calculation_module where cm_id = ?',
+                            (cm_id))
+    conn.commit()
+    vectors_needed = vectors_needed.fetchone()[0]
+    vectors_needed = helper.unicode_array_to_string(vectors_needed)
+    conn.close()
+    return vectors_needed
+
+
 
 
 
@@ -359,11 +408,9 @@ def query_geographic_database(sql_query):
     conn = mypool.connect()
     # use it
     cursor = query(sql_query,conn)
-
     return cursor
 
 def query_calculation_module_database(sql_query):
-
 
     # get a connection
     conn = myCMpool.connect()
