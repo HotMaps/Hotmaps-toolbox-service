@@ -182,22 +182,23 @@ def zipdir(path, ziph):
 
 def retrieve_list_from_sql_result(results):
     response = []
-
     for value in results:
         print ('value', value)
         ze_value = {}
         i = 0
         for key in results.description:
-            ze_value[key[0]]= value[i]
+            ze_value[key[0]]= str(value[i])
             if isinstance(unicode_string_to_string(value[i]), str):
                 val = unicode_string_to_string(value[i])
-                print ('val.find( ', val.find('['))
+                if val.find('[') == 0: # and value.find(']')==
+                    print ('value ', val)
+                    ze_value[key[0]]= unicode_array_to_string(value[i])
+            elif isinstance(value[i], str):
+                val = value[i]
                 if val.find('[') == 0: # and value.find(']')==
                     print ('value ', val)
                     ze_value[key[0]]= unicode_array_to_string(value[i])
             i = i + 1
-
-
         response.append(ze_value)
     return response
 

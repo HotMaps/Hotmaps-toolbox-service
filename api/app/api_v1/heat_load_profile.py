@@ -20,8 +20,6 @@ log = logging.getLogger(__name__)
 load_profile_namespace = api.namespace('heat-load-profile', description='Operations related to heat load profile')
 
 ns = load_profile_namespace
-
-
 class HeatLoadProfileResource(Resource):
     def normalize_nuts(self, nuts):
         list_nuts_id = []
