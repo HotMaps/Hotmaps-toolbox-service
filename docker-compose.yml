@@ -210,7 +210,7 @@ services:
 
   lcoh:
     build:
-      context: ./calculation_module/solar_potential/lcoh
+      context: ./calculation_module/lcoh/cm
       dockerfile: Dockerfile
     restart: always
     expose:
