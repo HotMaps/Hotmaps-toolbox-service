@@ -95,7 +95,7 @@ services:
     external_links:
     - postgis-database:postgis
 
-  rabbit:
+  queuebrocker:
     hostname: rabbit
     image: rabbitmq:latest
     environment:
