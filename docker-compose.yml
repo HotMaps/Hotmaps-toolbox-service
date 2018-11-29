@@ -125,7 +125,7 @@ services:
     - postgis-database:postgis
 
     links:
-    - rabbit
+    - queuebrocker
     - redis
     depends_on:
     - redis
@@ -146,7 +146,7 @@ services:
     command:  -A celery_worker.celery --port=5555 --broker=amqp://admin:mypass@rabbit:5672/
     depends_on:
     - redis
-    - rabbit
+    - queuebrocker
   redis:
     image: redis
     networks:
@@ -161,7 +161,7 @@ services:
     expose:
     - 80
     external_links:
-    - rabbit
+    - queuebrocker
     networks:
     - cm-net
     volumes:
@@ -175,7 +175,7 @@ services:
     expose:
     - 80
     external_links:
-    - rabbit
+    - queuebrocker
     networks:
     - cm-net
     volumes:
@@ -188,7 +188,7 @@ services:
     expose:
     - 80
     external_links:
-    - rabbit
+    - queuebrocker
     networks:
     - cm-net
     volumes:
@@ -202,7 +202,7 @@ services:
     expose:
     - 80
     external_links:
-    - rabbit
+    - queuebrocker
     networks:
     - cm-net
     volumes:
@@ -216,7 +216,7 @@ services:
     expose:
       - 80
     external_links:
-      - rabbit
+      - queuebrocker
     networks:
       - cm-net
     volumes:
