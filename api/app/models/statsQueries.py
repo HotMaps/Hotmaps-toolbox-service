@@ -15,7 +15,7 @@ class LayersStats:
 
 	
 	@staticmethod
-	def get_stats(year, layers, layersQueryData):
+	def get_stats(year, layers, layersQueryData, isHectare=False):
 		# Get the number of layers
 		nbLayers = len(layers)
 
@@ -29,15 +29,17 @@ class LayersStats:
 			sql_select = ' SELECT '
 			sql_from = ' FROM '
 			for c, layer in enumerate(layersQueryData):
-				sql_with += layersQueryData[layer]['with']
+				sql_with += layersQueryData[layer]['with']					
 				for indicator in layersQueryData[layer]['indicators']:
-					sql_select += indicator['select'] + ' as ' + indicator['name']+','
-				sql_from += layersQueryData[layer]['from']
+					if 'select' in indicator:
+						sql_select += layer+indicator['name']+','
+					else:
+						sql_select+= indicator['val1']+' '+indicator['operator']+' '+indicator['val2']+','
+				sql_from += layersQueryData[layer]['from_indicator_name']
 				if nbLayers > 1 and c < nbLayers-1:
 					sql_with += ', '
 					sql_from += ', '
-				else:
-					sql_select = sql_select[:-1]
+			sql_select = sql_select[:-1]
 			sql_query = sql_with + sql_select + sql_from + ';'
 			print(sql_query)
 			query_geographic_database_first = model.query_geographic_database_first(sql_query)
@@ -56,7 +58,7 @@ class LayersStats:
 
 					try:
 						values.append({
-							'name':indicator['name'],
+							'name':layer +'_'+indicator['name'],
 							'value':currentValue,
 							'unit':indicator['unit']
 						})
@@ -69,15 +71,14 @@ class LayersStats:
 		return result
 	
 	@staticmethod
-	@celery.task(name = 'stats_hectares')
+	#@celery.task(name = 'stats_hectares')
 	def stats_hectares(geometry, year, layers): #/stats/layers/hectares
 		# Get the data
 		layersQueryData = {}
 		for layer in layers:
 			layersQueryData[layer] = generalData.createQueryDataStatsHectares(layer=layer,geometry=geometry, year=year)
 			
-		
-		return LayersStats.get_stats(year,layers, layersQueryData)
+		return LayersStats.get_stats(year,layers, layersQueryData,isHectare=True)
 
 	@staticmethod
 	@celery.task(name = 'stats_nuts_lau')

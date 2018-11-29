@@ -2,75 +2,48 @@ from indicators import *
 
 def createQueryDataStatsHectares(layer, geometry, year):
 	return {
-			'with': constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=layer, fromPart=layersData[layer]['from']),
-			'from':layersData[layer]['from'], 'indicators':layersData[layer]['indicators']
+			'with': constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=layer, fromPart='stat_' + layer),
+			'indicators':layersData[layer]['indicators'],
+			'schema_hectare':layersData[layer]['schema_hectare'],'geo_column':layersData[layer]['geo_column'], 'from':layersData[layer]['tablename'],
+			'from_indicator_name':'stat_' + layer
 		}
 
 def createQueryDataStatsNutsLau(layer,nuts, year, type):
 	return {
-				'with':constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=layer, type=type, fromPart=layersData[layer]['from']), 
-				'from':layersData[layer]['from'], 'indicators':layersData[layer]['indicators']
+				'with':constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=layer, type=type, fromPart='stat_' + layersData[layer]['tablename']), 
+				'from_indicator_name':'stat_' + layersData[layer]['tablename'], 'indicators':layersData[layer]['indicators']
 			}
 
 def constructWithPartEachLayerHectare(geometry, year, layer, fromPart):
-	if layer == wwtpCapacity or layer == wwtpPower:
-		w = ''+fromPart+' AS (SELECT '
-		if layer == wwtpCapacity:
-			w += 'sum(capacity) as capacityPerson '
-		else:
-			w += 'sum(power) as power '
+	
+	query = ''
+	layer_table = layersData[layer]['schema_hectare']+"."+layersData[layer]['tablename']
+	query_select = 'SELECT '
+	if layer in [electricityCo2EmisionsFactor,indSitesExc,geothermalPotHeatCond, wwtpCapacity,wwtpPower,indSitesEm]:
+		for indic in layersData[layer]['indicators']:
+			if 'select' in indic:
+				query_select+= 'sum(' +layer_table+'.' +indic['select'] + ') as '+layer + indic['name'] + ','
 
-		w += ' FROM ' + \
-		' public.'+ layersData[layer]['tablename'] +'' + \
-		' WHERE' + \
-		' ST_Within(public.'+ layersData[layer]['tablename'] +'.geometry,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(constants.CRS) + ')) ' + \
-		') '
-	elif layer == indSitesEm:
-		w = ''+fromPart+' AS (SELECT ' + \
-		' sum(emissions_ets_2014) as sum ' + \
-		' FROM ' + \
-		' public.'+ layersData[layer]['tablename'] + \
-		' WHERE' + \
-		' ST_Within(public.'+ layersData[layer]['tablename'] +'.geom,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),4326))) '
 
-	elif layer == geothermalPotHeatCond:
-		w = ''+fromPart+' AS (SELECT ' + \
-			' SUM(CAST(heat_cond as DECIMAL(9,2)) * CAST(ST_Area(geometry) as DECIMAL(9,2))) / SUM(ST_Area(geometry)) as sum ' + \
-			' FROM ' + \
-			' public.'+ layersData[layer]['tablename'] + \
-			' WHERE' + \
-			' ST_Within(public.'+ layersData[layer]['tablename'] +'.geometry,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),4326))) '
-
-	elif layer == indSitesExc:
-		w = ''+fromPart+' AS (SELECT ' + \
-		' sum(excess_heat_100_200c) as sum1, sum(excess_heat_200_500c) as sum2, sum(excess_heat_500c) as sum3, sum(excess_heat_total) as total ' + \
-		' FROM ' + \
-		' public.'+ layersData[layer]['tablename'] + \
-		' WHERE' + \
-		' ST_Within(public.'+ layersData[layer]['tablename'] +'.geom,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),4326))) '
-	elif layer == electricityCo2EmisionsFactor:
-		w = ''+fromPart+' AS (SELECT ' + \
-			' sum(value) as sum1, sum(unit) as sum2,' + \
-			' FROM ' + \
-			' public.'+ layersData[layer]['tablename'] + \
-			' WHERE' + \
-			' ST_Within(public.'+ layersData[layer]['tablename'] +'.geometry,st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),4326))) '
+		query_select = query_select[:-1]
+		query += fromPart+" as ("
+		query += query_select
+		query += " FROM "+layer_table
+		query += " WHERE "+ "ST_Within("+layer_table+"."+layersData[layer]['geo_column']+",st_transform(st_geomfromtext('"+ geometry +"'::text,"+layersData[layer]['crs']+")," + str(constants.CRS) + "))"
+		query += ")"
 	else:
-		w = ''+fromPart+' AS ( SELECT (' + \
-		' ((ST_SummaryStatsAgg(ST_Clip('+ layersData[layer]['tablename'] + '.rast, 1, ' + \
-		' st_transform(st_geomfromtext(\'' + \
-						geometry + '\'::text,4326),' + str(constants.CRS) + '),false),true,0))).*) as stats ' + \
-		' FROM ' + \
-		' geo.'+ layersData[layer]['tablename'] + \
-		' WHERE' + \
-		' ST_Intersects('+ layersData[layer]['tablename'] + '.rast,' + \
-		' st_transform(st_geomfromtext(\''+ geometry +'\'::text,4326),' + str(constants.CRS) + ')) '
-		if layer == popDe or layer == heatDe:
-			w += ') '
-		else:
-			w += ') '
-		
-	return w
+		for indic in layersData[layer]['indicators']:
+			if 'select' in indic:
+				query_select += "(((ST_SummaryStatsAgg(ST_Clip("+ layersData[layer]['tablename'] + ".rast, 1, st_transform(st_geomfromtext('" + geometry + "'::text,"+layersData[layer]['crs']+")," + str(constants.CRS) + "),false),true,0)))."+indic['select']+") as "+layersData[layer]['tablename'] + indic['name'] + ','
+		query_select = query_select[:-1]
+		query += fromPart+' AS ( '
+		query += query_select
+		query +=  " FROM "+ layer_table
+		query += "  WHERE ST_Intersects(" + layersData[layer]['tablename'] + ".rast, st_transform(st_geomfromtext('"+ geometry +"'::text,4326)," + str(constants.CRS) + ")) "
+		query += ")"
+				
+	print(query)
+	return query
 
 def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
 	
@@ -80,20 +53,26 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
 		id_type = 'nuts_id'
 	else:
 		id_type = 'comm_id'
-	query_from_part = fromPart+" as ("
-	query_select = "SELECT * "
+	if layer == electricityCo2EmisionsFactor:
+		id_type = 'nuts_code'
 
+
+	query_from_part = fromPart+" as ("
 	nust_select_name = "nutsSelection_"+ layer
 	nuts_selection =  nust_select_name +" as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), "
 	layer_table = layersData[layer]['schema']+"."+layersData[layer]['tablename']
 	geom_name = 'geom'
 	transformed_geom_id = '3035'
-	
-
-
-
-	if 'custom_select' in layersData[layer]:
-		query_select = layersData[layer]['custom_select']
+	query_select = 'SELECT '
+	query_from = ' FROM '
+	layer_table
+	suffix_table = ''
+	if layersData[layer]['schema'] == 'stat':
+		layer_table += '_'+type
+	for indic in layersData[layer]['indicators']:
+		if 'select' in indic:
+			query_select+= 'sum(' +layer_table+'.' +indic['select'] + ') as '+layersData[layer]['tablename'] + indic['name'] + ','
+	query_select = query_select[:-1]
 
 	if layer == geothermalPotHeatCond or layer == wwtpCapacity or layer == wwtpPower:
 		geom_name = 'geometry'
@@ -109,26 +88,16 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
 		from_q = "from " + layer_table
 
 	if layer == wwtpCapacity or layer == wwtpPower or layer == geothermalPotHeatCond or layer == indSitesExc or layer == indSitesEm:
-		sel = ''
-		for indic in layersData[layer]['indicators']:
-			sel += indic['select']+','
-		print(sel)
 		query += nuts_selection
 		query += query_from_part
 		query += query_select
 		query += from_q
 		query += " where st_within("+layer_table+"."+geom_name+", st_transform("+nust_select_name+".geom,"+transformed_geom_id+"))) "
-	elif layer == electricityCo2EmisionsFactor:
-		query += nuts_selection
-		query += query_from_part
-		query += query_select
-		query += "from " + layer_table
-		query += " where "+layer_table+".nuts_code  in ("+nuts+")) "
 	else:
 		query += query_from_part
 		query += query_select
-		query += " FROM "+layer_table+"_"+type
-		query += " WHERE "+layer_table+"_"+type+"."+id_type+" IN ("+nuts+") ) "
+		query += " FROM "+layer_table
+		query += " WHERE "+layer_table+"."+id_type+" IN ("+nuts+") ) "
 				
 	print(query)
 	return query

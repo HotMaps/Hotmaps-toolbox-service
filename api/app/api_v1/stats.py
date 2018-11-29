@@ -74,8 +74,8 @@ class StatsLayersNutsInArea(Resource):
 		
 		layers = adapt_layers_list(layersPayload=layersPayload, type=type, allLayers=allLayers)
 		output = []
-		res = LayersStats.stats_nuts_lau.delay(nuts=adapt_nuts_list(nuts), year=year, layers=layers, type=type)
-		output = res.get()
+		res = LayersStats.stats_nuts_lau(nuts=adapt_nuts_list(nuts), year=year, layers=layers, type=type)
+		output = res
 
 
 		# compute Cross indicators if both layers are selected
@@ -116,7 +116,7 @@ class StatsLayersHectareMulti(Resource):
 		layersPayload = api.payload['layers']        
 		areas = api.payload['areas']
 
-
+		print(api.payload)
 		# Layers filtration and management
 		allLayersTable = createAllLayers(constants.LAYERS_REF_HECTARES_TABLE)
 		allLayers = createAllLayers(constants.LAYERS_REF_HECTARES)
@@ -141,8 +141,8 @@ class StatsLayersHectareMulti(Resource):
 		#geom = "SRID=4326;{}".format(multipolygon.wkt)
 		geom = multipolygon.wkt
 
-		res = LayersStats.stats_hectares.delay(geometry=geom, year=year, layers=layers)
-		output = res.get()
+		res = LayersStats.stats_hectares(geometry=geom, year=year, layers=layers)
+		output = res
 
 		# compute heat consumption/person if both layers are selected
 		pop1ha_name = constants.POPULATION_TOT
@@ -152,10 +152,10 @@ class StatsLayersHectareMulti(Resource):
 		gfa_tot_curr_density_name = constants.GRASS_FLOOR_AREA_TOT
 
 
-		retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
+		""" retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
 		retrieveCrossIndicator(pop1ha_name, heat_curr_res_name, layers, output)
 		retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
-		retrieveCrossIndicator(gfa_tot_curr_density_name, hdm_name, layers, output)
+		retrieveCrossIndicator(gfa_tot_curr_density_name, hdm_name, layers, output) """
 
 		# Remove scale for each layer
 		noTableLayers = removeScaleLayers(noTableLayers, type='ha')

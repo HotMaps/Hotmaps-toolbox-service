@@ -95,6 +95,7 @@ MUNICIPAL_SOLID_WASTE = 'potential_municipal_solid_waste'
 WIND_POTENTIAL = 'potential_wind'
 SOLAR_POTENTIAL = 'solar_optimal_total'
 GEOTHERMAL_POTENTIAL_HEAT_COND = 'potential_shallowgeothermal_heat_cond'
+GEOTHERMAL_POTENTIAL_HEAT_COND2 = 'shallow_geothermal_potential'
 ELECRICITY_CO2_EMISSION_FACTOR = 'yearly_co2_emission'
 HDD_CUR = 'hdd_curr_tif'
 CDD_CUR = 'cdd_curr_tif'
@@ -105,6 +106,7 @@ _TOT = 'pop_tot_curr_density'
 
 # All layers references for queries
 LAYERS_REF_ALL = [
+    GEOTHERMAL_POTENTIAL_HEAT_COND2,
     POPULATION_TOT,
     land_data,
     HEAT_DENSITY_TOT,
