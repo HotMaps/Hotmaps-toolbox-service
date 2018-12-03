@@ -95,7 +95,7 @@ services:
     external_links:
     - postgis-database:postgis
 
-  queuebrocker:
+  rabbit:
     hostname: rabbit
     image: rabbitmq:latest
     environment:
@@ -125,7 +125,7 @@ services:
     - postgis-database:postgis
 
     links:
-    - queuebrocker
+    - rabbit
     - redis
     depends_on:
     - redis
@@ -146,7 +146,7 @@ services:
     command:  -A celery_worker.celery --port=5555 --broker=amqp://admin:mypass@rabbit:5672/
     depends_on:
     - redis
-    - queuebrocker
+    - rabbit
   redis:
     image: redis
     networks:
@@ -161,7 +161,7 @@ services:
     expose:
     - 80
     external_links:
-    - queuebrocker
+    - rabbit
     networks:
     - cm-net
     volumes:
@@ -175,7 +175,7 @@ services:
     expose:
     - 80
     external_links:
-    - queuebrocker
+    - rabbit
     networks:
     - cm-net
     volumes:
@@ -188,7 +188,7 @@ services:
     expose:
     - 80
     external_links:
-    - queuebrocker
+    - rabbit
     networks:
     - cm-net
     volumes:
@@ -202,12 +202,11 @@ services:
     expose:
     - 80
     external_links:
-    - queuebrocker
+    - rabbit
     networks:
-    - cm-net
+      - cm-net
     volumes:
-    - /var/tmp:/var/tmp
-
+      - /var/tmp:/var/tmp
   lcoh:
     build:
       context: ./calculation_module/lcoh/cm
@@ -216,7 +215,7 @@ services:
     expose:
       - 80
     external_links:
-      - queuebrocker
+      - rabbit
     networks:
       - cm-net
     volumes:

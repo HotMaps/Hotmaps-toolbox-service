@@ -4,14 +4,13 @@ FLASK_SERVER_NAME = '0.0.0.0:5556'
 FLASK_DEBUG = False  # Do not use debug mode in production
 CELERY_BROKER_URL_DOCKER= 'amqp://admin:mypass@rabbit:5672/'
 CELERY_BROKER_URL_LOCAL  = 'amqp://localhost/'
-CELERY_BROKER_URL = CELERY_BROKER_URL_LOCAL
+
 CELERY_ALWAYS_EAGER = False
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 CLIENT_URL_PROD = 'http://hotmaps.hevs.ch'
 CLIENT_URL_DEV = 'http://hotmapsdev.hevs.ch'
 CLIENT_URL_LOCAL = 'http://localhost:4200'
-#TODO setup this URL depending on which version you are running
-CLIENT_URL = CLIENT_URL_LOCAL
+
 
 RPC_Q = 'rpc_queue_CM_compute'
 TIMEOUT_ALIVE_CM = 3
@@ -20,8 +19,14 @@ TIMEOUT_DELETE_CM= 15
 RPC_CM_ALIVE= 'rpc_queue_CM_ALIVE'
 PORT_LOCAL = 5000
 PORT_DOCKER = 80
+
 CM_REGISTER_Q = 'rpc_queue_CM_register'
+#TODO ********************setup this URL depending on which version you are running***************************
+CELERY_BROKER_URL = CELERY_BROKER_URL_DOCKER
+CLIENT_URL = CLIENT_URL_DEV
 PORT = PORT_DOCKER
+
+#TODO *******************************************************************************
 CM_DB_NAME = "calculation_module.db"
 # Flask-Restplus settings
 RESTPLUS_SWAGGER_UI_DOC_EXPANSION = 'list'
