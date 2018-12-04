@@ -1,6 +1,8 @@
+import datetime
+
 from .. import constants
 from ..decorators.exceptions import ParameterException, RequestException, ActivationException, \
-    UserExistingException, WrongCredentialException, UserUnidentifiedException,\
+    UserExistingException, WrongCredentialException, UserUnidentifiedException, \
     UserNotActivatedException
 from ..decorators.restplus import api
 from ..decorators.serializers import user_register_input, user_register_output, user_activate_input, \
@@ -10,7 +12,8 @@ from ..decorators.serializers import user_register_input, user_register_output, 
 from flask_mail import Message
 from flask_restplus import Resource
 from flask_security import SQLAlchemySessionUserDatastore
-from itsdangerous import URLSafeTimedSerializer
+from itsdangerous import (URLSafeTimedSerializer, BadSignature, SignatureExpired)
+
 from passlib.hash import bcrypt
 
 from .. import dbGIS as db
@@ -409,12 +412,20 @@ class GetUserInformation(Resource):
 
 
 def generate_confirmation_token(email):
-    '''
+    """
 	this method will generate a confirmation token
 	:return: the confirmation token
-	'''
-    serializer = URLSafeTimedSerializer(FLASK_SECRET_KEY, salt=FLASK_SALT)
-    return serializer.dumps(email)
+	"""
+    s = URLSafeTimedSerializer(FLASK_SECRET_KEY, salt=FLASK_SALT)
+    token = s.dumps(
+        {
+            'email': email,
+            'date': str(datetime.datetime.now())
+        })
+    user = User.query.filter_by(email=email).first()
+    user.active_token = token
+    db.session.commit();
+    return token
 
 
 def confirm_token(token, expiration=3600):
@@ -424,22 +435,24 @@ def confirm_token(token, expiration=3600):
 	:param expiration:
 	:return:
 	'''
-    serializer = URLSafeTimedSerializer(FLASK_SECRET_KEY, salt=FLASK_SALT)
+    s = URLSafeTimedSerializer(FLASK_SECRET_KEY, salt=FLASK_SALT)
     try:
-        email = serializer.loads(
-            token,
-            max_age=expiration
-        )
-    except:
-        return False
-    return email
-
+        data = s.loads(token)
+    except SignatureExpired:
+        return None  # valid token, but expired
+    except BadSignature:
+        return None  # invalid token
+    user = User.query.filter_by(email=data['email']).first()
+    if user.active_token != token:
+        return None  # the user has been logout
+    user.active_token="None"
+    return user.email
 
 @login_manager.user_loader
 def load_user(user_id):
-	'''
+    '''
 	this method will return the current user
 	:param user_id:
 	:return:
 	'''
-	return User.query.filter_by(id=user_id).first()
+    return User.query.filter_by(id=user_id).first()

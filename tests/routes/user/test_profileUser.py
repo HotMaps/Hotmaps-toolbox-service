@@ -4,6 +4,8 @@ from unittest import TestCase
 from . import test_token
 from .. import BASE_URL
 
+test_last_name = 'toto'
+test_first_name = 'tata'
 
 class TestProfileUser(TestCase):
     def test_post_working(self):
@@ -11,8 +13,7 @@ class TestProfileUser(TestCase):
         this test will pass the user/information method
         """
         url = BASE_URL + "/users/profile/update"
-        test_last_name = 'toto'
-        test_first_name = 'tata'
+
         payload = {
             "token": test_token,
             "last_name": test_last_name,
@@ -49,8 +50,8 @@ class TestProfileUser(TestCase):
 
         payload = {
             "token": "mybeautifultoken",
-            "last_name": "toto",
-            "first_name": 'tata'
+            "last_name": test_last_name,
+            "first_name": test_first_name
         }
 
         output = requests.post(url, json=payload)
