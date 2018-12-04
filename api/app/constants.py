@@ -58,6 +58,7 @@ CORS_CREDENTIALS = False
 # SQLAlchemy settings
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 CRS = 3035
+CRS_USER_GEOMETRY = '4326'
 # Duration curve constants used in heat.load.profile.py
 HOURS_PER_YEAR = 8760
 LIMIT_VALUES_PER_NUTS = 4000
@@ -69,9 +70,16 @@ POINTS_FIRST_GROUP_STEP = 12
 POINTS_SECOND_GROUP_STEP = 40
 POINTS_THIRD_GROUP_STEP = 134
 POINTS_FOURTH_GROUP_STEP = 39
-
+nuts3 = 'NUTS 3'
+nuts2 = 'NUTS 2'
+nuts1 = 'NUTS 1'
+nuts0 = 'NUTS 0'
+lau2 = 'LAU 2'
+hectare_name = 'Hectare'
 # heat load and duration curve data options
 NUMBER_DECIMAL_DATA = 2
+NUTS_LAU_VALUES = [nuts0,nuts1,nuts2,nuts3,lau2]
+NUTS_VAlUES = [nuts0,nuts1,nuts2,nuts3]
 
 # All repositories
 POPULATION_TOT = 'pop_tot_curr_density_tif'
@@ -100,15 +108,16 @@ ELECRICITY_CO2_EMISSION_FACTOR = 'yearly_co2_emission'
 HDD_CUR = 'hdd_curr_tif'
 CDD_CUR = 'cdd_curr_tif'
 ELECRICITY_MIX = 'stat.yearly_electricity_generation_mix'
-land_data = 'land_surface_temperature'
+LAND_SURFACE = 'land_surface_temperature'
 
 _TOT = 'pop_tot_curr_density'
-
+AGRI_RES_VIEW = 'agricultural_residues_view'
 # All layers references for queries
 LAYERS_REF_ALL = [
+    AGRI_RES_VIEW,
     GEOTHERMAL_POTENTIAL_HEAT_COND2,
     POPULATION_TOT,
-    land_data,
+    LAND_SURFACE,
     HEAT_DENSITY_TOT,
     HEAT_DENSITY_NON_RES,
     HEAT_DENSITY_RES,
@@ -135,8 +144,9 @@ LAYERS_REF_ALL = [
 ]
 
 LAYERS_REF_HECTARES = [
-    land_data,
-
+    GEOTHERMAL_POTENTIAL_HEAT_COND2,
+    LAND_SURFACE,
+    AGRI_RES_VIEW,
     POPULATION_TOT,
     HEAT_DENSITY_TOT,
     HEAT_DENSITY_NON_RES,
@@ -159,8 +169,10 @@ LAYERS_REF_HECTARES = [
 ]
 
 LAYERS_REF_HECTARES_TABLE = [
-    land_data,
+    LAND_SURFACE,
+    GEOTHERMAL_POTENTIAL_HEAT_COND2,
 
+    AGRI_RES_VIEW,
     POPULATION_TOT,
     HEAT_DENSITY_TOT,
     HEAT_DENSITY_NON_RES,
@@ -184,8 +196,9 @@ LAYERS_REF_HECTARES_TABLE = [
 ]
 
 LAYERS_REF_NUTS = [
-    land_data,
-
+    LAND_SURFACE,
+    GEOTHERMAL_POTENTIAL_HEAT_COND2,
+    AGRI_RES_VIEW,
     POPULATION_TOT,
     HEAT_DENSITY_TOT,
     HEAT_DENSITY_RES,
@@ -208,8 +221,9 @@ LAYERS_REF_NUTS = [
 ]
 
 LAYERS_REF_LAU = [
-    land_data,
-
+    LAND_SURFACE,
+    AGRI_RES_VIEW,
+    GEOTHERMAL_POTENTIAL_HEAT_COND2,
     POPULATION_TOT,
     HEAT_DENSITY_TOT,
     HEAT_DENSITY_NON_RES,
@@ -233,9 +247,10 @@ LAYERS_REF_LAU = [
 ]
 
 LAYERS_REF_NUTS_TABLE = [
-    land_data,
-
+    LAND_SURFACE,
+    AGRI_RES_VIEW,
     POPULATION_TOT,
+    GEOTHERMAL_POTENTIAL_HEAT_COND2,
     HEAT_DENSITY_TOT,
     HEAT_DENSITY_RES,
     WWTP,
@@ -260,8 +275,9 @@ LAYERS_REF_NUTS_TABLE = [
 ]
 
 LAYERS_REF_LAU_TABLE = [
-    land_data,
-
+    LAND_SURFACE,
+    AGRI_RES_VIEW,
+    GEOTHERMAL_POTENTIAL_HEAT_COND2,
     POPULATION_TOT,
     HEAT_DENSITY_TOT,
     HEAT_DENSITY_NON_RES,

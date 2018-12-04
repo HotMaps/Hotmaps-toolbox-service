@@ -1,103 +1,89 @@
-from indicators import *
+from app.models.indicators import *
+from app.constants import CRS_USER_GEOMETRY, NUTS_VAlUES
 
 def createQueryDataStatsHectares(layer, geometry, year):
 	return {
 			'with': constructWithPartEachLayerHectare(geometry=geometry, year=year, layer=layer, fromPart='stat_' + layer),
 			'indicators':layersData[layer]['indicators'],
 			'schema_hectare':layersData[layer]['schema_hectare'],'geo_column':layersData[layer]['geo_column'], 'from':layersData[layer]['tablename'],
-			'from_indicator_name':'stat_' + layer
+			'from_indicator_name':'stat_' + layer, 'table_type':layersData[layer]['table_type']
 		}
 
-def createQueryDataStatsNutsLau(layer,nuts, year, type):
+def createQueryDataStatsNutsLau(layer, nuts, year, scale_level):
 	return {
-				'with':constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=layer, type=type, fromPart='stat_' + layersData[layer]['tablename']), 
-				'from_indicator_name':'stat_' + layersData[layer]['tablename'], 'indicators':layersData[layer]['indicators']
+				'with':constructWithPartEachLayerNutsLau(nuts=nuts, year=year, layer=layer, scale_level=scale_level, fromPart='stat_' + layer), 
+				'from_indicator_name':'stat_' + layer, 'indicators':layersData[layer]['indicators'], 'table_type':layersData[layer]['table_type']
 			}
 
 def constructWithPartEachLayerHectare(geometry, year, layer, fromPart):
-	
+	if len(layersData[layer]['indicators']) == 0:
+		return ' '
 	query = ''
-	layer_table = layersData[layer]['schema_hectare']+"."+layersData[layer]['tablename']
+	layer_table_name = layersData[layer]['schema_hectare']+"."+layersData[layer]['tablename']
 	query_select = 'SELECT '
-	if layer in [electricityCo2EmisionsFactor,indSitesExc,geothermalPotHeatCond, wwtpCapacity,wwtpPower,indSitesEm]:
+	if layersData[layer]['table_type'] == 'vector':
 		for indic in layersData[layer]['indicators']:
 			if 'select' in indic:
-				query_select+= 'sum(' +layer_table+'.' +indic['select'] + ') as '+layer + indic['name'] + ','
+				query_select+= 'sum(' +layer_table_name+'.' +indic['select'] + ') as '+layer + indic['name'] + ','
 
 
 		query_select = query_select[:-1]
 		query += fromPart+" as ("
 		query += query_select
-		query += " FROM "+layer_table
-		query += " WHERE "+ "ST_Within("+layer_table+"."+layersData[layer]['geo_column']+",st_transform(st_geomfromtext('"+ geometry +"'::text,"+layersData[layer]['crs']+")," + str(constants.CRS) + "))"
+		query += " FROM "+layer_table_name
+		query += " WHERE "+ "ST_Within("+layer_table_name+"."+layersData[layer]['geo_column']+",st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "))"
 		query += ")"
 	else:
 		for indic in layersData[layer]['indicators']:
 			if 'select' in indic:
-				query_select += "(((ST_SummaryStatsAgg(ST_Clip("+ layersData[layer]['tablename'] + ".rast, 1, st_transform(st_geomfromtext('" + geometry + "'::text,"+layersData[layer]['crs']+")," + str(constants.CRS) + "),false),true,0)))."+indic['select']+") as "+layersData[layer]['tablename'] + indic['name'] + ','
+				query_select += "(((ST_SummaryStatsAgg(ST_Clip("+ layersData[layer]['tablename'] + ".rast, 1, st_transform(st_geomfromtext('" + geometry + "'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "),false),true,0)))."+indic['select']+") as "+layersData[layer]['tablename'] + indic['name'] + ','
 		query_select = query_select[:-1]
 		query += fromPart+' AS ( '
 		query += query_select
-		query +=  " FROM "+ layer_table
-		query += "  WHERE ST_Intersects(" + layersData[layer]['tablename'] + ".rast, st_transform(st_geomfromtext('"+ geometry +"'::text,4326)," + str(constants.CRS) + ")) "
+		query +=  " FROM "+ layer_table_name
+		query += "  WHERE ST_Intersects(" + layersData[layer]['tablename'] + ".rast, st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + ")) "
 		query += ")"
 				
-	print(query)
 	return query
 
-def constructWithPartEachLayerNutsLau(nuts, year, layer, type, fromPart):
-	
+def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level, fromPart):
 	# Get name of table to select nuts/lau
+	if len(layersData[layer]['indicators']) == 0:
+		return ' '
 	query = ''
-	if type == 'nuts':
+	if scale_level in NUTS_VAlUES:
 		id_type = 'nuts_id'
+		name_type = 'nuts'
 	else:
 		id_type = 'comm_id'
-	if layer == electricityCo2EmisionsFactor:
-		id_type = 'nuts_code'
-
+		name_type = 'lau'
 
 	query_from_part = fromPart+" as ("
 	nust_select_name = "nutsSelection_"+ layer
-	nuts_selection =  nust_select_name +" as (SELECT geom from geo."+type+" where "+id_type+" in ("+nuts+")), "
-	layer_table = layersData[layer]['schema']+"."+layersData[layer]['tablename']
-	geom_name = 'geom'
-	transformed_geom_id = '3035'
+	nuts_selection =  nust_select_name +" as (SELECT geom from geo."+name_type+" where "+id_type+" in ("+nuts+")), "
+	layer_table_name = layersData[layer]['schema']+"."+layersData[layer]['tablename']
 	query_select = 'SELECT '
-	query_from = ' FROM '
-	layer_table
-	suffix_table = ''
-	if layersData[layer]['schema'] == 'stat':
-		layer_table += '_'+type
+
+	
+	if layersData[layer]['schema'] == 'stat' and layersData[layer]['tablename'] != 'wwtp' and layersData[layer]['tablename'] != 'industrial_database':
+		layer_table_name += '_'+name_type
 	for indic in layersData[layer]['indicators']:
 		if 'select' in indic:
-			query_select+= 'sum(' +layer_table+'.' +indic['select'] + ') as '+layersData[layer]['tablename'] + indic['name'] + ','
+			query_select+= 'sum(' +layer_table_name+'.' +indic['select'] + ') as '+layer + indic['name'] + ','
+
 	query_select = query_select[:-1]
 
-	if layer == geothermalPotHeatCond or layer == wwtpCapacity or layer == wwtpPower:
-		geom_name = 'geometry'
 
-	if layer == wwtpCapacity or layer == wwtpPower:
-		transformed_geom_id = '3035'
-	elif layer == indSitesEm or layer == geothermalPotHeatCond or layer == indSitesExc:
-		transformed_geom_id = '4326'
-	
-	if layer == wwtpCapacity or layer == wwtpPower or layer == geothermalPotHeatCond or layer == indSitesExc:
-		from_q = " from " + nust_select_name + ", "+layer_table
-	elif layer == indSitesEm:
-		from_q = "from " + layer_table
-
-	if layer == wwtpCapacity or layer == wwtpPower or layer == geothermalPotHeatCond or layer == indSitesExc or layer == indSitesEm:
+	if layersData[layer]['table_type'] == 'vector':
 		query += nuts_selection
-		query += query_from_part
+		query += query_from_part 
 		query += query_select
-		query += from_q
-		query += " where st_within("+layer_table+"."+geom_name+", st_transform("+nust_select_name+".geom,"+transformed_geom_id+"))) "
+		query += " from " + nust_select_name + ", "+layer_table_name
+		query += " where st_within("+layer_table_name+"."+layersData[layer]['geo_column']+", st_transform("+nust_select_name+".geom,"+layersData[layer]['crs']+"))) "
 	else:
 		query += query_from_part
 		query += query_select
-		query += " FROM "+layer_table
-		query += " WHERE "+layer_table+"."+id_type+" IN ("+nuts+") ) "
+		query += " FROM "+layer_table_name
+		query += " WHERE "+layer_table_name+"."+id_type+" IN ("+nuts+") ) "
 				
-	print(query)
 	return query

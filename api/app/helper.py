@@ -284,7 +284,16 @@ def getTypeScale(layers):
 			return 'nuts'
 	else:
 		return ''
-    
+
+def areas_to_geom(areas):
+    polygon_array=[]
+    for polygon in areas:
+        po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
+        polygon_array.append(po)
+
+	# convert array of polygon into multipolygon
+	return shapely_geom.MultiPolygon(polygon_array).wkt
+
 def adapt_layers_list(layersPayload, type, allLayers):
 	layers = []
 	if type == 'lau':

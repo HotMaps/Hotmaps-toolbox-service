@@ -12,7 +12,7 @@ from app.models.statsQueries import ElectricityMix
 from app.models.statsQueries import LayersStats
 
 
-
+from app.models.indicators import layersData
 import shapely.geometry as shapely_geom
 
 from app import constants
@@ -21,8 +21,10 @@ from app.models import generalData
 from app.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator, createAllLayers,\
 	getTypeScale, adapt_layers_list, adapt_nuts_list, removeScaleLayers, layers_filter, getTypeScale
 import app
-
 import json
+from app.model import check_table_existe
+
+
 
 
 log = logging.getLogger(__name__)
@@ -43,61 +45,15 @@ class StatsLayersNutsInArea(Resource):
 		"""
 		# Entrees
 		print ('/layers/nuts-lau')
-		year = api.payload['year']
-		layersPayload = api.payload['layers']
-		nuts = api.payload['nuts']
-		# Stop execution if layers list or nuts list is empty 
-		if not layersPayload or not nuts:
-			return
-
-		# Get type
-		type = getTypeScale(layersPayload)		
-
-		# Layers filtration and management
-		if type == 'nuts':
-			allLayersTable = createAllLayers(constants.LAYERS_REF_NUTS_TABLE)
-			allLayers = createAllLayers(constants.LAYERS_REF_NUTS)
-
-			noTableLayers = layers_filter(layersPayload, allLayersTable)
-			noDataLayers = layers_filter(layersPayload, allLayers)
-			
-		elif type == 'lau':
-			allLayersTable = createAllLayers(constants.LAYERS_REF_LAU_TABLE)
-			allLayers = createAllLayers(constants.LAYERS_REF_LAU)
-
-			noTableLayers = layers_filter(layersPayload, allLayersTable)
-			noDataLayers = layers_filter(layersPayload, allLayers)
-		else:
-			return
-
-		# Keep only existing layers
 		
-		layers = adapt_layers_list(layersPayload=layersPayload, type=type, allLayers=allLayers)
-		output = []
-		res = LayersStats.stats_nuts_lau(nuts=adapt_nuts_list(nuts), year=year, layers=layers, type=type)
-		output = res
-
-
-		# compute Cross indicators if both layers are selected
-		pop1ha_name = constants.POPULATION_TOT
-		hdm_name = constants.HEAT_DENSITY_TOT
-		heat_curr_non_res_name = constants.HEAT_DENSITY_NON_RES
-		heat_curr_res_name = constants.HEAT_DENSITY_RES
-
-
-		retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
-		retrieveCrossIndicator(pop1ha_name, heat_curr_res_name, layers, output)
-		retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
-
-		# Remove scale for each layer
-		noTableLayers = removeScaleLayers(noTableLayers, type)
-		noDataLayers = removeScaleLayers(noDataLayers, type)
-
+		if not api.payload['nuts']:
+			return
+		output, noDataLayers = LayersStats.run_stat(api.payload)
 		# output
 		return {
 			"layers": output,
 			"no_data_layers": noDataLayers,
-			"no_table_layers": noTableLayers
+			"no_table_layers": noDataLayers
 		}
 
 
@@ -111,62 +67,21 @@ class StatsLayersHectareMulti(Resource):
 		Returns the statistics for specific layers, hectares and year
 		:return:
 		"""
-		# Entrees
-		year = api.payload['year']
-		layersPayload = api.payload['layers']        
-		areas = api.payload['areas']
 
-		print(api.payload)
-		# Layers filtration and management
-		allLayersTable = createAllLayers(constants.LAYERS_REF_HECTARES_TABLE)
-		allLayers = createAllLayers(constants.LAYERS_REF_HECTARES)
-		noTableLayers = layers_filter(layersPayload, allLayersTable)
-		noDataLayers = layers_filter(layersPayload, allLayers)
-
-		# Keep only existing layers
-		layers = adapt_layers_list(layersPayload=layersPayload, type='ha', allLayers=allLayers)
-
-		polyArray = []
-		output = []
-
-		# convert to polygon format for each polygon and store them in polyArray
-		for polygon in areas:
-			po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
-			polyArray.append(po)
-
-
-		# convert array of polygon into multipolygon
-		multipolygon = shapely_geom.MultiPolygon(polyArray)
-
-		#geom = "SRID=4326;{}".format(multipolygon.wkt)
-		geom = multipolygon.wkt
-
-		res = LayersStats.stats_hectares(geometry=geom, year=year, layers=layers)
-		output = res
-
-		# compute heat consumption/person if both layers are selected
-		pop1ha_name = constants.POPULATION_TOT
-		hdm_name = constants.HEAT_DENSITY_TOT
-		heat_curr_non_res_name = constants.HEAT_DENSITY_NON_RES
-		heat_curr_res_name = constants.HEAT_DENSITY_RES
-		gfa_tot_curr_density_name = constants.GRASS_FLOOR_AREA_TOT
-
-
-		""" retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
-		retrieveCrossIndicator(pop1ha_name, heat_curr_res_name, layers, output)
-		retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
-		retrieveCrossIndicator(gfa_tot_curr_density_name, hdm_name, layers, output) """
-
-		# Remove scale for each layer
-		noTableLayers = removeScaleLayers(noTableLayers, type='ha')
-		noDataLayers = removeScaleLayers(noDataLayers, type='ha')
+		output, noDataLayers = LayersStats.run_stat(api.payload)
 
 		#output
 		return {
 			"layers": output,
 			"no_data_layers": noDataLayers,
-			"no_table_layers": noTableLayers
+			"no_table_layers": noDataLayers
 		}
+
+
+
+
+
+
 
 @ns.route('/energy-mix/nuts-lau')
 @api.response(404, 'No data found for that specific list of NUTS.')

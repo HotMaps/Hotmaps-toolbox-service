@@ -1,7 +1,3 @@
-
-
-
-
 from app.decorators.exceptions import ValidationError
 
 
@@ -362,6 +358,9 @@ def query_geographic_database(sql_query):
 
     return cursor
 
+def check_table_existe(sql_query):
+    return query_geographic_database_first(sql_query)
+
 def query_calculation_module_database(sql_query):
 
 
@@ -386,7 +385,6 @@ def query(sql_query,conn):
 
 def query_geographic_database_first(sql_query):
     cursor = query_geographic_database(sql_query)
-
     result = cursor.fetchone()
     #result = helper.remove_None_in_turple(result)
 
