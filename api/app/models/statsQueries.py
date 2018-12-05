@@ -3,7 +3,7 @@ from .. import helper
 from app import dbGIS as db
 from app import constants
 from decimal import *
-from indicators import layersData
+from app.models.indicators import layersData
 from app import celery
 from . import generalData
 from app import model

@@ -290,9 +290,9 @@ def areas_to_geom(areas):
     for polygon in areas:
         po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
         polygon_array.append(po)
-
 	# convert array of polygon into multipolygon
-	return shapely_geom.MultiPolygon(polygon_array).wkt
+    mp = shapely_geom.MultiPolygon(polygon_array)
+    return mp.wkt
 
 def adapt_layers_list(layersPayload, type, allLayers):
 	layers = []
