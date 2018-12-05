@@ -43,6 +43,7 @@ INDUSTRIAL_SITES_EMISSIONS = 'industrial_database_emissions'
 INDUSTRIAL_SITES_EXCESS_HEAT = 'industrial_database_excess_heat'
 BIOMASS_POTENTIAL = 'potential_biomass'
 MUNICIPAL_SOLID_WASTE = 'potential_municipal_solid_waste'
+WIND = 'wind_50m'
 WIND_POTENTIAL = 'potential_wind'
 SOLAR_POTENTIAL = 'solar_optimal_total'
 #GEOTHERMAL_POTENTIAL_HEAT_COND = 'potential_shallowgeothermal_heat_cond'
@@ -68,6 +69,17 @@ geom_column = 'geom'
 
 # ALL DATA FOR THE STATS
 layersData = {
+	WIND:{'tablename':WIND,
+			'from_indicator_name':stat + WIND,
+			'where':'',
+            'schema': geo_schema,
+            'schema_hectare': geo_schema,
+            'geo_column': geom_column,
+            'crs': '3035',
+			'table_type':raster_type,
+			'indicators':[
+				{'select': 'sum', 'unit': 'wind/hectare','name':'values'},
+			]},
 	AGRI_RES_VIEW:{'tablename':AGRI_RES_VIEW,
 			'from_indicator_name':stat + AGRI_RES_VIEW,
 			'where':'',
@@ -102,12 +114,12 @@ layersData = {
 			'table_type':raster_type,
 
 			'indicators':[
-				{'select': 'sum', 'unit': 'MWh','name':'consumption'},
-				{'select': 'count', 'unit': 'cells','name':'count_cell'},
-				{'select': 'min', 'unit': 'MWh','name':'consumption_min'},
-				{'select': 'max', 'unit': 'MWh','name':'consumption_max'},
-				{'select': 'mean', 'unit': 'Blabla','name':'consumption_mean'},
-				{'val1': 'consumption','from_val1':HEAT_DENSITY_TOT, 'operator': '/','val2':'count_cell','from_val2':POPULATION_TOT, 'unit':'MWh/person', 'name':HEAT_DENSITY_TOT+'_per_'+POPULATION_TOT},
+				{'table_column': 'sum', 'unit': 'MWh','indicator_id':'consumption'},
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell'},
+				{'table_column': 'min', 'unit': 'MWh','indicator_id':'consumption_min'},
+				{'table_column': 'max', 'unit': 'MWh','indicator_id':'consumption_max'},
+				{'table_column': 'mean', 'unit': 'Blabla','indicator_id':'consumption_mean'},
+				{'reference_indicator_id_1': 'consumption','reference_tablename_indicator_id_1':HEAT_DENSITY_TOT, 'operator': '/','reference_indicator_id_2':'count_cell','reference_tablename_indicator_id_1':POPULATION_TOT, 'unit':'MWh/person', 'name':HEAT_DENSITY_TOT+'_per_'+POPULATION_TOT},
 			]},
 	POPULATION_TOT:{'tablename':POPULATION_TOT,
 			'from_indicator_name':stat + POPULATION_TOT,
