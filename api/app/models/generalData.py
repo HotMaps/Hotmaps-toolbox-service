@@ -44,17 +44,15 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 		return ' '
 	query = ''
 	name_type = ''
-	if 'scalelvl_column' not in layersData[layer]:
-		if scale_level in NUTS_VAlUES:
-			scale_level_name = 'nuts_id'
-			name_type = 'nuts'
-			fk_column_id = 'fk_nuts_gid'
-		else:
-			scale_level_name = 'comm_id'
-			name_type = 'lau'
-			fk_column_id = 'fk_lau_gid'
-
+	if scale_level in NUTS_VAlUES:
+		scale_level_name = 'nuts_id'
+		name_type = 'nuts'
+		fk_column_id = 'fk_nuts_gid'
 	else:
+		scale_level_name = 'comm_id'
+		name_type = 'lau'
+		fk_column_id = 'fk_lau_gid'
+	if 'scalelvl_column' in layersData[layer]:
 		scale_level_name = layersData[layer]['scalelvl_column']
 	
 	nust_select_name = "nutsSelection_"+ layer

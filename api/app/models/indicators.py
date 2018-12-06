@@ -74,6 +74,40 @@ geom_column = 'geom'
 
 # ALL DATA FOR THE STATS
 layersData = {
+	MUNICIPAL_SOLID_WASTE:{'tablename':MUNICIPAL_SOLID_WASTE,
+			'from_indicator_name':stat + MUNICIPAL_SOLID_WASTE,
+			'where':'',
+            'schema_scalelvl': stat_schema,
+            'schema_hectare': geo_schema,
+            'crs': '3035',
+            'geo_column': geometry_column,
+			'table_type':vector_type,
+			'data_lvl':[nuts3],
+			'scalelvl_column':'code',
+			'data_aggregated':True,'indicators':[
+				{'table_column': 'value', 'unit': 'unit_1','indicator_id':'val'},
+				
+			]},
+	SOLAR_RADIATION:{'tablename':SOLAR_RADIATION,
+			'from_indicator_name':stat + SOLAR_RADIATION,
+			'where':'',
+            'schema_scalelvl': stat_schema,
+            'schema_hectare': geo_schema,
+            'crs': '3035',
+            'geo_column': geometry_column,
+			'table_type':raster_type,
+			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
+			'data_aggregated':True,'indicators':[
+				{'table_column': 'sum', 'unit': 'unit_1','indicator_id':'solar'},
+				{'table_column': 'count', 'unit': 'unit_1','indicator_id':'count_cell'},
+				{
+					'reference_indicator_id_1': 'solar','reference_tablename_indicator_id_1':SOLAR_RADIATION, 
+					'operator': '/',
+					'reference_indicator_id_2':'count_cell','reference_tablename_indicator_id_2':POPULATION_TOT, 
+					'unit':'MWh/person', 'indicator_id':SOLAR_RADIATION+'_per_'+POPULATION_TOT
+				},
+				
+			]},
 	HEAT_DENSITY_TOT:{'tablename':HEAT_DENSITY_TOT,
 			'from_indicator_name':stat + HEAT_DENSITY_TOT,
 			'where':'',
