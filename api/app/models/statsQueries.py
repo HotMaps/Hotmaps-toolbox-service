@@ -15,6 +15,7 @@ class LayersStats:
 
 	@staticmethod
 	def run_stat(payload):
+		
 		year = payload['year']
 		layersPayload = payload['layers']
 		scale_level = payload['scale_level']
@@ -23,7 +24,7 @@ class LayersStats:
 		noDataLayers=[]
 		layers=[]
 		output=[]
-
+		print(layersPayload)
 		if scale_level in constants.NUTS_LAU_VALUES:
 			selection_areas = payload['nuts']
 		elif scale_level == constants.hectare_name:
@@ -32,7 +33,6 @@ class LayersStats:
 			is_hectare=True
 
 		for c, layer in enumerate(layersPayload):
-			#layersPayload[c] = layer.replace('_' + scale_level,'')
 			if layersPayload[c] in layersData:
 				layers.append(layersPayload[c])
 			else: 
@@ -40,20 +40,17 @@ class LayersStats:
 
 		
 		if is_hectare:
-			output = LayersStats.stats_hectares(geometry=geom, year=year, layers=layers)
+			output = LayersStats.get_stats(selection_areas=geom, year=year, layers=layers,scale_level=scale_level, is_hectare=is_hectare)
 		else:
 			nuts = ''.join("'"+str(nu)+"'," for nu in selection_areas)[:-1]
-			output = LayersStats.stats_nuts_lau(nuts=nuts, year=year, layers=layers, scale_level=scale_level)
+			output = LayersStats.get_stats(selection_areas=nuts, year=year, layers=layers, scale_level=scale_level, is_hectare=False)
 
 		return output, noDataLayers
 
 	@staticmethod
-	def get_stats(year, layers, layersQueryData, isHectare=False):
+	def get_stats(year, layers, selection_areas, is_hectare, scale_level):
 		# Get the number of layers
-		nbLayers = len(layers)
-
 		result = []
-
 		# Check if there is at least one layer
 		if layers:
 			# Construction of the query 
@@ -61,28 +58,37 @@ class LayersStats:
 			sql_with = ' WITH '
 			sql_select = ' SELECT '
 			sql_from = ' FROM '
-			for layer in layersQueryData:
-				if len(layersQueryData[layer]['indicators']) != 0:
-					sql_with += layersQueryData[layer]['with'] + ','
-					for indicator in layersQueryData[layer]['indicators']:
-						if 'select' in indicator:
-							sql_select += layer+indicator['name']+','
-						elif indicator['from_val1'] in layersQueryData and indicator['from_val2'] in layersQueryData:
-								sql_select+= indicator['from_val1']+indicator['val1']+' '+indicator['operator']+' '+indicator['from_val2']+indicator['val2']+','
-					sql_from += layersQueryData[layer]['from_indicator_name']+','
+			for layer in layers:
+				print(layer)
+				if len(layersData[layer]['indicators']) != 0 and scale_level in layersData[layer]['data_lvl']:
+					if is_hectare:
+						sql_with += generalData.constructWithPartEachLayerHectare(geometry=selection_areas, year=year, layer=layer, scale_level=scale_level) + ','
+					else:
+						sql_with += generalData.constructWithPartEachLayerNutsLau(layer=layer, nuts=selection_areas, year=year, scale_level=scale_level) + ','
+
+					for indicator in layersData[layer]['indicators']:
+						if 'table_column' in indicator:
+							sql_select += layer+indicator['indicator_id']+','
+						elif indicator['reference_tablename_indicator_id_1'] in layers and indicator['reference_tablename_indicator_id_2'] in layers:
+								sql_select+= indicator['reference_tablename_indicator_id_1']+indicator['reference_indicator_id_1']+' '+indicator['operator']+' '+indicator['reference_tablename_indicator_id_2']+indicator['reference_indicator_id_2']+','
+					sql_from += layersData[layer]['from_indicator_name']+','
+			
+			
+			# Combine string to a single query
 			sql_with = sql_with[:-1]
 			sql_select = sql_select[:-1]
 			sql_from = sql_from[:-1]
 			sql_query = sql_with + sql_select + sql_from + ';'
 			print(sql_query)
+			# Run the query
 			query_geographic_database_first = model.query_geographic_database_first(sql_query)
 
 			# Storing the results only if there is data
 			count_indic=0
-			for layer in layersQueryData:
+			for layer in layers:
 				values = []
-				for indicator in layersQueryData[layer]['indicators']:
-					if 'select' not in indicator and (indicator['from_val1'] not in layersQueryData or indicator['from_val2'] not in layersQueryData):
+				for indicator in layersData[layer]['indicators']:
+					if ('table_column' not in indicator and (indicator['reference_tablename_indicator_id_1'] not in layers or indicator['reference_tablename_indicator_id_2'] not in layers)) or scale_level not in layersData[layer]['data_lvl']:
 						continue
 					currentValue = query_geographic_database_first[count_indic]
 					count_indic += 1
@@ -93,7 +99,7 @@ class LayersStats:
 
 					try:
 						values.append({
-							'name':layer +'_'+indicator['name'],
+							'name':layer +'_'+indicator['indicator_id'],
 							'value':currentValue,
 							'unit':indicator['unit']
 						})
@@ -103,25 +109,8 @@ class LayersStats:
 					'name':layer,
 					'values':values
 				})
+		print(count_indic)
 		return result
-	
-	@staticmethod
-	#@celery.task(name = 'stats_hectares')
-	def stats_hectares(geometry, year, layers): #/stats/layers/hectares
-		# Get the data
-		layersQueryData = {}
-		for layer in layers:
-			layersQueryData[layer] = generalData.createQueryDataStatsHectares(layer=layer,geometry=geometry, year=year)
-		return LayersStats.get_stats(year,layers, layersQueryData,isHectare=True)
-
-	@staticmethod
-	@celery.task(name = 'stats_nuts_lau')
-	def stats_nuts_lau(nuts, year, layers, scale_level): #/stats/layers/nuts-lau
-		# Get the data
-		layersQueryData = {}
-		for layer in layers:
-			layersQueryData[layer] = generalData.createQueryDataStatsNutsLau(layer=layer, nuts=nuts, year=year, scale_level=scale_level)
-		return LayersStats.get_stats(year,layers, layersQueryData)
 
 
 class ElectricityMix:

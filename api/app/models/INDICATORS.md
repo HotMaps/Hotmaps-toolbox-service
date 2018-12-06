@@ -10,23 +10,25 @@ An indicator is a value that is displayed on the Hotmaps toolbox in the client s
 	    'heat_tot_curr_density_tif':{
             'tablename':'heat_tot_curr_density_tif',
 			'from_indicator_name':'stat_heat_tot_curr_density_tif',
-            'schema': 'stat',
+            'schema_scalelvl': 'stat',
             'schema_hectare': 'geo',
             'crs': '3035',
             'geo_column': 'geometry',
 			'table_type':'raster',
+            'data_lvl':['NUTS 0','NUTS 1','NUTS 2','NUTS 3','LAU 2','Hectare'],
+			'data_aggregated':True,
+			'scalelvl_column':'',
 			'indicators':[
-				{'select': 'sum', 'unit': 'MWh','name':'consumption'},
-				{'select': 'count', 'unit': 'cells','name':'count_cell'},
+                {'table_column': 'sum', 'unit': 'MWh','indicator_id':'consumption'},
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell'},
 				{
-                    'val1': 'consumption',
-                    'from_val1':'heat_tot_curr_density_tif', 
-                    'operator': '/',
-                    'val2':'count_cell',
-                    'from_val2':'pop_tot_curr_density_tif', 
-                    'unit':'MWh/person', 
-                    'name':'heat_tot_curr_density_tif_per_pop_tot_curr_density_tif'
-                }
+					'reference_indicator_id_1': 'consumption',
+                    'reference_tablename_indicator_id_1': 'heat_tot_curr_density_tif', 
+					'operator': '/',
+					'reference_indicator_id_2': 'count_cell',
+                    'reference_tablename_indicator_id_2': 'pop_tot_curr_density_tif', 
+					'unit':'MWh/person', 'indicator_id': 'heat_tot_curr_density_tif_per_pop_tot_curr_density_tif'
+				}
 			]
         }
     }
@@ -38,9 +40,21 @@ Name of the DB table. (Exemple: 'heat_tot_curr_density_tif')
 
 - 'from_indicator_name'
 
-Subtablename for the selection of indicators. **Must be unique.** (Exemple: 'stat_heat_tot_curr_density_tif') 
+Subtablename for the selection of indicators. **Must be unique.** (Exemple: 'stat_heat_tot_curr_density_tif')
 
-- 'schema'
+- 'data_aggregated'
+
+Is the data aggregated or not (Values: True or False)
+
+- 'scalelvl_column'
+
+Scale level column name if different to default one (Exemple: 'code')
+
+- 'data_lvl'
+
+Name of the scale level where datas are available
+
+- 'schema_scalelvl'
 
 Table schema location for the nuts level. (Exemple: 'geo', 'stat', 'public')
 
@@ -72,16 +86,16 @@ There are 2 types of indicators (Simple indicators & Cross indicators).
 A simple indicator is an object with 3 parameters. 
 
     {
-        'select': 'count', 
+        'table_column': 'count', 
         'unit': 'cells',
-        'name':'count_cell'
+        'indicator_id':'count_cell'
     }
 
 
 
-- 'select'
+- 'table_column'
 
-This is the database column that is selected in the table. (Exemple: 'count')
+This is the talbe column that is selected in the table. (Exemple: 'count')
 
 ![tablecolumnselection](/api/assets/table_image.png)
 
@@ -89,9 +103,9 @@ This is the database column that is selected in the table. (Exemple: 'count')
 
 This is the unit of the indicator. (Exemple: 'cells', 'MWh')
 
-- 'name'
+- 'indicator_id'
 
-This is the name of the indicator (Like an ID). This name **must be unique** in the array of indicator.
+This is the indicator identifier of the indicator (Like an ID). This name **must be unique** in the array of indicator.
 
 
 
@@ -100,34 +114,35 @@ This is the name of the indicator (Like an ID). This name **must be unique** in 
 A cross indicator is an object with 7 parameters. The goal of this indicator is to make a calcul between simple indicators and cross indicator. 
 
 	{
-        'val1': 'consumption',
-        'from_val1':'heat_tot_curr_density_tif', 
+        'reference_indicator_id_1': 'consumption',
+        'reference_tablename_indicator_id_1':'heat_tot_curr_density_tif', 
         'operator': '/',
-        'val2':'count_cell',
-        'from_val2':'pop_tot_curr_density_tif', 
+        'reference_indicator_id_2':'count_cell',
+        'reference_tablename_indicator_id_2':'pop_tot_curr_density_tif', 
         'unit':'MWh/person', 
-        'name':'heat_tot_curr_density_tif_per_pop_tot_curr_density_tif'
+        'indicator_id':'heat_tot_curr_density_tif_per_pop_tot_curr_density_tif'
     }
 
-- 'val1'
 
-Corresponds to the name of a simple indicator. This name **must be defined** in the indicator array. It is the value number 1.
+- 'reference_indicator_id_1'
 
-- 'from_val1'
+Corresponds to the identifier of a simple indicator. This name **must be defined** in the indicator array. It is the value number 1.
 
-Name of the layer tablename that reference the value number 1. (Exemple: 'heat_tot_curr_density_tif')
+- 'reference_tablename_indicator_id_1'
+
+Reference of the layer tablename that reference the value number 1. (Exemple: 'heat_tot_curr_density_tif')
 
 - 'operator'
 
 Calcul rule to apply to the 2 values (Values: '/' or '*' or '+' or '-')
 
-- 'val2'
+- 'reference_indicator_id_1'
 
-Corresponds to the name of a simple indicator. This name **must be defined** in the indicator array. It is the value number 2.
+Corresponds to the identifier of a simple indicator. This name **must be defined** in the indicator array. It is the value number 2.
 
-- 'from_val2'
+- 'reference_tablename_indicator_id_2'
 
-Name of the layer tablename that reference the value number 2. (Exemple: 'pop_tot_curr_density_tif')
+Reference of the layer tablename that reference the value number 2. (Exemple: 'pop_tot_curr_density_tif')
 
 - 'unit'
 
@@ -140,7 +155,7 @@ This is the name of the indicator (Like an ID). This name **must be unique** in 
 
 ##### Note: For this exemple, the calculation bellow is done.
 
-    from1.val1 / from2.val2 = heat_tot_curr_density_tif.consumption / pop_tot_curr_density_tif.count_cell
+    reference_indicator_id_1.reference_indicator_id_1 / reference_indicator_id_1.reference_indicator_id_1 = heat_tot_curr_density_tif.consumption / pop_tot_curr_density_tif.count_cell
 
 ### Indicator result
 
