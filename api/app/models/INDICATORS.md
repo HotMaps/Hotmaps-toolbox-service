@@ -52,7 +52,7 @@ Scale level column name if different to default one (Exemple: 'code')
 
 - 'data_lvl'
 
-Name of the scale level where datas are available
+Levels available for the data in the database
 
 - 'schema_scalelvl'
 
@@ -95,7 +95,7 @@ A simple indicator is an object with 3 parameters.
 
 - 'table_column'
 
-This is the talbe column that is selected in the table. (Exemple: 'count')
+This is the table column that is selected in the table. (Exemple: 'count')
 
 ![tablecolumnselection](/api/assets/table_image.png)
 
