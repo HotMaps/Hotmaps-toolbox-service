@@ -497,3 +497,13 @@ upload_delete_input = api.model('input for uploads deleting', {
 upload_delete_output = api.model('output for uploads deleting', {
     "message": fields.String(description='used size'),
 })
+upload_export_nuts_input = api.model('input for the nuts upload export', {
+    "layers": fields.String(description='layer'),
+    "year": fields.String(description='year'),
+    "nuts": fields.List(fields.String())
+})
+upload_export_hectare_input = api.model('input for the hectare upload export', {
+    "layers": fields.String(description='layer'),
+    "year": fields.String(description='year'),
+    "areas": fields.List(fields.Nested(area))
+})
