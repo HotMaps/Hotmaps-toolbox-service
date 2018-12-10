@@ -19,6 +19,7 @@ class LayersStats:
 		year = payload['year']
 		layersPayload = payload['layers']
 		scale_level = payload['scale_level']
+		print ("scale level ",scale_level)
 		selection_areas = ''
 		is_hectare = False
 		noDataLayers=[]
@@ -27,6 +28,7 @@ class LayersStats:
 		print(layersPayload)
 		if scale_level in constants.NUTS_LAU_VALUES:
 			selection_areas = payload['nuts']
+			print ("scale in constants.NUTS_LAU_VALUES ")
 		elif scale_level == constants.hectare_name:
 			selection_areas = payload['areas']
 			geom = helper.areas_to_geom(selection_areas)
