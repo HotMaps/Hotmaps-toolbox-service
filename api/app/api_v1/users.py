@@ -8,7 +8,8 @@ from ..decorators.restplus import api
 from ..decorators.serializers import user_register_input, user_register_output, user_activate_input, \
     user_activate_output, user_ask_recovery_input, user_ask_recovery_output, user_recovery_output, \
     user_recovery_input, user_login_input, user_login_output, user_logout_input, user_logout_output, \
-    user_profile_input, user_profile_output, user_get_information_output, user_get_information_input
+    user_profile_input, user_profile_output, user_get_information_output, user_get_information_input, \
+    upload_space_used_output, upload_space_used_input
 from flask_mail import Message
 from flask_restplus import Resource
 from flask_security import SQLAlchemySessionUserDatastore
@@ -21,6 +22,8 @@ from .. import mail, login_manager
 from ..secrets import FLASK_SECRET_KEY, FLASK_SALT
 from ..models.user import User
 from ..models.role import Role
+
+from .upload import calculate_total_space
 
 # Setup Flask-Security
 user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
@@ -410,6 +413,39 @@ class GetUserInformation(Resource):
             'email': email
         }
 
+
+@ns.route('/space_used')
+@api.response(530, 'Request error')
+@api.response(531, 'Missing parameter')
+@api.response(539, 'User Unidentified')
+class SpaceUsedUploads(Resource):
+    @api.marshal_with(upload_space_used_output)
+    @api.expect(upload_space_used_input)
+    def post(self):
+        """
+        The method called to see the space used by an user
+        :return:
+        """
+        # Entries
+        try:
+            token = api.payload['token']
+        except:
+            raise ParameterException('token')
+
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise UserUnidentifiedException
+
+        # get the user uploads
+        uploads = user.uploads
+        used_size = calculate_total_space(uploads)
+
+        # output
+        return {
+            "used_size": used_size,
+            "max_size": constants.USER_DISC_SPACE_AVAILABLE
+        }
 
 def generate_confirmation_token(email):
     """

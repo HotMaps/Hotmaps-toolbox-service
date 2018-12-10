@@ -2,12 +2,13 @@ import requests
 
 from unittest import TestCase
 from . import BASE_URL, test_token
-from .test_addUploads import test_size
+from ..uploads.test_addUploads import test_size
 
-url = BASE_URL + "/upload/space_used"
+url = BASE_URL + "/users/space_used"
 
 
 class TestSpaceUsedUploads(TestCase):
+    "The class has to be here in order to be run before the deletion of the upload"
     def test_post(self):
         """
         this test will pass the uploads/space_used method

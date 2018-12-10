@@ -123,40 +123,6 @@ class ListUploads(Resource):
         # output
 
 
-@ns.route('/space_used')
-@api.response(530, 'Request error')
-@api.response(531, 'Missing parameter')
-@api.response(539, 'User Unidentified')
-class SpaceUsedUploads(Resource):
-    @api.marshal_with(upload_space_used_output)
-    @api.expect(upload_space_used_input)
-    def post(self):
-        """
-        The method called to see the space used by an user
-        :return:
-        """
-        # Entries
-        try:
-            token = api.payload['token']
-        except:
-            raise ParameterException('token')
-
-        # check token
-        user = User.verify_auth_token(token)
-        if user is None:
-            raise UserUnidentifiedException
-
-        # get the user uploads
-        uploads = user.uploads
-        used_size = calculate_total_space(uploads)
-
-        # output
-        return {
-            "used_size": used_size,
-            "max_size": constants.USER_DISC_SPACE_AVAILABLE
-        }
-
-
 @ns.route('/remove_upload')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
@@ -321,7 +287,6 @@ class ExportNuts(Resource):
                          mimetype='image/TIFF',
                          attachment_filename="testing.tif",
                          as_attachment=True)
-
 
 
 @ns.route('/export/hectare')
