@@ -40,6 +40,11 @@ RESTPLUS_JSON = {
 # disc space available for every users (in MegaOctet)
 USER_DISC_SPACE_AVAILABLE = 500
 
+# # list of characters forbidden in user name (to protect the file system)
+# FORBIDDEN_NAME_CHARACTERS = {
+#     '\\', '/', ':', '*', '\"', '<', '>', '|'
+# }
+
 CORS_HEADER_API_KEY = 'av7e7d78f93e2af'
 CORS_ORIGIN = 'http://hotmaps.hevs.ch'
 CORS_CREDENTIALS = False

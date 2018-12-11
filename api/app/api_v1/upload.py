@@ -1,4 +1,5 @@
 import StringIO
+import os
 
 from flask import send_file
 from .. import constants
@@ -6,9 +7,9 @@ from ..decorators.restplus import api
 from ..decorators.restplus import UserUnidentifiedException, ParameterException, RequestException, \
     UserDoesntOwnUploadsException, UploadExistingUrlException, NotEnoughSpaceException, UploadNotExistingException, \
     HugeRequestException, NotEnoughPointsException
-from ..decorators.serializers import upload_add_input, upload_add_output, upload_list_input, upload_list_output,\
-    upload_space_used_input, upload_space_used_output, upload_delete_input, upload_delete_output, \
-    upload_export_nuts_input, upload_export_hectare_input
+from ..decorators.serializers import upload_add_output, upload_list_input, upload_list_output,upload_delete_input, \
+    upload_delete_output, \
+    upload_export_nuts_input, upload_export_hectare_input, upload_download_input
 from flask_restplus import Resource
 from binascii import unhexlify
 from .. import dbGIS as db
@@ -16,11 +17,15 @@ from ..models.uploads import Uploads
 from ..models.user import User
 import shapely.geometry as shapely_geom
 
+from ..decorators.parsers import file_upload
+
 nsUpload = api.namespace('upload', description='Operations related to file upload')
 ns = nsUpload
 NUTS_YEAR = "2013"
 LAU_YEAR = NUTS_YEAR
+UPLOAD_FOLDER = '/temp/Hotmaps/users/'
 
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 @ns.route('/add')
 @api.response(530, 'Request error')
@@ -30,30 +35,27 @@ LAU_YEAR = NUTS_YEAR
 @api.response(542, 'Not Enough Space')
 class AddUploads(Resource):
     @api.marshal_with(upload_add_output)
-    @api.expect(upload_add_input)
+    @api.expect(file_upload)
     def post(self):
         """
         The method called to add an upload
         :return:
         """
+        args = file_upload.parse_args()
         # Entries
         wrong_parameter = []
         try:
-            file_name = api.payload['file_name']
+            token = args['token']
+        except:
+            wrong_parameter.append('token')
+        try:
+            file_name = args['file_name']
         except:
             wrong_parameter.append('file_name')
         try:
-            url = api.payload['url']
-        except:
-            wrong_parameter.append('url')
-        try:
-            size = api.payload['size']
-        except:
-            wrong_parameter.append('size')
-        try:
-            token = api.payload['token']
-        except:
-            wrong_parameter.append('token')
+            tif_file = '%s%s' % (UPLOAD_FOLDER, file_name + ".tif")
+        except Exception, e :
+            wrong_parameter.append('file')
         # raise exception if parameters are false
         if len(wrong_parameter) > 0:
             exception_message = ''
@@ -67,13 +69,21 @@ class AddUploads(Resource):
         user = User.verify_auth_token(token)
         if user is None:
             raise UserUnidentifiedException
-
+        url = UPLOAD_FOLDER + file_name
         # we need to check if the URL is already taken
         if Uploads.query.filter_by(url=url).first() is not None:
             raise UploadExistingUrlException
+        # save the file on the file_system
+        args['tif_file'].save(tif_file)
 
-        # we need to check if there is enough disk space for the dataset
-        used_size = calculate_total_space(user.uploads) + size
+        # we check the size of our file
+        size = float(os.path.getsize(url+".tif")) / 1000000
+
+        try:
+            # we need to check if there is enough disk space for the dataset
+            used_size = calculate_total_space(user.uploads) + size
+        except Exception, e:
+            raise RequestException(str(e))
         if used_size > constants.USER_DISC_SPACE_AVAILABLE:
             raise NotEnoughSpaceException
 
@@ -81,10 +91,11 @@ class AddUploads(Resource):
         upload = Uploads(file_name=file_name, url=url, size=size, user_id=user.id)
         db.session.add(upload)
         db.session.commit()
+
         # output
         output = 'file '+file_name+' added for the user '+user.first_name
         return {
-            "message": output
+            "message": str(output)
         }
 
 
@@ -140,9 +151,9 @@ class DeleteUploads(Resource):
         # Entries
         wrong_parameter = []
         try:
-            url = api.payload['url']
+            file_name = api.payload['file_name']
         except:
-            wrong_parameter.append('url')
+            file_name = wrong_parameter.append('file_name')
         try:
             token = api.payload['token']
         except:
@@ -155,6 +166,7 @@ class DeleteUploads(Resource):
                 if i != len(wrong_parameter) - 1:
                     exception_message += ', '
             raise ParameterException(str(exception_message))
+        url = UPLOAD_FOLDER + file_name
 
         # check token
         user = User.verify_auth_token(token)
@@ -173,6 +185,9 @@ class DeleteUploads(Resource):
         # delete the upload
         db.session.delete(upload_to_delete)
         db.session.commit()
+
+        #delete the file
+        os.remove(url + ".tif")
         # output
         return {
             "message": "Upload removed"
@@ -293,7 +308,7 @@ class ExportNuts(Resource):
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
 @api.response(532, 'Request too big')
-class ExportNuts(Resource):
+class ExportHectare(Resource):
     @api.expect(upload_export_hectare_input)
     def post(self):
         """
@@ -387,16 +402,79 @@ class ExportNuts(Resource):
             raise RequestException(str(e))
 
 
+@ns.route('/download')
+@api.response(530, 'Request error')
+@api.response(531, 'Missing Parameters')
+@api.response(539, 'User Unidentified')
+@api.response(540, 'User doesn\'t own the upload')
+@api.response(543, 'Uploads doesn\'t exists')
+class ExportNuts(Resource):
+    @api.expect(upload_download_input)
+    def post(self):
+        '''
+        This method will allow the user to download a selected dataset
+        :return:
+        '''
+        # Entries
+        wrong_parameter = []
+        try:
+            token = api.payload['token']
+        except:
+            wrong_parameter.append('token')
+        try:
+            file_name = api.payload['file_name']
+        except:
+            wrong_parameter.append('file_name')
+
+        if len(wrong_parameter) > 0:
+            exception_message = ''
+            for i in range(len(wrong_parameter)):
+                exception_message += wrong_parameter[i]
+                if i != len(wrong_parameter) - 1:
+                    exception_message += ', '
+            raise ParameterException(str(exception_message))
+
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise UserUnidentifiedException
+
+        url = UPLOAD_FOLDER + file_name
+
+        # find upload to delete
+        upload = Uploads.query.filter_by(url=url).first()
+        if upload is None:
+            raise UploadNotExistingException
+
+        # check if the user can delete the
+        if upload.user_id != user.id:
+            raise UserDoesntOwnUploadsException
+
+        # send the file to the client
+        return send_file(url +".tif",
+                         mimetype='image/TIFF',
+                         attachment_filename="testing.tif",
+                         as_attachment=True)
+
 def calculate_total_space(uploads):
     '''
     This method will calculate the amount of disc space taken by a list of uploads
     :param uploads:
     :return: the used disk space
     '''
-    used_size = 0
+    used_size = float(0)
 
     # sum of every size
     for upload in uploads:
-        used_size += upload.size
+        used_size += float(upload.size)
 
     return used_size
+
+def allowed_file(filename):
+    '''
+    This method will check if the file is allowed
+    :param filename:
+    :return:
+    '''
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

@@ -173,6 +173,7 @@ class UserRegistering(Resource):
         # we check if the email has already been used
         if User.get_by_email(email) is not None:
             raise UserExistingException(email)
+
         # user creation in the DB
         user_datastore.create_user(email=email, password=password, active=False, first_name=first_name,
                                    last_name=last_name)
@@ -191,7 +192,7 @@ class UserRegistering(Resource):
             mail.send(msg)
 
         except Exception, e:
-            raise RequestException(str(e))
+            raise RequestException("Problem with the mail sending.")
 
         output = 'user registered'
 
