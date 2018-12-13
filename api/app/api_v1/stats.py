@@ -9,21 +9,23 @@ from app.decorators.serializers import  stats_layers_hectares_output,\
 from app.decorators.restplus import api
 from app.decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, ParameterException, RequestException
 
-from app.models.statsQueries import LayersHectare
 from app.models.statsQueries import ElectricityMix
-from app.models.statsQueries import LayersNutsLau
+from app.models.statsQueries import LayersStats
 
 
+from app.models.indicators import layersData
 import shapely.geometry as shapely_geom
 
 from app import constants
 
 from app.models import generalData
-from app.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator
+from app.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator, createAllLayers,\
+	getTypeScale, adapt_layers_list, adapt_nuts_list, removeScaleLayers, layers_filter, getTypeScale
 import app
-
-
 import json
+from app.model import check_table_existe
+
+
 
 
 log = logging.getLogger(__name__)
@@ -73,54 +75,14 @@ class StatsLayersNutsInArea(Resource):
 			return
 
 		# Get type
-		type = generalData.getTypeScale(layersPayload)
-
-		# Layers filtration and management
-		if type == 'nuts':
-			allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_NUTS_TABLE)
-			allLayers = generalData.createAllLayers(constants.LAYERS_REF_NUTS)
-
-			noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
-			noDataLayers = generalData.layers_filter(layersPayload, allLayers)
-
-		elif type == 'lau':
-			allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_LAU_TABLE)
-			allLayers = generalData.createAllLayers(constants.LAYERS_REF_LAU)
-
-			noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
-			noDataLayers = generalData.layers_filter(layersPayload, allLayers)
-		else:
-			return
-
-		# Keep only existing layers
-		layers = generalData.adapt_layers_list(layersPayload=layersPayload, type=type, allLayers=allLayers)
-
-		output = []
-
-		res = LayersNutsLau.stats_nuts_lau.delay(nuts=generalData.adapt_nuts_list(nuts), year=year, layers=layers, type=type)
-		output = res.get()
 
 
-		# compute Cross indicators if both layers are selected
-		pop1ha_name = constants.POPULATION_TOT
-		hdm_name = constants.HEAT_DENSITY_TOT
-		heat_curr_non_res_name = constants.HEAT_DENSITY_NON_RES
-		heat_curr_res_name = constants.HEAT_DENSITY_RES
-
-
-		retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
-		retrieveCrossIndicator(pop1ha_name, heat_curr_res_name, layers, output)
-		retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
-
-		# Remove scale for each layer
-		noTableLayers = generalData.removeScaleLayers(noTableLayers, type)
-		noDataLayers = generalData.removeScaleLayers(noDataLayers, type)
-
+		output, noDataLayers = LayersStats.run_stat(api.payload)
 		# output
 		return {
 			"layers": output,
 			"no_data_layers": noDataLayers,
-			"no_table_layers": noTableLayers
+			"no_table_layers": noDataLayers
 		}
 
 
@@ -179,114 +141,21 @@ class StatsLayersHectareMulti(Resource):
 
 
 
-		# Layers filtration and management
-		allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_HECTARES_TABLE)
-		allLayers = generalData.createAllLayers(constants.LAYERS_REF_HECTARES)
-		noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
-		noDataLayers = generalData.layers_filter(layersPayload, allLayers)
-
-		# Keep only existing layers
-		layers = generalData.adapt_layers_list(layersPayload=layersPayload, type='ha', allLayers=allLayers)
-
-		polyArray = []
-		output = []
-
-		# convert to polygon format for each polygon and store them in polyArray
-		try:
-			for polygon in areas:
-				po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
-				polyArray.append(po)
-		except:
-			raise NotEnoughPointsException
-
-		# convert array of polygon into multipolygon
-		multipolygon = shapely_geom.MultiPolygon(polyArray)
-
-		#geom = "SRID=4326;{}".format(multipolygon.wkt)
-		geom = multipolygon.wkt
-		try:
-			res = LayersHectare.stats_hectares.delay(geometry=geom, year=year, layers=layers)
-			output = res.get()
-		except:
-			raise IntersectionException()
-		# compute heat consumption/person if both layers are selected
-		pop1ha_name = constants.POPULATION_TOT
-		hdm_name = constants.HEAT_DENSITY_TOT
-		heat_curr_non_res_name = constants.HEAT_DENSITY_NON_RES
-		heat_curr_res_name = constants.HEAT_DENSITY_RES
-		gfa_tot_curr_density_name = constants.GRASS_FLOOR_AREA_TOT
 
 
-		retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
-		retrieveCrossIndicator(pop1ha_name, heat_curr_res_name, layers, output)
-		retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
-		retrieveCrossIndicator(gfa_tot_curr_density_name, hdm_name, layers, output)
-
-		# Remove scale for each layer
-		noTableLayers = generalData.removeScaleLayers(noTableLayers, type='ha')
-		noDataLayers = generalData.removeScaleLayers(noDataLayers, type='ha')
+		output, noDataLayers = LayersStats.run_stat(api.payload)
 
 		#output
 		return {
 			"layers": output,
 			"no_data_layers": noDataLayers,
-			"no_table_layers": noTableLayers
+			"no_table_layers": noDataLayers
 		}
 
 
-@celery.task(name = 'layer_hectare')
-def indicatorsHectares(year,layersPayload,areas):
-	if not layersPayload or not areas:
-		return
-
-		# Layers filtration and management
-	allLayersTable = generalData.createAllLayers(constants.LAYERS_REF_HECTARES_TABLE)
-	allLayers = generalData.createAllLayers(constants.LAYERS_REF_HECTARES)
-	noTableLayers = generalData.layers_filter(layersPayload, allLayersTable)
-	noDataLayers = generalData.layers_filter(layersPayload, allLayers)
-
-	# Keep only existing layers
-	layers = generalData.adapt_layers_list(layersPayload=layersPayload, type='ha', allLayers=allLayers)
-
-	polyArray = []
-	output = []
-
-	# convert to polygon format for each polygon and store them in polyArray
-	for polygon in areas:
-		po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
-		polyArray.append(po)
 
 
-	# convert array of polygon into multipolygon
-	multipolygon = shapely_geom.MultiPolygon(polyArray)
 
-	#geom = "SRID=4326;{}".format(multipolygon.wkt)
-	geom = multipolygon.wkt
-
-	try:
-		res = LayersHectare.stats_hectares(geometry=geom, year=year, layers=layers)
-	except:
-		raise IntersectionException
-	output = res
-
-	# compute heat consumption/person if both layers are selected
-	pop1ha_name = constants.POPULATION_TOT
-	hdm_name = constants.HEAT_DENSITY_TOT
-	heat_curr_non_res_name = constants.HEAT_DENSITY_NON_RES
-	heat_curr_res_name = constants.HEAT_DENSITY_RES
-	gfa_tot_curr_density_name = constants.GRASS_FLOOR_AREA_TOT
-
-
-	retrieveCrossIndicator(pop1ha_name, heat_curr_non_res_name, layers, output)
-	retrieveCrossIndicator(pop1ha_name, heat_curr_res_name, layers, output)
-	retrieveCrossIndicator(pop1ha_name, hdm_name, layers, output)
-	retrieveCrossIndicator(gfa_tot_curr_density_name, hdm_name, layers, output)
-
-	# Remove scale for each layer
-	noTableLayers = generalData.removeScaleLayers(noTableLayers, type='ha')
-	noDataLayers = generalData.removeScaleLayers(noDataLayers, type='ha')
-
-	return output, noTableLayers, noDataLayers
 
 
 @ns.route('/energy-mix/nuts-lau')

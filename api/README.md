@@ -43,6 +43,14 @@ start a rabbitmq server installed in the system :
 check the status of the server :
 `sudo rabbitmqctl status`
 
+#### Install redis on the OS
+Add the repository, update your APT cache and install redis
+
+` wget -q -O - http://www.dotdeb.org/dotdeb.gpg | sudo apt-key add - `
+
+`sudo apt-get update`
+
+`sudo apt-get install redis-server`
 
 #### Setup redis
 by default redis server will run on the port 6379

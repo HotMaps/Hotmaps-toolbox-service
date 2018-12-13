@@ -4,7 +4,11 @@ __pycache__/
 .idea
 venv/
 tests/.pytest_cache
+.idea/*
+app/app/secrets\.py
 api/app/secrets.py
 .idea/workspace.xml
- api/.fuse_hidden00000f0000000005
- api/.fuse_hidden00000f0000000006
+.vscode
+venv
+test-python.py
+venv3
