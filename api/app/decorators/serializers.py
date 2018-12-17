@@ -495,14 +495,26 @@ upload_delete_input = api.model('input for uploads deleting', {
 upload_delete_output = api.model('output for uploads deleting', {
     "message": fields.String(description='used size'),
 })
-upload_export_nuts_input = api.model('input for the nuts upload export', {
+upload_export_raster_nuts_input = api.model('input for the nuts upload export to raster', {
     "layers": fields.String(description='layer'),
     "year": fields.String(description='year'),
     "nuts": fields.List(fields.String())
 })
-upload_export_hectare_input = api.model('input for the hectare upload export', {
+upload_export_raster_hectare_input = api.model('input for the hectare upload export to raster', {
     "layers": fields.String(description='layer'),
     "year": fields.String(description='year'),
+    "areas": fields.List(fields.Nested(area))
+})
+upload_export_csv_nuts_input = api.model('input for the nuts upload export to csv', {
+    "layers": fields.String(description='layer'),
+    "year": fields.String(description='year'),
+    "schema": fields.String(description='schema'),
+    "nuts": fields.List(fields.String())
+})
+upload_export_csv_hectare_input = api.model('input for the hectare upload export to csv', {
+    "layers": fields.String(description='layer'),
+    "year": fields.String(description='year'),
+    "schema": fields.String(description='schema'),
     "areas": fields.List(fields.Nested(area))
 })
 upload_download_input = api.model('input for the upload download.', {

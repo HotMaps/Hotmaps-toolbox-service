@@ -9,9 +9,8 @@ pagination_arguments.add_argument('per_page', type=int, required=False, choices=
 
 file_upload = reqparse.RequestParser()
 file_upload.add_argument('token', type=str, required=True, help='Login token')
-file_upload.add_argument('file_name', type=str, required=True, help='File name')
-file_upload.add_argument('tif_file',
+file_upload.add_argument('file',
                          type=werkzeug.datastructures.FileStorage,
                          location='files',
                          required=True,
-                         help='TIF file')
+                         help='file')
