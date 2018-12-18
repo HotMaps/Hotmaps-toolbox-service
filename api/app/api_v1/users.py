@@ -1,16 +1,20 @@
+import datetime
+
 from .. import constants
 from ..decorators.exceptions import ParameterException, RequestException, ActivationException, \
-    UserExistingException, WrongCredentialException, UserUnidentifiedException,\
+    UserExistingException, WrongCredentialException, UserUnidentifiedException, \
     UserNotActivatedException
 from ..decorators.restplus import api
 from ..decorators.serializers import user_register_input, user_register_output, user_activate_input, \
     user_activate_output, user_ask_recovery_input, user_ask_recovery_output, user_recovery_output, \
     user_recovery_input, user_login_input, user_login_output, user_logout_input, user_logout_output, \
-    user_profile_input, user_profile_output, user_get_information_output, user_get_information_input
+    user_profile_input, user_profile_output, user_get_information_output, user_get_information_input, \
+    upload_space_used_output, upload_space_used_input
 from flask_mail import Message
 from flask_restplus import Resource
 from flask_security import SQLAlchemySessionUserDatastore
-from itsdangerous import URLSafeTimedSerializer
+from itsdangerous import (URLSafeTimedSerializer, BadSignature, SignatureExpired)
+
 from passlib.hash import bcrypt
 
 from .. import dbGIS as db
@@ -18,6 +22,8 @@ from .. import mail, login_manager
 from ..secrets import FLASK_SECRET_KEY, FLASK_SALT
 from ..models.user import User
 from ..models.role import Role
+
+from .upload import calculate_total_space
 
 # Setup Flask-Security
 user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
@@ -167,6 +173,7 @@ class UserRegistering(Resource):
         # we check if the email has already been used
         if User.get_by_email(email) is not None:
             raise UserExistingException(email)
+
         # user creation in the DB
         user_datastore.create_user(email=email, password=password, active=False, first_name=first_name,
                                    last_name=last_name)
@@ -185,7 +192,7 @@ class UserRegistering(Resource):
             mail.send(msg)
 
         except Exception, e:
-            raise RequestException(str(e))
+            raise RequestException("Problem with the mail sending.")
 
         output = 'user registered'
 
@@ -408,13 +415,54 @@ class GetUserInformation(Resource):
         }
 
 
+@ns.route('/space_used')
+@api.response(530, 'Request error')
+@api.response(531, 'Missing parameter')
+@api.response(539, 'User Unidentified')
+class SpaceUsedUploads(Resource):
+    @api.marshal_with(upload_space_used_output)
+    @api.expect(upload_space_used_input)
+    def post(self):
+        """
+        The method called to see the space used by an user
+        :return:
+        """
+        # Entries
+        try:
+            token = api.payload['token']
+        except:
+            raise ParameterException('token')
+
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise UserUnidentifiedException
+
+        # get the user uploads
+        uploads = user.uploads
+        used_size = calculate_total_space(uploads)
+
+        # output
+        return {
+            "used_size": used_size,
+            "max_size": constants.USER_DISC_SPACE_AVAILABLE
+        }
+
 def generate_confirmation_token(email):
-    '''
+    """
 	this method will generate a confirmation token
 	:return: the confirmation token
-	'''
-    serializer = URLSafeTimedSerializer(FLASK_SECRET_KEY, salt=FLASK_SALT)
-    return serializer.dumps(email)
+	"""
+    s = URLSafeTimedSerializer(FLASK_SECRET_KEY, salt=FLASK_SALT)
+    token = s.dumps(
+        {
+            'email': email,
+            'date': str(datetime.datetime.now())
+        })
+    user = User.query.filter_by(email=email).first()
+    user.active_token = token
+    db.session.commit();
+    return token
 
 
 def confirm_token(token, expiration=3600):
@@ -424,22 +472,24 @@ def confirm_token(token, expiration=3600):
 	:param expiration:
 	:return:
 	'''
-    serializer = URLSafeTimedSerializer(FLASK_SECRET_KEY, salt=FLASK_SALT)
+    s = URLSafeTimedSerializer(FLASK_SECRET_KEY, salt=FLASK_SALT)
     try:
-        email = serializer.loads(
-            token,
-            max_age=expiration
-        )
-    except:
-        return False
-    return email
-
+        data = s.loads(token)
+    except SignatureExpired:
+        return None  # valid token, but expired
+    except BadSignature:
+        return None  # invalid token
+    user = User.query.filter_by(email=data['email']).first()
+    if user.active_token != token:
+        return None  # the user has been logout
+    user.active_token="None"
+    return user.email
 
 @login_manager.user_loader
 def load_user(user_id):
-	'''
+    '''
 	this method will return the current user
 	:param user_id:
 	:return:
 	'''
-	return User.query.filter_by(id=user_id).first()
+    return User.query.filter_by(id=user_id).first()
