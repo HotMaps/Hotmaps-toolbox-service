@@ -28,6 +28,7 @@ UPLOAD_FOLDER = '/var/Hotmaps/users/'
 
 ALLOWED_EXTENSIONS = set(['tif', 'csv'])
 
+
 @ns.route('/add')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
@@ -67,7 +68,11 @@ class AddUploads(Resource):
         if user is None:
             raise UserUnidentifiedException
 
-        url = UPLOAD_FOLDER + file_name
+        # Set up the path
+        user_folder = UPLOAD_FOLDER + str(user.id)
+        if not os.path.isdir(user_folder):
+            os.makedirs(user_folder)
+        url = user_folder + '/' + file_name
 
         # we need to check if the URL is already taken
         if Uploads.query.filter_by(url=url).first() is not None:
@@ -129,13 +134,10 @@ class ListUploads(Resource):
         # get the user uploads
         uploads = user.uploads
 
-        try:
-            return {
-                "uploads": uploads
-            }
-        except Exception, e:
-            raise RequestException(str(e))
         # output
+        return {
+            "uploads": uploads
+        }
 
 
 @ns.route('/remove_upload')
@@ -170,12 +172,12 @@ class DeleteUploads(Resource):
                 if i != len(wrong_parameter) - 1:
                     exception_message += ', '
             raise ParameterException(str(exception_message))
-        url = UPLOAD_FOLDER + file_name
-
         # check token
         user = User.verify_auth_token(token)
         if user is None:
             raise UserUnidentifiedException
+
+        url = UPLOAD_FOLDER + str(user.id) + '/' + file_name
 
         # find upload to delete
         upload_to_delete = Uploads.query.filter_by(url=url).first()
@@ -647,7 +649,7 @@ class DownloadNuts(Resource):
         if user is None:
             raise UserUnidentifiedException
 
-        url = UPLOAD_FOLDER + file_name
+        url = UPLOAD_FOLDER + str(user.id) + '/' + file_name
 
         # find upload to delete
         upload = Uploads.query.filter_by(url=url).first()
