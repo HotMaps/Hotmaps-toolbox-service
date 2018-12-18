@@ -1,6 +1,10 @@
 import StringIO
 import os
+import shutil
+import shapely.geometry as shapely_geom
 
+from flask_restplus import Resource
+from binascii import unhexlify
 from flask import send_file
 from .. import constants
 from ..decorators.restplus import api
@@ -10,21 +14,17 @@ from ..decorators.restplus import UserUnidentifiedException, ParameterException,
 from ..decorators.serializers import upload_add_output, upload_list_input, upload_list_output,upload_delete_input, \
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
     upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input
-from flask_restplus import Resource
-from binascii import unhexlify
 from .. import dbGIS as db
 from ..models.uploads import Uploads
 from ..models.user import User
-from werkzeug.utils import secure_filename
-import shapely.geometry as shapely_geom
-
+from ..helper import generate_geotif_name
 from ..decorators.parsers import file_upload
 
 nsUpload = api.namespace('upload', description='Operations related to file upload')
 ns = nsUpload
 NUTS_YEAR = "2013"
 LAU_YEAR = NUTS_YEAR
-UPLOAD_FOLDER = '/var/Hotmaps/users/'
+USER_UPLOAD_FOLDER = '/var/Hotmaps/users/'
 
 ALLOWED_EXTENSIONS = set(['tif', 'csv'])
 
@@ -44,6 +44,7 @@ class AddUploads(Resource):
         :return:
         """
         args = file_upload.parse_args()
+
         # Entries
         wrong_parameter = []
         try:
@@ -54,6 +55,7 @@ class AddUploads(Resource):
             file_name = args['file'].filename
         except Exception, e :
             wrong_parameter.append('file')
+
         # raise exception if parameters are false
         if len(wrong_parameter) > 0:
             exception_message = ''
@@ -69,10 +71,12 @@ class AddUploads(Resource):
             raise UserUnidentifiedException
 
         # Set up the path
-        user_folder = UPLOAD_FOLDER + str(user.id)
+        user_folder = USER_UPLOAD_FOLDER + str(user.id)
+        upload_folder = user_folder + '/' + file_name[:-4]
+        url = upload_folder + '/' + file_name
+
         if not os.path.isdir(user_folder):
             os.makedirs(user_folder)
-        url = user_folder + '/' + file_name
 
         # we need to check if the URL is already taken
         if Uploads.query.filter_by(url=url).first() is not None:
@@ -82,18 +86,26 @@ class AddUploads(Resource):
         if not allowed_file(file_name):
             raise RequestException("Please select a tif or csv file !")
 
+        os.makedirs(upload_folder)
+
         # save the file on the file_system
-        try:
-            args['file'].save(url)
-        except:
-            raise RequestException(args['file'].filename)
+        args['file'].save(url)
+
+        generate_tiles(url, upload_folder)
+
         # we check the size of our file
-        size = float(os.path.getsize(url)) / 1000000
+        size = 0
+        for dirpath, dirnames, filenames in os.walk(upload_folder):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                size += float(os.path.getsize(fp)) / 1000000
 
         # we need to check if there is enough disk space for the dataset
         used_size = calculate_total_space(user.uploads) + size
 
         if used_size > constants.USER_DISC_SPACE_AVAILABLE:
+            # retroactively delete the files
+            shutil.rmtree(upload_folder)
             raise NotEnoughSpaceException
 
         # add the upload on the db
@@ -177,7 +189,9 @@ class DeleteUploads(Resource):
         if user is None:
             raise UserUnidentifiedException
 
-        url = UPLOAD_FOLDER + str(user.id) + '/' + file_name
+        folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + file_name[:-4]
+
+        url = folder_url + '/' + file_name
 
         # find upload to delete
         upload_to_delete = Uploads.query.filter_by(url=url).first()
@@ -193,7 +207,8 @@ class DeleteUploads(Resource):
         db.session.commit()
 
         #delete the file
-        os.remove(url)
+        shutil.rmtree(folder_url)
+
         # output
         return {
             "message": "Upload removed"
@@ -263,11 +278,11 @@ class ExportRasterNuts(Resource):
             sql += "geom"
 
         # We add the first nuts/lau id
-        sql += " FROM public." + layer_type + " WHERE " + id_type + " = '" + nuts[0] + "'"
+        sql += " FROM geo." + layer_type + " WHERE " + id_type + " = '" + nuts[0] + "'"
         # we add the rest of the nuts/lau id
         for nut in nuts[1:]:
             sql += " OR " + id_type + " = '" + nut + "'"
-        sql += " AND date = '" + layer_date + "-01-01'"
+        sql += " AND year = '" + layer_date + "-01-01'"
 
         sql += "), 3035 ), 0) AS buffer_geom) " \
             "SELECT encode(ST_AsTIFF(foo.rast, 'LZW'), 'hex') as tif " \
@@ -278,8 +293,10 @@ class ExportRasterNuts(Resource):
         hex_file = ''
 
         # execute request
-        result = db.engine.execute(sql)
-
+        try:
+            result = db.engine.execute(sql)
+        except:
+            raise RequestException("Problem with your SQL query")
         try:
             # write hex_file
             for row in result:
@@ -369,14 +386,14 @@ class ExportRasterHectare(Resource):
         sql = "WITH buffer AS ( SELECT ST_Buffer( ST_Transform( ST_GeomFromText('"+str(multipolygon)+"', 4258) " \
                 ", 3035), 0) AS buffer_geom) SELECT encode(ST_AsTIFF(foo.rast, 'LZW'), 'hex') as tif FROM " \
                 "( SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast FROM geo." + layer_name + \
-                ", buffer WHEfdRE ST_Intersects(rast, buffer_geom)) AS foo;"  # TODO Manage also the date field
+                ", buffer WHERE ST_Intersects(rast, buffer_geom)) AS foo;"  # TODO Manage also the date field
 
         hex_file = ''
         # execute request
         try:
             result = db.engine.execute(sql)
-        except Exception, e:
-            raise RequestException(sql)
+        except Exception:
+            raise RequestException(result)
 
         rowcount = 0
         # write hex_file
@@ -467,7 +484,7 @@ class ExportCsvNuts(Resource):
         for nut in nuts[1:]:
             sql += " OR " + id_type + " = '" + nut + "'"
 
-        sql +=" and year = '" + layer_date + "-01-01'), 3035))"
+        sql += " and year = '" + layer_date + "-01-01'), 3035))"
 
         # execute request
         try:
@@ -649,7 +666,7 @@ class DownloadNuts(Resource):
         if user is None:
             raise UserUnidentifiedException
 
-        url = UPLOAD_FOLDER + str(user.id) + '/' + file_name
+        url = USER_UPLOAD_FOLDER + str(user.id) + '/' + file_name[:-4] + '/' + file_name
 
         # find upload to delete
         upload = Uploads.query.filter_by(url=url).first()
@@ -694,3 +711,32 @@ def allowed_file(filename):
     '''
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def generate_tiles(url, path):
+    '''
+    This function is used to generate the various tiles of a layer in the db.
+    :param: raster_layer: an array of raster layer composed of a name, a path and a type (only the path is used here)
+    :return:
+    '''
+    file_path_input = url
+    # we set up the directory for the tif
+    directory_for_tiles = file_path_input.replace('.tif', '')
+
+    intermediate_raster = generate_geotif_name(path)
+    tile_path = directory_for_tiles
+    access_rights = 0o755
+
+    try:
+        os.mkdir(tile_path, access_rights)
+    except OSError:
+        print ("Creation of the directory %s failed" % tile_path)
+    else:
+        print ("Successfully created the directory %s" % tile_path)
+
+    # commands launch to obtain the level of zooms
+    com_string = "gdal_translate -of GTiff {} {} -co COMPRESS=DEFLATE "\
+        .format(file_path_input, intermediate_raster)
+    com_string += "&& python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} "\
+        .format(intermediate_raster, tile_path)
+    os.system(com_string)
