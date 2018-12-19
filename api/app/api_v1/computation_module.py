@@ -10,6 +10,8 @@ from app.model import register_calulation_module,getCMUrl,getUI,getCMList,getLay
 
 
 from app import model
+
+from app import helper
 nsCM = api.namespace('cm', description='Operations related to statistisdscs')
 
 ns = nsCM
