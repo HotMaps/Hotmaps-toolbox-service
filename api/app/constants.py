@@ -5,11 +5,10 @@ FLASK_DEBUG = False  # Do not use debug mode in production
 CELERY_BROKER_URL_DOCKER= 'amqp://admin:mypass@rabbit:5672/'
 CELERY_BROKER_URL_LOCAL  = 'amqp://localhost/'
 
-
 CELERY_ALWAYS_EAGER = False
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-CLIENT_URL_PROD = 'http://hotmaps.hevs.ch'
-CLIENT_URL_DEV = 'http://hotmapsdev.hevs.ch'
+CLIENT_URL_PROD = 'https://hotmaps.hevs.ch'
+CLIENT_URL_DEV = 'https://hotmapsdev.hevs.ch'
 CLIENT_URL_LOCAL = 'http://localhost:4200'
 
 
@@ -24,9 +23,10 @@ PORT_DOCKER = 80
 CM_REGISTER_Q = 'rpc_queue_CM_register'
 
 #TODO ********************setup this URL depending on which version you are running***************************
-CELERY_BROKER_URL = CELERY_BROKER_URL_LOCAL
-CLIENT_URL = CLIENT_URL_LOCAL
-PORT = PORT_LOCAL
+
+CELERY_BROKER_URL = CELERY_BROKER_URL_DOCKER
+CLIENT_URL = CLIENT_URL_DEV
+PORT = PORT_DOCKER
 
 #TODO *******************************************************************************
 CM_DB_NAME = "calculation_module.db"
@@ -38,6 +38,14 @@ RESTPLUS_ERROR_404_HELP = False
 RESTPLUS_JSON = {
     'separators': (',', ':')
 }
+
+# disc space available for every users (in MegaOctet)
+USER_DISC_SPACE_AVAILABLE = 500
+
+# # list of characters forbidden in user name (to protect the file system)
+# FORBIDDEN_NAME_CHARACTERS = {
+#     '\\', '/', ':', '*', '\"', '<', '>', '|'
+# }
 
 CORS_HEADER_API_KEY = 'av7e7d78f93e2af'
 CORS_ORIGIN = 'http://hotmaps.hevs.ch'

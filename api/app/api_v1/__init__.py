@@ -5,6 +5,7 @@ from .heat_load_profile import  load_profile_namespace
 from ..decorators import etag
 from .computation_module import nsCM
 from .users import nsUsers
+from .upload import nsUpload
 
 @api.before_request
 def before_request():
