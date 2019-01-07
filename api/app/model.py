@@ -428,6 +428,7 @@ def query(sql_query,conn):
     conn.commit()
     conn.close()
 
+
     return cursor
 
 def query_geographic_database_first(sql_query):

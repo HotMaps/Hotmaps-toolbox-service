@@ -13,7 +13,7 @@ CLIENT_URL_LOCAL = 'http://localhost:4200'
 
 
 RPC_Q = 'rpc_queue_CM_compute'
-TIMEOUT_ALIVE_CM = 3
+TIMEOUT_ALIVE_CM = 60
 TIMEOUT_START_CM = 1
 TIMEOUT_DELETE_CM= 15
 RPC_CM_ALIVE= 'rpc_queue_CM_ALIVE'

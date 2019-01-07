@@ -118,7 +118,7 @@ class getRasterTile(Resource):
         return Response(open(tile_filename).read(), mimetype='image/png')
 
 
-#@celery.task(name = 'registerCM')
+
 def registerCM(input):
     register_calulation_module(input)
     return input
@@ -130,7 +130,7 @@ def celery_get_CM_url(cm_id):
     return getCMUrl(cm_id)
 
 
-    #return {}, 201, {'Location': cm.get_url()}
+
 
 
 
