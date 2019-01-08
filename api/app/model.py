@@ -28,7 +28,7 @@ db_path = os.path.join(basedir, '../data.sqlite')
 DB_NAME = CM_DB_NAME
 
 def getConnection_db_CM():
-    c = sqlite3.connect(DB_NAME, check_same_thread=False)
+    c = sqlite3.connect(DB_NAME)
     return c
 
 
@@ -399,13 +399,17 @@ def get_vectors_needed(cm_id):
 
 def query_geographic_database(sql_query):
 
-    mypool = pool.QueuePool(getConnection_db_gis, max_overflow=10, pool_size=5)
+    mypool = pool.QueuePool(getConnection_db_gis, max_overflow=100, pool_size=5)
     # get a connection
     conn = mypool.connect()
     # use it
     cursor = query(sql_query,conn)
     return cursor
-
+def query_geographic_database_first(sql_query):
+    cursor = query_geographic_database(sql_query)
+    result = cursor.fetchone()
+    #result = helper.remove_None_in_turple(result)
+    return result
 def check_table_existe(sql_query):
     return query_geographic_database_first(sql_query)
 
@@ -413,9 +417,13 @@ def query_calculation_module_database(sql_query):
 
     # get a connection
     conn = myCMpool.connect()
-
     # use it
-    cursor = query(sql_query,conn)
+    cursor = conn.cursor()
+
+    cursor.execute(sql_query)
+    conn.commit()
+    conn.close()
+
 
     return cursor
 
@@ -431,13 +439,6 @@ def query(sql_query,conn):
 
     return cursor
 
-def query_geographic_database_first(sql_query):
-    cursor = query_geographic_database(sql_query)
-    result = cursor.fetchone()
-    #result = helper.remove_None_in_turple(result)
-
-
-    return result
 
 
 
