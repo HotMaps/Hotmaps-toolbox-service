@@ -4,7 +4,13 @@ from app import helper
 def transformGeo(geometry,toCRS):
     return 'st_transform(st_geomfromtext(\''+ str(geometry) +'\'::text,4326),' + str(toCRS) + ')'
 
-
+def get_exists_table_query(tbname, schema):
+    return """ SELECT EXISTS (
+                        SELECT 1
+                        FROM   information_schema.tables 
+                        WHERE  table_schema = '""" + schema + """'
+                        AND    table_name = '""" + tbname + """'
+                    );"""
 
 def vector_query(scalevalue,vector_table_requested, geometry,toCRS):
     """

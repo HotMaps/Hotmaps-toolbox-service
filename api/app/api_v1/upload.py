@@ -1,4 +1,7 @@
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import os
 import shutil
 import shapely.geometry as shapely_geom
@@ -53,7 +56,7 @@ class AddUploads(Resource):
             wrong_parameter.append('token')
         try:
             file_name = args['file'].filename
-        except Exception, e :
+        except Exception(e):
             wrong_parameter.append('file')
 
         # raise exception if parameters are false
@@ -301,7 +304,7 @@ class ExportRasterNuts(Resource):
             # write hex_file
             for row in result:
                 hex_file += row['tif']
-        except Exception, e:
+        except Exception(e):
             raise RequestException("There is no result for this selection")
 
         # decode hex_file
@@ -419,7 +422,7 @@ class ExportRasterHectare(Resource):
                              mimetype='image/TIFF',
                              attachment_filename="testing.tif",
                              as_attachment=True)
-        except Exception, e:
+        except Exception(e):
             raise RequestException(str(e))
 
 
@@ -489,7 +492,7 @@ class ExportCsvNuts(Resource):
         # execute request
         try:
             result = db.engine.execute(sql)
-        except Exception, e:
+        except Exception(e):
             raise RequestException(sql)
 
         # write csv_file
@@ -597,7 +600,7 @@ class ExportCsvHectare(Resource):
         # execute request
         try:
             result = db.engine.execute(sql)
-        except Exception, e:
+        except Exception(e):
             raise RequestException(sql) #Failure in the SQL Request
 
         # write csv_file
