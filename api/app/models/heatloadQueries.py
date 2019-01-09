@@ -189,7 +189,7 @@ class HeatLoadProfile:
 
 		# Get the query
 		sql_query = createQueryDataDCHectares(year=year, geometry=geometry)
-		print(sql_query)
+		#print(sql_query)
 		# Execution of the query
 		#query = db.session.execute(sql_query)
 		query = model.query_geographic_database(sql_query)
