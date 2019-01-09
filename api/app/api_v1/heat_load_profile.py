@@ -318,7 +318,7 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
 
         try:
             res = HeatLoadProfile.heatloadprofile_nuts_lau(nuts=nuts, year=year, month=month, day=day)
-        except Exception(e):
+        except Exception, e:
             raise IntersectionException
         output = res
 
