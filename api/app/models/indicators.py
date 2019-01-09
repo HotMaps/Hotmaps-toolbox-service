@@ -535,7 +535,7 @@ layersData = {
 		'table_type':vector_type,
 		'level_of_data':'nuts0',
 		'from_indicator_name':stat + ELECTRICITY_CO2_EMISSION_FACTOR,
-		'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
+		'data_lvl':[nuts0],
 		'data_aggregated':True,'indicators':[
 			{'table_column': 'value', 'unit': 'kg/MWh','indicator_id':'density','agg_method':'mean_simple','diss_agg_method':'NUTS_result'}
 		]

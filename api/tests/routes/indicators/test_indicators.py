@@ -31,16 +31,17 @@ class TestIndicators(unittest.TestCase):
             It create the payload, and send it to the API ('api/stats/layers/nuts-lau') from each layer.
         """
         for layer in layersData:
-            nuts3_stat['layers'] = [layer]
-            print(nuts3_stat)
-            
-            with self.subTest(layer=layer, payload=nuts3_stat):
-                try:
-                    rv, json = self.client.post('api/stats/layers/nuts-lau', data=nuts3_stat)
-                    self.assertTrue(rv.status_code == 200)
-                except Exception as e:
-                    print(e)
-                    self.assertTrue(False)
+            if('NUTS 3' in layersData[layer]['data_lvl']):
+                nuts3_stat['layers'] = [layer]
+                print(nuts3_stat)
+                
+                with self.subTest(layer=layer, payload=nuts3_stat):
+                    try:
+                        rv, json = self.client.post('api/stats/layers/nuts-lau', data=nuts3_stat)
+                        self.assertTrue(rv.status_code == 200)
+                    except Exception as e:
+                        print(e)
+                        self.assertTrue(False)
     
     def test_aggregateddata_statlvl_nutslau(self):
         """

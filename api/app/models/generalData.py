@@ -110,7 +110,7 @@ def get_indicator_as_query(indic, layer_table_name, layer):
 	
 	if 'agg_method' in indic:
 		agg_method = indic['agg_method']
-	quer = switcher.get(agg_method,'sum')
+	quer = switcher.get(agg_method,switcher['sum'])
 	#print(quer)
 	return quer
 				
