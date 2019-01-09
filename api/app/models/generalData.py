@@ -56,7 +56,7 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 		scale_level_name = layersData[layer]['scalelvl_column']
 	
 	nust_select_name = "nutsSelection_"+ layer
-	nuts_selection =  nust_select_name +" as (SELECT geom from geo."+name_type+" where year = date('2013-01-01') and "+scale_level_name+"  in ("+nuts+")), "
+	nuts_selection =  nust_select_name +" as (SELECT geom from geo."+name_type+" where "+name_type+".year = date('"+year+"-01-01') and "+scale_level_name+"  in ("+nuts+")), "
 
 	from_part = 'stat_' + layer
 	query_from_part = from_part+" as ("
@@ -75,7 +75,7 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 
 
 	if layersData[layer]['data_aggregated'] == False:
-		print(layer)
+		#print(layer)
 		query += nuts_selection
 		query += query_from_part 
 		query += query_select
@@ -85,6 +85,6 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 		query += query_from_part
 		query += query_select
 		query += " FROM "+layer_table_name + ", geo." + name_type
-		query += " WHERE "+layer_table_name+"."+fk_column_id+" = geo."+name_type+".gid and year = date('"+year+"-01-01') and "+layer_table_name+"."+scale_level_name+"  IN ("+nuts+") ) "
+		query += " WHERE "+layer_table_name+"."+fk_column_id+" = geo."+name_type+".gid and "+name_type+".year = date('"+year+"-01-01') and "+layer_table_name+"."+scale_level_name+"  IN ("+nuts+") ) "
 				
 	return query
