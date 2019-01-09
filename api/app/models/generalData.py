@@ -11,8 +11,10 @@ def constructWithPartEachLayerHectare(geometry, year, layer, scale_level):
 	from_part = 'stat_' + layer
 	if layersData[layer]['table_type'] == vector_type:
 		for indic in layersData[layer]['indicators']:
+
 			if 'table_column' in indic:
-				query_select+= 'sum(' + layer_table_name + '.' + indic['table_column'] + ') as '+ layer + indic['indicator_id'] + ','
+				query_select+=get_indicator_as_query(indic,layer_table_name,layer)
+				#query_select+= 'sum(' + layer_table_name + '.' + indic['table_column'] + ') as '+ layer + indic['indicator_id'] + ','
 
 		query_select = query_select[:-1]
 		query += from_part+" as ("
@@ -25,14 +27,16 @@ def constructWithPartEachLayerHectare(geometry, year, layer, scale_level):
 		query += " WHERE "+ "ST_Within("+layer_table_name+"."+layersData[layer]['geo_column']+",st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "))"
 		query += ")"
 	else:
+		agg_summary_stat = 'agg_summary_stat'
 		for indic in layersData[layer]['indicators']:
 			if 'table_column' in indic:
-				query_select += "(((ST_SummaryStatsAgg(ST_Clip("+ layersData[layer]['tablename'] + ".rast, 1, st_transform(st_geomfromtext('" + geometry + "'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "),false),true,0)))."+indic['table_column']+") as "+layersData[layer]['tablename'] + indic['indicator_id'] + ','
+				query_select += agg_summary_stat + '.'+indic['table_column']+' as '+ layer + indic['indicator_id'] + ','
 		query_select = query_select[:-1]
+		query_select += " from (select (((ST_SummaryStatsAgg(ST_Clip("+ layersData[layer]['tablename'] + ".rast, 1, st_transform(st_geomfromtext('" + geometry + "'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "),false),true,0))).*) as "+layersData[layer]['tablename']
 		query += from_part+' AS ( '
 		query += query_select
 		query +=  " FROM "+ layer_table_name
-		query += "  WHERE ST_Intersects(" + layersData[layer]['tablename'] + ".rast, st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + ")) "
+		query += "  WHERE ST_Intersects(" + layersData[layer]['tablename'] + ".rast, st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "))) "+agg_summary_stat
 		query += ")"
 				
 	return query
@@ -69,13 +73,15 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 	
 	for indic in layersData[layer]['indicators']:
 		if 'table_column' in indic:
-			query_select+= 'sum(' +layer_table_name+'.' +indic['table_column'] + ') as '+layer + indic['indicator_id'] + ','
+			query_select+=get_indicator_as_query(indic, layer_table_name, layer)
+		#if 'table_column' in indic:
+		#	query_select+= 'sum(' +layer_table_name+'.' +indic['table_column'] + ') as '+layer + indic['indicator_id'] + ','
 
 	query_select = query_select[:-1]
 
 
 	if layersData[layer]['data_aggregated'] == False:
-		print(layer)
+		#print(layer)
 		query += nuts_selection
 		query += query_from_part 
 		query += query_select
@@ -88,3 +94,25 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 		query += " WHERE "+layer_table_name+"."+fk_column_id+" = geo."+name_type+".gid and year = date('"+year+"-01-01') and "+layer_table_name+"."+scale_level_name+"  IN ("+nuts+") ) "
 				
 	return query
+
+def get_indicator_as_query(indic, layer_table_name, layer):
+	agg_method = 'sum'
+	indic_id = 'as '+layer + indic['indicator_id'] + ','
+	query_calcul = layer_table_name+'.' +indic['table_column'] + ')' + indic_id 
+	switcher = {
+		'sum':'sum('+query_calcul,
+		'min':'min('+query_calcul,
+		'max':'max('+query_calcul,
+		'avg':'avg('+query_calcul,
+		'mean_weighted_cell':'sum('+layer_table_name+'.count*'+layer_table_name+'.' +indic['table_column']+')/sum('+layer_table_name+'.count) '+indic_id,
+		'mean_simple':'avg('+query_calcul
+	}
+	
+	if 'agg_method' in indic:
+		agg_method = indic['agg_method']
+	quer = switcher.get(agg_method,'sum')
+	print(quer)
+	return quer
+				
+def get_indicator_as_query_hectare(indic,layer_table_name,layer):
+	pass

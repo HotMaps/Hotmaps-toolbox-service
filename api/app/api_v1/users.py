@@ -64,7 +64,7 @@ class AskingPasswordRecovery(Resource):
                                                                        '\n' + link + '\n if you haven\'t ask for this modification, please delete this email.'
         try:
             mail.send(msg)
-        except Exception, e:
+        except Exception as e:
             raise RequestException(str(e))
 
         output = 'request for recovery successful'
@@ -119,7 +119,7 @@ class RecoverPassword(Resource):
                 user_to_reset.password = password
                 db.session.commit()
                 output = 'user password reset'
-            except Exception, e:
+            except Exception as e:
                 raise RequestException(str(e))
         # output
         return {
@@ -168,7 +168,7 @@ class UserRegistering(Resource):
         # password_encryption
         try:
             password = bcrypt.using(salt=FLASK_SALT).hash(str(unencrypted_password))
-        except Exception, e:
+        except Exception as e:
             raise RequestException(str(e))
         # we check if the email has already been used
         if User.get_by_email(email) is not None:
@@ -191,7 +191,7 @@ class UserRegistering(Resource):
 
             mail.send(msg)
 
-        except Exception, e:
+        except Exception as e:
             raise RequestException("Problem with the mail sending.")
 
         output = 'user registered'
@@ -231,7 +231,7 @@ class ActivateUser(Resource):
                 user_to_activate.active = True
                 db.session.commit()
                 output = 'user activated'
-            except Exception, e:
+            except Exception as e:
                 raise RequestException(str(e))
         # output
         return {
