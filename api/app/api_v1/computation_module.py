@@ -114,8 +114,10 @@ class getRasterTile(Resource):
         if not os.path.exists(tile_filename):
             if not os.path.exists(os.path.dirname(tile_filename)):
                 os.makedirs(os.path.dirname(tile_filename))
-
-        return Response(open(tile_filename).read(), mimetype='image/png')
+        try:
+            return Response(open(tile_filename).read(), mimetype='image/png')
+        except:
+            return None
 
 
 

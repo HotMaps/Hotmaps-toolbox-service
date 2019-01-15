@@ -86,7 +86,7 @@ layersData = {
 			'table_type':raster_type,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'MWh','indicator_id':'consumption','factor': 0.00001,},
+				{'table_column': 'sum', 'unit': 'MWh','indicator_id':'consumption',},
 				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell'},
 				{'table_column': 'min', 'unit': 'MWh','indicator_id':'consumption_min'},
 				{'table_column': 'max', 'unit': 'MWh','indicator_id':'consumption_max'},
