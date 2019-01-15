@@ -1,4 +1,7 @@
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import os
 import shutil
 import shapely.geometry as shapely_geom
@@ -53,7 +56,7 @@ class AddUploads(Resource):
             wrong_parameter.append('token')
         try:
             file_name = args['file'].filename
-        except Exception, e :
+        except Exception, e:
             wrong_parameter.append('file')
 
         # raise exception if parameters are false
