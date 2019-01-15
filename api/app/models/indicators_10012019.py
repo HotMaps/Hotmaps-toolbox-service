@@ -487,9 +487,9 @@ layersData = {
 		 	'from_indicator_name':stat + LAND_SURFACE_TEMP,
 			'data_aggregated':True,
 			'indicators':[
-            {'table_column': 'mean', 'unit': 'degree C','indicator_id':'average','factor':0.1,'agg_method':'mean_weighted_cell'},         
-            {'table_column': 'max', 'unit': 'degree C','indicator_id':'maximum','factor':0.1,'agg_method':'max'},				
-            {'table_column': 'min', 'unit': 'degree C','indicator_id':'minimum','factor':0.1,'agg_method':'min'},
+            {'table_column': 'mean', 'unit': 'degree C','indicator_id':'average','agg_method':'mean_weighted_cell'},         
+            {'table_column': 'max', 'unit': 'degree C','indicator_id':'maximum','agg_method':'max'},				
+            {'table_column': 'min', 'unit': 'degree C','indicator_id':'minimum','agg_method':'min'},
             {'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},             
 			]
 		 },

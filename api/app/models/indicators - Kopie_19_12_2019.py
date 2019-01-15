@@ -55,7 +55,7 @@ GEOTHERMAL_POTENTIAL_HEAT_COND = 'potential_shallowgeothermal'
 ELECTRICITY_CO2_EMISSION_FACTOR = 'yearly_co2_emission'
 HDD_CUR = 'hdd_curr'
 CDD_CUR = 'cdd_curr'
-#ELECRICITY_MIX = 'stat.yearly_electricity_generation_mix'
+ELECRICITY_MIX = 'stat.yearly_electricity_generation_mix'
 LAND_SURFACE_TEMP = 'land_surface_temperature'
 AGRICULTURAL_RESIDUES = 'agricultural_residues_view'
 SOLAR_RADIATION = 'solar_radiation'
@@ -86,16 +86,16 @@ layersData = {
 			'table_type':raster_type,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'GWh','indicator_id':'consumption','factor':0.001,'agg_method':'sum'},
-				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
-				{'table_column': 'min', 'unit': 'MWh','indicator_id':'consumption_min','agg_method':'min'},
-				{'table_column': 'max', 'unit': 'MWh','indicator_id':'consumption_max','agg_method':'max'},
-				{'table_column': 'mean', 'unit': 'MWh/ha','indicator_id':'density','agg_method':'mean_weighted_cells'},    
+				{'table_column': 'sum', 'unit': 'MWh','indicator_id':'consumption'},
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell'},
+				{'table_column': 'min', 'unit': 'MWh','indicator_id':'consumption_min'},
+				{'table_column': 'max', 'unit': 'MWh','indicator_id':'consumption_max'},
+				{'table_column': 'mean', 'unit': 'MWh/ha','indicator_id':'density'},    
 				{
 					'reference_indicator_id_1': 'consumption','reference_tablename_indicator_id_1':HEAT_DENSITY_TOT, 
 					'operator': '/',
 					'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 
-					'unit':'MWh/person', 'indicator_id':HEAT_DENSITY_TOT+'_per_'+POPULATION_TOT,'agg_method':'sum'
+					'unit':'MWh/person', 'indicator_id':HEAT_DENSITY_TOT+'_per_'+POPULATION_TOT
 				},
 			]},
 	HEAT_DENSITY_RES:{'tablename':HEAT_DENSITY_RES,
@@ -108,13 +108,13 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'GWh','indicator_id':'consumption','factor':0.001,'agg_method':'sum'},
-            {'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
-            {'table_column': 'mean', 'unit': 'MWh/ha','indicator_id':'density','agg_method':'mean_weighted_cells'},
+				{'table_column': 'sum', 'unit': 'MWh','indicator_id':'consumption'},
+            {'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell'},
+            {'table_column': 'mean', 'unit': 'MWh/ha','indicator_id':'density'},
 				{'reference_indicator_id_1': 'consumption', 'reference_tablename_indicator_id_1':HEAT_DENSITY_RES, 					
                  'operator': '/',
     				'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 
-                'unit':'MWh/person', 'indicator_id':HEAT_DENSITY_RES+'_per_'+POPULATION_TOT,'agg_method':'sum'
+                'unit':'MWh/person', 'indicator_id':HEAT_DENSITY_RES+'_per_'+POPULATION_TOT
 				},
 			]
 			},
@@ -128,13 +128,13 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'GWh','indicator_id':'consumption','factor':0.001,'agg_method':'sum'},
-            {'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
-            {'table_column': 'mean', 'unit': 'MWh/ha','indicator_id':'density','agg_method':'mean_weighted_cells'},
+				{'table_column': 'sum', 'unit': 'MWh','indicator_id':'consumption'},
+            {'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell'},
+            {'table_column': 'mean', 'unit': 'MWh/ha','indicator_id':'density'},
 				{'reference_indicator_id_1': 'consumption', 'reference_tablename_indicator_id_1':HEAT_DENSITY_NON_RES, 					
                  'operator': '/',
     				'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 
-                'unit':'MWh/person', 'indicator_id':HEAT_DENSITY_NON_RES+'_per_'+POPULATION_TOT,'agg_method':'sum'
+                'unit':'MWh/person', 'indicator_id':HEAT_DENSITY_NON_RES+'_per_'+POPULATION_TOT
 				},
 			]},
 	GRASS_FLOOR_AREA_TOT:{'tablename':GRASS_FLOOR_AREA_TOT,
@@ -147,13 +147,13 @@ layersData = {
 			
 			'from_indicator_name':stat + GRASS_FLOOR_AREA_TOT,
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'm2','indicator_id':'total','agg_method':'sum'},
-				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
-            {'table_column': 'mean', 'unit': 'm2/ha','indicator_id':'density','agg_method':'mean_weighted_cells'},
+				{'table_column': 'sum', 'unit': 'm2','indicator_id':'total'},
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell'},
+            {'table_column': 'mean', 'unit': 'm2/ha','indicator_id':'density'},
             {'reference_indicator_id_1': 'total', 'reference_tablename_indicator_id_1':GRASS_FLOOR_AREA_TOT, 					
                  'operator': '/',
     				'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 
-                'unit':'m2/person', 'indicator_id':GRASS_FLOOR_AREA_TOT+'_per_'+POPULATION_TOT,'agg_method':'sum'
+                'unit':'m2/person', 'indicator_id':GRASS_FLOOR_AREA_TOT+'_per_'+POPULATION_TOT
 				},
                 
 			]
@@ -168,13 +168,13 @@ layersData = {
 			
 			'from_indicator_name':stat + GRASS_FLOOR_AREA_RES,
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'm2','indicator_id':'total','agg_method':'sum'},
-				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
-            {'table_column': 'mean', 'unit': 'm2/ha','indicator_id':'density','agg_method':'mean_weighted_cells'},
+				{'table_column': 'sum', 'unit': 'm2','indicator_id':'total'},
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell'},
+            {'table_column': 'mean', 'unit': 'm2/ha','indicator_id':'density'},
             {'reference_indicator_id_1': 'total', 'reference_tablename_indicator_id_1':GRASS_FLOOR_AREA_RES, 					
                  'operator': '/',
     				'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 
-                'unit':'m2/person', 'indicator_id':GRASS_FLOOR_AREA_RES+'_per_'+POPULATION_TOT,'agg_method':'sum'
+                'unit':'m2/person', 'indicator_id':GRASS_FLOOR_AREA_RES+'_per_'+POPULATION_TOT
 				},
 			]
 			},
@@ -188,13 +188,13 @@ layersData = {
 			
 			'from_indicator_name': stat + GRASS_FLOOR_AREA_NON_RES,
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'm2','indicator_id':'total','agg_method':'sum'},
-				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
-            {'table_column': 'mean', 'unit': 'm2/ha','indicator_id':'density','agg_method':'mean_weighted_cells'},
+				{'table_column': 'sum', 'unit': 'm2','indicator_id':'total'},
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell'},
+            {'table_column': 'mean', 'unit': 'm2/ha','indicator_id':'density'},
             {'reference_indicator_id_1': 'total', 'reference_tablename_indicator_id_1':GRASS_FLOOR_AREA_NON_RES, 					
                  'operator': '/',
     				'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 
-                'unit':'m2/person', 'indicator_id':GRASS_FLOOR_AREA_NON_RES+'_per_'+POPULATION_TOT,'agg_method':'sum'
+                'unit':'m2/person', 'indicator_id':GRASS_FLOOR_AREA_NON_RES+'_per_'+POPULATION_TOT
 				},
 			]
 			},
@@ -207,13 +207,13 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'from_indicator_name':stat + BUILDING_VOLUMES_TOT,
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'm3','indicator_id':'total','agg_method':'sum'},
-				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
-            {'table_column': 'mean', 'unit': 'm3/ha','indicator_id':'density','agg_method':'mean_weighted_cells'},
+				{'table_column': 'sum', 'unit': 'm3','indicator_id':'total'},
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell'},
+            {'table_column': 'mean', 'unit': 'm3/ha','indicator_id':'density'},
             {'reference_indicator_id_1': 'total', 'reference_tablename_indicator_id_1':BUILDING_VOLUMES_TOT, 					
                  'operator': '/',
     				'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 
-                'unit':'m3/person', 'indicator_id':BUILDING_VOLUMES_TOT+'_per_'+POPULATION_TOT,'agg_method':'sum'
+                'unit':'m3/person', 'indicator_id':BUILDING_VOLUMES_TOT+'_per_'+POPULATION_TOT
 				},			
 			]
 			},
@@ -226,13 +226,13 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'from_indicator_name':stat + BUILDING_VOLUMES_RES,
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'm3','indicator_id':'total','agg_method':'sum'},
-				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
-            {'table_column': 'mean', 'unit': 'm3/ha','indicator_id':'density','agg_method':'mean_weighted_cells'},
+				{'table_column': 'sum', 'unit': 'm3','indicator_id':'total'},
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell'},
+            {'table_column': 'mean', 'unit': 'm3/ha','indicator_id':'density'},
             {'reference_indicator_id_1': 'total', 'reference_tablename_indicator_id_1':BUILDING_VOLUMES_RES, 					
                  'operator': '/',
     				'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 
-                'unit':'m3/person', 'indicator_id':BUILDING_VOLUMES_RES+'_per_'+POPULATION_TOT,'agg_method':'sum'
+                'unit':'m3/person', 'indicator_id':BUILDING_VOLUMES_RES+'_per_'+POPULATION_TOT
 				},	
 			]
 			},
@@ -245,14 +245,14 @@ layersData = {
 			'table_type':raster_type,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],			
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'm3','indicator_id':'total','agg_method':'sum'},
-				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
-            {'table_column': 'mean', 'unit': 'm3/ha','indicator_id':'density','agg_method':'mean_weighted_cells'},
+				{'table_column': 'sum', 'unit': 'm3','indicator_id':'total'},
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell'},
+            {'table_column': 'mean', 'unit': 'm3/ha','indicator_id':'density'},
             {'reference_indicator_id_1': 'total', 'reference_tablename_indicator_id_1':BUILDING_VOLUMES_NON_RES, 					
                  'operator': '/',
     				'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 
-                'unit':'m3/person', 'indicator_id':BUILDING_VOLUMES_NON_RES+'_per_'+POPULATION_TOT,'agg_method':'sum'
-				},					
+                'unit':'m3/person', 'indicator_id':BUILDING_VOLUMES_NON_RES+'_per_'+POPULATION_TOT
+				},				
          ]
 			},
 	INDUSTRIAL_SITES_EMISSIONS:{'tablename':INDUSTRIAL_SITES_EMISSIONS,
@@ -294,9 +294,9 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
             'geo_column': geometry_column,
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'person','indicator_id':'population','agg_method':'sum'},
-				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
-				{'reference_indicator_id_1': 'population','reference_tablename_indicator_id_1':POPULATION_TOT, 'operator': '/','reference_indicator_id_2':'count_cell','reference_tablename_indicator_id_2':POPULATION_TOT, 'unit':'person/ha', 'indicator_id':'density','agg_method':'sum'},
+				{'table_column': 'sum', 'unit': 'person','indicator_id':'population'},
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell'},
+				{'reference_indicator_id_1': 'population','reference_tablename_indicator_id_1':POPULATION_TOT, 'operator': '/','reference_indicator_id_2':'count_cell','reference_tablename_indicator_id_2':POPULATION_TOT, 'unit':'person/ha', 'indicator_id':'density'},
 			]
 			},
     WWTP:{'tablename':WWTP,
@@ -350,7 +350,7 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'scalelvl_column':'code',
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'value', 'unit': 'GWh','indicator_id':'NUTS_potential','factor':277.778,'agg_method':'sum','diss_agg_method':'NUTS_result'},
+				{'table_column': 'value', 'unit': 'PJ','indicator_id':'NUTS_potential'},
             {'reference_indicator_id_1': 'NUTS_potential', 'reference_tablename_indicator_id_1':LIVESTOCK_EFFLUENTS, 'operator': '/','reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 'unit':'PJ/person', 'indicator_id':'Livestock_effl_pp'}
             			
 			]},
@@ -362,12 +362,11 @@ layersData = {
             'crs': '3035',
             'geo_column': geometry_column,
 			'table_type':vector_type,
-         'level_of_data':'nuts3',   
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'scalelvl_column':'code',
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'value', 'unit': 'GWh','indicator_id':'NUTS_potential','factor':277.778,'agg_method':'sum','diss_agg_method':'NUTS_result'},
-            {'reference_indicator_id_1': 'NUTS_potential', 'reference_tablename_indicator_id_1':AGRICULTURAL_RESIDUES, 'operator': '/','reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 'unit':'PJ/person', 'indicator_id':'agriculture_pp','diss_agg_method':'NUTS_result'}          			
+				{'table_column': 'value', 'unit': 'PJ','indicator_id':'NUTS_potential'},
+            {'reference_indicator_id_1': 'NUTS_potential', 'reference_tablename_indicator_id_1':AGRICULTURAL_RESIDUES, 'operator': '/','reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 'unit':'PJ/person', 'indicator_id':'agriculture_pp'}          			
 			]},
 	POTENTIAL_FOREST:{'tablename':POTENTIAL_FOREST,
             'schema_scalelvl': stat_schema,
@@ -375,13 +374,12 @@ layersData = {
             'geo_column': geometry_column,
             'crs': '3035',
 			'table_type':raster_type,
-         'level_of_data':'nuts3',   
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'from_indicator_name':stat + POTENTIAL_FOREST,
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'mean', 'unit': 'MWh/ha','indicator_id':'average','agg_method':'mean_weighted_cells'},
-            {'table_column': 'sum', 'unit': 'GWh','indicator_id':'value','factor':0.001,'agg_method':'sum'},    
-				{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},
+				{'table_column': 'mean', 'unit': 'PJ/ha','indicator_id':'average'},
+            {'table_column': 'sum', 'unit': 'PJ/ha x cells','indicator_id':'value'},    
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'cells'},
 			]
 			},            
 	MUNICIPAL_SOLID_WASTE:{'tablename':MUNICIPAL_SOLID_WASTE,
@@ -392,12 +390,11 @@ layersData = {
             'crs': '3035',
             'geo_column': geometry_column,
 			'table_type':vector_type,
-         'level_of_data':'nuts3',   
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'scalelvl_column':'code',
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'value', 'unit': 'GWh','indicator_id':'val','factor':277.778,'agg_method':'sum','diss_agg_method':'NUTS_result'},
-				{'reference_indicator_id_1': 'val', 'reference_tablename_indicator_id_1':MUNICIPAL_SOLID_WASTE, 'operator': '/','reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 'unit':'PJ/person', 'indicator_id':'agriculture_pp','diss_agg_method':'NUTS_result'},
+				{'table_column': 'value', 'unit': 'PJ','indicator_id':'val'},
+				{'reference_indicator_id_1': 'val', 'reference_tablename_indicator_id_1':MUNICIPAL_SOLID_WASTE, 'operator': '/','reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 'unit':'PJ/person', 'indicator_id':'agriculture_pp'},
 			]},    
 	GEOTHERMAL_POTENTIAL_HEAT_COND:{'tablename':GEOTHERMAL_POTENTIAL_HEAT_COND,
 		   'from_indicator_name':stat + GEOTHERMAL_POTENTIAL_HEAT_COND,
@@ -421,11 +418,10 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],	
 			'data_aggregated':True,
 			'indicators':[
-            {'table_column': 'mean', 'unit': 'kWh/m^2','indicator_id':'average','agg_method':'mean_weighted_cell'},
-            {'table_column': 'min', 'unit': 'kWh/m^2','indicator_id':'min','agg_method':'min'},
-            {'table_column': 'max', 'unit': 'kWh/m^2','indicator_id':'max','agg_method':'max'},
-        		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},
-            {'table_column': 'sum', 'unit': 'GWh','indicator_id':'potential_5_percent','factor':0.0005,'agg_method':'sum'},
+            {'table_column': 'mean', 'unit': 'kWh/m^2','indicator_id':'average'},
+            {'table_column': 'min', 'unit': 'kWh/m^2','indicator_id':'min'},
+            {'table_column': 'max', 'unit': 'kWh/m^2','indicator_id':'max'},
+        		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells'},    
 			]
 			},
 	WIND_POTENTIAL:{'tablename':WIND_POTENTIAL,
@@ -438,10 +434,10 @@ layersData = {
 		 	'from_indicator_name':stat + WIND_POTENTIAL,
 			'data_aggregated':True,
 			'indicators':[
-				{'table_column': 'mean', 'unit': 'm/s','indicator_id':'average','agg_method':'mean_weighted_cell'},
-            {'table_column': 'max', 'unit': 'm/s','indicator_id':'max','agg_method':'max'},
-            {'table_column': 'min', 'unit': 'm/s','indicator_id':'min','agg_method':'min'},
-            {'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'}
+				{'table_column': 'mean', 'unit': 'm/s','indicator_id':'average'},
+            {'table_column': 'max', 'unit': 'm/s','indicator_id':'max'},
+            {'table_column': 'min', 'unit': 'm/s','indicator_id':'min'},
+            {'table_column': 'count', 'unit': 'cells','indicator_id':'cells'}
 			]
 		 },
 	HDD_CUR:{'tablename':HDD_CUR,
@@ -454,10 +450,10 @@ layersData = {
 		 	'from_indicator_name':stat + HDD_CUR,
 			'data_aggregated':True,
 			'indicators':[
-				{'table_column': 'mean', 'unit': 'Kd','indicator_id':'average','agg_method':'mean_weighted_cell'},
-            {'table_column': 'max', 'unit': 'Kd','indicator_id':'max','agg_method':'max'},
-            {'table_column': 'min', 'unit': 'Kd','indicator_id':'min','agg_method':'min'},
-            {'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'}
+				{'table_column': 'mean', 'unit': 'Kd','indicator_id':'average'},
+            {'table_column': 'max', 'unit': 'Kd','indicator_id':'max'},
+            {'table_column': 'min', 'unit': 'Kd','indicator_id':'min'},
+            {'table_column': 'count', 'unit': 'cells','indicator_id':'cells'}
 			]
 		 },
 	CDD_CUR:{	
@@ -471,10 +467,10 @@ layersData = {
 		'from_indicator_name':stat + CDD_CUR,
 		'data_aggregated':True,
 		'indicators':[
-				{'table_column': 'mean', 'unit': 'Kd','indicator_id':'average','agg_method':'mean_weighted_cell'},
-            {'table_column': 'max', 'unit': 'Kd','indicator_id':'max','agg_method':'max'},
-            {'table_column': 'min', 'unit': 'Kd','indicator_id':'min','agg_method':'min'},
-            {'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'}
+				{'table_column': 'mean', 'unit': 'Kd','indicator_id':'average'},
+            {'table_column': 'max', 'unit': 'Kd','indicator_id':'max'},
+            {'table_column': 'min', 'unit': 'Kd','indicator_id':'min'},
+            {'table_column': 'count', 'unit': 'cells','indicator_id':'cells'}
 		]},
     LAND_SURFACE_TEMP:{
         'tablename':LAND_SURFACE_TEMP,
@@ -487,10 +483,10 @@ layersData = {
 		 	'from_indicator_name':stat + LAND_SURFACE_TEMP,
 			'data_aggregated':True,
 			'indicators':[
-            {'table_column': 'mean', 'unit': 'degree C','indicator_id':'average','factor':0.1,'agg_method':'mean_weighted_cell'},         
-            {'table_column': 'max', 'unit': 'degree C','indicator_id':'maximum','factor':0.1,'agg_method':'max'},				
-            {'table_column': 'min', 'unit': 'degree C','indicator_id':'minimum','factor':0.1,'agg_method':'min'},
-            {'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},             
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'cells'},
+            {'table_column': 'min', 'unit': 'degree C','indicator_id':'minimum'},
+            {'table_column': 'max', 'unit': 'degree C','indicator_id':'maximum'},
+            {'table_column': 'mean', 'unit': 'degree C','indicator_id':'average'}              
 			]
 		 },
 	SOLAR_RADIATION:{'tablename':SOLAR_RADIATION,
@@ -503,11 +499,10 @@ layersData = {
 			'table_type':raster_type,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':True,'indicators':[
-            {'table_column': 'mean', 'unit': 'kWh/m^2','indicator_id':'average','agg_method':'mean_weighted_cell'},
-            {'table_column': 'min', 'unit': 'kWh/m^2','indicator_id':'min','agg_method':'min'},
-            {'table_column': 'max', 'unit': 'kWh/m^2','indicator_id':'max','agg_method':'max'},
-            {'table_column': 'sum', 'unit': 'GWh','indicator_id':'total_radiation','factor':0.09,'agg_method':'sum'},
-        		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},	
+            {'table_column': 'mean', 'unit': 'kWh/m^2','indicator_id':'average'},
+            {'table_column': 'min', 'unit': 'kWh/m^2','indicator_id':'min'},
+            {'table_column': 'max', 'unit': 'kWh/m^2','indicator_id':'max'},
+        		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells'},	
 			]},
 	WIND_SPEED:{'tablename':WIND_SPEED,
             'schema_scalelvl': stat_schema,
@@ -519,10 +514,10 @@ layersData = {
 		 	'from_indicator_name':stat + WIND_SPEED,
 			'data_aggregated':True,
 			'indicators':[
-				{'table_column': 'mean', 'unit': 'm/s','indicator_id':'average','agg_method':'mean_weighted_cell'},
-            {'table_column': 'max', 'unit': 'm/s','indicator_id':'max','agg_method':'max'},
-            {'table_column': 'min', 'unit': 'm/s','indicator_id':'min','agg_method':'min'},
-            {'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'}
+				{'table_column': 'mean', 'unit': 'm/s','indicator_id':'average'},
+            {'table_column': 'max', 'unit': 'm/s','indicator_id':'max'},
+            {'table_column': 'min', 'unit': 'm/s','indicator_id':'min'},
+            {'table_column': 'count', 'unit': 'cells','indicator_id':'cells'}
 			]
 		 },
     ELECTRICITY_CO2_EMISSION_FACTOR:{'tablename':ELECTRICITY_CO2_EMISSION_FACTOR,
@@ -531,11 +526,11 @@ layersData = {
             'geo_column': geom_column,
             'crs': '4258',
 			'table_type':vector_type,
-			'level_of_data':'nuts0',
+			'level_of_data':'NUTS 0',
 			'from_indicator_name':stat + ELECTRICITY_CO2_EMISSION_FACTOR,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'value', 'unit': 'kg/MWh','indicator_id':'density','agg_method':'mean_simple','diss_agg_method':'NUTS_result'}
+				{'table_column': 'value', 'unit': 'kg/MWh','indicator_id':'density'}
 			]
 			},
 }
