@@ -426,7 +426,6 @@ layersData = {
             {'table_column': 'max', 'unit': 'kWh/m^2','indicator_id':'max','agg_method':'max'},
         		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},
             {'table_column': 'sum', 'unit': 'GWh','indicator_id':'potential_5_percent','factor':0.0005,'agg_method':'sum'},
-            {'table_column': 'sum', 'unit': 'GWh','indicator_id':'total','agg_method':'sum'},
 			]
 			},
 	WIND_POTENTIAL:{'tablename':WIND_POTENTIAL,
@@ -488,9 +487,9 @@ layersData = {
 		 	'from_indicator_name':stat + LAND_SURFACE_TEMP,
 			'data_aggregated':True,
 			'indicators':[
-            {'table_column': 'mean', 'unit': 'degree C','indicator_id':'average','agg_method':'mean_weighted_cell'},         
-            {'table_column': 'max', 'unit': 'degree C','indicator_id':'maximum','agg_method':'max'},				
-            {'table_column': 'min', 'unit': 'degree C','indicator_id':'minimum','agg_method':'min'},
+            {'table_column': 'mean', 'unit': 'degree C','indicator_id':'average','factor':0.1,'agg_method':'mean_weighted_cell'},
+            {'table_column': 'max', 'unit': 'degree C','indicator_id':'maximum','factor':0.1,'agg_method':'max'},
+            {'table_column': 'min', 'unit': 'degree C','indicator_id':'minimum','factor':0.1,'agg_method':'min'},
             {'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},             
 			]
 		 },
@@ -526,19 +525,18 @@ layersData = {
             {'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'}
 			]
 		 },
-    ELECTRICITY_CO2_EMISSION_FACTOR:{
-		'tablename':ELECTRICITY_CO2_EMISSION_FACTOR,
-		'schema_scalelvl': public_schema,
-		'schema_hectare': public_schema,
-		'geo_column': geom_column,
-		'crs': '4258',
-		'table_type':vector_type,
-		'level_of_data':'nuts0',
-		'from_indicator_name':stat + ELECTRICITY_CO2_EMISSION_FACTOR,
-		'data_lvl':[nuts0],
-		'data_aggregated':True,'indicators':[
-			{'table_column': 'value', 'unit': 'kg/MWh','indicator_id':'density','agg_method':'mean_simple','diss_agg_method':'NUTS_result'}
-		]
-	},
+    ELECTRICITY_CO2_EMISSION_FACTOR:{'tablename':ELECTRICITY_CO2_EMISSION_FACTOR,
+            'schema_scalelvl': public_schema,
+            'schema_hectare': public_schema,
+            'geo_column': geom_column,
+            'crs': '4258',
+			'table_type':vector_type,
+			'level_of_data':'nuts0',
+			'from_indicator_name':stat + ELECTRICITY_CO2_EMISSION_FACTOR,
+			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
+			'data_aggregated':True,'indicators':[
+				{'table_column': 'value', 'unit': 'kg/MWh','indicator_id':'density','agg_method':'mean_simple','diss_agg_method':'NUTS_result'}
+			]
+			},
 }
 
