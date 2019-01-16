@@ -1,11 +1,8 @@
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+import StringIO
 import os
 import shutil
 import shapely.geometry as shapely_geom
-
+import uuid
 from flask_restplus import Resource
 from binascii import unhexlify
 from flask import send_file
@@ -52,13 +49,18 @@ class AddUploads(Resource):
         except:
             wrong_parameter.append('token')
         try:
+            upload_name = args['upload_name']
+        except:
+            wrong_parameter.append('upload_name')
+        try:
             file_name = args['file'].filename
         except Exception, e:
             wrong_parameter.append('file')
         try:
             layer = args['layer']
         except:
-            wrong_parameter.append('layer')
+            if file_name.endswith('.tif'):
+                wrong_parameter.append('layer')
 
         # raise exception if parameters are false
         if len(wrong_parameter) > 0:
@@ -76,14 +78,16 @@ class AddUploads(Resource):
 
         # Set up the path
         user_folder = USER_UPLOAD_FOLDER + str(user.id)
-        upload_folder = user_folder + '/' + file_name[:-4]
-        url = upload_folder + '/' + file_name
+        upload_uuid = str(uuid.uuid4())
+        upload_folder = user_folder + '/' + upload_uuid
+        url = upload_folder + '/grey.tif'
 
+        # if the user does not own a repository, we create one
         if not os.path.isdir(user_folder):
             os.makedirs(user_folder)
 
         # we need to check if the URL is already taken
-        if Uploads.query.filter_by(url=url).first() is not None:
+        if Uploads.query.filter_by(file_name=upload_name).first() is not None:
             raise UploadExistingUrlException
 
         # we check if the file extension is valid
@@ -95,7 +99,8 @@ class AddUploads(Resource):
         # save the file on the file_system
         args['file'].save(url)
 
-        generate_tiles(upload_folder, url, layer)
+        if file_name.endswith('.tif'):
+            generate_tiles(upload_folder, url, layer)
 
         # we check the size of our file
         size = 0
@@ -113,7 +118,7 @@ class AddUploads(Resource):
             raise NotEnoughSpaceException
 
         # add the upload on the db
-        upload = Uploads(file_name=file_name, url=url, size=size, user_id=user.id)
+        upload = Uploads(file_name=upload_name, url=url, size=size, layer=layer, user_id=user.id, uuid=upload_uuid)
         db.session.add(upload)
         db.session.commit()
 
@@ -172,9 +177,9 @@ class DeleteUploads(Resource):
         # Entries
         wrong_parameter = []
         try:
-            file_name = api.payload['file_name']
+            upload_name = api.payload['upload_name']
         except:
-            file_name = wrong_parameter.append('file_name')
+            wrong_parameter.append('upload_name')
         try:
             token = api.payload['token']
         except:
@@ -192,18 +197,16 @@ class DeleteUploads(Resource):
         if user is None:
             raise UserUnidentifiedException
 
-        folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + file_name[:-4]
-
-        url = folder_url + '/' + file_name
-
         # find upload to delete
-        upload_to_delete = Uploads.query.filter_by(url=url).first()
+        upload_to_delete = Uploads.query.filter_by(file_name=upload_name).first()
         if upload_to_delete is None:
             raise UploadNotExistingException
 
         # check if the user can delete the
         if upload_to_delete.user_id != user.id:
             raise UserDoesntOwnUploadsException
+
+        folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload_to_delete.uuid)
 
         # delete the upload
         db.session.delete(upload_to_delete)
@@ -652,9 +655,9 @@ class Download(Resource):
         except:
             wrong_parameter.append('token')
         try:
-            file_name = api.payload['file_name']
+            upload_name = api.payload['upload_name']
         except:
-            wrong_parameter.append('file_name')
+            wrong_parameter.append('upload_name')
 
         if len(wrong_parameter) > 0:
             exception_message = ''
@@ -669,16 +672,17 @@ class Download(Resource):
         if user is None:
             raise UserUnidentifiedException
 
-        url = USER_UPLOAD_FOLDER + str(user.id) + '/' + file_name[:-4] + '/' + file_name
-
-        # find upload to delete
-        upload = Uploads.query.filter_by(url=url).first()
+        # find upload
+        upload = Uploads.query.filter_by(file_name=upload_name).first()
         if upload is None:
             raise UploadNotExistingException
 
-        # check if the user can delete the
+        # check if the user own the upload
         if upload.user_id != user.id:
             raise UserDoesntOwnUploadsException
+
+        url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid) + '/grey.tif'
+
         if url.endswith('.tif'):
             mimetype = 'image/TIFF'
         elif url.endswith('.csv'):
@@ -687,7 +691,7 @@ class Download(Resource):
         # send the file to the client
         return send_file(url,
                          mimetype=mimetype,
-                         attachment_filename=file_name,
+                         attachment_filename=upload_name+'.tif',
                          as_attachment=True)
 
 

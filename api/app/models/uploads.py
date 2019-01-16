@@ -1,9 +1,10 @@
-import json
 import os
 import requests
 import uuid
 import xml.etree.ElementTree as ET
 from .. import dbGIS as db
+from ..decorators.exceptions import RequestException
+ALLOWED_EXTENSIONS = set(['tif', 'csv'])
 
 
 class Uploads(db.Model):
@@ -16,7 +17,10 @@ class Uploads(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
+    # TODO change file_name to upload_name once code is push (check with frontend)
+    uuid = db.Column(db.String(255))
     file_name = db.Column(db.String(255))
+    layer = db.Column(db.String(255))
     size = db.Column(db.Numeric)
     url = db.Column(db.String(255))
     user_id = db.Column(db.Integer, db.ForeignKey('user.users.id'))
@@ -26,7 +30,7 @@ class ColorMap:
     '''
     This class is used to access all informations necessary to upload a .tif to the server separating it into tiles
     '''
-    def __init__(self, r, g ,b ,a, quantity):
+    def __init__(self, r, g, b, a, quantity):
         self.r = r
         self.g = g
         self.b = b
@@ -34,15 +38,16 @@ class ColorMap:
         self.quantity = quantity
 
 
-ALLOWED_EXTENSIONS = set(['tif', 'csv'])
-
-def generate_tiles(upload_folder, file_path_input, layer):
+def generate_tiles(upload_folder, grey_tif, layer):
     '''
     This function is used to generate the various tiles of a layer in the db.
-    :param file_path_input: the url to the input file
+    :param upload_folder: the folder of the upload
+    :param grey_tif: the url to the input file
+    :param layer: the name of the layer choosen for the input
     '''
     # we set up the directory for the tif
-    directory_for_tiles = file_path_input.replace('.tif', '')
+    directory_for_tiles = upload_folder + '/tiles'
+
     tile_path = directory_for_tiles
     access_rights = 0o755
     try:
@@ -53,20 +58,20 @@ def generate_tiles(upload_folder, file_path_input, layer):
         print ("Successfully created the directory %s" % tile_path)
 
     # get the sld file
-    url = 'https://geoserver.hotmapsdev.hevs.ch/geoserver/rest/styles/' + layer + '.sld'  # TODO change URL to depend from parameters
+    url = 'https://geoserver.hotmapsdev.hevs.ch/geoserver/rest/styles/' + layer + '.sld'
     auth = ('admin', 'H0tM4p52017')
     result = requests.get(url, auth=auth)
     xml = result.content
     color_map_objects = extract_colormap(xml)
 
-    # we want to use a unique id for the file to be sure that it will not be duplicated
-    uuid_upload = str(uuid.uuid4())
-    grey2rgb_path = create_grey2rgb_txt(color_map_objects, uuid_upload)
+    # we want to use a unique id for the file to be sure that it will not be duplicated in case two
+    uuid_temp = str(uuid.uuid4())
+    grey2rgb_path = create_grey2rgb_txt(color_map_objects, uuid_temp)
     rgb_tif = upload_folder + '/rgba.tif'
 
     # commands launch to obtain the level of zooms
     com_creatergba = "gdaldem color-relief {} {} -alpha {}" \
-        .format(file_path_input, grey2rgb_path, rgb_tif)
+        .format(grey_tif, grey2rgb_path, rgb_tif)
     os.system(com_creatergba)
 
     # commands launch to obtain the level of zooms
@@ -76,11 +81,9 @@ def generate_tiles(upload_folder, file_path_input, layer):
 
     # we delete all temp files
     for fname in os.listdir('/tmp'):
-        if fname.startswith(uuid_upload):
+        if fname.startswith(uuid_temp):
             os.remove(os.path.join('/tmp', fname))
 
-    # inspect the response
-    return {"result": "lul"}
 
 def create_grey2rgb_txt(color_map_objects, uuid_upload):
     '''
@@ -107,6 +110,7 @@ def create_grey2rgb_txt(color_map_objects, uuid_upload):
     grey2rgb.close()
     return grey2rgb_path
 
+
 def extract_colormap(xml):
     '''
     This method will extract the colormap of a sld stylesheet
@@ -114,7 +118,10 @@ def extract_colormap(xml):
     :return: an array of the different color map
     '''
     # create the xml tree
-    root = ET.fromstring(xml)
+    try:
+        root = ET.fromstring(xml)
+    except Exception, e:
+        raise RequestException(str(xml))
     ns = {'sld': 'http://www.opengis.net/sld'}
     # get the list of Color map
     color_map_list = root.findall(".//sld:ColorMapEntry", ns)
@@ -130,6 +137,7 @@ def extract_colormap(xml):
         color_map_objects.append(color_map_object)
     return color_map_objects
 
+
 def hex_to_rgb(value):
     '''
     This method is used to convert an hexadecimal into a tuple of rgb values
@@ -139,6 +147,7 @@ def hex_to_rgb(value):
     value = value.lstrip('#')
     lv = len(value)
     return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+
 
 def calculate_total_space(uploads):
     '''
@@ -153,6 +162,7 @@ def calculate_total_space(uploads):
         used_size += float(upload.size)
 
     return used_size
+
 
 def allowed_file(filename):
     '''

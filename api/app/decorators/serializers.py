@@ -468,8 +468,8 @@ upload_add_output = api.model('output for uploads adding', {
 
 upload_model = api.model('all upload fields', {
     'file_name': fields.String(description='file name'),
-    'url': fields.String(description='url'),
     'size': fields.Float(description='size'),
+    'layer': fields.String(description='layer'),
 })
 
 upload_list_input = api.model('input for uploads listing', {
@@ -491,7 +491,7 @@ upload_space_used_output = api.model('output for uploads space used function', {
 
 upload_delete_input = api.model('input for uploads deleting', {
     'token': fields.String(description='authentification token'),
-    "file_name": fields.String(description='File name'),
+    "upload_name": fields.String(description='Upload name'),
 })
 
 upload_delete_output = api.model('output for uploads deleting', {
@@ -521,5 +521,5 @@ upload_export_csv_hectare_input = api.model('input for the hectare upload export
 })
 upload_download_input = api.model('input for the upload download.', {
     'token': fields.String(description='authentification token'),
-    "file_name": fields.String(description='File name'),
+    "upload_name": fields.String(description='Upload name'),
 })
