@@ -1,7 +1,3 @@
-
-
-
-
 from app.decorators.exceptions import ValidationError
 
 
@@ -32,7 +28,7 @@ db_path = os.path.join(basedir, '../data.sqlite')
 DB_NAME = CM_DB_NAME
 
 def getConnection_db_CM():
-    c = sqlite3.connect(DB_NAME, check_same_thread=False)
+    c = sqlite3.connect(DB_NAME)
     return c
 
 
@@ -213,15 +209,15 @@ def getCMUrl(cm_id):
     except sqlite3.IntegrityError as e:
         print (e)
 
-def getLayerNeeded(cm_id):
+def get_type_layer_needed(cm_id):
     try:
         conn = myCMpool.connect()
         cursor = conn.cursor()
 
-        cm_url = cursor.execute('select layers_needed from calculation_module where cm_id = ?',
+        result = cursor.execute('select type_layer_needed from calculation_module where cm_id = ?',
                                 (cm_id))
         conn.commit()
-        cm_url = str(cm_url.fetchone()[0])
+        cm_url = str(result.fetchone()[0])
         conn.close()
         return cm_url
 
@@ -326,7 +322,7 @@ def get_shapefile_from_selection(scalevalue,id_selected_list,ouput_directory):
     os.system(com_string)
     return output_shapefile
 
-def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed, output_directory):
+def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed,type_needed, output_directory):
     inputs_raster_selection = {}
     wkt_point_3035 = helper.projection_4326_to_3035(wkt_point)
     #print ('wkt_point_3035 ',wkt_point_3035)
@@ -335,6 +331,8 @@ def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed, output_direc
     print ('filename_csv ',filename_csv)
     # retrieve all layer neeeded
     for layer in layer_needed:
+        cpt_type = 0
+        type = type_needed[cpt_type]
         directory = layer.replace('_tif', '')
         path_to_dataset = datasets_directory + layer.replace('_tif', '')+ "/data/" + layer + ".tif"
         # create a file name as output
@@ -343,14 +341,18 @@ def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed, output_direc
         com_string = "gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(filename_csv,path_to_dataset,filename_tif)
         os.system(com_string)
         print ('com_string ',filename_tif)
-        inputs_raster_selection[layer] = filename_tif
+        inputs_raster_selection[type] = filename_tif
+        cpt_type = cpt_type + 1
     return inputs_raster_selection
 
-def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed, output_directory):
-    print('layer_needed',layer_needed)
+def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed,type_needed, output_directory):
+    print('clip_raster_from_shapefile/layer_needed',layer_needed)
+    print('clip_raster_from_shapefile/type_needed',type_needed)
     inputs_raster_selection = {}
     # retrieve all layer neeeded
     for layer in layer_needed:
+        cpt_type = 0
+        type = type_needed[cpt_type]
         directory = layer.replace('_tif', '')
         path_to_dataset = datasets_directory + directory + "/data/" + layer + ".tif"
         # create a file name as output
@@ -360,7 +362,8 @@ def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed, 
 
         os.system(com_string)
         print ('com_string ',filename_tif)
-        inputs_raster_selection[layer] = filename_tif
+        inputs_raster_selection[type] = filename_tif
+        cpt_type = cpt_type + 1
     return inputs_raster_selection
 
 
@@ -403,20 +406,31 @@ def get_vectors_needed(cm_id):
 
 def query_geographic_database(sql_query):
 
-    mypool = pool.QueuePool(getConnection_db_gis, max_overflow=10, pool_size=5)
+    mypool = pool.QueuePool(getConnection_db_gis, max_overflow=100, pool_size=5)
     # get a connection
     conn = mypool.connect()
     # use it
     cursor = query(sql_query,conn)
     return cursor
+def query_geographic_database_first(sql_query):
+    cursor = query_geographic_database(sql_query)
+    result = cursor.fetchone()
+    #result = helper.remove_None_in_turple(result)
+    return result
+def check_table_existe(sql_query):
+    return query_geographic_database_first(sql_query)
 
 def query_calculation_module_database(sql_query):
 
     # get a connection
     conn = myCMpool.connect()
-
     # use it
-    cursor = query(sql_query,conn)
+    cursor = conn.cursor()
+
+    cursor.execute(sql_query)
+    conn.commit()
+    conn.close()
+
 
     return cursor
 
@@ -429,17 +443,9 @@ def query(sql_query,conn):
     conn.commit()
     conn.close()
 
+
     return cursor
 
-def query_geographic_database_first(sql_query):
-    cursor = query_geographic_database(sql_query)
-
-    result = cursor.fetchone()
-
-    #result = helper.remove_None_in_turple(result)
-
-
-    return result
 
 
 

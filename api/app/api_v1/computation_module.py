@@ -6,10 +6,12 @@ from app.decorators.serializers import  compution_module_class, \
     input_computation_module, test_communication_cm, \
     compution_module_list, uploadfile, cm_id_input
 
-from app.model import register_calulation_module,getCMUrl,getUI,getCMList,getLayerNeeded
+from app.model import register_calulation_module,getCMUrl,getUI,getCMList,get_type_layer_needed
 
 
 from app import model
+
+from app import helper
 nsCM = api.namespace('cm', description='Operations related to statistisdscs')
 
 ns = nsCM
@@ -24,7 +26,7 @@ from flask import send_from_directory
 
 
 from app import CalculationModuleRpcClient
-from app import helper
+
 
 
 #TODO Add url to find  right computation module
@@ -112,11 +114,13 @@ class getRasterTile(Resource):
         if not os.path.exists(tile_filename):
             if not os.path.exists(os.path.dirname(tile_filename)):
                 os.makedirs(os.path.dirname(tile_filename))
+        try:
+            return Response(open(tile_filename).read(), mimetype='image/png')
+        except:
+            return None
 
-        return Response(open(tile_filename).read(), mimetype='image/png')
 
 
-#@celery.task(name = 'registerCM')
 def registerCM(input):
     register_calulation_module(input)
     return input
@@ -128,7 +132,7 @@ def celery_get_CM_url(cm_id):
     return getCMUrl(cm_id)
 
 
-    #return {}, 201, {'Location': cm.get_url()}
+
 
 
 
@@ -143,7 +147,7 @@ def savefile(filename,url):
 
 #@celery.task(bind=True)
 @celery.task(name = 'Compute-async')
-def computeTask(data,payload,cm_id,layerneed):
+def computeTask(data,payload,cm_id,type_layer_needed):
 
     """
     Rdeturns the calculation of a calculation module
@@ -158,10 +162,13 @@ def computeTask(data,payload,cm_id,layerneed):
 
     print ('****************** RETRIVE INPUT DATA ***************************************************')
     #transforme stringify array to json
-    print ('layer_needed', payload)
+
     #layer_needed = helper.unicode_array_to_string(layerneed)
 
     layer_needed = payload['layers_needed']
+    print ('layer_needed', layer_needed)
+    print ('type_layer_needed', type_layer_needed)
+    type_layer_needed = helper.unicode_array_to_string(type_layer_needed)
 
     vectors_needed = model.get_vectors_needed(cm_id)
 
@@ -179,7 +186,7 @@ def computeTask(data,payload,cm_id,layerneed):
         areas = payload['areas']
         geom =  helper.area_to_geom(areas)
         #get the rasters selected
-        inputs_raster_selection = model.get_raster_from_csv(DATASET_DIRECTORY ,geom,layer_needed, UPLOAD_DIRECTORY)
+        inputs_raster_selection = model.get_raster_from_csv(DATASET_DIRECTORY ,geom,layer_needed, type_layer_needed, UPLOAD_DIRECTORY)
 
         inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, geom)
         #get the vectors selected
@@ -193,7 +200,7 @@ def computeTask(data,payload,cm_id,layerneed):
         print ('****************** BEGIN RASTER CLIP FOR NUTS OR LAU ***************************************************')
         id_list = payload['nuts']
         shapefile_path = model.get_shapefile_from_selection(scalevalue,id_list,UPLOAD_DIRECTORY)
-        inputs_raster_selection = model.clip_raster_from_shapefile(DATASET_DIRECTORY ,shapefile_path,layer_needed, UPLOAD_DIRECTORY)
+        inputs_raster_selection = model.clip_raster_from_shapefile(DATASET_DIRECTORY ,shapefile_path,layer_needed, type_layer_needed, UPLOAD_DIRECTORY)
         if vectors_needed != None:
             inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, id_list)
         print ('****************** FINISH RASTER CLIP FOR NUTS  OR LAU ***************************************************')
@@ -233,7 +240,6 @@ def computeTask(data,payload,cm_id,layerneed):
 
 
 def generateTiles(raster_layers):
-
     for layers in raster_layers:
         file_path_input = layers['path']
         directory_for_tiles = file_path_input.replace('.tif', '')
@@ -248,12 +254,7 @@ def generateTiles(raster_layers):
             print ("Creation of the directory %s failed" % tile_path)
         else:
             print ("Successfully created the directory %s" % tile_path)
-
-
         com_string = "gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE && python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
-
-        #com_string = "gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE && python app/helper/gdal2tiles-multiprocess.py -d -p 'mercator' -r 'near' -n -l -z 4-13 {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
-
         os.system(com_string)
         directory_for_tiles = directory_for_tiles.replace(UPLOAD_DIRECTORY+'/', '')
         layers['path'] = directory_for_tiles
@@ -311,9 +312,9 @@ class ComputationModuleClass(Resource):
         payload = api.payload['payload']
         cm_id = data["cm_id"]
         #2 inputs layers from the CM
-        layerneed = getLayerNeeded(cm_id)
+        type_layer_needed = get_type_layer_needed(cm_id)
         with app.app_context():
-            task = computeTask.delay(data,payload,cm_id,layerneed)
+            task = computeTask.delay(data,payload,cm_id,type_layer_needed)
             return {'status_id': task.id}
 
 

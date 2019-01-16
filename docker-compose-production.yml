@@ -4,8 +4,8 @@ services:
   nginx:
     container_name: nginx-proxy
     build: ./nginx-proxy/
-    environment:
-    - HTTPS_METHOD=nohttps
+#    environment:
+ #   - HTTPS_METHOD=nohttps
     networks:
     - nginx
     ports:

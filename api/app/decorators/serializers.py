@@ -339,6 +339,7 @@ stats_list_label_dataset = api.model('Output  list of labels and datasets', {
 stats_layers_nuts_input = api.model('Input for statistics on layers, list of nuts and year', {
     'layers': fields.List(fields.String(description='Layer')),
     'nuts': fields.List(fields.String(descriptions='List of NUTS')),
+    'scale_level': fields.String(descriptions='Scale level'),
     'year': fields.Integer(description='Year'),
 })
 
@@ -362,6 +363,7 @@ stats_layers_hectares_input = api.model('Input for statistics on layers, hectare
     'layers': fields.List(fields.String(description='Layer')),
     'areas': fields.List(fields.Nested(area)),
     'year': fields.Integer(description='Year'),
+    'scale_level': fields.String(description='Scale level'),
 })
 
 input_computation_module = api.model('Input for population density for area', {
