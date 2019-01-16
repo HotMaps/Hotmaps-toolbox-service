@@ -18,18 +18,15 @@ from ..decorators.serializers import upload_add_output, upload_list_input, uploa
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
     upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input
 from .. import dbGIS as db
-from ..models.uploads import Uploads
+from ..models.uploads import Uploads, generate_tiles, allowed_file, calculate_total_space
 from ..models.user import User
-from ..helper import generate_geotif_name
 from ..decorators.parsers import file_upload
 
 nsUpload = api.namespace('upload', description='Operations related to file upload')
 ns = nsUpload
 NUTS_YEAR = "2013"
 LAU_YEAR = NUTS_YEAR
-USER_UPLOAD_FOLDER = '/var/Hotmaps/users/'
-
-ALLOWED_EXTENSIONS = set(['tif', 'csv'])
+USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
 
 
 @ns.route('/add')
@@ -58,6 +55,10 @@ class AddUploads(Resource):
             file_name = args['file'].filename
         except Exception, e:
             wrong_parameter.append('file')
+        try:
+            layer = args['layer']
+        except:
+            wrong_parameter.append('layer')
 
         # raise exception if parameters are false
         if len(wrong_parameter) > 0:
@@ -94,7 +95,7 @@ class AddUploads(Resource):
         # save the file on the file_system
         args['file'].save(url)
 
-        generate_tiles(url, upload_folder)
+        generate_tiles(upload_folder, url, layer)
 
         # we check the size of our file
         size = 0
@@ -159,7 +160,6 @@ class ListUploads(Resource):
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
-@api.response(540, 'User doesn\'t own the upload')
 @api.response(543, 'Uploads doesn\'t exists')
 class DeleteUploads(Resource):
     @api.marshal_with(upload_delete_output)
@@ -209,7 +209,7 @@ class DeleteUploads(Resource):
         db.session.delete(upload_to_delete)
         db.session.commit()
 
-        #delete the file
+        # delete the file
         shutil.rmtree(folder_url)
 
         # output
@@ -262,7 +262,7 @@ class ExportRasterNuts(Resource):
             layer_name = str(layers)[: -6]
             id_type = 'nuts_id'
             layer_date = NUTS_YEAR
-            if str(layers)[-1] != '3':
+            if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
 
 
@@ -476,7 +476,7 @@ class ExportCsvNuts(Resource):
             layer_name = str(layers)[: -6]
             id_type = 'nuts_id'
             layer_date = NUTS_YEAR
-            if str(layers)[-1] != '3':
+            if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
 
         sql = "SELECT * FROM " + schema + "." + layer_name + " WHERE date = '" + year + "-01-01' AND ST_Within(" \
@@ -638,7 +638,7 @@ class ExportCsvHectare(Resource):
 @api.response(539, 'User Unidentified')
 @api.response(540, 'User doesn\'t own the upload')
 @api.response(543, 'Uploads doesn\'t exists')
-class DownloadNuts(Resource):
+class Download(Resource):
     @api.expect(upload_download_input)
     def post(self):
         '''
@@ -691,55 +691,3 @@ class DownloadNuts(Resource):
                          as_attachment=True)
 
 
-def calculate_total_space(uploads):
-    '''
-    This method will calculate the amount of disc space taken by a list of uploads
-    :param uploads:
-    :return: the used disk space
-    '''
-    used_size = float(0)
-
-    # sum of every size
-    for upload in uploads:
-        used_size += float(upload.size)
-
-    return used_size
-
-
-def allowed_file(filename):
-    '''
-    This method will check if the file is allowed
-    :param filename:
-    :return:
-    '''
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-def generate_tiles(url, path):
-    '''
-    This function is used to generate the various tiles of a layer in the db.
-    :param: raster_layer: an array of raster layer composed of a name, a path and a type (only the path is used here)
-    :return:
-    '''
-    file_path_input = url
-    # we set up the directory for the tif
-    directory_for_tiles = file_path_input.replace('.tif', '')
-
-    intermediate_raster = generate_geotif_name(path)
-    tile_path = directory_for_tiles
-    access_rights = 0o755
-
-    try:
-        os.mkdir(tile_path, access_rights)
-    except OSError:
-        print ("Creation of the directory %s failed" % tile_path)
-    else:
-        print ("Successfully created the directory %s" % tile_path)
-
-    # commands launch to obtain the level of zooms
-    com_string = "gdal_translate -of GTiff {} {} -co COMPRESS=DEFLATE "\
-        .format(file_path_input, intermediate_raster)
-    com_string += "&& python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} "\
-        .format(intermediate_raster, tile_path)
-    os.system(com_string)
