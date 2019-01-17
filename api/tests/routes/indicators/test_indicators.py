@@ -60,18 +60,18 @@ class TestIndicators(unittest.TestCase):
             Query return >= 1 => Data are available in the specific scale
         """
         for layer in layersData:
-            sql_querie = "select count(*) from "+layersData[layer]['schema_scalelvl']+"."+layersData[layer]['tablename']
-            sql_querie_lau = sql_querie + "_lau limit 100"
-            print(sql_querie_lau)
-            with self.subTest(stat_levl_='lau',tablename=layersData[layer]['schema_scalelvl']+"."+layersData[layer]['tablename']+"_lau"):
-                try:
-                    query = query_geographic_database(sql_querie_lau).fetchone()
-                    self.assertTrue(int(query[0]) >= 1)
-                except Exception as e:
-                    print(e)
-                    self.assertTrue(False)
-            for i in range(0,4):
-                if layersData[layer]['data_aggregated'] == True:
+            if layersData[layer]['data_aggregated'] == True:
+                sql_querie = "select count(*) from "+layersData[layer]['schema_scalelvl']+"."+layersData[layer]['tablename']
+                sql_querie_lau = sql_querie + "_lau limit 100"
+                print(sql_querie_lau)
+                with self.subTest(stat_levl_='lau',tablename=layersData[layer]['schema_scalelvl']+"."+layersData[layer]['tablename']+"_lau"):
+                    try:
+                        query = query_geographic_database(sql_querie_lau).fetchone()
+                        self.assertTrue(int(query[0]) >= 1)
+                    except Exception as e:
+                        print(e)
+                        self.assertTrue(False)
+                for i in range(0,4):
                     sql_querie_nuts = sql_querie + "_nuts where stat_levl_ = "+str(i)
                     print(sql_querie_nuts)
                     with self.subTest(stat_levl_=i,tablename=layersData[layer]['schema_scalelvl']+"."+layersData[layer]['tablename']+"_nuts"):

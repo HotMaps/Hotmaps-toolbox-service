@@ -1,5 +1,5 @@
 from app.models.indicators import *
-from app.constants import CRS_USER_GEOMETRY, NUTS_VAlUES
+from app.constants import CRS_USER_GEOMETRY, NUTS_VAlUES, NUTS_LAU_LEVELS, CRS_NUTS
 
 
 def constructWithPartEachLayerHectare(geometry, year, layer, scale_level):
@@ -14,17 +14,16 @@ def constructWithPartEachLayerHectare(geometry, year, layer, scale_level):
 
 			if 'table_column' in indic:
 				query_select+=get_indicator_as_query(indic,layer_table_name,layer)
-				#query_select+= 'sum(' + layer_table_name + '.' + indic['table_column'] + ') as '+ layer + indic['indicator_id'] + ','
 
 		query_select = query_select[:-1]
 		query += from_part+" as ("
 		query += query_select
 		query += " FROM "+layer_table_name
-
-		""" if 'level_of_data' in layersData[layer]:
+		
+		if 'level_of_data' in layersData[layer] and NUTS_LAU_LEVELS[layersData[layer]['level_of_data']] < NUTS_LAU_LEVELS[scale_level]:
 			query += " WHERE "+ "ST_Intersects(st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "),"+layer_table_name+"."+layersData[layer]['geo_column']+")"
-		else: """
-		query += " WHERE "+ "ST_Within("+layer_table_name+"."+layersData[layer]['geo_column']+",st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "))"
+		else:
+			query += " WHERE "+ "ST_Within("+layer_table_name+"."+layersData[layer]['geo_column']+",st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "))"
 		query += ")"
 	else:
 		agg_summary_stat = 'agg_summary_stat'
@@ -58,7 +57,7 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 		fk_column_id = 'fk_lau_gid'
 	if 'scalelvl_column' in layersData[layer]:
 		scale_level_name = layersData[layer]['scalelvl_column']
-	
+
 	nust_select_name = "nutsSelection_"+ layer
 	nuts_selection =  nust_select_name +" as (SELECT geom from geo."+name_type+" where "+name_type+".year = date('"+year+"-01-01') and "+scale_level_name+"  in ("+nuts+")), "
 
@@ -74,19 +73,19 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 	for indic in layersData[layer]['indicators']:
 		if 'table_column' in indic:
 			query_select+=get_indicator_as_query(indic, layer_table_name, layer)
-		#if 'table_column' in indic:
-		#	query_select+= 'sum(' +layer_table_name+'.' +indic['table_column'] + ') as '+layer + indic['indicator_id'] + ','
 
 	query_select = query_select[:-1]
 
 
 	if layersData[layer]['data_aggregated'] == False:
-		#print(layer)
 		query += nuts_selection
 		query += query_from_part 
 		query += query_select
 		query += " from " + nust_select_name + ", "+layer_table_name
-		query += " where st_within("+layer_table_name+"."+layersData[layer]['geo_column']+", st_transform("+nust_select_name+".geom,"+layersData[layer]['crs']+"))) "
+		if 'level_of_data' in layersData[layer] and NUTS_LAU_LEVELS[layersData[layer]['level_of_data']] < NUTS_LAU_LEVELS[scale_level]:
+			query += " where ST_Intersects("+nust_select_name+".geom,st_transform("+layer_table_name+"."+layersData[layer]['geo_column']+","+CRS_NUTS+"))) "
+		else:
+			query += " where st_within(st_transform("+layer_table_name+"."+layersData[layer]['geo_column']+","+CRS_NUTS+"), "+nust_select_name+".geom)) "
 	else:
 		query += query_from_part
 		query += query_select

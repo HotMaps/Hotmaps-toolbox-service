@@ -51,7 +51,8 @@ WIND_SPEED = 'output_wind_speed'
 WIND_POTENTIAL = 'wind_50m'
 SOLAR_POTENTIAL = 'solar_optimal_total'
 #GEOTHERMAL_POTENTIAL_HEAT_COND = 'potential_shallowgeothermal_heat_cond'
-GEOTHERMAL_POTENTIAL_HEAT_COND = 'potential_shallowgeothermal'
+#GEOTHERMAL_POTENTIAL_HEAT_COND = 'potential_shallowgeothermal'shallow_geothermal_potential
+GEOTHERMAL_POTENTIAL_HEAT_COND = 'shallow_geothermal_potential'
 ELECTRICITY_CO2_EMISSION_FACTOR = 'yearly_co2_emission'
 HDD_CUR = 'hdd_curr'
 CDD_CUR = 'cdd_curr'
@@ -344,12 +345,12 @@ layersData = {
 			'where':'livestock_effluents',
             'schema_scalelvl': geo_schema,
             'schema_hectare': geo_schema,
-            'crs': '3035',
-            'geo_column': geometry_column,
+            'crs': '4258',
+            'geo_column': geom_column,
 			'table_type':vector_type,
+         	'level_of_data':nuts3,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
-			'scalelvl_column':'code',
-			'data_aggregated':True,'indicators':[
+			'data_aggregated':False,'indicators':[
 				{'table_column': 'value', 'unit': 'GWh','indicator_id':'NUTS_potential','factor':277.778,'agg_method':'sum','diss_agg_method':'NUTS_result'},
             {'reference_indicator_id_1': 'NUTS_potential', 'reference_tablename_indicator_id_1':LIVESTOCK_EFFLUENTS, 'operator': '/','reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 'unit':'PJ/person', 'indicator_id':'Livestock_effl_pp'}
             			
@@ -359,13 +360,12 @@ layersData = {
 			'where':'livestock_effluents',
             'schema_scalelvl': geo_schema,
             'schema_hectare': geo_schema,
-            'crs': '3035',
-            'geo_column': geometry_column,
+            'crs': '4258',
+            'geo_column': geom_column,
 			'table_type':vector_type,
-         'level_of_data':'nuts3',   
+         	'level_of_data':nuts3,   
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
-			'scalelvl_column':'code',
-			'data_aggregated':True,'indicators':[
+			'data_aggregated':False,'indicators':[
 				{'table_column': 'value', 'unit': 'GWh','indicator_id':'NUTS_potential','factor':277.778,'agg_method':'sum','diss_agg_method':'NUTS_result'},
             {'reference_indicator_id_1': 'NUTS_potential', 'reference_tablename_indicator_id_1':AGRICULTURAL_RESIDUES, 'operator': '/','reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 'unit':'PJ/person', 'indicator_id':'agriculture_pp','diss_agg_method':'NUTS_result'}          			
 			]},
@@ -375,7 +375,7 @@ layersData = {
             'geo_column': geometry_column,
             'crs': '3035',
 			'table_type':raster_type,
-         'level_of_data':'nuts3',   
+        	'level_of_data':nuts3, 
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'from_indicator_name':stat + POTENTIAL_FOREST,
 			'data_aggregated':True,'indicators':[
@@ -387,15 +387,14 @@ layersData = {
 	MUNICIPAL_SOLID_WASTE:{'tablename':MUNICIPAL_SOLID_WASTE,
 			'from_indicator_name':stat + MUNICIPAL_SOLID_WASTE,
 			'where':'',
-            'schema_scalelvl': stat_schema,
-            'schema_hectare': geo_schema,
-            'crs': '3035',
+            'schema_scalelvl': public_schema,
+            'schema_hectare': public_schema,
+            'crs': '4258',
             'geo_column': geometry_column,
 			'table_type':vector_type,
-         'level_of_data':'nuts3',   
+         'level_of_data':nuts3,   
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
-			'scalelvl_column':'code',
-			'data_aggregated':True,'indicators':[
+			'data_aggregated':False,'indicators':[
 				{'table_column': 'value', 'unit': 'GWh','indicator_id':'val','factor':277.778,'agg_method':'sum','diss_agg_method':'NUTS_result'},
 				{'reference_indicator_id_1': 'val', 'reference_tablename_indicator_id_1':MUNICIPAL_SOLID_WASTE, 'operator': '/','reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 'unit':'PJ/person', 'indicator_id':'agriculture_pp','diss_agg_method':'NUTS_result'},
 			]},    
@@ -531,10 +530,10 @@ layersData = {
             'geo_column': geom_column,
             'crs': '4258',
 			'table_type':vector_type,
-			'level_of_data':'nuts0',
+			'level_of_data':nuts0,
 			'from_indicator_name':stat + ELECTRICITY_CO2_EMISSION_FACTOR,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
-			'data_aggregated':True,'indicators':[
+			'data_aggregated':False,'indicators':[
 				{'table_column': 'value', 'unit': 'kg/MWh','indicator_id':'density','agg_method':'mean_simple','diss_agg_method':'NUTS_result'}
 			]
 			},

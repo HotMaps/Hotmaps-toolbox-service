@@ -80,6 +80,7 @@ CORS_CREDENTIALS = False
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 CRS = 3035
 CRS_USER_GEOMETRY = '4326'
+CRS_NUTS = '4258'
 # Duration curve constants used in heat.load.profile.py
 HOURS_PER_YEAR = 8760
 LIMIT_VALUES_PER_NUTS = 4000
@@ -102,3 +103,5 @@ NUMBER_DECIMAL_DATA = 2
 NUTS_LAU_VALUES = [nuts0,nuts1,nuts2,nuts3,lau2]
 NUTS_VAlUES = [nuts0,nuts1,nuts2,nuts3]
 
+
+NUTS_LAU_LEVELS = {nuts0:0,nuts1:1,nuts2:2,nuts3:3,lau2:4,hectare_name:5}
