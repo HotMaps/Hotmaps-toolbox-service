@@ -2,7 +2,6 @@ import requests
 
 from unittest import TestCase
 from . import test_token, BASE_URL
-from .test_addUploads import test_upload_name
 
 url = BASE_URL + "/upload/remove_upload"
 
@@ -12,8 +11,16 @@ class TestDeleteUploads(TestCase):
         """
         this test will pass the uploads/remove method
         """
+        listUrl = BASE_URL + "/upload/list"
         payload = {
-            "upload_name": test_upload_name,
+            "token": test_token,
+        }
+
+        output = requests.post(listUrl, json=payload)
+        test_upload_id = output.json()['uploads'][0]['id']
+
+        payload = {
+            "id": test_upload_id,
             "token": test_token,
         }
 
@@ -27,7 +34,7 @@ class TestDeleteUploads(TestCase):
         this test will fail because the given parameters are wrong
         """
         payload = {
-            "usafrl": test_upload_name,
+            "etsid": -5,
             "togfdken": test_token,
         }
 
@@ -42,7 +49,7 @@ class TestDeleteUploads(TestCase):
         this test will fail because the user is not connected
         """
         payload = {
-            "upload_name": test_upload_name,
+            "id": -5,
             "token": "ThisIsAWrongToken",
         }
 
@@ -57,7 +64,7 @@ class TestDeleteUploads(TestCase):
         this test will fail because the upload does not exists
         """
         payload = {
-            "upload_name": "thisisarandomurl",
+            "id": -5,
             "token": test_token,
         }
 

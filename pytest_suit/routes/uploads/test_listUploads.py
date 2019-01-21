@@ -19,7 +19,7 @@ class TestListUploads(TestCase):
         output = requests.post(url, json=payload)
 
         expected_output = test_upload_name
-        assert output.json()['uploads'][0]['file_name'] == expected_output
+        assert output.json()['uploads'][0]['name'] == expected_output
 
     def test_post_missing_parameter(self):
         """

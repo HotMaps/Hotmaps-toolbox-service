@@ -3,4 +3,4 @@
 The Application tests collection
 ================================
 """
-BASE_URL = "http://153.109.130.81:5000/api"
+BASE_URL = "http://153.109.130.76:5000/api"

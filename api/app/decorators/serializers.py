@@ -459,7 +459,7 @@ user_get_information_input = api.model('input for getting user information', {
 
 upload_add_input = api.model('input for uploads adding', {
     'token': fields.String(description='authentification token'),
-    'file_name': fields.String(description='file name'),
+    'name': fields.String(description='Upload name'),
 })
 
 upload_add_output = api.model('output for uploads adding', {
@@ -467,7 +467,8 @@ upload_add_output = api.model('output for uploads adding', {
 })
 
 upload_model = api.model('all upload fields', {
-    'file_name': fields.String(description='file name'),
+    'id': fields.Integer(description='Upload id'),
+    'name': fields.String(description='Upload name'),
     'size': fields.Float(description='size'),
     'layer': fields.String(description='layer'),
 })
@@ -491,7 +492,7 @@ upload_space_used_output = api.model('output for uploads space used function', {
 
 upload_delete_input = api.model('input for uploads deleting', {
     'token': fields.String(description='authentification token'),
-    "upload_name": fields.String(description='Upload name'),
+    "id": fields.Integer(description='Upload id'),
 })
 
 upload_delete_output = api.model('output for uploads deleting', {
@@ -521,5 +522,5 @@ upload_export_csv_hectare_input = api.model('input for the hectare upload export
 })
 upload_download_input = api.model('input for the upload download.', {
     'token': fields.String(description='authentification token'),
-    "upload_name": fields.String(description='Upload name'),
+    "id": fields.Integer(description='Upload id'),
 })

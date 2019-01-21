@@ -1,10 +1,10 @@
 import requests
 
 from unittest import TestCase
-from . import BASE_URL, test_token, test_csv_file, test_csv_name, test_upload_name
+from . import BASE_URL, test_token, test_csv_file, test_upload_name
 from ..user.test_profileUser import test_first_name
 
-url = BASE_URL + '/upload/add?file_name=' + test_csv_name + '&token =' + test_token
+url = BASE_URL + '/upload/add'
 
 
 class TestAddUploads(TestCase):
@@ -13,11 +13,11 @@ class TestAddUploads(TestCase):
         this test will pass the uploads/add method
         """
         files = {'file': open(test_csv_file, 'rb')}
-        values = {'token': test_token, 'upload_name': test_upload_name}
+        values = {'token': test_token, 'name': test_upload_name}
 
         output = requests.post(url, files=files, data=values)
 
-        expected_output = 'file ' + test_csv_name + ' added for the user ' + test_first_name
+        expected_output = 'file ' + test_upload_name + ' added for the user ' + test_first_name
         assert output.json()['message'] == expected_output
 
     def test_post_missing_parameter(self):
@@ -25,7 +25,7 @@ class TestAddUploads(TestCase):
         this test will fail because of missing parameters
         """
         files = {'file': open(test_csv_file, 'rb')}
-        values = {'dstoken': test_token}
+        values = {'dstoken': test_token, 'sdafname': test_upload_name}
 
         output = requests.post(url, files=files, data=values)
 
@@ -37,7 +37,7 @@ class TestAddUploads(TestCase):
         this test will fail because the used token is wrong
         """
         files = {'file': open(test_csv_file, 'rb')}
-        values = {'token': 'invalidtoken', 'upload_name': test_upload_name}
+        values = {'token': 'invalidtoken', 'name': test_upload_name}
 
         output = requests.post(url, files=files, data=values)
 
@@ -50,7 +50,7 @@ class TestAddUploads(TestCase):
         this test will fail because the file url is already existing
         """
         files = {'file': open(test_csv_file, 'rb')}
-        values = {'token': test_token, 'upload_name': test_upload_name}
+        values = {'token': test_token, 'name': test_upload_name}
 
         output = requests.post(url, files=files, data=values)
 

@@ -17,9 +17,9 @@ class Uploads(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    # TODO change file_name to upload_name once code is push (check with frontend)
+    # TODO change file_name to name once code is push (check with frontend)
     uuid = db.Column(db.String(255))
-    file_name = db.Column(db.String(255))
+    name = db.Column(db.String(255))
     layer = db.Column(db.String(255))
     size = db.Column(db.Numeric)
     url = db.Column(db.String(255))

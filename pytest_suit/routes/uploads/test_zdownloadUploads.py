@@ -1,6 +1,6 @@
 import requests
 from unittest import TestCase
-from . import BASE_URL, test_token, test_upload_name
+from . import BASE_URL, test_token
 
 url = BASE_URL + "/upload/download"
 
@@ -10,9 +10,17 @@ class TestDownload(TestCase):
         """
         this test will pass the upload/download method
         """
+        listUrl = BASE_URL + "/upload/list"
         payload = {
             "token": test_token,
-            "upload_name": test_upload_name
+        }
+
+        output = requests.post(listUrl, json=payload)
+        test_upload_id = output.json()['uploads'][0]['id']
+
+        payload = {
+            "token": test_token,
+            "id": test_upload_id
         }
 
         output = requests.post(url, json=payload)
@@ -24,7 +32,7 @@ class TestDownload(TestCase):
         this test will fail because the given parameters are wrong
         """
         payload = {
-            "usafrl": test_upload_name,
+            "sdafid": -5,
             "togfdken": test_token,
         }
 
@@ -39,7 +47,7 @@ class TestDownload(TestCase):
         this test will pass the uploads/add method
         """
         payload = {
-            "upload_name": test_upload_name,
+            "id": -5,
             "token": "ThisIsAWrongToken",
         }
 
@@ -54,7 +62,7 @@ class TestDownload(TestCase):
         this test will pass the uploads/add method
         """
         payload = {
-            "upload_name": "thisisarandomurl",
+            "id": -5,
             "token": test_token,
         }
 

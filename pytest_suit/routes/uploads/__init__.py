@@ -3,4 +3,3 @@ from .. import BASE_URL, test_csv_file, test_csv_size, test_csv_name, test_hecta
 from ..user import test_token
 
 test_upload_name = 'pytest_upload_csv'
-

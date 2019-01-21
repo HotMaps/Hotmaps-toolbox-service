@@ -49,9 +49,9 @@ class AddUploads(Resource):
         except:
             wrong_parameter.append('token')
         try:
-            upload_name = args['upload_name']
+            name = args['name']
         except:
-            wrong_parameter.append('upload_name')
+            wrong_parameter.append('name')
         try:
             file_name = args['file'].filename
         except Exception, e:
@@ -86,8 +86,8 @@ class AddUploads(Resource):
         if not os.path.isdir(user_folder):
             os.makedirs(user_folder)
 
-        # we need to check if the URL is already taken
-        if Uploads.query.filter_by(file_name=upload_name).first() is not None:
+        # we need to check if the name is already taken for the user
+        if Uploads.query.filter_by(name=name).first() is not None:
             raise UploadExistingUrlException
 
         # we check if the file extension is valid
@@ -118,12 +118,12 @@ class AddUploads(Resource):
             raise NotEnoughSpaceException
 
         # add the upload on the db
-        upload = Uploads(file_name=upload_name, url=url, size=size, layer=layer, user_id=user.id, uuid=upload_uuid)
+        upload = Uploads(name=name, url=url, size=size, layer=layer, user_id=user.id, uuid=upload_uuid)
         db.session.add(upload)
         db.session.commit()
 
         # output
-        output = 'file '+file_name+' added for the user '+user.first_name
+        output = 'file '+name+' added for the user '+user.first_name
         return {
             "message": str(output)
         }
@@ -177,9 +177,9 @@ class DeleteUploads(Resource):
         # Entries
         wrong_parameter = []
         try:
-            upload_name = api.payload['upload_name']
+            id = api.payload['id']
         except:
-            wrong_parameter.append('upload_name')
+            wrong_parameter.append('id')
         try:
             token = api.payload['token']
         except:
@@ -198,7 +198,7 @@ class DeleteUploads(Resource):
             raise UserUnidentifiedException
 
         # find upload to delete
-        upload_to_delete = Uploads.query.filter_by(file_name=upload_name).first()
+        upload_to_delete = Uploads.query.filter_by(id=id).first()
         if upload_to_delete is None:
             raise UploadNotExistingException
 
@@ -655,9 +655,9 @@ class Download(Resource):
         except:
             wrong_parameter.append('token')
         try:
-            upload_name = api.payload['upload_name']
+            id = api.payload['id']
         except:
-            wrong_parameter.append('upload_name')
+            wrong_parameter.append('id')
 
         if len(wrong_parameter) > 0:
             exception_message = ''
@@ -673,7 +673,7 @@ class Download(Resource):
             raise UserUnidentifiedException
 
         # find upload
-        upload = Uploads.query.filter_by(file_name=upload_name).first()
+        upload = Uploads.query.filter_by(id=id).first()
         if upload is None:
             raise UploadNotExistingException
 
@@ -691,7 +691,7 @@ class Download(Resource):
         # send the file to the client
         return send_file(url,
                          mimetype=mimetype,
-                         attachment_filename=upload_name+'.tif',
+                         attachment_filename=upload.name+'.tif',
                          as_attachment=True)
 
 
