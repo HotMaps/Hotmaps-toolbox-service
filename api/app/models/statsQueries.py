@@ -3,7 +3,7 @@ from .. import helper
 from app import dbGIS as db
 from app import constants
 from decimal import *
-from app.models.indicators import layersData
+from app.models.indicators import layersData, ELECRICITY_MIX
 from app import celery
 from . import generalData
 from app import model
@@ -126,8 +126,8 @@ class ElectricityMix:
 
 	def getEnergyMixNutsLau(nuts):
 
-		sql_query = "WITH energy_total as (SELECT sum(electricity_generation) as value FROM " + constants.ELECRICITY_MIX + " WHERE nuts0_code IN ("+nuts+") )" + \
-					"SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM " + constants.ELECRICITY_MIX + " ,energy_total WHERE nuts0_code IN ("+nuts+")  GROUP BY energy_carrier ORDER BY energy_carrier ASC" ;
+		sql_query = "WITH energy_total as (SELECT sum(electricity_generation) as value FROM " + ELECRICITY_MIX + " WHERE nuts0_code IN ("+nuts+") )" + \
+					"SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM " + ELECRICITY_MIX + " ,energy_total WHERE nuts0_code IN ("+nuts+")  GROUP BY energy_carrier ORDER BY energy_carrier ASC" ;
 
 
 

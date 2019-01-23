@@ -187,7 +187,7 @@ class StatsLayersNutsInArea(Resource):
 					exception_message += ', '
 			raise ParameterException(str(exception_message))
 
-		res = ElectricityMix.getEnergyMixNutsLau(generalData.adapt_nuts_list(nuts))
+		res = ElectricityMix.getEnergyMixNutsLau(adapt_nuts_list(nuts))
 		return res
 
 
@@ -200,7 +200,7 @@ class StatsLayersNutsInArea(Resource):
 def processGenerationMix(nuts):
 	if not nuts:
 		return
-	res = ElectricityMix.getEnergyMixNutsLau(generalData.adapt_nuts_list(nuts))
+	res = ElectricityMix.getEnergyMixNutsLau(adapt_nuts_list(nuts))
 
 	return res
 

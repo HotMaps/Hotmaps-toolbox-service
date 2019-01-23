@@ -51,16 +51,16 @@ WIND_SPEED = 'output_wind_speed'
 WIND_POTENTIAL = 'wind_50m'
 SOLAR_POTENTIAL = 'solar_optimal_total'
 #GEOTHERMAL_POTENTIAL_HEAT_COND = 'potential_shallowgeothermal_heat_cond'
-#GEOTHERMAL_POTENTIAL_HEAT_COND = 'potential_shallowgeothermal'shallow_geothermal_potential
-GEOTHERMAL_POTENTIAL_HEAT_COND = 'shallow_geothermal_potential'
+#GEOTHERMAL_POTENTIAL_HEAT_COND = 'potential_shallowgeothermal'
+GEOTHERMAL_POTENTIAL_HEAT_COND = 'shallow_geothermal_potential2'
 ELECTRICITY_CO2_EMISSION_FACTOR = 'yearly_co2_emission'
 HDD_CUR = 'hdd_curr'
 CDD_CUR = 'cdd_curr'
-#ELECRICITY_MIX = 'stat.yearly_electricity_generation_mix'
 LAND_SURFACE_TEMP = 'land_surface_temperature'
 AGRICULTURAL_RESIDUES = 'agricultural_residues_view'
 SOLAR_RADIATION = 'solar_radiation'
 
+ELECRICITY_MIX = 'stat.yearly_electricity_generation_mix'
 
 
 stat = 'stat_'
@@ -348,6 +348,7 @@ layersData = {
             'crs': '4258',
             'geo_column': geom_column,
 			'table_type':vector_type,
+			'scalelvl_column':'nuts_id',
          	'level_of_data':nuts3,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':False,'indicators':[
@@ -363,7 +364,8 @@ layersData = {
             'crs': '4258',
             'geo_column': geom_column,
 			'table_type':vector_type,
-         	'level_of_data':nuts3,   
+         	'level_of_data':nuts3,
+			'scalelvl_column':'nuts_id',
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':False,'indicators':[
 				{'table_column': 'value', 'unit': 'GWh','indicator_id':'NUTS_potential','factor':277.778,'agg_method':'sum','diss_agg_method':'NUTS_result'},
@@ -392,7 +394,8 @@ layersData = {
             'crs': '4258',
             'geo_column': geometry_column,
 			'table_type':vector_type,
-         'level_of_data':nuts3,   
+         	'level_of_data':nuts3,
+			'scalelvl_column':'nuts_id',
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':False,'indicators':[
 				{'table_column': 'value', 'unit': 'GWh','indicator_id':'val','factor':277.778,'agg_method':'sum','diss_agg_method':'NUTS_result'},
@@ -531,6 +534,7 @@ layersData = {
             'crs': '4258',
 			'table_type':vector_type,
 			'level_of_data':nuts0,
+			'scalelvl_column':'nuts_id',
 			'from_indicator_name':stat + ELECTRICITY_CO2_EMISSION_FACTOR,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':False,'indicators':[
