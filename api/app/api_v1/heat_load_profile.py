@@ -301,9 +301,10 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
         # Stop execution if nuts list is empty
         if not nuts:
             return
-            
-        nuts = helper.transform_nuts_list(nuts)
-        
+        print(nuts)
+        nuts = helper.nuts_array_to_string(nuts)
+        print(nuts)
+
         if 'month' in api.payload.keys():
           month = api.payload["month"]
         else:
@@ -315,11 +316,10 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
           day = 0
 
         output = {}
-
-        try:
-            res = HeatLoadProfile.heatloadprofile_nuts_lau(nuts=nuts, year=year, month=month, day=day)
-        except Exception as e:
-            raise IntersectionException
-        output = res
+        nuts_level = api.payload["nuts_level"]
+        """ try: """
+        output = HeatLoadProfile.heatloadprofile_nuts_lau(nuts=nuts, year=year, month=month, day=day, nuts_level=nuts_level)
+        """ except Exception as e:
+            raise IntersectionException """
 
         return output

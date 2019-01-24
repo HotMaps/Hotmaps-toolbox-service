@@ -247,6 +247,9 @@ def sampling_data(listValues):
 		finalListPoints.append(minValue)
 
 	return finalListPoints
+def nuts_array_to_string(nuts):
+    nuts_transformed = ''.join("'"+str(nu)+"'," for nu in nuts)[:-1]
+    return nuts_transformed
 
 def transform_nuts_list(nuts):
 		# Store nuts in new custom list
