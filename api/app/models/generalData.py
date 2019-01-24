@@ -65,7 +65,9 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 		scalelvl_column = layersData[layer]['scalelvl_column']
 
 	nust_select_name = "nutsSelection_"+ layer
-	nuts_selection =  nust_select_name +" as (SELECT st_union(geom) as geom from geo."+name_type+" where "+name_type+".year = date('"+year+"-01-01') and "+scale_level_name+"  in ("+nuts+")), "
+
+	#TODO: Make a nuts selection like heatload with within where clause in nuts selection. Do not use geom! To slow
+	nuts_selection =  nust_select_name +" as (SELECT geom as geom from geo."+name_type+" where "+name_type+".year = date('"+year+"-01-01') and "+scale_level_name+"  in ("+nuts+")), "
 
 	from_part = 'stat_' + layer
 	query_from_part = from_part+" as ("
