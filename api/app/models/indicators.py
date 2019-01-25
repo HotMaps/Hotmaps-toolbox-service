@@ -52,7 +52,7 @@ WIND_POTENTIAL = 'wind_50m'
 SOLAR_POTENTIAL = 'solar_optimal_total'
 #GEOTHERMAL_POTENTIAL_HEAT_COND = 'potential_shallowgeothermal_heat_cond'
 #GEOTHERMAL_POTENTIAL_HEAT_COND = 'potential_shallowgeothermal'
-GEOTHERMAL_POTENTIAL_HEAT_COND = 'shallow_geothermal_potential2'
+GEOTHERMAL_POTENTIAL_HEAT_COND = 'shallow_geothermal_potential'
 ELECTRICITY_CO2_EMISSION_FACTOR = 'yearly_co2_emission'
 HDD_CUR = 'hdd_curr'
 CDD_CUR = 'cdd_curr'
@@ -410,7 +410,7 @@ layersData = {
 			'table_type':vector_type,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':False,'indicators':[
-				{'table_column': 'sum', 'unit': 'W/mK','indicator_id':'value'}
+				{'table_column': 'heat_cond', 'unit': 'W/mK','indicator_id':'value'}
 			]
 		   },
 	SOLAR_POTENTIAL:{'tablename':SOLAR_POTENTIAL,

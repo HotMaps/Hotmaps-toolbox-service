@@ -45,14 +45,17 @@ def addRegisterCalulationModule(data):
         authorized_scale = data['authorized_scale']
     except:
         pass
-
+    cm_link = ""
+    try:
+        cm_link = data['cm_link']
+    except:
+        pass
 
     vectors_needed = "[]"
     try:
         vectors_needed = data['vectors_needed']
     except:
         pass
-
 
 
 
@@ -65,7 +68,7 @@ def addRegisterCalulationModule(data):
     conn = myCMpool.connect()
     cursor = conn.cursor()
     #c.execute("INSERT INTO calculation_module(cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt) VALUES ({},{},{},{},{},{},{},{})".format(cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt))
-    cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt,type_layer_needed,authorized_scale,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?)", ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ,type_layer_needed,authorized_scale,vectors_needed))
+    cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt,type_layer_needed,authorized_scale,cm_link,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?)", ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ,type_layer_needed,authorized_scale,cm_link,vectors_needed))
     cursor.close()
 
 def init_sqlite_caculation_module_database(dbname=DB_NAME):
@@ -73,7 +76,7 @@ def init_sqlite_caculation_module_database(dbname=DB_NAME):
     cursor = conn.cursor()
     cursor.execute("DROP TABLE IF EXISTS calculation_module")
     cursor.execute("CREATE TABLE calculation_module (cm_id INTEGER NOT NULL, cm_name VARCHAR(255), "
-                   "cm_description VARCHAR(255),cm_url VARCHAR(255),category VARCHAR(255),layers_needed VARCHAR(255),authorized_scale VARCHAR(255),createdAt REAL(255),updatedAt REAL(255),type_layer_needed REAL(255),vectors_needed REAL(255),"
+                   "cm_description VARCHAR(255),cm_url VARCHAR(255),category VARCHAR(255),layers_needed VARCHAR(255),authorized_scale VARCHAR(255),cm_link VARCHAR(255),createdAt REAL(255),updatedAt REAL(255),type_layer_needed REAL(255),vectors_needed REAL(255),"
                    " PRIMARY KEY(cm_id))")
     conn.commit()
     cursor.execute("DROP TABLE IF EXISTS inputs_calculation_module")
@@ -101,6 +104,12 @@ def register_calulation_module(data):
             authorized_scale = data['authorized_scale']
         except:
             pass
+
+        cm_link = ""
+        try:
+            cm_link = data['cm_link']
+        except:
+            pass
         vectors_needed = "[]"
         try:
             vectors_needed = data['vectors_needed']
@@ -118,11 +127,9 @@ def register_calulation_module(data):
             ln = str(layers_needed)
             tn = str(type_layer_needed)
             authorized_scale = str(authorized_scale)
+            cm_link = str(cm_link)
             vectors_needed = str(vectors_needed)
-
-
-            print ("layers_needed string",ln)
-            cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?)", ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt,tn,authorized_scale,vectors_needed ))
+            cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,cm_link,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt,tn,authorized_scale,cm_link,vectors_needed ))
             conn.commit()
             for value in inputs_calculation_module:
                 input_name = value['input_name']
@@ -148,19 +155,21 @@ def register_calulation_module(data):
         except ValidationError:
             pass
         except sqlite3.IntegrityError as e:
-            update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,type_layer_needed,authorized_scale,vectors_needed,inputs_calculation_module,cursor,conn)
+            update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,type_layer_needed,authorized_scale,cm_link,vectors_needed,inputs_calculation_module,cursor,conn)
 
 
-def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,vectors_needed ,inputs_calculation_module,cursor,conn):
+def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,cm_link,vectors_needed ,inputs_calculation_module,cursor,conn):
     try:
 
         ln = str(layers_needed)
         tn = str(type_layer_needed)
         auth_s = str(authorized_scale)
+
+        cm_link = str(cm_link)
         vn = str(vectors_needed)
 
 
-        cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? ,  type_layer_needed = ?, authorized_scale = ?, vectors_needed = ?   WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt, tn,auth_s, vn,cm_id ))
+        cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? ,  type_layer_needed = ?, authorized_scale = ?,cm_link = ?, vectors_needed = ?   WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt, tn,auth_s,cm_link, vn,cm_id ))
         conn.commit()
         cursor.execute("DELETE FROM inputs_calculation_module WHERE cm_id = ? ", (str(cm_id)))
         conn.commit()
@@ -249,14 +258,13 @@ def get_parameters_needed(cm_id):
         print ('results', results)
         for row in results:
             response.append(row[0])
-
         conn.close()
         return response
-
     except ValidationError:
         print ('error')
     except sqlite3.IntegrityError as e:
         print (e)
+
 def delete_cm(cm_id):
     delete_cm_with_id(cm_id)
     delete_cm_ui_with_id(cm_id)
@@ -265,7 +273,6 @@ def delete_cm_ui_with_id(cm_id):
     try:
         conn = myCMpool.connect()
         cursor = conn.cursor()
-
         results = cursor.execute('DELETE FROM inputs_calculation_module WHERE cm_id = ?',
                                  (cm_id))
         conn.commit()
@@ -276,6 +283,7 @@ def delete_cm_ui_with_id(cm_id):
         print ('error')
     except sqlite3.IntegrityError as e:
         print (e)
+
 
 def delete_cm_with_id(cm_id):
     try:
