@@ -24,9 +24,9 @@ CM_REGISTER_Q = 'rpc_queue_CM_register'
 
 #TODO ********************setup this URL depending on which version you are running***************************
 
-CELERY_BROKER_URL = CELERY_BROKER_URL_LOCAL
+CELERY_BROKER_URL = CELERY_BROKER_URL_DOCKER
 CLIENT_URL = CLIENT_URL_DEV
-PORT = PORT_LOCAL
+PORT = PORT_DOCKER
 
 
 #TODO *******************************************************************************
@@ -107,4 +107,4 @@ NUTS_VAlUES = [nuts0,nuts1,nuts2,nuts3]
 
 
 NUTS_LAU_LEVELS = {nuts0:0,nuts1:1,nuts2:2,nuts3:3,lau2:4,hectare_name:5}
-
+scale_level_loadprofile_aggreagtion = [nuts3,lau2]

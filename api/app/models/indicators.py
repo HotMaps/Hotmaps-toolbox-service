@@ -32,6 +32,7 @@ POPULATION_TOT = 'pop_tot_curr_density'
 HEAT_DENSITY_TOT = 'heat_tot_curr_density'
 HEAT_DENSITY_NON_RES = 'heat_nonres_curr_density'
 HEAT_DENSITY_RES = 'heat_res_curr_density'
+COOL_DENSITY_TOT = 'cool_tot_curr_density'
 GRASS_FLOOR_AREA_TOT = 'gfa_tot_curr_density'
 GRASS_FLOOR_AREA_RES = 'gfa_res_curr_density'
 GRASS_FLOOR_AREA_NON_RES = 'gfa_nonres_curr_density'
@@ -51,16 +52,15 @@ WIND_SPEED = 'output_wind_speed'
 WIND_POTENTIAL = 'wind_50m'
 SOLAR_POTENTIAL = 'solar_optimal_total'
 #GEOTHERMAL_POTENTIAL_HEAT_COND = 'potential_shallowgeothermal_heat_cond'
-#GEOTHERMAL_POTENTIAL_HEAT_COND = 'potential_shallowgeothermal'
 GEOTHERMAL_POTENTIAL_HEAT_COND = 'shallow_geothermal_potential'
 ELECTRICITY_CO2_EMISSION_FACTOR = 'yearly_co2_emission'
 HDD_CUR = 'hdd_curr'
 CDD_CUR = 'cdd_curr'
+ELECRICITY_MIX = 'stat.yearly_electricity_generation_mix'
 LAND_SURFACE_TEMP = 'land_surface_temperature'
 AGRICULTURAL_RESIDUES = 'agricultural_residues_view'
 SOLAR_RADIATION = 'solar_radiation'
 
-ELECRICITY_MIX = 'stat.yearly_electricity_generation_mix'
 
 
 stat = 'stat_'
@@ -136,6 +136,25 @@ layersData = {
                  'operator': '/',
     				'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 
                 'unit':'MWh/person', 'indicator_id':HEAT_DENSITY_NON_RES+'_per_'+POPULATION_TOT,'agg_method':'sum'
+				},
+			]},
+	COOL_DENSITY_TOT:{'tablename':COOL_DENSITY_TOT,
+			'from_indicator_name':stat + COOL_DENSITY_TOT,
+            'schema_scalelvl': stat_schema,
+            'schema_hectare': geo_schema,
+            'geo_column': geometry_column,
+            'crs': '3035',
+			'table_type':raster_type,
+			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
+
+			'data_aggregated':True,'indicators':[
+				{'table_column': 'sum', 'unit': 'GWh','indicator_id':'consumption','factor':0.001,'agg_method':'sum'},
+            {'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
+            {'table_column': 'mean', 'unit': 'MWh/ha','indicator_id':'density','agg_method':'mean_weighted_cells'},
+				{'reference_indicator_id_1': 'consumption', 'reference_tablename_indicator_id_1':COOL_DENSITY_TOT,
+                 'operator': '/',
+    				'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT,
+                'unit':'MWh/person', 'indicator_id':COOL_DENSITY_TOT+'_per_'+POPULATION_TOT,'agg_method':'sum'
 				},
 			]},
 	GRASS_FLOOR_AREA_TOT:{'tablename':GRASS_FLOOR_AREA_TOT,
@@ -377,7 +396,7 @@ layersData = {
             'geo_column': geometry_column,
             'crs': '3035',
 			'table_type':raster_type,
-        	'level_of_data':nuts3, 
+        	'level_of_data':nuts3,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'from_indicator_name':stat + POTENTIAL_FOREST,
 			'data_aggregated':True,'indicators':[
