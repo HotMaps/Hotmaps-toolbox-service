@@ -1,9 +1,12 @@
 import os
 import requests
 import uuid
+import shutil
 import xml.etree.ElementTree as ET
-from .. import dbGIS as db
+from app import celery
+from .. import constants, dbGIS as db
 from ..decorators.exceptions import RequestException
+
 ALLOWED_EXTENSIONS = set(['tif', 'csv'])
 
 
@@ -17,12 +20,12 @@ class Uploads(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    # TODO change file_name to name once code is push (check with frontend)
     uuid = db.Column(db.String(255))
     name = db.Column(db.String(255))
     layer = db.Column(db.String(255))
     size = db.Column(db.Numeric)
     url = db.Column(db.String(255))
+    is_generated = db.Column(db.Integer)
     user_id = db.Column(db.Integer, db.ForeignKey('user.users.id'))
 
 
@@ -38,12 +41,16 @@ class ColorMap:
         self.quantity = quantity
 
 
-def generate_tiles(upload_folder, grey_tif, layer):
+@celery.task(name = 'generate_tiles_file_upload')
+def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_used_space):
     '''
     This function is used to generate the various tiles of a layer in the db.
     :param upload_folder: the folder of the upload
     :param grey_tif: the url to the input file
     :param layer: the name of the layer choosen for the input
+    :param upload_uuid: the uuid of the upload
+    :param user_currently_used_space: the space currently used by the user
+
     '''
     # we set up the directory for the tif
     directory_for_tiles = upload_folder + '/tiles'
@@ -69,20 +76,49 @@ def generate_tiles(upload_folder, grey_tif, layer):
     grey2rgb_path = create_grey2rgb_txt(color_map_objects, uuid_temp)
     rgb_tif = upload_folder + '/rgba.tif'
 
-    # commands launch to obtain the level of zooms
-    com_creatergba = "gdaldem color-relief {} {} -alpha {}" \
-        .format(grey_tif, grey2rgb_path, rgb_tif)
-    os.system(com_creatergba)
+    try:
+        # commands launch to obtain the level of zooms
+        com_create_rgba = "gdaldem color-relief {} {} -alpha {}" \
+            .format(grey_tif, grey2rgb_path, rgb_tif)
+        os.system(com_create_rgba)
 
-    # commands launch to obtain the level of zooms
-    com_generate_tiles = "python app/helper/gdal2tiles.py -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} " \
-        .format(rgb_tif, tile_path)
-    os.system(com_generate_tiles)
+        # commands launch to obtain the level of zooms
+        com_generate_tiles = "python app/helper/gdal2tiles.py -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} " \
+            .format(rgb_tif, tile_path)
+        os.system(com_generate_tiles)
+    except:
+        generate_state = 10
+    else:
+        generate_state = 0
 
     # we delete all temp files
     for fname in os.listdir('/tmp'):
         if fname.startswith(uuid_temp):
             os.remove(os.path.join('/tmp', fname))
+    upload = Uploads.query.filter_by(uuid=upload_uuid).first()
+    upload.is_generated = generate_state
+    db.session.commit()
+    check_map_size(upload_folder, user_currently_used_space, upload_uuid)
+    return generate_state
+
+
+def check_map_size(upload_folder, user_currently_used_space, upload_uuid):
+    '''
+    This method is used to check the size of the file
+    :param upload_folder: the folder where the upload is stored
+    :param user_currently_used_space: the space already used by the user
+    :param upload_uuid: the uuid of the upload
+    :return:
+    '''
+    size = 0
+    for dirpath, dirnames, filenames in os.walk(upload_folder):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            size += float(os.path.getsize(fp)) / 1000000
+    # we need to check if there is enough disk space for the dataset
+    upload = Uploads.query.filter_by(uuid=upload_uuid).first()
+    upload.size = 2
+    db.session.commit()
 
 
 def create_grey2rgb_txt(color_map_objects, uuid_upload):
@@ -171,3 +207,4 @@ def allowed_file(filename):
     :return:
     '''
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+

@@ -6,16 +6,16 @@ import uuid
 from flask_restplus import Resource
 from binascii import unhexlify
 from flask import send_file
-from .. import constants
+from app import celery
 from ..decorators.restplus import api
 from ..decorators.restplus import UserUnidentifiedException, ParameterException, RequestException, \
-    UserDoesntOwnUploadsException, UploadExistingUrlException, NotEnoughSpaceException, UploadNotExistingException, \
+    UserDoesntOwnUploadsException, UploadExistingUrlException, UploadNotExistingException, \
     HugeRequestException, NotEnoughPointsException
 from ..decorators.serializers import upload_add_output, upload_list_input, upload_list_output,upload_delete_input, \
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
     upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input
 from .. import dbGIS as db
-from ..models.uploads import Uploads, generate_tiles, allowed_file, calculate_total_space
+from ..models.uploads import Uploads, generate_tiles, allowed_file, check_map_size, calculate_total_space
 from ..models.user import User
 from ..decorators.parsers import file_upload
 
@@ -80,7 +80,6 @@ class AddUploads(Resource):
         user_folder = USER_UPLOAD_FOLDER + str(user.id)
         upload_uuid = str(uuid.uuid4())
         upload_folder = user_folder + '/' + upload_uuid
-        url = upload_folder + '/grey.tif'
 
         # if the user does not own a repository, we create one
         if not os.path.isdir(user_folder):
@@ -94,36 +93,29 @@ class AddUploads(Resource):
         if not allowed_file(file_name):
             raise RequestException("Please select a tif or csv file !")
 
+        user_currently_used_space = calculate_total_space(user.uploads)
+
+        if file_name.endswith('.tif'):
+            url = upload_folder + '/grey.tif'
+        else:
+            url = upload_folder + '/data.csv'
+
+        upload = Uploads(name=name, url=url, size=-1, layer=layer, user_id=user.id, uuid=upload_uuid,
+                         is_generated=10)
+        db.session.add(upload)
+        db.session.commit()
+
         os.makedirs(upload_folder)
 
         # save the file on the file_system
         args['file'].save(url)
-
         if file_name.endswith('.tif'):
-            generate_tiles(upload_folder, url, layer)
-
-        # we check the size of our file
-        size = 0
-        for dirpath, dirnames, filenames in os.walk(upload_folder):
-            for f in filenames:
-                fp = os.path.join(dirpath, f)
-                size += float(os.path.getsize(fp)) / 1000000
-
-        # we need to check if there is enough disk space for the dataset
-        used_size = calculate_total_space(user.uploads) + size
-
-        if used_size > constants.USER_DISC_SPACE_AVAILABLE:
-            # retroactively delete the files
-            shutil.rmtree(upload_folder)
-            raise NotEnoughSpaceException
-
-        # add the upload on the db
-        upload = Uploads(name=name, url=url, size=size, layer=layer, user_id=user.id, uuid=upload_uuid)
-        db.session.add(upload)
-        db.session.commit()
+            generate_tiles.delay(upload_folder, url, layer, upload_uuid, user_currently_used_space)
+        else:
+            check_map_size(upload_folder, user_currently_used_space, upload_uuid)
 
         # output
-        output = 'file '+name+' added for the user '+user.first_name
+        output = 'file ' + name + ' added for the user ' + user.first_name
         return {
             "message": str(output)
         }
@@ -221,6 +213,7 @@ class DeleteUploads(Resource):
         }
 
 
+@celery.task(name='generate_tiles_file_upload')
 @ns.route('/export/raster/nuts')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
@@ -267,7 +260,6 @@ class ExportRasterNuts(Resource):
             layer_date = NUTS_YEAR
             if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
-
 
         # format the layer_name to contain only the name
         if layer_name.endswith('_tif'):
@@ -325,6 +317,7 @@ class ExportRasterNuts(Resource):
                          as_attachment=True)
 
 
+@celery.task(name='generate_tiles_file_upload')
 @ns.route('/export/raster/hectare')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
@@ -429,6 +422,7 @@ class ExportRasterHectare(Resource):
             raise RequestException(str(e))
 
 
+@celery.task(name='generate_tiles_file_upload')
 @ns.route('/export/csv/nuts')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
@@ -528,6 +522,7 @@ class ExportCsvNuts(Resource):
                          as_attachment=True)
 
 
+@celery.task(name='generate_tiles_file_upload')
 @ns.route('/export/csv/hectare')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
