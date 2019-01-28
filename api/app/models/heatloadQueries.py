@@ -29,7 +29,6 @@ class HeatLoadProfile:
 		#query = db.session.execute(sql_query)
 
 		res = model.query_geographic_database(query)
-		print(res)
 		# Storing the results only if there is data
 		output = []
 		
@@ -254,7 +253,6 @@ def createQueryDataLPNutsLau(year, month, day, nuts, request_type, nuts_level):
 		time_columns = "stat.time.day AS statday,stat.time.month AS statmonth,stat.time.year AS statyear"
 		group_by_time_columns=" statday, statmonth, statyear"
 		where_request="where statmonth = " + str(month)
-		#order_by = "order by statday"
 	elif request_type == 'day':
 		time_columns = "stat.time.hour_of_day as hour_of_day, stat.time.day AS statday,stat.time.month AS statmonth,stat.time.year AS statyear"
 		group_by_time_columns="hour_of_day, statday, statmonth, statyear"
