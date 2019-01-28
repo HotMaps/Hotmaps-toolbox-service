@@ -530,7 +530,4 @@ upload_download_input = api.model('input for the upload download.', {
 upload_tiles_input = api.model('input for getting tiles  deleting', {
     'token': fields.String(description='authentification token'),
     "id": fields.Integer(description='Upload id'),
-    'x': fields.Integer(description='x for leaflet'),
-    'y': fields.Integer(description='y for leaflet'),
-    'z': fields.Integer(description='z for leaflet'),
 })

@@ -121,14 +121,14 @@ class AddUploads(Resource):
         }
 
 
-@ns.route('/tiles')
+@ns.route('/tiles/<int:z>/<int:x>/<int:y>')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 @api.response(543, 'Uploads doesn\'t exists')
 class TilesUploads(Resource):
     @api.expect(upload_tiles_input)
-    def post(self):
+    def post(self, z, x, y):
         """
         The method called to get the tiles of an upload
         :return:
@@ -143,18 +143,6 @@ class TilesUploads(Resource):
             token = api.payload['token']
         except:
             wrong_parameter.append('token')
-        try:
-            x = api.payload['x']
-        except:
-            wrong_parameter.append('x')
-        try:
-            y = api.payload['y']
-        except:
-            wrong_parameter.append('y')
-        try:
-            z = api.payload['z']
-        except:
-            wrong_parameter.append('z')
         # raise exception if parameters are false
         if len(wrong_parameter) > 0:
             exception_message = ''
@@ -542,9 +530,14 @@ class ExportCsvNuts(Resource):
             if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
 
+        # using the year
         sql = "SELECT * FROM " + schema + "." + layer_name + " WHERE date = '" + year + "-01-01' AND ST_Within(" \
               + schema + "." + layer_name + ".geometry, st_transform((SELECT geom from geo." \
               + layer_type + " where " + id_type + " = '" + nuts[0] + "'"
+
+        # sql = "SELECT * FROM " + schema + "." + layer_name + " WHERE ST_Within(" \
+        #     + schema + "." + layer_name + ".geometry, st_transform((SELECT geom from geo." \
+        #    + layer_type + " where " + id_type + " = '" + nuts[0] + "'"
 
         # we add the rest of the lau id
         for nut in nuts[1:]:
