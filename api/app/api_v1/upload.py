@@ -742,17 +742,19 @@ class Download(Resource):
         if upload.user_id != user.id:
             raise UserDoesntOwnUploadsException
 
-        url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid) + '/grey.tif'
+        url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
 
-        if url.endswith('.tif'):
+        if os.path.exists(url + '/grey.tif'):
+            url += '/grey.tif'
+            extension = '.tif'
             mimetype = 'image/TIFF'
-        elif url.endswith('.csv'):
+        elif os.path.exists(url + '/data.csv'):
+            url += '/data.csv'
+            extension= '.csv'
             mimetype = 'text/csv'
 
         # send the file to the client
         return send_file(url,
                          mimetype=mimetype,
-                         attachment_filename=upload.name+'.tif',
+                         attachment_filename=upload.name + extension,
                          as_attachment=True)
-
-

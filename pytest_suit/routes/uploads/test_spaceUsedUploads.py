@@ -19,6 +19,7 @@ class TestSpaceUsedUploads(TestCase):
         output = requests.post(url, json=payload)
 
         expected_output = test_csv_size
+
         assert output.json()['used_size'] == expected_output
 
     def test_post_missing_parameter(self):

@@ -116,8 +116,12 @@ def check_map_size(upload_folder, user_currently_used_space, upload_uuid):
             fp = os.path.join(dirpath, f)
             size += float(os.path.getsize(fp)) / 1000000
     # we need to check if there is enough disk space for the dataset
+    total_used_space = user_currently_used_space + size
     upload = Uploads.query.filter_by(uuid=upload_uuid).first()
-    upload.size = 2
+    if total_used_space > constants.USER_DISC_SPACE_AVAILABLE:
+        db.session.delete(upload)
+    else:
+        upload.size = size
     db.session.commit()
 
 
