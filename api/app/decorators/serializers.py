@@ -526,8 +526,3 @@ upload_download_input = api.model('input for the upload download.', {
     'token': fields.String(description='authentification token'),
     "id": fields.Integer(description='Upload id'),
 })
-
-upload_tiles_input = api.model('input for getting tiles  deleting', {
-    'token': fields.String(description='authentification token'),
-    "id": fields.Integer(description='Upload id'),
-})

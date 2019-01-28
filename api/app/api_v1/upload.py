@@ -13,7 +13,7 @@ from ..decorators.restplus import UserUnidentifiedException, ParameterException,
     HugeRequestException, NotEnoughPointsException
 from ..decorators.serializers import upload_add_output, upload_list_input, upload_list_output,upload_delete_input, \
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
-    upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input, upload_tiles_input
+    upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input
 from .. import dbGIS as db
 from ..models.uploads import Uploads, generate_tiles, allowed_file, check_map_size, calculate_total_space
 from ..models.user import User
@@ -100,8 +100,8 @@ class AddUploads(Resource):
         else:
             url = upload_folder + '/data.csv'
 
-        upload = Uploads(name=name, url=url, size=-1, layer=layer, user_id=user.id, uuid=upload_uuid,
-                         is_generated=10)
+        upload = Uploads(name=name, url=url, layer=layer, user_id=user.id, uuid=upload_uuid,
+                         is_generated=1)
         db.session.add(upload)
         db.session.commit()
 
@@ -121,36 +121,17 @@ class AddUploads(Resource):
         }
 
 
-@ns.route('/tiles/<int:z>/<int:x>/<int:y>')
+@ns.route('/tiles/<string:token>/<string:upload_id>/<int:z>/<int:x>/<int:y>')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 @api.response(543, 'Uploads doesn\'t exists')
 class TilesUploads(Resource):
-    @api.expect(upload_tiles_input)
-    def post(self, z, x, y):
+    def post(self, token, upload_id, z, x, y):
         """
         The method called to get the tiles of an upload
         :return:
         """
-        # Entries
-        wrong_parameter = []
-        try:
-            id = api.payload['id']
-        except:
-            wrong_parameter.append('id')
-        try:
-            token = api.payload['token']
-        except:
-            wrong_parameter.append('token')
-        # raise exception if parameters are false
-        if len(wrong_parameter) > 0:
-            exception_message = ''
-            for i in range(len(wrong_parameter)):
-                exception_message += wrong_parameter[i]
-                if i != len(wrong_parameter) - 1:
-                    exception_message += ', '
-            raise ParameterException(str(exception_message))
 
         # check token
         user = User.verify_auth_token(token)
@@ -158,7 +139,7 @@ class TilesUploads(Resource):
             raise UserUnidentifiedException
 
         # find upload to display
-        upload = Uploads.query.filter_by(id=id).first()
+        upload = Uploads.query.filter_by(id=upload_id).first()
         if upload is None:
             raise UploadNotExistingException
 
