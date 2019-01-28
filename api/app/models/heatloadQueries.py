@@ -29,7 +29,6 @@ class HeatLoadProfile:
 		#query = db.session.execute(sql_query)
 
 		res = model.query_geographic_database(query)
-		print(res)
 		# Storing the results only if there is data
 		output = []
 		
@@ -254,7 +253,6 @@ def createQueryDataLPNutsLau(year, month, day, nuts, request_type, nuts_level):
 		time_columns = "stat.time.day AS statday,stat.time.month AS statmonth,stat.time.year AS statyear"
 		group_by_time_columns=" statday, statmonth, statyear"
 		where_request="where statmonth = " + str(month)
-		
 	elif request_type == 'day':
 		time_columns = "stat.time.hour_of_day as hour_of_day, stat.time.day AS statday,stat.time.month AS statmonth,stat.time.year AS statyear"
 		group_by_time_columns="hour_of_day, statday, statmonth, statyear"
@@ -265,6 +263,7 @@ def createQueryDataLPNutsLau(year, month, day, nuts, request_type, nuts_level):
 	else:
 		scale_level_table = 'nuts'
 		scale_id = 'nuts_id'
+
 	hd_table = "stat.heat_tot_curr_density_"+scale_level_table
 	where_clause_hd = hd_table+"."+scale_id+" in ("+nuts+")"
 	from_hd = hd_table
@@ -314,6 +313,7 @@ def createQueryDataLPNutsLau(year, month, day, nuts, request_type, nuts_level):
 		from normalizedData
 		"""+where_request+"""
 		group by """+group_by_time_columns+"""
+		order by """+group_by_time_columns+"""
 	"""
 	
 	query = 'with ' + nutsSelectionQuery + query_lp + query_hd + query_normalized + query_select
