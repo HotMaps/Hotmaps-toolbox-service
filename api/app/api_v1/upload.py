@@ -270,7 +270,7 @@ class DeleteUploads(Resource):
         }
 
 
-@celery.task(name='export_raster_nuts')
+#@celery.task(name='export_raster_nuts')
 @ns.route('/export/raster/nuts')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
@@ -374,7 +374,7 @@ class ExportRasterNuts(Resource):
                          as_attachment=True)
 
 
-@celery.task(name='export_raster_hectare')
+#@celery.task(name='export_raster_hectare')
 @ns.route('/export/raster/hectare')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
@@ -476,7 +476,7 @@ class ExportRasterHectare(Resource):
                          as_attachment=True)
 
 
-@celery.task(name='export_csv_nuts')
+#@celery.task(name='export_csv_nuts')
 @ns.route('/export/csv/nuts')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
@@ -581,7 +581,7 @@ class ExportCsvNuts(Resource):
                          as_attachment=True)
 
 
-@celery.task(name='export_csv_hectare')
+#@celery.task(name='export_csv_hectare')
 @ns.route('/export/csv/hectare')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
