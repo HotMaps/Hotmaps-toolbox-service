@@ -521,7 +521,16 @@ upload_export_csv_hectare_input = api.model('input for the hectare upload export
     "schema": fields.String(description='schema'),
     "areas": fields.List(fields.Nested(area))
 })
+
 upload_download_input = api.model('input for the upload download.', {
     'token': fields.String(description='authentification token'),
     "id": fields.Integer(description='Upload id'),
+})
+
+upload_tiles_input = api.model('input for getting tiles  deleting', {
+    'token': fields.String(description='authentification token'),
+    "id": fields.Integer(description='Upload id'),
+    'x': fields.Integer(description='x for leaflet'),
+    'y': fields.Integer(description='y for leaflet'),
+    'z': fields.Integer(description='z for leaflet'),
 })

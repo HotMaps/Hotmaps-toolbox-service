@@ -5,7 +5,7 @@ import shapely.geometry as shapely_geom
 import uuid
 from flask_restplus import Resource
 from binascii import unhexlify
-from flask import send_file
+from flask import send_file, Response
 from app import celery
 from ..decorators.restplus import api
 from ..decorators.restplus import UserUnidentifiedException, ParameterException, RequestException, \
@@ -13,7 +13,7 @@ from ..decorators.restplus import UserUnidentifiedException, ParameterException,
     HugeRequestException, NotEnoughPointsException
 from ..decorators.serializers import upload_add_output, upload_list_input, upload_list_output,upload_delete_input, \
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
-    upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input
+    upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input, upload_tiles_input
 from .. import dbGIS as db
 from ..models.uploads import Uploads, generate_tiles, allowed_file, check_map_size, calculate_total_space
 from ..models.user import User
@@ -121,6 +121,75 @@ class AddUploads(Resource):
         }
 
 
+@ns.route('/tiles')
+@api.response(530, 'Request error')
+@api.response(531, 'Missing parameter')
+@api.response(539, 'User Unidentified')
+@api.response(543, 'Uploads doesn\'t exists')
+class TilesUploads(Resource):
+    @api.expect(upload_tiles_input)
+    def post(self):
+        """
+        The method called to get the tiles of an upload
+        :return:
+        """
+        # Entries
+        wrong_parameter = []
+        try:
+            id = api.payload['id']
+        except:
+            wrong_parameter.append('id')
+        try:
+            token = api.payload['token']
+        except:
+            wrong_parameter.append('token')
+        try:
+            x = api.payload['x']
+        except:
+            wrong_parameter.append('x')
+        try:
+            y = api.payload['y']
+        except:
+            wrong_parameter.append('y')
+        try:
+            z = api.payload['z']
+        except:
+            wrong_parameter.append('z')
+        # raise exception if parameters are false
+        if len(wrong_parameter) > 0:
+            exception_message = ''
+            for i in range(len(wrong_parameter)):
+                exception_message += wrong_parameter[i]
+                if i != len(wrong_parameter) - 1:
+                    exception_message += ', '
+            raise ParameterException(str(exception_message))
+
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise UserUnidentifiedException
+
+        # find upload to display
+        upload = Uploads.query.filter_by(id=id).first()
+        if upload is None:
+            raise UploadNotExistingException
+
+        # check if the user can display the upload
+        if upload.user_id != user.id:
+            raise UserDoesntOwnUploadsException
+
+        folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
+
+        tile_filename = folder_url+"/tiles/%d/%d/%d.png" % (z ,x ,y)
+        if not os.path.exists(tile_filename):
+            if not os.path.exists(os.path.dirname(tile_filename)):
+                os.makedirs(os.path.dirname(tile_filename))
+        try:
+            return Response(open(tile_filename).read(), mimetype='image/png')
+        except:
+            return None
+
+
 @ns.route('/list')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
@@ -213,7 +282,7 @@ class DeleteUploads(Resource):
         }
 
 
-@celery.task(name='generate_tiles_file_upload')
+@celery.task(name='export_raster_nuts')
 @ns.route('/export/raster/nuts')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
@@ -312,12 +381,12 @@ class ExportRasterNuts(Resource):
 
         # send the file to the client
         return send_file(strIO,
-                         mimetype='image/TIFF',
+                         mimetype='image/TIF',
                          attachment_filename="testing.tif",
                          as_attachment=True)
 
 
-@celery.task(name='generate_tiles_file_upload')
+@celery.task(name='export_raster_hectare')
 @ns.route('/export/raster/hectare')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
@@ -412,17 +481,14 @@ class ExportRasterHectare(Resource):
         strIO.write(hex_file_decoded)
         strIO.seek(0)
 
-        try:
-            # send the file to the client
-            return send_file(strIO,
-                             mimetype='image/TIFF',
-                             attachment_filename="testing.tif",
-                             as_attachment=True)
-        except Exception, e:
-            raise RequestException(str(e))
+        # send the file to the client
+        return send_file(strIO,
+                         mimetype='image/TIF',
+                         attachment_filename="testing.tif",
+                         as_attachment=True)
 
 
-@celery.task(name='generate_tiles_file_upload')
+@celery.task(name='export_csv_nuts')
 @ns.route('/export/csv/nuts')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
@@ -522,7 +588,7 @@ class ExportCsvNuts(Resource):
                          as_attachment=True)
 
 
-@celery.task(name='generate_tiles_file_upload')
+@celery.task(name='export_csv_hectare')
 @ns.route('/export/csv/hectare')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
