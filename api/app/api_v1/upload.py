@@ -151,9 +151,9 @@ class TilesUploads(Resource):
 
         folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
 
-        tile_filename = folder_url+"/tiles/%d/%d/%d.png" % (z ,x ,y)
+        tile_filename = folder_url+"/tiles/%d/%d/%d.png" % (z, x, y)
         if not os.path.exists(tile_filename):
-            return {'message': 'no tiles'}
+            return #TODO check if it is not none
         # send the file to the client
         return send_file(tile_filename,
                          mimetype='image/png')
@@ -327,7 +327,7 @@ class ExportRasterNuts(Resource):
             "FROM " \
                 "(SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast " \
                 "FROM geo." + layer_name + ", buffer " \
-                "WHERE ST_Intersects(rast, buffer_geom)) AS foo;"  # TODO Manage also the date field
+                "WHERE ST_Intersects(rast, buffer_geom)) AS foo;"  # TODO Postpone Manage also the date field
         hex_file = ''
 
         # execute request
@@ -346,12 +346,12 @@ class ExportRasterNuts(Resource):
         hex_file_decoded = unhexlify(hex_file)
 
         # write string buffer
-        strIO = StringIO.StringIO()
-        strIO.write(hex_file_decoded)
-        strIO.seek(0)
+        str_io = StringIO.StringIO()
+        str_io.write(hex_file_decoded)
+        str_io.seek(0)
 
         # send the file to the client
-        return send_file(strIO,
+        return send_file(str_io,
                          mimetype='image/TIF',
                          attachment_filename="testing.tif",
                          as_attachment=True)
@@ -425,14 +425,14 @@ class ExportRasterHectare(Resource):
         sql = "WITH buffer AS ( SELECT ST_Buffer( ST_Transform( ST_GeomFromText('"+str(multipolygon)+"', 4258) " \
                 ", 3035), 0) AS buffer_geom) SELECT encode(ST_AsTIFF(foo.rast, 'LZW'), 'hex') as tif FROM " \
                 "( SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast FROM geo." + layer_name + \
-                ", buffer WHERE ST_Intersects(rast, buffer_geom)) AS foo;"  # TODO Manage also the date field
+                ", buffer WHERE ST_Intersects(rast, buffer_geom)) AS foo;"  # TODO Postpone Manage also the date field
 
         hex_file = ''
         # execute request
         try:
             result = db.engine.execute(sql)
         except Exception:
-            raise RequestException(result)
+            raise RequestException("Problem with your SQL query")
 
         rowcount = 0
         # write hex_file
@@ -448,12 +448,12 @@ class ExportRasterHectare(Resource):
         hex_file_decoded = unhexlify(hex_file)
 
         # write string buffer
-        strIO = StringIO.StringIO()
-        strIO.write(hex_file_decoded)
-        strIO.seek(0)
+        str_io = StringIO.StringIO()
+        str_io.write(hex_file_decoded)
+        str_io.seek(0)
 
         # send the file to the client
-        return send_file(strIO,
+        return send_file(str_io,
                          mimetype='image/TIF',
                          attachment_filename="testing.tif",
                          as_attachment=True)
@@ -513,14 +513,9 @@ class ExportCsvNuts(Resource):
             if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
 
-        # using the year
         sql = "SELECT * FROM " + schema + "." + layer_name + " WHERE date = '" + year + "-01-01' AND ST_Within(" \
               + schema + "." + layer_name + ".geometry, st_transform((SELECT geom from geo." \
               + layer_type + " where " + id_type + " = '" + nuts[0] + "'"
-
-        # sql = "SELECT * FROM " + schema + "." + layer_name + " WHERE ST_Within(" \
-        #     + schema + "." + layer_name + ".geometry, st_transform((SELECT geom from geo." \
-        #    + layer_type + " where " + id_type + " = '" + nuts[0] + "'"
 
         # we add the rest of the lau id
         for nut in nuts[1:]:
@@ -531,8 +526,8 @@ class ExportCsvNuts(Resource):
         # execute request
         try:
             result = db.engine.execute(sql)
-        except Exception, e:
-            raise RequestException(sql)
+        except:
+            raise RequestException("Problem with your SQL query")
 
         # write csv_file
         number_of_columns = len(result._metadata.keys)
@@ -553,12 +548,12 @@ class ExportCsvNuts(Resource):
             raise RequestException('There is no result for this selection')
 
         # write string buffer
-        strIO = StringIO.StringIO()
-        strIO.write(csv_file)
-        strIO.seek(0)
+        str_io = StringIO.StringIO()
+        str_io.write(csv_file)
+        str_io.seek(0)
 
         # send the file to the client
-        return send_file(strIO,
+        return send_file(str_io,
                          mimetype='text/csv',
                          attachment_filename="testing.csv",
                          as_attachment=True)
@@ -640,8 +635,8 @@ class ExportCsvHectare(Resource):
         # execute request
         try:
             result = db.engine.execute(sql)
-        except Exception, e:
-            raise RequestException(sql) #Failure in the SQL Request
+        except:
+            raise RequestException("Problem with your SQL query")
 
         # write csv_file
         number_of_columns = len(result._metadata.keys)
@@ -661,12 +656,12 @@ class ExportCsvHectare(Resource):
             raise RequestException('There is no result for this selection')
 
         # write string buffer>
-        strIO = StringIO.StringIO()
-        strIO.write(csv_file)
-        strIO.seek(0)
+        str_io = StringIO.StringIO()
+        str_io.write(csv_file)
+        str_io.seek(0)
 
         # send the file to the client
-        return send_file(strIO,
+        return send_file(str_io,
                          mimetype='text/csv',
                          attachment_filename="testing.csv",
                          as_attachment=True)

@@ -2,10 +2,11 @@ import os
 import requests
 import uuid
 import xml.etree.ElementTree as ET
+import shutil
 from app import celery
 from .. import constants, dbGIS as db
 from ..decorators.exceptions import RequestException
-
+from .. import secrets
 ALLOWED_EXTENSIONS = set(['tif', 'csv'])
 
 
@@ -64,8 +65,8 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
         print ("Successfully created the directory %s" % tile_path)
 
     # get the sld file
-    url = 'https://geoserver.hotmapsdev.hevs.ch/geoserver/rest/styles/' + layer + '.sld'
-    auth = ('admin', 'H0tM4p52017')
+    url = secrets.GEOSERVER_API_URL + 'styles/' + layer + '.sld'
+    auth = secrets.GEOSERVER_AUTH
     result = requests.get(url, auth=auth)
     xml = result.content
     color_map_objects = extract_colormap(xml)
@@ -94,9 +95,12 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
     for fname in os.listdir('/tmp'):
         if fname.startswith(uuid_temp):
             os.remove(os.path.join('/tmp', fname))
+
+    # updating generate state of upload
     upload = Uploads.query.filter_by(uuid=upload_uuid).first()
     upload.is_generated = generate_state
     db.session.commit()
+
     check_map_size(upload_folder, user_currently_used_space, upload_uuid)
     return generate_state
 
@@ -119,6 +123,7 @@ def check_map_size(upload_folder, user_currently_used_space, upload_uuid):
     upload = Uploads.query.filter_by(uuid=upload_uuid).first()
     if total_used_space > constants.USER_DISC_SPACE_AVAILABLE:
         db.session.delete(upload)
+        shutil.rmtree(upload_folder)
     else:
         upload.size = size
     db.session.commit()

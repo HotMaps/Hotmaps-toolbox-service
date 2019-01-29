@@ -158,7 +158,7 @@ def handle_activation_failure(error):
     :param error -- the called error:
     :return:
     '''
-    message = 'No snapshot existing'
+    message = 'This snapshot does not exists'
     response = {
         "message": message,
         "error": {

@@ -1,5 +1,7 @@
 from .. import dbGIS as db
 from ..decorators.restplus import UserUnidentifiedException, ParameterException, RequestException
+
+
 class Snapshots(db.Model):
     '''
     This class will describe the model of the snapshot for a user
