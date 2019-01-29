@@ -7,7 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from ..decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, \
     ParameterException, RequestException, ActivationException, UserExistingException, \
     WrongCredentialException, UserUnidentifiedException, UserDoesntOwnUploadsException, UploadExistingUrlException, \
-    NotEnoughSpaceException, UploadNotExistingException, UserNotActivatedException
+    NotEnoughSpaceException, UploadNotExistingException, UserNotActivatedException, SnapshotNotExistingException
 
 log = logging.getLogger(__name__)
 
@@ -149,6 +149,25 @@ def handle_activation_failure(error):
         }
     }
     return response, 536
+
+
+@api.errorhandler(SnapshotNotExistingException)
+def handle_activation_failure(error):
+    '''
+    decorator called with an error caused when you reach a non existing snapshot
+    :param error -- the called error:
+    :return:
+    '''
+    message = 'No snapshot existing'
+    response = {
+        "message": message,
+        "error": {
+            "message": message,
+            "status": "537",
+            "statusText": "SNAPSHOT MISSING"
+        }
+    }
+    return response, 537
 
 
 @api.errorhandler(WrongCredentialException)

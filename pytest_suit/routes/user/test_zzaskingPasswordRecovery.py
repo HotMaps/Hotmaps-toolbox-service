@@ -2,6 +2,7 @@ from unittest import TestCase
 from .. import BASE_URL
 import requests
 
+
 class TestAskingPasswordRecovery(TestCase):
     def test_post_working(self):
         '''

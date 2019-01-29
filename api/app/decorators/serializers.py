@@ -526,3 +526,53 @@ upload_download_input = api.model('input for the upload download.', {
     'token': fields.String(description='authentification token'),
     "id": fields.Integer(description='Upload id'),
 })
+
+snapshot_model = api.model('all snapshot fields', {
+    'id': fields.Integer(description='Snapshot id'),
+    'save': fields.String(description='Snapshot content')
+})
+
+snapshot_save_input = api.model('input for the snapshot\'s save.', {
+    'token': fields.String(description='authentification token'),
+    "save": fields.String(description='snapshot content'),
+})
+
+snapshot_save_output = api.model('output for the snapshot\'s save.', {
+    'message': fields.String(description='confirmation\'s message'),
+})
+
+snapshot_load_input = api.model('input for the snapshot\'s load.', {
+    'token': fields.String(description='authentification token'),
+    "id": fields.Integer(description='Snapshot id'),
+})
+
+snapshot_load_output = api.model('output for the snapshot\'s load.', {
+    'save': fields.String(description='save content'),
+})
+
+snapshot_delete_input = api.model('input for the snapshot\'s deletion.', {
+    'token': fields.String(description='authentification token'),
+    "id": fields.Integer(description='Snapshot id'),
+})
+
+snapshot_delete_output = api.model('output for the snapshot\'s deletion.', {
+    'message': fields.String(description='response'),
+})
+
+snapshot_update_input = api.model('input for the snapshot\'s update.', {
+    'token': fields.String(description='authentification token'),
+    'save': fields.String(description='save content'),
+    "id": fields.Integer(description='Snapshot id'),
+})
+
+snapshot_update_output = api.model('output for the snapshot\'s update.', {
+    'message': fields.String(description='response'),
+})
+
+snapshot_list_input = api.model('input for snapshot listing', {
+    'token': fields.String(description='authentification token'),
+})
+
+snapshot_list_output = api.model('output for snapshot listing', {
+    'snapshots': fields.List(fields.Nested(snapshot_model)),
+})

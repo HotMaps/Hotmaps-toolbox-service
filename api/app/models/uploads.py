@@ -1,7 +1,6 @@
 import os
 import requests
 import uuid
-import shutil
 import xml.etree.ElementTree as ET
 from app import celery
 from .. import constants, dbGIS as db

@@ -5,7 +5,7 @@ import shapely.geometry as shapely_geom
 import uuid
 from flask_restplus import Resource
 from binascii import unhexlify
-from flask import send_file, Response
+from flask import send_file
 from app import celery
 from ..decorators.restplus import api
 from ..decorators.restplus import UserUnidentifiedException, ParameterException, RequestException, \
@@ -127,7 +127,7 @@ class AddUploads(Resource):
 @api.response(539, 'User Unidentified')
 @api.response(543, 'Uploads doesn\'t exists')
 class TilesUploads(Resource):
-    def post(self, token, upload_id, z, x, y):
+    def get(self, token, upload_id, z, x, y):
         """
         The method called to get the tiles of an upload
         :return:
@@ -151,12 +151,10 @@ class TilesUploads(Resource):
 
         tile_filename = folder_url+"/tiles/%d/%d/%d.png" % (z ,x ,y)
         if not os.path.exists(tile_filename):
-            if not os.path.exists(os.path.dirname(tile_filename)):
-                os.makedirs(os.path.dirname(tile_filename))
-        try:
-            return Response(open(tile_filename).read(), mimetype='image/png')
-        except:
-            return None
+            return {'message': 'no tiles'}
+        # send the file to the client
+        return send_file(tile_filename,
+                         mimetype='image/png')
 
 
 @ns.route('/list')
@@ -251,7 +249,6 @@ class DeleteUploads(Resource):
         }
 
 
-#@celery.task(name='export_raster_nuts')
 @ns.route('/export/raster/nuts')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
@@ -355,7 +352,6 @@ class ExportRasterNuts(Resource):
                          as_attachment=True)
 
 
-#@celery.task(name='export_raster_hectare')
 @ns.route('/export/raster/hectare')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
@@ -457,7 +453,6 @@ class ExportRasterHectare(Resource):
                          as_attachment=True)
 
 
-#@celery.task(name='export_csv_nuts')
 @ns.route('/export/csv/nuts')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
@@ -562,7 +557,6 @@ class ExportCsvNuts(Resource):
                          as_attachment=True)
 
 
-#@celery.task(name='export_csv_hectare')
 @ns.route('/export/csv/hectare')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
