@@ -128,7 +128,6 @@ class AddUploads(Resource):
 @api.response(539, 'User Unidentified')
 @api.response(543, 'Uploads doesn\'t exists')
 class TilesUploads(Resource):
-    @celery.task(name='tiles selection')
     def get(self, token, upload_id, z, x, y):
         """
         The method called to get the tiles of an upload
