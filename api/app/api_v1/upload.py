@@ -35,6 +35,7 @@ USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
 class AddUploads(Resource):
     @api.marshal_with(upload_add_output)
     @api.expect(file_upload)
+    @celery.task(name='upload add')
     def post(self):
         """
         The method called to add an upload
@@ -127,6 +128,7 @@ class AddUploads(Resource):
 @api.response(539, 'User Unidentified')
 @api.response(543, 'Uploads doesn\'t exists')
 class TilesUploads(Resource):
+    @celery.task(name='tiles selection')
     def get(self, token, upload_id, z, x, y):
         """
         The method called to get the tiles of an upload
@@ -164,6 +166,7 @@ class TilesUploads(Resource):
 class ListUploads(Resource):
     @api.marshal_with(upload_list_output)
     @api.expect(upload_list_input)
+    @celery.task(name='upload listing')
     def post(self):
         """
         The method called to list the uploads of the connected user
@@ -197,6 +200,7 @@ class ListUploads(Resource):
 class DeleteUploads(Resource):
     @api.marshal_with(upload_delete_output)
     @api.expect(upload_delete_input)
+    @celery.task(name='upload deletion')
     def delete(self):
         """
         The method called to remove an upload
@@ -255,7 +259,8 @@ class DeleteUploads(Resource):
 @api.response(532, 'Request too big')
 class ExportRasterNuts(Resource):
     @api.expect(upload_export_raster_nuts_input)
-    def post(self):
+    @celery.task(name='upload export raster nuts')
+    def post(self=None):
         """
         The method called to export a list of given nuts into a raster
         :return:
@@ -358,7 +363,8 @@ class ExportRasterNuts(Resource):
 @api.response(532, 'Request too big')
 class ExportRasterHectare(Resource):
     @api.expect(upload_export_raster_hectare_input)
-    def post(self):
+    @celery.task(name='upload export raster hectare')
+    def post(self=None):
         """
         The method called to export a list of given hectares into a raster
         :return:
@@ -459,7 +465,8 @@ class ExportRasterHectare(Resource):
 @api.response(532, 'Request too big')
 class ExportCsvNuts(Resource):
     @api.expect(upload_export_csv_nuts_input)
-    def post(self):
+    @celery.task(name='upload export csv nuts')
+    def post(self=None):
         """
         The method called to export a given list of nuts into a csv
         :return:
@@ -563,7 +570,8 @@ class ExportCsvNuts(Resource):
 @api.response(532, 'Request too big')
 class ExportCsvHectare(Resource):
     @api.expect(upload_export_csv_hectare_input)
-    def post(self):
+    @celery.task(name='upload export csv hectare')
+    def post(self=None):
         """
         The method called to export a given list of hectares into a csv
         :return:
@@ -672,7 +680,8 @@ class ExportCsvHectare(Resource):
 @api.response(543, 'Uploads doesn\'t exists')
 class Download(Resource):
     @api.expect(upload_download_input)
-    def post(self):
+    @celery.task(name='upload download')
+    def post(self=None):
         '''
         This method will allow the user to download a selected dataset
         :return:

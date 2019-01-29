@@ -7,6 +7,7 @@ from ..models.snapshots import Snapshots
 from ..decorators.serializers import snapshot_load_input, snapshot_load_output, snapshot_save_input, \
     snapshot_save_output, snapshot_delete_input, snapshot_delete_output, snapshot_list_input, snapshot_list_output, \
     snapshot_update_input, snapshot_update_output
+from app import celery
 from flask_restplus import Resource
 
 nsSnapshot = api.namespace('snapshot', description='Operations related to snapshots')
@@ -20,6 +21,7 @@ ns = nsSnapshot
 class SaveSnapshot(Resource):
     @api.marshal_with(snapshot_save_output)
     @api.expect(snapshot_save_input)
+    @celery.task(name='save a snapshot')
     def post(self):
         """
         The method called to save a snapshot for the connected user
@@ -66,6 +68,7 @@ class SaveSnapshot(Resource):
 class LoadSnapshot(Resource):
     @api.marshal_with(snapshot_load_output)
     @api.expect(snapshot_load_input)
+    @celery.task(name='load a snapshot')
     def post(self):
         """
         The method called to load a snapshot of the connected user
@@ -117,6 +120,7 @@ class LoadSnapshot(Resource):
 class DeleteSnapshot(Resource):
     @api.marshal_with(snapshot_delete_output)
     @api.expect(snapshot_delete_input)
+    @celery.task(name='delete a snapshot')
     def delete(self):
         """
         The method called to delete a snapshot of the connected user
@@ -171,6 +175,7 @@ class DeleteSnapshot(Resource):
 class UpdateSnapshot(Resource):
     @api.marshal_with(snapshot_update_output)
     @api.expect(snapshot_update_input)
+    @celery.task(name='update a celery')
     def post(self):
         """
         The method called to update a snapshot of the connected user
@@ -227,6 +232,7 @@ class UpdateSnapshot(Resource):
 class ListSnapshot(Resource):
     @api.marshal_with(snapshot_list_output)
     @api.expect(snapshot_list_input)
+    @celery.task(name='list all snapshots of a user')
     def post(self):
         """
         The method called to list all snapshots of the connected user
