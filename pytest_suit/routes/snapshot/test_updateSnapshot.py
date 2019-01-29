@@ -1,7 +1,7 @@
 import requests
 
 from unittest import TestCase
-from . import BASE_URL, test_token, test_save
+from . import BASE_URL, test_token, test_config
 
 url = BASE_URL + '/snapshot/update'
 
@@ -11,18 +11,18 @@ class TestUpdateSnapshot(TestCase):
         """
         this test will pass the snapshot/load method
         """
-        listUrl = BASE_URL + "/snapshot/list"
+        list_url = BASE_URL + "/snapshot/list"
         payload = {
             "token": test_token,
         }
 
-        output = requests.post(listUrl, json=payload)
+        output = requests.post(list_url, json=payload)
         test_snapshot_id = output.json()['snapshots'][0]['id']
 
         payload = {
             "token": test_token,
             "id": test_snapshot_id,
-            "save": "Hey"
+            "config": "Hey"
         }
 
         output = requests.post(url, json=payload)
@@ -37,7 +37,7 @@ class TestUpdateSnapshot(TestCase):
         payload = {
             "tokfadsfasden": test_token,
             "ifdsad": -5,
-            "savedasf": "Hey"
+            "configdasf": "Hey"
         }
 
         output = requests.post(url, json=payload)
@@ -53,7 +53,7 @@ class TestUpdateSnapshot(TestCase):
         payload = {
             "token": test_token,
             "id": -5,
-            "save": "Hey"
+            "config": "Hey"
         }
 
         output = requests.post(url, json=payload)
@@ -69,7 +69,7 @@ class TestUpdateSnapshot(TestCase):
         payload = {
             "token": 'toto',
             "id": -5,
-            "save": "Hey"
+            "config": "Hey"
         }
 
         output = requests.post(url, json=payload)

@@ -4,8 +4,8 @@ from ..decorators.exceptions import RequestException, ParameterException, UserUn
     SnapshotNotExistingException
 from ..models.user import User
 from ..models.snapshots import Snapshots
-from ..decorators.serializers import snapshot_load_input, snapshot_load_output, snapshot_save_input, \
-    snapshot_save_output, snapshot_delete_input, snapshot_delete_output, snapshot_list_input, snapshot_list_output, \
+from ..decorators.serializers import snapshot_load_input, snapshot_load_output, snapshot_add_input, \
+    snapshot_add_output, snapshot_delete_input, snapshot_delete_output, snapshot_list_input, snapshot_list_output, \
     snapshot_update_input, snapshot_update_output
 from app import celery
 from flask_restplus import Resource
@@ -14,17 +14,17 @@ nsSnapshot = api.namespace('snapshot', description='Operations related to snapsh
 ns = nsSnapshot
 
 
-@ns.route('/save')
+@ns.route('/add')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
-class SaveSnapshot(Resource):
-    @api.marshal_with(snapshot_save_output)
-    @api.expect(snapshot_save_input)
-    @celery.task(name='save a snapshot')
+class AddSnapshot(Resource):
+    @api.marshal_with(snapshot_add_output)
+    @api.expect(snapshot_add_input)
+    @celery.task(name='config a snapshot')
     def post(self):
         """
-        The method called to save a snapshot for the connected user
+        The method called to add a snapshot for the connected user
         :return:
         """
         # Entries
@@ -34,9 +34,9 @@ class SaveSnapshot(Resource):
         except:
             wrong_parameter.append('token')
         try:
-            save = api.payload['save']
+            config = api.payload['config']
         except:
-            wrong_parameter.append('save')
+            wrong_parameter.append('config')
 
         if len(wrong_parameter) > 0:
             exception_message = ''
@@ -50,7 +50,7 @@ class SaveSnapshot(Resource):
         if user is None:
             raise UserUnidentifiedException
 
-        snapshot = Snapshots(save=save, user_id=user.id)
+        snapshot = Snapshots(config=config, user_id=user.id)
         db.session.add(snapshot)
         db.session.commit()
 
@@ -108,7 +108,7 @@ class LoadSnapshot(Resource):
 
         # output
         return {
-            "save": snapshot.save
+            "config": snapshot.config
         }
 
 
@@ -163,7 +163,7 @@ class DeleteSnapshot(Resource):
 
         # output
         return {
-            "message": "The snapshot has been removed"
+            "message": "The snapshot has been deleted"
         }
 
 
@@ -192,9 +192,9 @@ class UpdateSnapshot(Resource):
         except:
             wrong_parameter.append('id')
         try:
-            save = api.payload['save']
+            config = api.payload['config']
         except:
-            wrong_parameter.append('save')
+            wrong_parameter.append('config')
 
         if len(wrong_parameter) > 0:
             exception_message = ''
@@ -216,7 +216,7 @@ class UpdateSnapshot(Resource):
         if snapshot.user_id != user.id:
             raise SnapshotNotExistingException
 
-        snapshot.save = save
+        snapshot.config = config
         db.session.commit()
 
         # output

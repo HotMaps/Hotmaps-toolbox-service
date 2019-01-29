@@ -3,7 +3,7 @@ import requests
 from unittest import TestCase
 from . import test_token, BASE_URL
 
-url = BASE_URL + "/upload/remove_upload"
+url = BASE_URL + "/upload/delete"
 
 
 class TestDeleteUploads(TestCase):
@@ -11,12 +11,12 @@ class TestDeleteUploads(TestCase):
         """
         this test will pass the uploads/remove method
         """
-        listUrl = BASE_URL + "/upload/list"
+        list_url = BASE_URL + "/upload/list"
         payload = {
             "token": test_token,
         }
 
-        output = requests.post(listUrl, json=payload)
+        output = requests.post(list_url, json=payload)
         test_upload_id = output.json()['uploads'][0]['id']
 
         payload = {
@@ -26,7 +26,7 @@ class TestDeleteUploads(TestCase):
 
         output = requests.delete(url, json=payload)
 
-        expected_output = 'Upload removed'
+        expected_output = 'Upload deleted'
         assert output.json()['message'] == expected_output
 
     def test_delete_missing_parameter(self):

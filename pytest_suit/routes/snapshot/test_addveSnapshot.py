@@ -1,19 +1,19 @@
 import requests
 
 from unittest import TestCase
-from . import BASE_URL, test_token, test_save
+from . import BASE_URL, test_token, test_config
 
-url = BASE_URL + '/snapshot/save'
+url = BASE_URL + '/snapshot/add'
 
 
-class TestSaveSnapshot(TestCase):
+class TestAddSnapshot(TestCase):
     def test_post_working(self):
         """
-        this test will pass the snapshot/save method
+        this test will pass the snapshot/add method
         """
         payload = {
             "token": test_token,
-            "save": test_save
+            "config": test_config
         }
 
         output = requests.post(url, json=payload)
@@ -28,7 +28,7 @@ class TestSaveSnapshot(TestCase):
         """
         payload = {
             "tokfadsfasden": test_token,
-            "save": test_save
+            "config": test_config
         }
 
         output = requests.post(url, json=payload)
@@ -43,7 +43,7 @@ class TestSaveSnapshot(TestCase):
         """
         payload = {
             "token": 'toto',
-            "save": test_save
+            "config": test_config
         }
 
         output = requests.post(url, json=payload)

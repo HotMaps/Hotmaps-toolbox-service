@@ -192,7 +192,7 @@ class ListUploads(Resource):
         }
 
 
-@ns.route('/remove_upload')
+@ns.route('/delete')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
@@ -203,7 +203,7 @@ class DeleteUploads(Resource):
     @celery.task(name='upload deletion')
     def delete(self):
         """
-        The method called to remove an upload
+        The method called to delete an upload
         :return:
         """
         # Entries
@@ -249,7 +249,7 @@ class DeleteUploads(Resource):
 
         # output
         return {
-            "message": "Upload removed"
+            "message": "Upload deleted"
         }
 
 

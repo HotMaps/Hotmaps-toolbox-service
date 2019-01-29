@@ -12,5 +12,5 @@ class Snapshots(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    save = db.Column(db.Text())
+    config = db.Column(db.Text())
     user_id = db.Column(db.Integer, db.ForeignKey('user.users.id'))

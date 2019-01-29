@@ -1,7 +1,7 @@
 import requests
 
 from unittest import TestCase
-from . import BASE_URL, test_token, test_save
+from . import BASE_URL, test_token, test_config
 
 url = BASE_URL + '/snapshot/load'
 
@@ -11,12 +11,12 @@ class TestLoadSnapshot(TestCase):
         """
         this test will pass the snapshot/load method
         """
-        listUrl = BASE_URL + "/snapshot/list"
+        list_url = BASE_URL + "/snapshot/list"
         payload = {
             "token": test_token,
         }
 
-        output = requests.post(listUrl, json=payload)
+        output = requests.post(list_url, json=payload)
         test_snapshot_id = output.json()['snapshots'][0]['id']
 
         payload = {
@@ -26,8 +26,8 @@ class TestLoadSnapshot(TestCase):
 
         output = requests.post(url, json=payload)
 
-        expected_output = test_save
-        assert output.json()['save'] == expected_output
+        expected_output = test_config
+        assert output.json()['config'] == expected_output
 
     def test_post_missing_parameter(self):
         """

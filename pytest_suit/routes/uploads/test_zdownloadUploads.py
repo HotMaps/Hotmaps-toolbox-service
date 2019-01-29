@@ -10,12 +10,12 @@ class TestDownload(TestCase):
         """
         this test will pass the upload/download method
         """
-        listUrl = BASE_URL + "/upload/list"
+        list_url = BASE_URL + "/upload/list"
         payload = {
             "token": test_token,
         }
 
-        output = requests.post(listUrl, json=payload)
+        output = requests.post(list_url, json=payload)
         test_upload_id = output.json()['uploads'][0]['id']
 
         payload = {

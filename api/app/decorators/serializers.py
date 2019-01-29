@@ -529,15 +529,15 @@ upload_download_input = api.model('input for the upload download.', {
 
 snapshot_model = api.model('all snapshot fields', {
     'id': fields.Integer(description='Snapshot id'),
-    'save': fields.String(description='Snapshot content')
+    'config': fields.String(description='Snapshot content')
 })
 
-snapshot_save_input = api.model('input for the snapshot\'s save.', {
+snapshot_add_input = api.model('input for the snapshot\'s addition.', {
     'token': fields.String(description='authentification token'),
-    "save": fields.String(description='snapshot content'),
+    "config": fields.String(description='snapshot content'),
 })
 
-snapshot_save_output = api.model('output for the snapshot\'s save.', {
+snapshot_add_output = api.model('output for the snapshot\'s addition.', {
     'message': fields.String(description='confirmation\'s message'),
 })
 
@@ -547,7 +547,7 @@ snapshot_load_input = api.model('input for the snapshot\'s load.', {
 })
 
 snapshot_load_output = api.model('output for the snapshot\'s load.', {
-    'save': fields.String(description='save content'),
+    'config': fields.String(description='config content'),
 })
 
 snapshot_delete_input = api.model('input for the snapshot\'s deletion.', {
@@ -561,7 +561,7 @@ snapshot_delete_output = api.model('output for the snapshot\'s deletion.', {
 
 snapshot_update_input = api.model('input for the snapshot\'s update.', {
     'token': fields.String(description='authentification token'),
-    'save': fields.String(description='save content'),
+    'config': fields.String(description='config content'),
     "id": fields.Integer(description='Snapshot id'),
 })
 

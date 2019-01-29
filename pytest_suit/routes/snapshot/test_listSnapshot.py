@@ -1,7 +1,7 @@
 import requests
 
 from unittest import TestCase
-from . import BASE_URL, test_token, test_save
+from . import BASE_URL, test_token, test_config
 
 url = BASE_URL + '/snapshot/list'
 
@@ -17,8 +17,8 @@ class TestListSnapshot(TestCase):
 
         output = requests.post(url, json=payload)
 
-        expected_output = test_save
-        assert output.json()['snapshots'][0]['save'] == expected_output
+        expected_output = test_config
+        assert output.json()['snapshots'][0]['config'] == expected_output
 
     def test_post_missing_parameter(self):
         """
