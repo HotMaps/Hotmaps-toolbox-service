@@ -352,7 +352,7 @@ class ExportRasterNuts(Resource):
         # send the file to the client
         return send_file(str_io,
                          mimetype='image/TIF',
-                         attachment_filename="testing.tif",
+                         attachment_filename="hotmaps.tif",
                          as_attachment=True)
 
 
@@ -454,7 +454,7 @@ class ExportRasterHectare(Resource):
         # send the file to the client
         return send_file(str_io,
                          mimetype='image/TIF',
-                         attachment_filename="testing.tif",
+                         attachment_filename="hotmaps.tif",
                          as_attachment=True)
 
 
@@ -554,7 +554,7 @@ class ExportCsvNuts(Resource):
         # send the file to the client
         return send_file(str_io,
                          mimetype='text/csv',
-                         attachment_filename="testing.csv",
+                         attachment_filename="hotmaps.csv",
                          as_attachment=True)
 
 
@@ -662,7 +662,7 @@ class ExportCsvHectare(Resource):
         # send the file to the client
         return send_file(str_io,
                          mimetype='text/csv',
-                         attachment_filename="testing.csv",
+                         attachment_filename="hotmaps.csv",
                          as_attachment=True)
 
 
