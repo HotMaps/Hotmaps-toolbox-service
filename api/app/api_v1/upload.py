@@ -101,7 +101,7 @@ class AddUploads(Resource):
         else:
             url = upload_folder + '/data.csv'
 
-        upload = Uploads(name=name, url=url, layer=layer, user_id=user.id, uuid=upload_uuid,
+        upload = Uploads(name=name, url=url, layer=layer, size=0.0, user_id=user.id, uuid=upload_uuid,
                          is_generated=1)
         db.session.add(upload)
         db.session.commit()
@@ -151,8 +151,9 @@ class TilesUploads(Resource):
         folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
 
         tile_filename = folder_url+"/tiles/%d/%d/%d.png" % (z, x, y)
+
         if not os.path.exists(tile_filename):
-            return #TODO check if it is not none
+            return
         # send the file to the client
         return send_file(tile_filename,
                          mimetype='image/png')
@@ -526,7 +527,7 @@ class ExportCsvNuts(Resource):
         try:
             result = db.engine.execute(sql)
         except:
-            raise RequestException("Problem with your SQL query")
+            raise RequestException(sql)
 
         # write csv_file
         number_of_columns = len(result._metadata.keys)
