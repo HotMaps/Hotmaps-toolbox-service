@@ -4,78 +4,55 @@ from app import dbGIS as db
 from app import model
 from . import generalData
 from app import celery
+from .. import helper
 #logging.basicConfig()
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 class HeatLoadProfile:
 	@staticmethod
 	@celery.task(name = 'heatloadprofile_nuts_lau')
-	def heatloadprofile_nuts_lau(year, month, day, nuts): #/heat-load-profile/nuts-lau
-
+	def heatloadprofile_nuts_lau(year, month, day, nuts, nuts_level): #/heat-load-profile/nuts-lau
+		request_type=''
 		# Check the type of the query
 		if month != 0 and day != 0:
-			by = 'byDay'
+			request_type = 'day'
 		elif month != 0:
-			by = 'byMonth'
+			request_type = 'month'
 		else:
-			by = 'byYear'
+			request_type = 'year'
 
 		# Get the data
-		queryData = generalData.createQueryDataLPNutsLau(year=year, month=month, day=day, nuts=nuts)
+		query = createQueryDataLPNutsLau(year=year, month=month, day=day, nuts=nuts,request_type=request_type, nuts_level=nuts_level)
 
 		# Construction of the query
-		sql_query = queryData[by]['with'] + queryData[by]['time'] + queryData[by]['from'] + queryData[by]['select']
-
 		# Execution of the query
 		#query = db.session.execute(sql_query)
 
-		query = model.query_geographic_database(sql_query)
-
+		res = model.query_geographic_database(query)
 		# Storing the results only if there is data
 		output = []
-		if by == 'byYear':
-			for c, q in enumerate(query):
-				if q[0]:
-					output.append({
-						'year': year,
-						'month': q[3],
-						'granularity': 'month',
-						'unit': 'kW',
-						'min': round(q[0], constants.NUMBER_DECIMAL_DATA),
-						'max': round(q[1], constants.NUMBER_DECIMAL_DATA),
-						'average': round(q[2], constants.NUMBER_DECIMAL_DATA)
-						})
-				else:
-					output = []
-		elif by == 'byMonth':
-			for c, q in enumerate(query):
-				if q[0]:
-					output.append({
-						'year': year,
-						'month': month,
-						'day': q[3],
-						'granularity': 'day',
-						'unit': 'kW',
-						'min': round(q[0], constants.NUMBER_DECIMAL_DATA),
-						'max': round(q[1], constants.NUMBER_DECIMAL_DATA),
-						'average': round(q[2], constants.NUMBER_DECIMAL_DATA)
-						})
-				else:
-					output = []
-		else:
-			for c, q in enumerate(query):
-				if q[0]:
-					output.append({
-						'year': year,
-						'month': month,
-						'day': day,
-						'hour_of_day': q[1],
-						'granularity': 'hour',
-						'unit': 'kW',
-						'value': round(q[0], constants.NUMBER_DECIMAL_DATA)
-						})
-				else:
-					output = []
+		
+		for c, q in enumerate(res):
+			if q[0]:
+				data={}
+				if request_type == 'year':
+					data = {
+						'year': year,'month': q[4],'granularity': 'month','unit': 'kW','min': round(q[0], constants.NUMBER_DECIMAL_DATA),
+						'max': round(q[1], constants.NUMBER_DECIMAL_DATA),'average': round(q[2], constants.NUMBER_DECIMAL_DATA)
+					}
+				elif request_type == 'month':
+					data = {
+						'year': year,'month': month,'day': q[4],'granularity': 'day','unit': 'kW','min': round(q[0], constants.NUMBER_DECIMAL_DATA),
+						'max': round(q[1], constants.NUMBER_DECIMAL_DATA),'average': round(q[2], constants.NUMBER_DECIMAL_DATA)
+					}
+				elif request_type == 'day':
+					data = {
+						'year': year,'month': month,'day': day,'hour_of_day': q[4],'granularity': 'hour',
+						'unit': 'kW','value': round(q[3], constants.NUMBER_DECIMAL_DATA)
+					}
+				output.append(data)
+			else:
+				output = []
 		
 		return {
 			"values": output
@@ -95,7 +72,7 @@ class HeatLoadProfile:
 			by = 'byYear'
 		
 		# Get the data
-		queryData = generalData.createQueryDataLPHectares(year=year, month=month, day=day, geometry=geometry)
+		queryData = createQueryDataLPHectares(year=year, month=month, day=day, geometry=geometry)
 
 		# Construction of the query
 		sql_query = queryData[by]['with'] + queryData[by]['select']
@@ -158,7 +135,7 @@ class HeatLoadProfile:
 	def duration_curve_nuts_lau(year, nuts): #/heat-load-profile/duration-curve/nuts-lau
 
 		# Get the query
-		sql_query = generalData.createQueryDataDCNutsLau(year=year, nuts=nuts)
+		sql_query = createQueryDataDCNutsLau(year=year, nuts=nuts)
 
 		# Execution of the query
 		#query = db.session.execute(sql_query)
@@ -176,7 +153,7 @@ class HeatLoadProfile:
 
 		# Creation of points and sampling of the values only if there is data
 		if listAllValues:
-			finalListPoints = generalData.sampling_data(listAllValues)
+			finalListPoints = helper.sampling_data(listAllValues)
 		else:
 			finalListPoints = []
 
@@ -187,8 +164,8 @@ class HeatLoadProfile:
 	def duration_curve_hectares(year, geometry): #/heat-load-profile/duration-curve/hectares
 
 		# Get the query
-		sql_query = generalData.createQueryDataDCHectares(year=year, geometry=geometry)
-
+		sql_query = createQueryDataDCHectares(year=year, geometry=geometry)
+		#print(sql_query)
 		# Execution of the query
 		#query = db.session.execute(sql_query)
 		query = model.query_geographic_database(sql_query)
@@ -199,9 +176,203 @@ class HeatLoadProfile:
 
 		# Creation of points and sampling of the values only if there is data
 		if listAllValues:
-			finalListPoints = generalData.sampling_data(listAllValues)
+			finalListPoints = helper.sampling_data(listAllValues)
 		else:
 			finalListPoints = []		
 
 		return finalListPoints
+
+def createQueryDataLPHectares(year, month, day, geometry):
+	withPart = "with subAreas as (SELECT ST_Intersection(ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258),nuts.geom) as soustracteGeom, " +\
+						"nuts.gid " +\
+						"FROM geo.nuts " +\
+						"where ST_Intersects(nuts.geom,ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258)) " + \
+						"AND STAT_LEVL_=2), " +\
+					"statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density_tif.rast,1, " +\
+						"ST_Transform(subAreas.soustracteGeom,3035),0,true),1,true)).* as stat, subAreas.gid " +\
+						"FROM subAreas, geo.heat_tot_curr_density_tif " +\
+						"WHERE ST_Intersects(heat_tot_curr_density_tif.rast,ST_Transform(subAreas.soustracteGeom,3035)) group by subAreas.gid), " +\
+					"statLoadProfilBySubarea as (select stat.load_profile.nuts_id as load_profile_nutsid, stat.load_profile.value as val_load_profile, " +\
+						"stat.time.month as month_of_year, " +\
+						"stat.time.hour_of_year as hour_of_year, " +\
+						"stat.time.day as day_of_month, " +\
+						"stat.time.hour_of_day as hour_of_day, " +\
+						"statBySubAreas.count as statCount, statBySubAreas.sum as statSum_HD " +\
+						"from stat.load_profile " +\
+						"left join statBySubAreas on statBySubAreas.gid = stat.load_profile.fk_nuts_gid " +\
+						"inner join stat.time on stat.load_profile.fk_time_id = stat.time.id " +\
+						"WHERE fk_nuts_gid is not null and fk_time_id is not null " +\
+						"AND statBySubAreas.gid = stat.load_profile.fk_nuts_gid AND stat.time.year = " + str(year) + " " +\
+						"order by stat.time.hour_of_year), " +\
+					"totalLoadprofile as ( " +\
+						"select sum(val_load_profile) as tot_load_profile,load_profile_nutsid " +\
+						"from statLoadProfilBySubarea group by load_profile_nutsid), " +\
+					"normalizedData as (select sum(val_load_profile/tot_load_profile*statSum_HD) as normalizedCalutation, " +\
+						"hour_of_year, month_of_year, day_of_month, hour_of_day " +\
+						"from statLoadProfilBySubarea " +\
+						"inner join totalLoadprofile on statLoadProfilBySubarea.load_profile_nutsid = totalLoadprofile.load_profile_nutsid " +\
+						"group by hour_of_year, month_of_year, hour_of_day, day_of_month " +\
+						"order by hour_of_year) " +\
+					"select "
+
+	selectYear = "min(normalizedCalutation), max(normalizedCalutation), avg(normalizedCalutation), month_of_year " +\
+					"from normalizedData " +\
+					"group by month_of_year " +\
+					"order by month_of_year"
+	selectMonth = "min(normalizedCalutation), max(normalizedCalutation), avg(normalizedCalutation), day_of_month " +\
+					"from normalizedData " +\
+					"where month_of_year = " + str(month) + " " +\
+					"group by day_of_month, month_of_year " +\
+					"order by day_of_month"
+	selectDay = "normalizedCalutation, hour_of_day " +\
+					"from normalizedData " +\
+					"where day_of_month = " + str(day) + " " +\
+					"and month_of_year = " + str(month) + " " +\
+					"group by normalizedCalutation, hour_of_day " +\
+					"order by hour_of_day"
+
+	# Dictionary with query data
+	queryData = {'byYear':{'with':withPart, 'select':selectYear},
+					'byMonth':{'with':withPart, 'select':selectMonth},
+					'byDay':{'with':withPart, 'select':selectDay}}
+
+	return queryData
+
+# ALL QUERIES DATA FOR THE HEAT LOAD PROFILE BY NUTS
+def createQueryDataLPNutsLau(year, month, day, nuts, request_type, nuts_level):
+	where_request=''
+	nutsSelectionQuery=''
+	scale_schema = 'geo'
+	hd_nuts_select= ''
+	from_clause_lp = 'stat.load_profile'
+
+	if request_type=='year':
+		time_columns = "stat.time.month AS statmonth,stat.time.year AS statyear"
+		group_by_time_columns="statmonth,statyear"
+	elif request_type == 'month':
+		time_columns = "stat.time.day AS statday,stat.time.month AS statmonth,stat.time.year AS statyear"
+		group_by_time_columns=" statday, statmonth, statyear"
+		where_request="where statmonth = " + str(month)
+	elif request_type == 'day':
+		time_columns = "stat.time.hour_of_day as hour_of_day, stat.time.day AS statday,stat.time.month AS statmonth,stat.time.year AS statyear"
+		group_by_time_columns="hour_of_day, statday, statmonth, statyear"
+		where_request="where statmonth = " + str(month) + " and statday = " + str(day)
+	if nuts_level == 'LAU 2':
+		scale_level_table = 'lau'
+		scale_id = 'comm_id'
+	else:
+		scale_level_table = 'nuts'
+		scale_id = 'nuts_id'
+
+	hd_table = "stat.heat_tot_curr_density_"+scale_level_table
+	where_clause_hd = hd_table+"."+scale_id+" in ("+nuts+")"
+	from_hd = hd_table
+
+	if nuts_level in constants.scale_level_loadprofile_aggreagtion:
+		nutsSelectionQuery = """nutsSelection as (
+			SELECT nuts.nuts_id as nuts2_id, tbl2."""+scale_id+""" as scale_id
+			from geo.nuts nuts, """+scale_schema+"""."""+scale_level_table+""" tbl2
+			where tbl2.year = date('2013-01-01') and tbl2."""+scale_id+""" in ("""+nuts+""")
+			and st_within(st_transform(tbl2.geom,"""+constants.CRS_NUTS+"""),nuts.geom)
+			and nuts.stat_levl_ = 2
+			group by nuts.nuts_id, tbl2."""+scale_id+"""),"""
+		where_clause_lp = "stat.load_profile.nuts_id = nutsSelection.nuts2_id"
+		from_clause_lp += ',nutsSelection'
+		hd_nuts_select = "nutsSelection.nuts2_id"
+		from_hd += ', nutsSelection'
+		where_clause_hd = hd_table+"."+scale_id+" = nutsSelection.scale_id"
+
+	elif nuts_level == 'NUTS 2':
+		where_clause_lp = "stat.load_profile.nuts_id in ("+nuts+")"
+		where_clause_hd = hd_table+"."+scale_id+" in ("+nuts+")"
+		hd_nuts_select = hd_table + '.nuts_id'
+	
+	query_lp = """loadprofile as (
+		SELECT sum(stat.load_profile.value) as valtot, stat.load_profile.nuts_id
+		from """+from_clause_lp+"""
+		where """+where_clause_lp+"""
+		group by stat.load_profile.nuts_id
+	), """
+
+	query_hd = """heatdemand as (
+		SELECT sum(sum) as HDtotal,"""+hd_nuts_select+""" as nuts2_id
+		from """+from_hd+"""
+		where """+where_clause_hd+"""
+		group by """+hd_nuts_select+"""
+	), """
+
+	query_normalized = """normalizedData as (
+		SELECT avg(stat.load_profile.value / valtot * HDtotal) AS avg_1,min(stat.load_profile.value / valtot * HDtotal) AS min_1, max(stat.load_profile.value / valtot * HDtotal) AS max_1, sum(stat.load_profile.value / valtot * HDtotal) as sum_1,
+			"""+time_columns+"""
+		FROM """+from_clause_lp+""", heatdemand hd, loadprofile lp, stat.time
+		where  """+where_clause_lp+""" 
+			and stat.time.id = stat.load_profile.fk_time_id and stat.load_profile.nuts_id = hd.nuts2_id and stat.load_profile.nuts_id = lp.nuts_id
+		group by stat.load_profile.fk_nuts_gid, """+group_by_time_columns+""")"""
+
+	query_select = """select sum(min_1), sum(max_1), sum(avg_1), sum(sum_1), """+group_by_time_columns+""" 
+		from normalizedData
+		"""+where_request+"""
+		group by """+group_by_time_columns+"""
+		order by """+group_by_time_columns+"""
+	"""
+	
+	query = 'with ' + nutsSelectionQuery + query_lp + query_hd + query_normalized + query_select
+	#print(query)
+	return query
+
+# ALL QUERIES DATA FOR THE DURATION CURVE BY NUTS
+def createQueryDataDCNutsLau(year, nuts):
+	sql_query =	"WITH nutsSelection as (select nuts_id FROM stat.heat_tot_curr_density_tif_nuts WHERE nuts_id IN ("+nuts+")), " +\
+						"loadprofile as (SELECT sum(stat.load_profile.value) as valtot, stat.load_profile.nuts_id from stat.load_profile " +\
+							"INNER JOIN nutsSelection on stat.load_profile.nuts_id = nutsSelection.nuts_id " +\
+							"where stat.load_profile.nuts_id = nutsSelection.nuts_id group by nutsSelection.nuts_id, stat.load_profile.nuts_id), " +\
+						"heatdemand as (SELECT sum as HDtotal, stat.heat_tot_curr_density_tif_nuts.nuts_id from stat.heat_tot_curr_density_tif_nuts " +\
+							"INNER JOIN nutsSelection on stat.heat_tot_curr_density_tif_nuts.nuts_id = nutsSelection.nuts_id " +\
+							"where stat.heat_tot_curr_density_tif_nuts.nuts_id = nutsSelection.nuts_id) " +\
+						"SELECT sum(stat.load_profile.value/valtot*HDtotal) as val, stat.time.hour_of_year as hoy from stat.load_profile " +\
+							"INNER JOIN nutsSelection on stat.load_profile.nuts_id = nutsSelection.nuts_id " +\
+							"INNER JOIN stat.time on stat.load_profile.fk_time_id = stat.time.id " +\
+							"INNER JOIN loadprofile on stat.load_profile.nuts_id = loadprofile.nuts_id " +\
+							"INNER JOIN heatdemand on stat.load_profile.nuts_id = heatdemand.nuts_id " +\
+							"WHERE stat.load_profile.nuts_id is not null and fk_time_id is not null " +\
+							"AND stat.load_profile.nuts_id = nutsSelection.nuts_id " +\
+							"GROUP BY hoy " +\
+							"HAVING	COUNT(value)=COUNT(*) " +\
+							"ORDER BY val DESC;"
+
+	return sql_query
+
+# ALL QUERIES DATA FOR THE DURATION CURVE BY HECTARES
+def createQueryDataDCHectares(year, geometry):
+	sql_query = "with subAreas as (SELECT ST_Intersection(ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258),nuts.geom) as soustracteGeom, " +\
+							"nuts.gid " +\
+							"FROM geo.nuts " +\
+							"where ST_Intersects(nuts.geom,ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258)) " + \
+							"AND STAT_LEVL_=2 ), " +\
+						"statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density_tif.rast,1, " +\
+							"ST_Transform(subAreas.soustracteGeom,3035),0,true),1,true)).* as stat, subAreas.gid " +\
+							"FROM subAreas, geo.heat_tot_curr_density_tif " +\
+							"WHERE ST_Intersects(heat_tot_curr_density_tif.rast,ST_Transform(subAreas.soustracteGeom,3035)) group by subAreas.gid), " +\
+						"statLoadProfilBySubarea as (select stat.load_profile.nuts_id as load_profile_nutsid, stat.load_profile.value as val_load_profile, " +\
+							"stat.time.month as month_of_year, " +\
+							"stat.time.hour_of_year as hour_of_year, " +\
+							"stat.time.day as day_of_month, " +\
+							"stat.time.hour_of_day as hour_of_day, " +\
+							"statBySubAreas.count as statCount, statBySubAreas.sum as statSum_HD " +\
+							"from stat.load_profile " +\
+							"left join statBySubAreas on statBySubAreas.gid = stat.load_profile.fk_nuts_gid " +\
+							"inner join stat.time on stat.load_profile.fk_time_id = stat.time.id " +\
+							"WHERE fk_nuts_gid is not null and fk_time_id is not null " +\
+							"AND statBySubAreas.gid = stat.load_profile.fk_nuts_gid AND stat.time.year = " + str(year) + " " +\
+							"order by stat.time.hour_of_year), " +\
+						"totalLoadprofile as ( " +\
+							"select sum(val_load_profile) as tot_load_profile,load_profile_nutsid " +\
+							"from statLoadProfilBySubarea group by load_profile_nutsid) " +\
+						"select sum(val_load_profile/tot_load_profile*statSum_HD) as normalizedCalutation,hour_of_year " +\
+							"from statLoadProfilBySubarea " +\
+							"inner join totalLoadprofile on statLoadProfilBySubarea.load_profile_nutsid = totalLoadprofile.load_profile_nutsid " +\
+							"group by hour_of_year " +\
+							"order by normalizedCalutation DESC;"
+
+	return sql_query
 

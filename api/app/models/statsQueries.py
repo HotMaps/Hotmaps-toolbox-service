@@ -1,9 +1,9 @@
 import datetime
-from app import helper
+from .. import helper
 from app import dbGIS as db
 from app import constants
 from decimal import *
-
+from app.models.indicators import layersData, ELECRICITY_MIX
 from app import celery
 from . import generalData
 from app import model
@@ -11,178 +11,112 @@ from app import model
 import logging
 log = logging.getLogger(__name__)
 
-
-
-class LayersNutsLau:
+class LayersStats:
 
 	@staticmethod
-	@celery.task(name = 'stats_nuts_lau')
-	def stats_nuts_lau(nuts, year, layers, type): #/stats/layers/nuts-lau
-
-
-		# Get the data
-		layersQueryData = generalData.createQueryDataStatsNutsLau(nuts=nuts, year=year, type=type)
-		layersData = generalData.layersData
+	def run_stat(payload):
 		
+		year = payload['year']
+		layersPayload = payload['layers']
+		scale_level = payload['scale_level']
+		#print ("scale level ",scale_level)
+		selection_areas = ''
+		is_hectare = False
+		noDataLayers=[]
+		layers=[]
+		output=[]
+		#print(layersPayload)
+		if scale_level in constants.NUTS_LAU_VALUES:
+			selection_areas = payload['nuts']
+			#print ("scale in constants.NUTS_LAU_VALUES ")
+		elif scale_level == constants.hectare_name:
+			selection_areas = payload['areas']
+			geom = helper.areas_to_geom(selection_areas)
+			is_hectare=True
+
+		for c, layer in enumerate(layersPayload):
+			if layersPayload[c] in layersData:
+				layers.append(layersPayload[c])
+			else: 
+				noDataLayers.append(layersPayload[c])
+
+		
+		if is_hectare:
+			output = LayersStats.get_stats(selection_areas=geom, year=year, layers=layers,scale_level=scale_level, is_hectare=is_hectare)
+		else:
+			nuts = ''.join("'"+str(nu)+"'," for nu in selection_areas)[:-1]
+			output = LayersStats.get_stats(selection_areas=nuts, year=year, layers=layers, scale_level=scale_level, is_hectare=False)
+
+		return output, noDataLayers
+
+	@staticmethod
+	def get_stats(year, layers, selection_areas, is_hectare, scale_level):
 		# Get the number of layers
-		nbLayers = len(layers)
-
 		result = []
-
 		# Check if there is at least one layer
 		if layers:
 			# Construction of the query 
-			sql_query = 'WITH '
+			sql_query = ''
+			sql_with = ' WITH '
+			sql_select = ' SELECT '
+			sql_from = ' FROM '
+			for layer in layers:
+				#print(layer)
+				if len(layersData[layer]['indicators']) != 0 and scale_level in layersData[layer]['data_lvl']:
+					if is_hectare:
+						sql_with += generalData.constructWithPartEachLayerHectare(geometry=selection_areas, year=year, layer=layer, scale_level=scale_level) + ','
+					else:
+						sql_with += generalData.constructWithPartEachLayerNutsLau(layer=layer, nuts=selection_areas, year=year, scale_level=scale_level) + ','
 
-			for c, layer in enumerate(layers):
-				sql_query += layersQueryData[layer]['with']
-
-				# Add a comma when the query needs one	
-				if nbLayers > 1 and c < nbLayers-1:
-					sql_query += ', '
-
-			sql_query += 'SELECT '
-
-			for c, layer in enumerate(layers):
-				sql_query += layersQueryData[layer]['select']
-				# Add a comma when the query needs one
-				if nbLayers > 1 and c < nbLayers-1:
-					sql_query += ', '
-
-			sql_query += 'FROM '
-
-			for c, layer in enumerate(layers):
-				sql_query += layersQueryData[layer]['from']
-				# Add a comma when the query needs one
-				if nbLayers > 1 and c < nbLayers-1:
-					sql_query += ', '	
-				
-			sql_query += ';'
-
-
-			# Execution of the query
-			#query2 = db.session.execute(sql_query)
-			#print ('query 456', query2)
-
+					for indicator in layersData[layer]['indicators']:
+						if 'table_column' in indicator:
+							sql_select += layer+indicator['indicator_id']+','
+						elif indicator['reference_tablename_indicator_id_1'] in layers and indicator['reference_tablename_indicator_id_2'] in layers:
+								sql_select+= indicator['reference_tablename_indicator_id_1']+indicator['reference_indicator_id_1']+' '+indicator['operator']+' '+indicator['reference_tablename_indicator_id_2']+indicator['reference_indicator_id_2']+','
+					sql_from += layersData[layer]['from_indicator_name']+','
+					#print ("sql_from ", sql_from)
+			
+			
+			# Combine string to a single query
+			sql_with = sql_with[:-1]
+			sql_select = sql_select[:-1]
+			sql_from = sql_from[:-1]
+			sql_query = sql_with + sql_select + sql_from + ';'
+			print(sql_query)
+			# Run the query
 			query_geographic_database_first = model.query_geographic_database_first(sql_query)
 
-
-			# Execution of the query
-			#query = db.session.execute(sql_query).first()
-
-			#print ('query session', query)
-
-
 			# Storing the results only if there is data
-			cpt_value_used = 0
-			"""if query[0] == None:
-				result = []
-			else:"""
+			count_indic=0
 			for layer in layers:
 				values = []
+				for indicator in layersData[layer]['indicators']:
+					if ('table_column' not in indicator and (indicator['reference_tablename_indicator_id_1'] not in layers or indicator['reference_tablename_indicator_id_2'] not in layers)) or scale_level not in layersData[layer]['data_lvl']:
+						continue
+					currentValue = query_geographic_database_first[count_indic]
+					count_indic += 1
 
-				for c, l in enumerate(layersData[layer]['resultsName']):
-					print ('c', c)
-					currentValue = query_geographic_database_first[cpt_value_used]
-
-
-
-
-					#print ('currentValue', query)
 					if currentValue == None:
 						currentValue = 0
 
 
+					if 'factor' in indicator:
+						currentValue = float(currentValue)* float(indicator['factor'])
+
+
 					try:
 						values.append({
-							'name':layersData[layer]['resultsName'][c],
+							'name':layer +'_'+indicator['indicator_id'],
 							'value':currentValue,
-							'unit':layersData[layer]['resultsUnit'][c]
+							'unit':indicator['unit']
 						})
 					except KeyError: # Special case we retrieve only one value for an hectare
 						pass
-					cpt_value_used = cpt_value_used + 1
-
 				result.append({
 					'name':layer,
 					'values':values
 				})
-
-		return result
-
-
-class LayersHectare:
-
-	@staticmethod
-	@celery.task(name = 'stats_hectares')
-	def stats_hectares(geometry, year, layers): #/stats/layers/hectares
-
-		# Get the data
-		layersQueryData = generalData.createQueryDataStatsHectares(geometry=geometry, year=year)
-		layersData = generalData.layersData
-
-		# Get the number of layers
-		nbLayers = len(layers)
-
-		result = []
-
-		# Check if there is at least one layer
-		if layers:
-			# Construction of the query 
-			sql_query = 'WITH '
-
-			for c, layer in enumerate(layers):
-				sql_query += layersQueryData[layer]['with']
-				# Add a comma when the query needs one	
-				if nbLayers > 1 and c < nbLayers-1:
-					sql_query += ', '
-
-			sql_query += 'SELECT '
-
-			for c, layer in enumerate(layers):
-				sql_query += layersQueryData[layer]['select']
-				# Add a comma when the query needs one
-				if nbLayers > 1 and c < nbLayers-1:
-					sql_query += ', '
-
-			sql_query += 'FROM '
-
-			for c, layer in enumerate(layers):
-				sql_query += layersQueryData[layer]['from']
-				# Add a comma when the query needs one
-				if nbLayers > 1 and c < nbLayers-1:
-					sql_query += ', '	
-				
-			sql_query += ';'
-
-			# Execution of the query
-			query = db.session.execute(sql_query).first()
-
-			# Storing the results only if there is data
-			if query[0] == None:
-				result = []
-			else:
-				for layer in layers:
-					values = []
-					for c, l in enumerate(layersData[layer]['resultsName']):
-						try:
-							currentValue = query[layersData[layer]['resultsName'][c]]
-							if currentValue == None:
-								currentValue = 0
-
-							values.append({
-									'name':layersData[layer]['resultsName'][c],
-									'value':currentValue,
-									'unit':layersData[layer]['resultsUnit'][c]
-								})
-						except KeyError: # Special case we retrieve only one value for an hectare
-							pass
-
-					result.append({
-							'name':layer,
-							'values':values
-						})
-
+		#print(count_indic)
 		return result
 
 
@@ -192,8 +126,8 @@ class ElectricityMix:
 
 	def getEnergyMixNutsLau(nuts):
 
-		sql_query = "WITH energy_total as (SELECT sum(electricity_generation) as value FROM " + constants.ELECRICITY_MIX + " WHERE nuts0_code IN ("+nuts+") )" + \
-					"SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM " + constants.ELECRICITY_MIX + " ,energy_total WHERE nuts0_code IN ("+nuts+")  GROUP BY energy_carrier ORDER BY energy_carrier ASC" ;
+		sql_query = "WITH energy_total as (SELECT sum(electricity_generation) as value FROM " + ELECRICITY_MIX + " WHERE nuts0_code IN ("+nuts+") )" + \
+					"SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM " + ELECRICITY_MIX + " ,energy_total WHERE nuts0_code IN ("+nuts+")  GROUP BY energy_carrier ORDER BY energy_carrier ASC" ;
 
 
 

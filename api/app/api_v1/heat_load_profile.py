@@ -7,6 +7,7 @@ from app.decorators.serializers import  load_profile_aggregation_day_input, \
 from app.decorators.restplus import api
 from app.decorators.exceptions import IntersectionException, HugeRequestException, ParameterException, RequestException
 from app.models.heatloadQueries import HeatLoadProfile
+from .. import helper
 
 
 
@@ -28,6 +29,7 @@ class HeatLoadProfileResource(Resource):
             if nuts_id not in list_nuts_id:
                 list_nuts_id.append(nuts_id)
         return list_nuts_id
+
 
 
 @ns.route('/duration-curve/nuts-lau')
@@ -66,7 +68,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         if not nuts:
             return
 
-        nuts = generalData.transform_nuts_list(nuts)
+        nuts = helper.transform_nuts_list(nuts)
 
         output = {}
 
@@ -259,9 +261,9 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
         # geom = "SRID=4326;{}".format(multipolygon.wkt)
         geom = multipolygon.wkt
 
-        res = HeatLoadProfile.heatloadprofile_hectares.delay(year=year, month=month, day=day, geometry=geom)
+        res = HeatLoadProfile.heatloadprofile_hectares(year=year, month=month, day=day, geometry=geom)
 
-        return res.get()
+        return res
 
 
 @ns.route('/nuts-lau')
@@ -299,9 +301,10 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
         # Stop execution if nuts list is empty
         if not nuts:
             return
-            
-        nuts = generalData.transform_nuts_list(nuts)
-        
+        print(nuts)
+        nuts = helper.nuts_array_to_string(nuts)
+        print(nuts)
+
         if 'month' in api.payload.keys():
           month = api.payload["month"]
         else:
@@ -313,11 +316,10 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
           day = 0
 
         output = {}
-
-        try:
-            res = HeatLoadProfile.heatloadprofile_nuts_lau.delay(nuts=nuts, year=year, month=month, day=day)
-        except Exception, e:
-            raise IntersectionException
-        output = res.get()
+        nuts_level = api.payload["nuts_level"]
+        """ try: """
+        output = HeatLoadProfile.heatloadprofile_nuts_lau(nuts=nuts, year=year, month=month, day=day, nuts_level=nuts_level)
+        """ except Exception as e:
+            raise IntersectionException """
 
         return output
