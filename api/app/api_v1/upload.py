@@ -514,7 +514,7 @@ class ExportCsvNuts(Resource):
                 raise HugeRequestException
 
         sql = "SELECT * FROM " + schema + "." + layer_name + " WHERE date = '" + year + "-01-01' AND ST_Within(" \
-              + schema + "." + layer_name + ".geometry, st_transform((SELECT geom from geo." \
+              + schema + "." + layer_name + ".geometry, st_transform((SELECT ST_UNION(geom) from geo." \
               + layer_type + " where " + id_type + " = '" + nuts[0] + "'"
 
         # we add the rest of the lau id
@@ -527,7 +527,7 @@ class ExportCsvNuts(Resource):
         try:
             result = db.engine.execute(sql)
         except:
-            raise RequestException(sql)
+            raise RequestException("Problem with your SQL query")
 
         # write csv_file
         number_of_columns = len(result._metadata.keys)
