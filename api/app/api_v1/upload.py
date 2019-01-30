@@ -1,35 +1,29 @@
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+import StringIO
 import os
 import shutil
 import shapely.geometry as shapely_geom
-
+import uuid
 from flask_restplus import Resource
 from binascii import unhexlify
 from flask import send_file
-from .. import constants
+from app import celery
 from ..decorators.restplus import api
 from ..decorators.restplus import UserUnidentifiedException, ParameterException, RequestException, \
-    UserDoesntOwnUploadsException, UploadExistingUrlException, NotEnoughSpaceException, UploadNotExistingException, \
+    UserDoesntOwnUploadsException, UploadExistingUrlException, UploadNotExistingException, \
     HugeRequestException, NotEnoughPointsException
 from ..decorators.serializers import upload_add_output, upload_list_input, upload_list_output,upload_delete_input, \
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
     upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input
 from .. import dbGIS as db
-from ..models.uploads import Uploads
+from ..models.uploads import Uploads, generate_tiles, allowed_file, check_map_size, calculate_total_space
 from ..models.user import User
-from ..helper import generate_geotif_name
 from ..decorators.parsers import file_upload
 
 nsUpload = api.namespace('upload', description='Operations related to file upload')
 ns = nsUpload
 NUTS_YEAR = "2013"
 LAU_YEAR = NUTS_YEAR
-USER_UPLOAD_FOLDER = '/var/Hotmaps/users/'
-
-ALLOWED_EXTENSIONS = set(['tif', 'csv'])
+USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
 
 
 @ns.route('/add')
@@ -41,6 +35,7 @@ ALLOWED_EXTENSIONS = set(['tif', 'csv'])
 class AddUploads(Resource):
     @api.marshal_with(upload_add_output)
     @api.expect(file_upload)
+    @celery.task(name='upload add')
     def post(self):
         """
         The method called to add an upload
@@ -55,9 +50,18 @@ class AddUploads(Resource):
         except:
             wrong_parameter.append('token')
         try:
+            name = args['name']
+        except:
+            wrong_parameter.append('name')
+        try:
             file_name = args['file'].filename
         except Exception as e:
             wrong_parameter.append('file')
+        try:
+            layer = args['layer']
+        except:
+            if file_name.endswith('.tif'):
+                wrong_parameter.append('layer')
 
         # raise exception if parameters are false
         if len(wrong_parameter) > 0:
@@ -75,52 +79,84 @@ class AddUploads(Resource):
 
         # Set up the path
         user_folder = USER_UPLOAD_FOLDER + str(user.id)
-        upload_folder = user_folder + '/' + file_name[:-4]
-        url = upload_folder + '/' + file_name
+        upload_uuid = str(uuid.uuid4())
+        upload_folder = user_folder + '/' + upload_uuid
 
+        # if the user does not own a repository, we create one
         if not os.path.isdir(user_folder):
             os.makedirs(user_folder)
 
-        # we need to check if the URL is already taken
-        if Uploads.query.filter_by(url=url).first() is not None:
+        # we need to check if the name is already taken for the user
+        if Uploads.query.filter_by(name=name).first() is not None:
             raise UploadExistingUrlException
 
         # we check if the file extension is valid
         if not allowed_file(file_name):
             raise RequestException("Please select a tif or csv file !")
 
+        user_currently_used_space = calculate_total_space(user.uploads)
+
+        if file_name.endswith('.tif'):
+            url = upload_folder + '/grey.tif'
+        else:
+            url = upload_folder + '/data.csv'
+
+        upload = Uploads(name=name, url=url, layer=layer, size=0.0, user_id=user.id, uuid=upload_uuid,
+                         is_generated=1)
+        db.session.add(upload)
+        db.session.commit()
+
         os.makedirs(upload_folder)
 
         # save the file on the file_system
         args['file'].save(url)
-
-        generate_tiles(url, upload_folder)
-
-        # we check the size of our file
-        size = 0
-        for dirpath, dirnames, filenames in os.walk(upload_folder):
-            for f in filenames:
-                fp = os.path.join(dirpath, f)
-                size += float(os.path.getsize(fp)) / 1000000
-
-        # we need to check if there is enough disk space for the dataset
-        used_size = calculate_total_space(user.uploads) + size
-
-        if used_size > constants.USER_DISC_SPACE_AVAILABLE:
-            # retroactively delete the files
-            shutil.rmtree(upload_folder)
-            raise NotEnoughSpaceException
-
-        # add the upload on the db
-        upload = Uploads(file_name=file_name, url=url, size=size, user_id=user.id)
-        db.session.add(upload)
-        db.session.commit()
+        if file_name.endswith('.tif'):
+            generate_tiles.delay(upload_folder, url, layer, upload_uuid, user_currently_used_space)
+        else:
+            check_map_size(upload_folder, user_currently_used_space, upload_uuid)
 
         # output
-        output = 'file '+file_name+' added for the user '+user.first_name
+        output = 'file ' + name + ' added for the user ' + user.first_name
         return {
             "message": str(output)
         }
+
+
+@ns.route('/tiles/<string:token>/<string:upload_id>/<int:z>/<int:x>/<int:y>')
+@api.response(530, 'Request error')
+@api.response(531, 'Missing parameter')
+@api.response(539, 'User Unidentified')
+@api.response(543, 'Uploads doesn\'t exists')
+class TilesUploads(Resource):
+    def get(self, token, upload_id, z, x, y):
+        """
+        The method called to get the tiles of an upload
+        :return:
+        """
+
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise UserUnidentifiedException
+
+        # find upload to display
+        upload = Uploads.query.filter_by(id=upload_id).first()
+        if upload is None:
+            raise UploadNotExistingException
+
+        # check if the user can display the upload
+        if upload.user_id != user.id:
+            raise UserDoesntOwnUploadsException
+
+        folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
+
+        tile_filename = folder_url+"/tiles/%d/%d/%d.png" % (z, x, y)
+
+        if not os.path.exists(tile_filename):
+            return
+        # send the file to the client
+        return send_file(tile_filename,
+                         mimetype='image/png')
 
 
 @ns.route('/list')
@@ -130,6 +166,7 @@ class AddUploads(Resource):
 class ListUploads(Resource):
     @api.marshal_with(upload_list_output)
     @api.expect(upload_list_input)
+    @celery.task(name='upload listing')
     def post(self):
         """
         The method called to list the uploads of the connected user
@@ -155,26 +192,26 @@ class ListUploads(Resource):
         }
 
 
-@ns.route('/remove_upload')
+@ns.route('/delete')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
-@api.response(540, 'User doesn\'t own the upload')
 @api.response(543, 'Uploads doesn\'t exists')
 class DeleteUploads(Resource):
     @api.marshal_with(upload_delete_output)
     @api.expect(upload_delete_input)
+    @celery.task(name='upload deletion')
     def delete(self):
         """
-        The method called to remove an upload
+        The method called to delete an upload
         :return:
         """
         # Entries
         wrong_parameter = []
         try:
-            file_name = api.payload['file_name']
+            id = api.payload['id']
         except:
-            file_name = wrong_parameter.append('file_name')
+            wrong_parameter.append('id')
         try:
             token = api.payload['token']
         except:
@@ -192,12 +229,8 @@ class DeleteUploads(Resource):
         if user is None:
             raise UserUnidentifiedException
 
-        folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + file_name[:-4]
-
-        url = folder_url + '/' + file_name
-
         # find upload to delete
-        upload_to_delete = Uploads.query.filter_by(url=url).first()
+        upload_to_delete = Uploads.query.filter_by(id=id).first()
         if upload_to_delete is None:
             raise UploadNotExistingException
 
@@ -205,16 +238,18 @@ class DeleteUploads(Resource):
         if upload_to_delete.user_id != user.id:
             raise UserDoesntOwnUploadsException
 
+        folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload_to_delete.uuid)
+
         # delete the upload
         db.session.delete(upload_to_delete)
         db.session.commit()
 
-        #delete the file
+        # delete the file
         shutil.rmtree(folder_url)
 
         # output
         return {
-            "message": "Upload removed"
+            "message": "Upload deleted"
         }
 
 
@@ -224,7 +259,8 @@ class DeleteUploads(Resource):
 @api.response(532, 'Request too big')
 class ExportRasterNuts(Resource):
     @api.expect(upload_export_raster_nuts_input)
-    def post(self):
+    @celery.task(name='upload export raster nuts')
+    def post(self=None):
         """
         The method called to export a list of given nuts into a raster
         :return:
@@ -262,9 +298,8 @@ class ExportRasterNuts(Resource):
             layer_name = str(layers)[: -6]
             id_type = 'nuts_id'
             layer_date = NUTS_YEAR
-            if str(layers)[-1] != '3':
+            if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
-
 
         # format the layer_name to contain only the name
         if layer_name.endswith('_tif'):
@@ -292,7 +327,7 @@ class ExportRasterNuts(Resource):
             "FROM " \
                 "(SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast " \
                 "FROM geo." + layer_name + ", buffer " \
-                "WHERE ST_Intersects(rast, buffer_geom)) AS foo;"  # TODO Manage also the date field
+                "WHERE ST_Intersects(rast, buffer_geom)) AS foo;"  # TODO Postpone Manage also the date field
         hex_file = ''
 
         # execute request
@@ -311,14 +346,14 @@ class ExportRasterNuts(Resource):
         hex_file_decoded = unhexlify(hex_file)
 
         # write string buffer
-        strIO = StringIO.StringIO()
-        strIO.write(hex_file_decoded)
-        strIO.seek(0)
+        str_io = StringIO.StringIO()
+        str_io.write(hex_file_decoded)
+        str_io.seek(0)
 
         # send the file to the client
-        return send_file(strIO,
-                         mimetype='image/TIFF',
-                         attachment_filename="testing.tif",
+        return send_file(str_io,
+                         mimetype='image/TIF',
+                         attachment_filename="hotmaps.tif",
                          as_attachment=True)
 
 
@@ -328,7 +363,8 @@ class ExportRasterNuts(Resource):
 @api.response(532, 'Request too big')
 class ExportRasterHectare(Resource):
     @api.expect(upload_export_raster_hectare_input)
-    def post(self):
+    @celery.task(name='upload export raster hectare')
+    def post(self=None):
         """
         The method called to export a list of given hectares into a raster
         :return:
@@ -389,14 +425,14 @@ class ExportRasterHectare(Resource):
         sql = "WITH buffer AS ( SELECT ST_Buffer( ST_Transform( ST_GeomFromText('"+str(multipolygon)+"', 4258) " \
                 ", 3035), 0) AS buffer_geom) SELECT encode(ST_AsTIFF(foo.rast, 'LZW'), 'hex') as tif FROM " \
                 "( SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast FROM geo." + layer_name + \
-                ", buffer WHERE ST_Intersects(rast, buffer_geom)) AS foo;"  # TODO Manage also the date field
+                ", buffer WHERE ST_Intersects(rast, buffer_geom)) AS foo;"  # TODO Postpone Manage also the date field
 
         hex_file = ''
         # execute request
         try:
             result = db.engine.execute(sql)
         except Exception:
-            raise RequestException(result)
+            raise RequestException("Problem with your SQL query")
 
         rowcount = 0
         # write hex_file
@@ -412,18 +448,15 @@ class ExportRasterHectare(Resource):
         hex_file_decoded = unhexlify(hex_file)
 
         # write string buffer
-        strIO = StringIO.StringIO()
-        strIO.write(hex_file_decoded)
-        strIO.seek(0)
+        str_io = StringIO.StringIO()
+        str_io.write(hex_file_decoded)
+        str_io.seek(0)
 
-        try:
-            # send the file to the client
-            return send_file(strIO,
-                             mimetype='image/TIFF',
-                             attachment_filename="testing.tif",
-                             as_attachment=True)
-        except Exception as e:
-            raise RequestException(str(e))
+        # send the file to the client
+        return send_file(str_io,
+                         mimetype='image/TIF',
+                         attachment_filename="hotmaps.tif",
+                         as_attachment=True)
 
 
 @ns.route('/export/csv/nuts')
@@ -432,7 +465,8 @@ class ExportRasterHectare(Resource):
 @api.response(532, 'Request too big')
 class ExportCsvNuts(Resource):
     @api.expect(upload_export_csv_nuts_input)
-    def post(self):
+    @celery.task(name='upload export csv nuts')
+    def post(self=None):
         """
         The method called to export a given list of nuts into a csv
         :return:
@@ -476,11 +510,11 @@ class ExportCsvNuts(Resource):
             layer_name = str(layers)[: -6]
             id_type = 'nuts_id'
             layer_date = NUTS_YEAR
-            if str(layers)[-1] != '3':
+            if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
 
         sql = "SELECT * FROM " + schema + "." + layer_name + " WHERE date = '" + year + "-01-01' AND ST_Within(" \
-              + schema + "." + layer_name + ".geometry, st_transform((SELECT geom from geo." \
+              + schema + "." + layer_name + ".geometry, st_transform((SELECT ST_UNION(geom) from geo." \
               + layer_type + " where " + id_type + " = '" + nuts[0] + "'"
 
         # we add the rest of the lau id
@@ -492,8 +526,8 @@ class ExportCsvNuts(Resource):
         # execute request
         try:
             result = db.engine.execute(sql)
-        except Exception as e:
-            raise RequestException(sql)
+        except:
+            raise RequestException("Problem with your SQL query")
 
         # write csv_file
         number_of_columns = len(result._metadata.keys)
@@ -514,14 +548,14 @@ class ExportCsvNuts(Resource):
             raise RequestException('There is no result for this selection')
 
         # write string buffer
-        strIO = StringIO.StringIO()
-        strIO.write(csv_file)
-        strIO.seek(0)
+        str_io = StringIO.StringIO()
+        str_io.write(csv_file)
+        str_io.seek(0)
 
         # send the file to the client
-        return send_file(strIO,
+        return send_file(str_io,
                          mimetype='text/csv',
-                         attachment_filename="testing.csv",
+                         attachment_filename="hotmaps.csv",
                          as_attachment=True)
 
 
@@ -531,7 +565,8 @@ class ExportCsvNuts(Resource):
 @api.response(532, 'Request too big')
 class ExportCsvHectare(Resource):
     @api.expect(upload_export_csv_hectare_input)
-    def post(self):
+    @celery.task(name='upload export csv hectare')
+    def post(self=None):
         """
         The method called to export a given list of hectares into a csv
         :return:
@@ -600,8 +635,8 @@ class ExportCsvHectare(Resource):
         # execute request
         try:
             result = db.engine.execute(sql)
-        except Exception as e:
-            raise RequestException(sql) #Failure in the SQL Request
+        except:
+            raise RequestException("Problem with your SQL query")
 
         # write csv_file
         number_of_columns = len(result._metadata.keys)
@@ -621,14 +656,14 @@ class ExportCsvHectare(Resource):
             raise RequestException('There is no result for this selection')
 
         # write string buffer>
-        strIO = StringIO.StringIO()
-        strIO.write(csv_file)
-        strIO.seek(0)
+        str_io = StringIO.StringIO()
+        str_io.write(csv_file)
+        str_io.seek(0)
 
         # send the file to the client
-        return send_file(strIO,
+        return send_file(str_io,
                          mimetype='text/csv',
-                         attachment_filename="testing.csv",
+                         attachment_filename="hotmaps.csv",
                          as_attachment=True)
 
 
@@ -638,9 +673,10 @@ class ExportCsvHectare(Resource):
 @api.response(539, 'User Unidentified')
 @api.response(540, 'User doesn\'t own the upload')
 @api.response(543, 'Uploads doesn\'t exists')
-class DownloadNuts(Resource):
+class Download(Resource):
     @api.expect(upload_download_input)
-    def post(self):
+    @celery.task(name='upload download')
+    def post(self=None):
         '''
         This method will allow the user to download a selected dataset
         :return:
@@ -652,9 +688,9 @@ class DownloadNuts(Resource):
         except:
             wrong_parameter.append('token')
         try:
-            file_name = api.payload['file_name']
+            id = api.payload['id']
         except:
-            wrong_parameter.append('file_name')
+            wrong_parameter.append('id')
 
         if len(wrong_parameter) > 0:
             exception_message = ''
@@ -669,77 +705,28 @@ class DownloadNuts(Resource):
         if user is None:
             raise UserUnidentifiedException
 
-        url = USER_UPLOAD_FOLDER + str(user.id) + '/' + file_name[:-4] + '/' + file_name
-
-        # find upload to delete
-        upload = Uploads.query.filter_by(url=url).first()
+        # find upload
+        upload = Uploads.query.filter_by(id=id).first()
         if upload is None:
             raise UploadNotExistingException
 
-        # check if the user can delete the
+        # check if the user own the upload
         if upload.user_id != user.id:
             raise UserDoesntOwnUploadsException
-        if url.endswith('.tif'):
+
+        url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
+
+        if os.path.exists(url + '/grey.tif'):
+            url += '/grey.tif'
+            extension = '.tif'
             mimetype = 'image/TIFF'
-        elif url.endswith('.csv'):
+        elif os.path.exists(url + '/data.csv'):
+            url += '/data.csv'
+            extension= '.csv'
             mimetype = 'text/csv'
 
         # send the file to the client
         return send_file(url,
                          mimetype=mimetype,
-                         attachment_filename=file_name,
+                         attachment_filename=upload.name + extension,
                          as_attachment=True)
-
-
-def calculate_total_space(uploads):
-    '''
-    This method will calculate the amount of disc space taken by a list of uploads
-    :param uploads:
-    :return: the used disk space
-    '''
-    used_size = float(0)
-
-    # sum of every size
-    for upload in uploads:
-        used_size += float(upload.size)
-
-    return used_size
-
-
-def allowed_file(filename):
-    '''
-    This method will check if the file is allowed
-    :param filename:
-    :return:
-    '''
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-def generate_tiles(url, path):
-    '''
-    This function is used to generate the various tiles of a layer in the db.
-    :param: raster_layer: an array of raster layer composed of a name, a path and a type (only the path is used here)
-    :return:
-    '''
-    file_path_input = url
-    # we set up the directory for the tif
-    directory_for_tiles = file_path_input.replace('.tif', '')
-
-    intermediate_raster = generate_geotif_name(path)
-    tile_path = directory_for_tiles
-    access_rights = 0o755
-
-    try:
-        os.mkdir(tile_path, access_rights)
-    except OSError:
-        print ("Creation of the directory %s failed" % tile_path)
-    else:
-        print ("Successfully created the directory %s" % tile_path)
-
-    # commands launch to obtain the level of zooms
-    com_string = "gdal_translate -of GTiff {} {} -co COMPRESS=DEFLATE "\
-        .format(file_path_input, intermediate_raster)
-    com_string += "&& python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} "\
-        .format(intermediate_raster, tile_path)
-    os.system(com_string)
