@@ -144,7 +144,7 @@ class StatsLayersHectareMulti(Resource):
 
 
 		output, noDataLayers = LayersStats.run_stat(api.payload)
-		print ("output hectare ",output)
+		#print ("output hectare ",output)
 
 		#output
 		return {

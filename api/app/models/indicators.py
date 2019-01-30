@@ -89,8 +89,8 @@ layersData = {
 			'data_aggregated':True,'indicators':[
 				{'table_column': 'sum', 'unit': 'GWh','indicator_id':'consumption','factor':0.001,'agg_method':'sum'},
 				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
-				{'table_column': 'min', 'unit': 'MWh','indicator_id':'consumption_min','agg_method':'min'},
-				{'table_column': 'max', 'unit': 'MWh','indicator_id':'consumption_max','agg_method':'max'},
+				{'table_column': 'min', 'unit': 'MWh/ha','indicator_id':'consumption_min','agg_method':'min'},
+				{'table_column': 'max', 'unit': 'MWh/ha','indicator_id':'consumption_max','agg_method':'max'},
 				{'table_column': 'mean', 'unit': 'MWh/ha','indicator_id':'density','agg_method':'mean_weighted_cells'},    
 				{
 					'reference_indicator_id_1': 'consumption','reference_tablename_indicator_id_1':HEAT_DENSITY_TOT, 
@@ -285,7 +285,7 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':False,
 			'indicators':[
-				{'table_column': 'emissions_ets_2014', 'unit': 'Tonnes/year','indicator_id':'value'},                  
+				{'table_column': 'emissions_ets_2014', 'unit': 'Tons/year','indicator_id':'value'},
 			]
 			},
 	INDUSTRIAL_SITES_EXCESS_HEAT:{'tablename':INDUSTRIAL_SITES_EXCESS_HEAT,
@@ -298,10 +298,10 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			
 			'data_aggregated':False,'indicators':[
-				{'table_column': 'excess_heat_100_200c', 'unit': 'GWh/year','indicator_id':'value1'},
-				{'table_column': 'excess_heat_200_500c', 'unit': 'GWh/year','indicator_id':'value2'},
-				{'table_column': 'excess_heat_500c', 'unit': 'GWh/year','indicator_id':'value3'},
-				{'table_column': 'excess_heat_total', 'unit': 'GWh/year','indicator_id':'total'}
+				{'table_column': 'excess_heat_100_200c', 'unit': 'GWh','indicator_id':'value1'},
+				{'table_column': 'excess_heat_200_500c', 'unit': 'GWh','indicator_id':'value2'},
+				{'table_column': 'excess_heat_500c', 'unit': 'GWh','indicator_id':'value3'},
+				{'table_column': 'excess_heat_total', 'unit': 'GWh','indicator_id':'total'}
 			]
 			},                 
 	POPULATION_TOT:{
@@ -442,9 +442,9 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],	
 			'data_aggregated':True,
 			'indicators':[
-            {'table_column': 'mean', 'unit': 'kWh/m^2','indicator_id':'average','agg_method':'mean_weighted_cell'},
-            {'table_column': 'min', 'unit': 'kWh/m^2','indicator_id':'min','agg_method':'min'},
-            {'table_column': 'max', 'unit': 'kWh/m^2','indicator_id':'max','agg_method':'max'},
+            {'table_column': 'mean', 'unit': 'kWh/m2','indicator_id':'average','agg_method':'mean_weighted_cell'},
+            {'table_column': 'min', 'unit': 'kWh/m2','indicator_id':'min','agg_method':'min'},
+            {'table_column': 'max', 'unit': 'kWh/m2','indicator_id':'max','agg_method':'max'},
         		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},
             {'table_column': 'sum', 'unit': 'GWh','indicator_id':'potential_5_percent','factor':0.0005,'agg_method':'sum'},
 			]
@@ -524,9 +524,9 @@ layersData = {
 			'table_type':raster_type,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':True,'indicators':[
-            {'table_column': 'mean', 'unit': 'kWh/m^2','indicator_id':'average','agg_method':'mean_weighted_cell'},
-            {'table_column': 'min', 'unit': 'kWh/m^2','indicator_id':'min','agg_method':'min'},
-            {'table_column': 'max', 'unit': 'kWh/m^2','indicator_id':'max','agg_method':'max'},
+            {'table_column': 'mean', 'unit': 'kWh/m2','indicator_id':'average','agg_method':'mean_weighted_cell'},
+            {'table_column': 'min', 'unit': 'kWh/m2','indicator_id':'min','agg_method':'min'},
+            {'table_column': 'max', 'unit': 'kWh/m2','indicator_id':'max','agg_method':'max'},
             {'table_column': 'sum', 'unit': 'GWh','indicator_id':'total_radiation','factor':0.09,'agg_method':'sum'},
         		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},	
 			]},

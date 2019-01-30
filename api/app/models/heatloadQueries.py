@@ -165,7 +165,7 @@ class HeatLoadProfile:
 
 		# Get the query
 		sql_query = createQueryDataDCHectares(year=year, geometry=geometry)
-		#print(sql_query)
+		##print(sql_query)
 		# Execution of the query
 		#query = db.session.execute(sql_query)
 		query = model.query_geographic_database(sql_query)
@@ -317,7 +317,7 @@ def createQueryDataLPNutsLau(year, month, day, nuts, request_type, nuts_level):
 	"""
 	
 	query = 'with ' + nutsSelectionQuery + query_lp + query_hd + query_normalized + query_select
-	#print(query)
+	##print(query)
 	return query
 
 # ALL QUERIES DATA FOR THE DURATION CURVE BY NUTS

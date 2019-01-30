@@ -71,7 +71,7 @@ class ComputationModuleClass(Resource):
         input = request.get_json()
         cm_id = input["cm_id"]
 
-        print ('user-interface',getUI(cm_id))
+        #print ('user-interface',getUI(cm_id))
         return getUI(cm_id)
 
 
@@ -82,7 +82,7 @@ class ComputationModuleClass(Resource):
        Register a calculation module
        :return:
        """
-        print ('HTAPI will register cm')
+        #print ('HTAPI will register cm')
         input = request.get_json()
         register_calulation_module(input)
         return json.dumps(input)
@@ -160,14 +160,14 @@ def computeTask(data,payload,cm_id,type_layer_needed):
 
 
 
-    print ('****************** RETRIVE INPUT DATA ***************************************************')
+    #print ('****************** RETRIVE INPUT DATA ***************************************************')
     #transforme stringify array to json
 
     #layer_needed = helper.unicode_array_to_string(layerneed)
 
     layer_needed = payload['layers_needed']
-    print ('layer_needed', layer_needed)
-    print ('type_layer_needed', type_layer_needed)
+    #print ('layer_needed', layer_needed)
+    #print ('type_layer_needed', type_layer_needed)
     type_layer_needed = helper.unicode_array_to_string(type_layer_needed)
 
     vectors_needed = model.get_vectors_needed(cm_id)
@@ -175,14 +175,14 @@ def computeTask(data,payload,cm_id,type_layer_needed):
 
 
 
-    print ('layer_needed_inside', layer_needed)
+    #print ('layer_needed_inside', layer_needed)
 
 
     # retriving scale level 3 possiblity hectare,nuts, lau
 
     scalevalue = data['scalevalue']
     if scalevalue == 'hectare':
-        print ('****************** BEGIN RASTER CLIP FOR HECTAR ***************************************************')
+        #print ('****************** BEGIN RASTER CLIP FOR HECTAR ***************************************************')
         areas = payload['areas']
         geom =  helper.area_to_geom(areas)
         #get the rasters selected
@@ -191,19 +191,19 @@ def computeTask(data,payload,cm_id,type_layer_needed):
         inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, geom)
         #get the vectors selected
 
-        print ('inputs_raster_selection',inputs_raster_selection)
-        print ('****************** FINISH RASTER CLIP FOR HECTAR ***************************************************')
+        #print ('inputs_raster_selection',inputs_raster_selection)
+        #print ('****************** FINISH RASTER CLIP FOR HECTAR ***************************************************')
 
         # we will be working on hectare level
 
     else:
-        print ('****************** BEGIN RASTER CLIP FOR NUTS OR LAU ***************************************************')
+        #print ('****************** BEGIN RASTER CLIP FOR NUTS OR LAU ***************************************************')
         id_list = payload['nuts']
         shapefile_path = model.get_shapefile_from_selection(scalevalue,id_list,UPLOAD_DIRECTORY)
         inputs_raster_selection = model.clip_raster_from_shapefile(DATASET_DIRECTORY ,shapefile_path,layer_needed, type_layer_needed, UPLOAD_DIRECTORY)
         if vectors_needed != None:
             inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, id_list)
-        print ('****************** FINISH RASTER CLIP FOR NUTS  OR LAU ***************************************************')
+        #print ('****************** FINISH RASTER CLIP FOR NUTS  OR LAU ***************************************************')
 
         # we will be working on a nuts
 
@@ -211,13 +211,13 @@ def computeTask(data,payload,cm_id,type_layer_needed):
 
 
     # send the result to the right CM
-    print ('****************** WILL SEND PAYLOAD TO CM WITH ID {} ***************************************************'.format(cm_id))
+    #print ('****************** WILL SEND PAYLOAD TO CM WITH ID {} ***************************************************'.format(cm_id))
     calculation_module_rpc = CalculationModuleRpcClient()
     response = calculation_module_rpc.call(cm_id,data.encode('utf-8'))
-    print ('****************** RETRIVED RESULT FROM CM WITH ID {} ***************************************************'.format(cm_id))
+    #print ('****************** RETRIVED RESULT FROM CM WITH ID {} ***************************************************'.format(cm_id))
     data_output = json.loads(response)
     helper.test_display(data_output)
-    print ('****************** WILL GENERATE TILES ***************************************************'.format(cm_id))
+    #print ('****************** WILL GENERATE TILES ***************************************************'.format(cm_id))
     try:
         if data_output['result']['raster_layers'] is not None and len(data_output['result']['raster_layers'])>0:
             raster_layers = data_output['result']['raster_layers']
@@ -251,9 +251,11 @@ def generateTiles(raster_layers):
         try:
             os.mkdir(tile_path, access_rights)
         except OSError:
+            pass
             print ("Creation of the directory %s failed" % tile_path)
         else:
-            print ("Successfully created the directory %s" % tile_path)
+            pass
+            #print ("Successfully created the directory %s" % tile_path)
         com_string = "gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE && python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
         os.system(com_string)
         directory_for_tiles = directory_for_tiles.replace(UPLOAD_DIRECTORY+'/', '')
@@ -268,7 +270,7 @@ def generateTiles(raster_layers):
 def generate_shape(vector_layers):
     for layers in vector_layers:
         file_path_input = layers['path']
-        print ('file_path_input',file_path_input)
+        #print ('file_path_input',file_path_input)
 
 
     return file_path_input, file_path_input
@@ -276,12 +278,12 @@ def generate_shape(vector_layers):
 
 def generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection):
     inputs = data["inputs"]
-    print ('inputs', inputs)
+
     inputs_parameter_selection = {}
     data_output = {}
     for parameters in inputs:
-        print ('parameters[input_parameter_name]',parameters['input_parameter_name'])
-        print ('parameters[input_parameter_name]',parameters['input_value'])
+        #print ('parameters[input_parameter_name]',parameters['input_parameter_name'])
+        #print ('parameters[input_parameter_name]',parameters['input_value'])
         inputs_parameter_selection.update({
          parameters['input_parameter_name']: parameters['input_value']
         })
@@ -292,7 +294,7 @@ def generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_sele
         'inputs_raster_selection':inputs_raster_selection,
         'inputs_vector_selection':inputs_vector_selection
     })
-    print ('data_output',data_output)
+    #print ('inputs_raster_selection ',data_output['inputs_raster_selection'])
     data = json.dumps(data_output)
     return data
 
@@ -306,7 +308,7 @@ class ComputationModuleClass(Resource):
          retrieve a request from the from end
          :return:
          """
-        print ('HTAPI will compute cm')
+        #print ('HTAPI will compute cm')
         app = current_app._get_current_object()
         data = request.get_json()
         payload = api.payload['payload']
@@ -347,7 +349,7 @@ class ComputationTaskStatus(Resource):
              """import ipdb; ipdb.set_trace()
              if 'result' in task.info:
                 response['result'] = task.info['result']
-                print 'result',  task.info.get('status', '')"""
+                #print 'result',  task.info.get('status', '')"""
 
         else:
         # something went wrong in the background job

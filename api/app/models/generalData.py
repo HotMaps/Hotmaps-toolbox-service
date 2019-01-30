@@ -129,7 +129,7 @@ def get_indicator_as_query(indic, layer_table_name, layer, scale_level_name, sca
 	if 'diss_agg_method' in indic and check_if_agg_or_dis_method(layer, scale_level):
 		agg_method = indic['diss_agg_method']
 	quer = switcher.get(agg_method,switcher['sum'])
-	print(quer)
+	#print(quer)
 	return quer
 				
 def check_if_agg_or_dis_method(layer,scale_level):

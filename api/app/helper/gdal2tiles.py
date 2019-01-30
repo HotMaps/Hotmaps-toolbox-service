@@ -37,7 +37,7 @@
 #  DEALINGS IN THE SOFTWARE.
 # ******************************************************************************
 
-from __future__ import print_function, division
+from __future__ import #print_function, division
 
 import math
 from multiprocessing import Pipe, Pool, Process, Manager
@@ -474,7 +474,7 @@ class GDALError(Exception):
 
 
 def exit_with_error(message, details=""):
-    # Message printing and exit code kept from the way it worked using the OptionParser (in case
+    # Message #printing and exit code kept from the way it worked using the OptionParser (in case
     # someone parses the error output)
     sys.stderr.write("Usage: gdal2tiles.py [options] input_file [output]\n\n")
     sys.stderr.write("gdal2tiles.py: error: %s\n" % message)
@@ -672,7 +672,7 @@ def setup_no_data_values(input_dataset, options):
                 in_nodata.append(raster_no_data)
 
     if options.verbose:
-        print("NODATA: %s" % in_nodata)
+        #print("NODATA: %s" % in_nodata)
 
     return in_nodata
 
@@ -738,7 +738,7 @@ def reproject_dataset(from_dataset, from_srs, to_srs, options=None):
                                               from_srs.ExportToWkt(), to_srs.ExportToWkt())
 
         if options and options.verbose:
-            print("Warping of the raster by AutoCreateWarpedVRT (result saved into 'tiles.vrt')")
+            #print("Warping of the raster by AutoCreateWarpedVRT (result saved into 'tiles.vrt')")
             to_dataset.GetDriver().CreateCopy("tiles.vrt", to_dataset)
 
         return to_dataset
@@ -800,7 +800,7 @@ def update_no_data_values(warped_vrt_dataset, nodata_values, options=None):
         'NODATA_VALUES', ' '.join([str(i) for i in nodata_values]))
 
     if options and options.verbose:
-        print("Modified warping result saved into 'tiles1.vrt'")
+        #print("Modified warping result saved into 'tiles1.vrt'")
 
         with open("tiles1.vrt", "w") as f:
             f.write(corrected_dataset.GetMetadata("xml:VRT")[0])
@@ -873,7 +873,7 @@ def update_alpha_value_for_non_alpha_inputs(warped_vrt_dataset, options=None):
         warped_vrt_dataset = gdal.Open(vrt_string)
 
         if options and options.verbose:
-            print("Modified -dstalpha warping result saved into 'tiles1.vrt'")
+            #print("Modified -dstalpha warping result saved into 'tiles1.vrt'")
 
             with open("tiles1.vrt", "w") as f:
                 f.write(warped_vrt_dataset.GetMetadata("xml:VRT")[0])
@@ -934,7 +934,7 @@ def create_base_tile(tile_job_info, tile_detail, queue=None):
     data = alpha = None
 
     if options.verbose:
-        print("\tReadRaster Extent: ",
+        #print("\tReadRaster Extent: ",
               (rx, ry, rxsize, rysize), (wx, wy, wxsize, wysize))
 
     # Query is in 'nearest neighbour' but can be bigger in then the tilesize
@@ -1020,7 +1020,7 @@ def create_overview_tiles(tile_job_info, output_folder, options):
         return
 
     if not options.quiet:
-        print("Generating Overview Tiles:")
+        #print("Generating Overview Tiles:")
 
     progress_bar = ProgressBar(tcount)
     progress_bar.start()
@@ -1037,11 +1037,11 @@ def create_overview_tiles(tile_job_info, output_folder, options):
                                             "%s.%s" % (ty, tile_job_info.tile_extension))
 
                 if options.verbose:
-                    print(ti, '/', tcount, tilefilename)
+                    #print(ti, '/', tcount, tilefilename)
 
                 if options.resume and os.path.exists(tilefilename):
                     if options.verbose:
-                        print("Tile generation skipped because of --resume")
+                        #print("Tile generation skipped because of --resume")
                     else:
                         progress_bar.log_progress()
                     continue
@@ -1102,7 +1102,7 @@ def create_overview_tiles(tile_job_info, output_folder, options):
                         out_driver.CreateCopy(tilefilename, dstile, strict=0)
 
                     if options.verbose:
-                        print("\tbuild from zoom", tz + 1,
+                        #print("\tbuild from zoom", tz + 1,
                               " tiles:", (2 * tx, 2 * ty), (2 * tx + 1, 2 * ty),
                               (2 * tx, 2 * ty + 1), (2 * tx + 1, 2 * ty + 1))
 
@@ -1147,7 +1147,7 @@ def optparse_init():
                        "as 0.703125 or 2 tiles at zoom level 0."))
     p.add_option("-v", "--verbose",
                  action="store_true", dest="verbose",
-                 help="Print status messages to stdout")
+                 help="#print status messages to stdout")
     p.add_option("-x", "--exclude",
                  action="store_true", dest="exclude_transparent",
                  help="Exclude transparent tiles from result tileset")
@@ -1249,7 +1249,7 @@ def options_post_processing(options, input_file, output_folder):
     # LC_CTYPE check
     if not full_ascii and 'UTF-8' not in os.environ.get("LC_CTYPE", ""):
         if not options.quiet:
-            print("\nWARNING: "
+            #print("\nWARNING: "
                   "You are running gdal2tiles.py with a LC_CTYPE environment variable that is "
                   "not UTF-8 compatible, and your input file contains non-ascii characters. "
                   "The generated sample googlemaps, openlayers or "
@@ -1257,11 +1257,11 @@ def options_post_processing(options, input_file, output_folder):
 
     # Output the results
     if options.verbose:
-        print("Options:", options)
-        print("Input:", input_file)
-        print("Output:", output_folder)
-        print("Cache: %s MB" % (gdal.GetCacheMax() / 1024 / 1024))
-        print('')
+        #print("Options:", options)
+        #print("Input:", input_file)
+        #print("Output:", output_folder)
+        #print("Cache: %s MB" % (gdal.GetCacheMax() / 1024 / 1024))
+        #print('')
 
     return options
 
@@ -1434,13 +1434,13 @@ class GDAL2Tiles(object):
             raise Exception("No input file was specified")
 
         if self.options.verbose:
-            print("Input file:",
+            #print("Input file:",
                   "( %sP x %sL - %s bands)" % (input_dataset.RasterXSize,
                                                input_dataset.RasterYSize,
                                                input_dataset.RasterCount))
 
         if not input_dataset:
-            # Note: GDAL prints the ERROR message too
+            # Note: GDAL #prints the ERROR message too
             exit_with_error("It is not possible to open the input file '%s'." % self.input_file)
 
         # Read metadata from the input file
@@ -1459,7 +1459,7 @@ class GDAL2Tiles(object):
         in_nodata = setup_no_data_values(input_dataset, self.options)
 
         if self.options.verbose:
-            print("Preprocessed file:",
+            #print("Preprocessed file:",
                   "( %sP x %sL - %s bands)" % (input_dataset.RasterXSize,
                                                input_dataset.RasterYSize,
                                                input_dataset.RasterCount))
@@ -1501,7 +1501,7 @@ class GDAL2Tiles(object):
                         self.warped_input_dataset, options=self.options)
 
             if self.warped_input_dataset and self.options.verbose:
-                print("Projected file:", "tiles.vrt", "( %sP x %sL - %s bands)" % (
+                #print("Projected file:", "tiles.vrt", "( %sP x %sL - %s bands)" % (
                     self.warped_input_dataset.RasterXSize,
                     self.warped_input_dataset.RasterYSize,
                     self.warped_input_dataset.RasterCount))
@@ -1524,7 +1524,7 @@ class GDAL2Tiles(object):
             self.kml = True
             self.isepsg4326 = True
             if self.options.verbose:
-                print("KML autotest OK!")
+                #print("KML autotest OK!")
 
         # Read the georeference
         self.out_gt = self.warped_input_dataset.GetGeoTransform()
@@ -1546,7 +1546,7 @@ class GDAL2Tiles(object):
         # Note: maybe round(x, 14) to avoid the gdal_translate behaviour, when 0 becomes -1e-15
 
         if self.options.verbose:
-            print("Bounds (output srs):", round(self.ominx, 13), self.ominy, self.omaxx, self.omaxy)
+            #print("Bounds (output srs):", round(self.ominx, 13), self.ominy, self.omaxx, self.omaxy)
 
         # Calculating ranges for tiles in different zoom levels
         if self.options.profile == 'mercator':
@@ -1582,11 +1582,11 @@ class GDAL2Tiles(object):
                 self.tmaxz = self.mercator.ZoomForPixelSize(self.out_gt[1])
 
             if self.options.verbose:
-                print("Bounds (latlong):",
+                #print("Bounds (latlong):",
                       self.mercator.MetersToLatLon(self.ominx, self.ominy),
                       self.mercator.MetersToLatLon(self.omaxx, self.omaxy))
-                print('MinZoomLevel:', self.tminz)
-                print("MaxZoomLevel:",
+                #print('MinZoomLevel:', self.tminz)
+                #print("MaxZoomLevel:",
                       self.tmaxz,
                       "(",
                       self.mercator.Resolution(self.tmaxz),
@@ -1626,7 +1626,7 @@ class GDAL2Tiles(object):
                 self.tmaxz = self.geodetic.ZoomForPixelSize(self.out_gt[1])
 
             if self.options.verbose:
-                print("Bounds (latlong):", self.ominx, self.ominy, self.omaxx, self.omaxy)
+                #print("Bounds (latlong):", self.ominx, self.ominy, self.omaxx, self.omaxy)
 
         if self.options.profile == 'raster':
 
@@ -1638,7 +1638,7 @@ class GDAL2Tiles(object):
                     math.ceil(log2(self.warped_input_dataset.RasterYSize / float(self.tilesize)))))
 
             if self.options.verbose:
-                print("Native zoom of the raster:", self.nativezoom)
+                #print("Native zoom of the raster:", self.nativezoom)
 
             # Get the minimal zoom level (whole raster in one tile)
             if self.tminz is None:
@@ -1775,13 +1775,13 @@ class GDAL2Tiles(object):
         """
 
         if not self.options.quiet:
-            print("Generating Base Tiles:")
+            #print("Generating Base Tiles:")
 
         if self.options.verbose:
-            print('')
-            print("Tiles generated from the max zoom level:")
-            print("----------------------------------------")
-            print('')
+            #print('')
+            #print("Tiles generated from the max zoom level:")
+            #print("----------------------------------------")
+            #print('')
 
         # Set the bounds
         tminx, tminy, tmaxx, tmaxy = self.tminmax[self.tmaxz]
@@ -1791,8 +1791,8 @@ class GDAL2Tiles(object):
         querysize = self.querysize
 
         if self.options.verbose:
-            print("dataBandsCount: ", self.dataBandsCount)
-            print("tilebands: ", tilebands)
+            #print("dataBandsCount: ", self.dataBandsCount)
+            #print("tilebands: ", tilebands)
 
         tcount = (1 + abs(tmaxx - tminx)) * (1 + abs(tmaxy - tminy))
         ti = 0
@@ -1807,11 +1807,11 @@ class GDAL2Tiles(object):
                 tilefilename = os.path.join(
                     self.output_folder, str(tz), str(tx), "%s.%s" % (ty, self.tileext))
                 if self.options.verbose:
-                    print(ti, '/', tcount, tilefilename)
+                    #print(ti, '/', tcount, tilefilename)
 
                 if self.options.resume and os.path.exists(tilefilename):
                     if self.options.verbose:
-                        print("Tile generation skipped because of --resume")
+                        #print("Tile generation skipped because of --resume")
                     continue
 
                 # Create directories for the tile
@@ -1833,7 +1833,7 @@ class GDAL2Tiles(object):
                     # Pixel size in the raster covering query geo extent
                     nativesize = wb[0] + wb[2]
                     if self.options.verbose:
-                        print("\tNative Extent (querysize", nativesize, "): ", rb, wb)
+                        #print("\tNative Extent (querysize", nativesize, "): ", rb, wb)
 
                     # Tile bounds in raster coordinates for ReadRaster query
                     rb, wb = self.geo_query(ds, b[0], b[3], b[2], b[1], querysize=querysize)
@@ -2756,10 +2756,10 @@ def worker_tile_details(input_file, output_folder, options, send_pipe=None):
 
         return return_data
     except Exception as e:
-        print("worker_tile_details failed ", str(e))
+        #print("worker_tile_details failed ", str(e))
 
 
-def progress_printer_thread(queue, nb_jobs):
+def progress_#printer_thread(queue, nb_jobs):
     pb = ProgressBar(nb_jobs)
     pb.start()
     for _ in range(nb_jobs):
@@ -2840,11 +2840,11 @@ def single_threaded_tiling(input_file, output_folder, options):
     support it
     """
     if options.verbose:
-        print("Begin tiles details calc")
+        #print("Begin tiles details calc")
     conf, tile_details = worker_tile_details(input_file, output_folder, options)
 
     if options.verbose:
-        print("Tiles details calc complete.")
+        #print("Tiles details calc complete.")
 
     if not options.verbose and not options.quiet:
         progress_bar = ProgressBar(len(tile_details))
@@ -2873,7 +2873,7 @@ def multi_threaded_tiling(input_file, output_folder, options):
     (conf_receiver, conf_sender) = Pipe(False)
 
     if options.verbose:
-        print("Begin tiles details calc")
+        #print("Begin tiles details calc")
     p = Process(target=worker_tile_details,
                 args=[input_file, output_folder, options],
                 kwargs={"send_pipe": conf_sender})
@@ -2884,19 +2884,19 @@ def multi_threaded_tiling(input_file, output_folder, options):
     conf, tile_details = conf_receiver.recv()
     p.join()
     if options.verbose:
-        print("Tiles details calc complete.")
+        #print("Tiles details calc complete.")
     # Have to create the Queue through a multiprocessing.Manager to get a Queue Proxy,
     # otherwise you can't pass it as a param in the method invoked by the pool...
     manager = Manager()
     queue = manager.Queue()
     pool = Pool(processes=nb_processes)
     # TODO: gbataille - check the confs for which each element is an array... one useless level?
-    # TODO: gbataille - assign an ID to each job for print in verbose mode "ReadRaster Extent ..."
+    # TODO: gbataille - assign an ID to each job for #print in verbose mode "ReadRaster Extent ..."
     for tile_detail in tile_details:
         pool.apply_async(create_base_tile, (conf, tile_detail), {"queue": queue})
 
     if not options.verbose and not options.quiet:
-        p = Process(target=progress_printer_thread, args=[queue, len(tile_details)])
+        p = Process(target=progress_#printer_thread, args=[queue, len(tile_details)])
         p.start()
 
     pool.close()

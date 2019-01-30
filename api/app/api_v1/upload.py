@@ -735,6 +735,7 @@ def generate_tiles(url, path):
     except OSError:
         print ("Creation of the directory %s failed" % tile_path)
     else:
+        pass
         print ("Successfully created the directory %s" % tile_path)
 
     # commands launch to obtain the level of zooms

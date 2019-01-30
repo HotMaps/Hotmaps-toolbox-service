@@ -57,9 +57,9 @@ class CalculationModuleRpcClient(object):
                                    ),
                                    body='')
         while self.response is None:
-            #print ('Cm with cm id {} is not connected',cm_id)
+            ##print ('Cm with cm id {} is not connected',cm_id)
             self.connection.process_data_events()
-        print ('self.response ',self.response)
+        #print ('self.response ',self.response)
         return self.response
 
 

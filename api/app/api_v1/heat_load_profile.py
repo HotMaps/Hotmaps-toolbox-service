@@ -301,9 +301,9 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
         # Stop execution if nuts list is empty
         if not nuts:
             return
-        print(nuts)
+        #print(nuts)
         nuts = helper.nuts_array_to_string(nuts)
-        print(nuts)
+        #print(nuts)
 
         if 'month' in api.payload.keys():
           month = api.payload["month"]
