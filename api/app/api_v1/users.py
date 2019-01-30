@@ -1,6 +1,14 @@
 import datetime
 
-from .. import constants
+from flask_mail import Message
+from flask_restplus import Resource
+from flask_security import SQLAlchemySessionUserDatastore
+from itsdangerous import (URLSafeTimedSerializer, BadSignature, SignatureExpired)
+from passlib.hash import bcrypt
+
+from app import celery
+from .upload import calculate_total_space
+from .. import constants, mail, login_manager
 from ..decorators.exceptions import ParameterException, RequestException, ActivationException, \
     UserExistingException, WrongCredentialException, UserUnidentifiedException, \
     UserNotActivatedException
@@ -10,20 +18,10 @@ from ..decorators.serializers import user_register_input, user_register_output, 
     user_recovery_input, user_login_input, user_login_output, user_logout_input, user_logout_output, \
     user_profile_input, user_profile_output, user_get_information_output, user_get_information_input, \
     upload_space_used_output, upload_space_used_input
-from flask_mail import Message
-from flask_restplus import Resource
-from flask_security import SQLAlchemySessionUserDatastore
-from itsdangerous import (URLSafeTimedSerializer, BadSignature, SignatureExpired)
-
-from passlib.hash import bcrypt
-
 from .. import dbGIS as db
-from .. import mail, login_manager
 from ..secrets import FLASK_SECRET_KEY, FLASK_SALT
 from ..models.user import User
 from ..models.role import Role
-
-from .upload import calculate_total_space
 
 # Setup Flask-Security
 user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
@@ -38,6 +36,7 @@ ns = nsUsers
 class AskingPasswordRecovery(Resource):
     @api.marshal_with(user_ask_recovery_output)
     @api.expect(user_ask_recovery_input)
+    @celery.task(name='ask for password recovery')
     def post(self):
         """
 		Method to ask for a Password recovery
@@ -81,6 +80,7 @@ class AskingPasswordRecovery(Resource):
 class RecoverPassword(Resource):
     @api.marshal_with(user_recovery_output)
     @api.expect(user_recovery_input)
+    @celery.task(name='method for recover of password')
     def post(self):
         """
 		Method to recover the password
@@ -134,6 +134,7 @@ class RecoverPassword(Resource):
 class UserRegistering(Resource):
     @api.marshal_with(user_register_output)
     @api.expect(user_register_input)
+    @celery.task(name='user registration')
     def post(self):
         """
 		Returns the statistics for specific layers, area and year
@@ -209,6 +210,7 @@ class UserRegistering(Resource):
 class ActivateUser(Resource):
     @api.marshal_with(user_activate_output)
     @api.expect(user_activate_input)
+    @celery.task(name='user activation')
     def post(self):
         '''
 		The method called to activate a user with a token given by email
@@ -247,6 +249,7 @@ class ActivateUser(Resource):
 class LoginUser(Resource):
     @api.marshal_with(user_login_output)
     @api.expect(user_login_input)
+    @celery.task(name='user login')
     def post(self):
         '''
 		The method called to login a user
@@ -300,6 +303,7 @@ class LoginUser(Resource):
 class LogoutUser(Resource):
     @api.marshal_with(user_logout_output)
     @api.expect(user_logout_input)
+    @celery.task(name='user logout')
     def post(self):
         '''
 		The method called to logout a user
@@ -332,6 +336,7 @@ class LogoutUser(Resource):
 class ProfileUser(Resource):
     @api.marshal_with(user_profile_output)
     @api.expect(user_profile_input)
+    @celery.task(name='user profile update')
     def post(self):
         '''
         The method called to update the profile of a user
@@ -386,6 +391,7 @@ class ProfileUser(Resource):
 class GetUserInformation(Resource):
     @api.marshal_with(user_get_information_output)
     @api.expect(user_get_information_input)
+    @celery.task(name='get user informations')
     def post(self):
         '''
         The method called to return the infos of a user by its token
@@ -422,6 +428,7 @@ class GetUserInformation(Resource):
 class SpaceUsedUploads(Resource):
     @api.marshal_with(upload_space_used_output)
     @api.expect(upload_space_used_input)
+    @celery.task(name='get user space used')
     def post(self):
         """
         The method called to see the space used by an user

@@ -459,7 +459,7 @@ user_get_information_input = api.model('input for getting user information', {
 
 upload_add_input = api.model('input for uploads adding', {
     'token': fields.String(description='authentification token'),
-    'file_name': fields.String(description='file name'),
+    'name': fields.String(description='Upload name'),
 })
 
 upload_add_output = api.model('output for uploads adding', {
@@ -467,9 +467,11 @@ upload_add_output = api.model('output for uploads adding', {
 })
 
 upload_model = api.model('all upload fields', {
-    'file_name': fields.String(description='file name'),
-    'url': fields.String(description='url'),
+    'id': fields.Integer(description='Upload id'),
+    'name': fields.String(description='Upload name'),
     'size': fields.Float(description='size'),
+    'layer': fields.String(description='layer'),
+    'is_generated': fields.Integer(description='Stat of the tiles generation')
 })
 
 upload_list_input = api.model('input for uploads listing', {
@@ -491,7 +493,7 @@ upload_space_used_output = api.model('output for uploads space used function', {
 
 upload_delete_input = api.model('input for uploads deleting', {
     'token': fields.String(description='authentification token'),
-    "file_name": fields.String(description='File name'),
+    "id": fields.Integer(description='Upload id'),
 })
 
 upload_delete_output = api.model('output for uploads deleting', {
@@ -519,7 +521,58 @@ upload_export_csv_hectare_input = api.model('input for the hectare upload export
     "schema": fields.String(description='schema'),
     "areas": fields.List(fields.Nested(area))
 })
+
 upload_download_input = api.model('input for the upload download.', {
     'token': fields.String(description='authentification token'),
-    "file_name": fields.String(description='File name'),
+    "id": fields.Integer(description='Upload id'),
+})
+
+snapshot_model = api.model('all snapshot fields', {
+    'id': fields.Integer(description='Snapshot id'),
+    'config': fields.String(description='Snapshot content')
+})
+
+snapshot_add_input = api.model('input for the snapshot\'s addition.', {
+    'token': fields.String(description='authentification token'),
+    "config": fields.String(description='snapshot content'),
+})
+
+snapshot_add_output = api.model('output for the snapshot\'s addition.', {
+    'message': fields.String(description='confirmation\'s message'),
+})
+
+snapshot_load_input = api.model('input for the snapshot\'s load.', {
+    'token': fields.String(description='authentification token'),
+    "id": fields.Integer(description='Snapshot id'),
+})
+
+snapshot_load_output = api.model('output for the snapshot\'s load.', {
+    'config': fields.String(description='config content'),
+})
+
+snapshot_delete_input = api.model('input for the snapshot\'s deletion.', {
+    'token': fields.String(description='authentification token'),
+    "id": fields.Integer(description='Snapshot id'),
+})
+
+snapshot_delete_output = api.model('output for the snapshot\'s deletion.', {
+    'message': fields.String(description='response'),
+})
+
+snapshot_update_input = api.model('input for the snapshot\'s update.', {
+    'token': fields.String(description='authentification token'),
+    'config': fields.String(description='config content'),
+    "id": fields.Integer(description='Snapshot id'),
+})
+
+snapshot_update_output = api.model('output for the snapshot\'s update.', {
+    'message': fields.String(description='response'),
+})
+
+snapshot_list_input = api.model('input for snapshot listing', {
+    'token': fields.String(description='authentification token'),
+})
+
+snapshot_list_output = api.model('output for snapshot listing', {
+    'snapshots': fields.List(fields.Nested(snapshot_model)),
 })

@@ -103,6 +103,13 @@ class UserNotActivatedException(Exception):
     pass
 
 
+class SnapshotNotExistingException(Exception):
+    '''
+    Exception raised when trying to reach a non existing snapshot
+    '''
+    pass
+
+
 class ValidationError(ValueError):
     pass
 
