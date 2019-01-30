@@ -636,7 +636,7 @@ class ExportCsvHectare(Resource):
         try:
             result = db.engine.execute(sql)
         except:
-            raise RequestException(sql)#"Problem with your SQL query")
+            raise RequestException("Problem with your SQL query")
 
         # write csv_file
         number_of_columns = len(result._metadata.keys)
