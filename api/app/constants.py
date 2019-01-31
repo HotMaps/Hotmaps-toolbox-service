@@ -7,8 +7,8 @@ CELERY_BROKER_URL_LOCAL  = 'amqp://localhost/'
 
 CELERY_ALWAYS_EAGER = False
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-CLIENT_URL_PROD = 'https://hotmaps.hevs.ch'
-CLIENT_URL_DEV = 'https://hotmapsdev.hevs.ch'
+CLIENT_URL_PROD = 'https://www.hotmaps.hevs.ch'
+CLIENT_URL_DEV = 'https://www.hotmapsdev.hevs.ch'
 CLIENT_URL_LOCAL = 'http://lesly-hotmaps:4200'
 
 
