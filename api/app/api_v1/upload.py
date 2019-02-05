@@ -320,14 +320,10 @@ class ExportRasterNuts(Resource):
         # we add the rest of the nuts/lau id
         for nut in nuts[1:]:
             sql += " OR " + id_type + " = '" + nut + "'"
-        sql += " AND year = '" + layer_date + "-01-01'"
 
-        sql += "), 3035 ), 0) AS buffer_geom) " \
-            "SELECT encode(ST_AsTIFF(foo.rast, 'LZW'), 'hex') as tif " \
-            "FROM " \
-                "(SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast " \
-                "FROM geo." + layer_name + ", buffer " \
-                "WHERE ST_Intersects(rast, buffer_geom)) AS foo;"  # TODO Postpone Manage also the date field
+        # TODO Postpone Manage also the date field
+        sql += """AND year = '{0}-01-01'), 3035 ), 0) AS buffer_geom) SELECT encode(ST_AsTIFF(foo.rast, 'LZW'), 'hex') as tif FROM (SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast FROM (SELECT ST_Union(rast) as rast, ST_Union(buffer_geom) as buffer_geom FROM geo.{1}, buffer WHERE ST_Intersects(rast, buffer_geom)) as rast WHERE ST_Intersects(rast, buffer_geom)) AS foo;""".format(layer_date, layer_name)
+
         hex_file = ''
 
         # execute request
@@ -422,10 +418,9 @@ class ExportRasterHectare(Resource):
         # convert array of polygon into multipolygon
         multipolygon = shapely_geom.MultiPolygon(polyArray)
 
-        sql = "WITH buffer AS ( SELECT ST_Buffer( ST_Transform( ST_GeomFromText('"+str(multipolygon)+"', 4258) " \
-                ", 3035), 0) AS buffer_geom) SELECT encode(ST_AsTIFF(foo.rast, 'LZW'), 'hex') as tif FROM " \
-                "( SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast FROM geo." + layer_name + \
-                ", buffer WHERE ST_Intersects(rast, buffer_geom)) AS foo;"  # TODO Postpone Manage also the date field
+        # TODO Postpone Manage also the date field
+        sql = """WITH buffer AS ( SELECT ST_Buffer( ST_Transform( ST_GeomFromText('{0}', 4258) , 3035), 0) AS buffer_geom) SELECT encode(ST_AsTIFF(foo.rast, 'LZW'), 'hex') as tif FROM ( SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast FROM ( SELECT ST_Union(rast) as rast, ST_Union(buffer_geom) as buffer_geom FROM geo.{1}, buffer WHERE ST_Intersects(rast, buffer_geom)) AS raster) AS foo;""".format(str(multipolygon), layer_name)
+
 
         hex_file = ''
         # execute request
@@ -513,9 +508,7 @@ class ExportCsvNuts(Resource):
             if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
 
-        sql = "SELECT * FROM " + schema + "." + layer_name + " WHERE date = '" + year + "-01-01' AND ST_Within(" \
-              + schema + "." + layer_name + ".geometry, st_transform((SELECT ST_UNION(geom) from geo." \
-              + layer_type + " where " + id_type + " = '" + nuts[0] + "'"
+        sql = """SELECT * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform((SELECT ST_UNION(geom) from geo.{3} where {4} = '{5}'""".format(schema, layer_name, year, layer_type, id_type, nuts[0])
 
         # we add the rest of the lau id
         for nut in nuts[1:]:
@@ -628,9 +621,7 @@ class ExportCsvHectare(Resource):
         # convert array of polygon into multipolygon
         multipolygon = shapely_geom.MultiPolygon(polyArray)
 
-        sql = "SELECT * FROM " + schema + "." + layer_name + " WHERE date = '" + year + "-01-01' AND ST_Within(" \
-              + schema + "." + layer_name + ".geometry, st_transform(st_geomfromtext('" + str(multipolygon) \
-              + "', 4258), 3035)) "
+        sql = """SELECT * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform(st_geomfromtext('{3}', 4258), 3035))""".format(schema, layer_name, year, str(multipolygon))
 
         # execute request
         try:
