@@ -2,12 +2,12 @@
 #FLASK_SERVER_NAME = '0.0.0.0:80'
 FLASK_SERVER_NAME = '0.0.0.0:5556'
 FLASK_DEBUG = False  # Do not use debug mode in production
-CELERY_BROKER_URL_DOCKER = 'amqp://admin:mypass@rabbit:5672/'
+CELERY_BROKER_URL_DOCKER= 'amqp://admin:mypass@rabbit:5672/'
 CELERY_BROKER_URL_LOCAL  = 'amqp://localhost/'
 
 CELERY_ALWAYS_EAGER = False
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-CLIENT_URL_PROD = 'https://hotmaps.hevs.ch'
+CLIENT_URL_PROD = 'https://www.hotmaps.hevs.ch'
 CLIENT_URL_DEV = 'https://www.hotmapsdev.hevs.ch'
 CLIENT_URL_LOCAL = 'http://localhost:4200'
 
@@ -24,7 +24,7 @@ CM_REGISTER_Q = 'rpc_queue_CM_register'
 
 #TODO ********************setup this URL depending on which version you are running***************************
 
-CELERY_BROKER_URL = CLIENT_URL_DEV
+CELERY_BROKER_URL = CELERY_BROKER_URL_DOCKER
 CLIENT_URL = CLIENT_URL_DEV
 PORT = PORT_DOCKER
 
