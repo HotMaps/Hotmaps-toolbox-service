@@ -184,7 +184,7 @@ def zipdir(path, ziph):
 def retrieve_list_from_sql_result(results):
     response = []
     for value in results:
-        ##print ('value', value)
+        #print ('value', value)
         ze_value = {}
         i = 0
         for key in results.description:
@@ -203,6 +203,11 @@ def retrieve_list_from_sql_result(results):
         response.append(ze_value)
     return response
 
+def transform_to_string_if_unicode(s):
+    if isinstance(s, unicode):
+        s = unicode_string_to_string(s)
+    return s
+
 def force_decode(string, codecs=['utf8', 'cp1252']):
     for i in codecs:
         try:
@@ -211,43 +216,46 @@ def force_decode(string, codecs=['utf8', 'cp1252']):
             pass
 
 def sampling_data(listValues):
-	# Get number of values
-	numberOfValues = len(listValues)
+    # Get number of values
+    numberOfValues = len(listValues)
+    # Create the points for the curve with the X and Y axis
+    listPoints = []
+    for n, l in enumerate(listValues):
+        listPoints.append({
+            'X':n+1,
+            'Y':listValues[n]
+        })
+    # Sampling of the values
+    cut1 = int(numberOfValues*constants.POINTS_FIRST_GROUP_PERCENTAGE)
+    cut2 = int(cut1+(numberOfValues*constants.POINTS_SECOND_GROUP_PERCENTAGE))
+    cut3 = int(cut2+(numberOfValues*constants.POINTS_THIRD_GROUP_PERCENTAGE))
 
-	# Create the points for the curve with the X and Y axis
-	listPoints = []
-	for n, l in enumerate(listValues):
-		listPoints.append({
-			'X':n+1,
-			'Y':listValues[n]
-		})
+    firstGroup = listPoints[0:cut1:constants.POINTS_FIRST_GROUP_STEP]
+    secondGroup = listPoints[cut1:cut2:constants.POINTS_SECOND_GROUP_STEP]
+    thirdGroup = listPoints[cut2:cut3:constants.POINTS_THIRD_GROUP_STEP]
+    fourthGroup = listPoints[cut3:numberOfValues:constants.POINTS_FOURTH_GROUP_STEP]
 
-	# Sampling of the values
-	cut1 = int(numberOfValues*constants.POINTS_FIRST_GROUP_PERCENTAGE)
-	cut2 = int(cut1+(numberOfValues*constants.POINTS_SECOND_GROUP_PERCENTAGE))
-	cut3 = int(cut2+(numberOfValues*constants.POINTS_THIRD_GROUP_PERCENTAGE))
 
-	firstGroup = listPoints[0:cut1:constants.POINTS_FIRST_GROUP_STEP]
-	secondGroup = listPoints[cut1:cut2:constants.POINTS_SECOND_GROUP_STEP]
-	thirdGroup = listPoints[cut2:cut3:constants.POINTS_THIRD_GROUP_STEP]
-	fourthGroup = listPoints[cut3:numberOfValues:constants.POINTS_FOURTH_GROUP_STEP]
+    # Get min and max values needed for the sampling list
+    #print('listPoints', listPoints)
+    maxValue = min(listPoints)
+    print('maxValue', maxValue)
+    minValue = max(listPoints)
+    print('minValue', minValue)
 
-	# Get min and max values needed for the sampling list
-	maxValue = min(listPoints)
-	minValue = max(listPoints)
+    # Concatenate the groups to a new list of points (sampling list)
+    finalListPoints = firstGroup+secondGroup+thirdGroup+fourthGroup
 
-	# Concatenate the groups to a new list of points (sampling list)
-	finalListPoints = firstGroup+secondGroup+thirdGroup+fourthGroup
+    # Add max value at the beginning if the list doesn't contain it
+    if maxValue not in finalListPoints:
+        finalListPoints.insert(0, maxValue)
 
-	# Add max value at the beginning if the list doesn't contain it
-	if maxValue not in finalListPoints:
-		finalListPoints.insert(0, maxValue)
+    # Add min value at the end if the list doesn't contain it
+    if minValue not in finalListPoints:
+        finalListPoints.append(minValue)
 
-	# Add min value at the end if the list doesn't contain it
-	if minValue not in finalListPoints:
-		finalListPoints.append(minValue)
+    return finalListPoints
 
-	return finalListPoints
 def nuts_array_to_string(nuts):
     nuts_transformed = ''.join("'"+str(nu)+"'," for nu in nuts)[:-1]
     return nuts_transformed

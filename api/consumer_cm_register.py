@@ -258,7 +258,8 @@ class Consumer(object):
 
             base_url = 'http://'+ str(ip) +':'+str(constants.PORT)+'/api/cm/register/'
             LOGGER.info('base_url is %s', base_url)
-
+            LOGGER.info('body is %s', body)
+            LOGGER.info('type  of body is %s', type(body))
             res = requests.post(base_url, data = body, headers = headers)
             response = res.text
             LOGGER.info('response is %s', response)

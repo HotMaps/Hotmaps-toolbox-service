@@ -1,5 +1,5 @@
 from app.decorators.exceptions import ValidationError
-
+import shlex, subprocess
 
 import json
 from app import secrets
@@ -36,6 +36,7 @@ myCMpool = pool.QueuePool(getConnection_db_CM, max_overflow=10, pool_size=15)
 
 
 def addRegisterCalulationModule(data):
+    print ("call addRegisterCalulationModule ")
 
     cm_name = data['cm_name']
     category = data['category']
@@ -89,16 +90,19 @@ def init_sqlite_caculation_module_database(dbname=DB_NAME):
 
 def register_calulation_module(data):
     if data is not None:
+        print("is registring")
         conn = myCMpool.connect()
         cursor = conn.cursor()
         cm_name = data['cm_name']
         category = data['category']
-        type_layer_needed = data['type_layer_needed']
+        print ('avant type_layer_needed',data['type_layer_needed'])
+        type_layer_needed = json.dumps(data['type_layer_needed'])
+        print ('apres type_layer_needed',type_layer_needed)
 
         cm_description = data['cm_description']
         cm_url = data['cm_url']
         cm_id = data['cm_id']
-        layers_needed = data['layers_needed']
+        layers_needed = json.dumps(data['layers_needed'])
         authorized_scale = "[]"
         try:
             authorized_scale = data['authorized_scale']
@@ -229,6 +233,7 @@ def get_type_layer_needed(cm_id):
         result = cursor.execute('select type_layer_needed from calculation_module where cm_id = ?',
                                 (cm_id))
         conn.commit()
+        print ("result", result.fetchone())
         cm_url = str(result.fetchone()[0])
         conn.close()
         return cm_url
@@ -331,14 +336,17 @@ def get_connection_string():
     return con
 
 def get_shapefile_from_selection(scalevalue,id_selected_list,ouput_directory):
-    id_selected_list = helper.adapt_nuts_list(id_selected_list)
-    output_shapefile = helper.generate_shapefile_name(ouput_directory)
+    id_selected_list = quote(helper.adapt_nuts_list(id_selected_list))
+    output_shapefile = quote(helper.generate_shapefile_name(ouput_directory))
+    connection_string = quote(get_connection_string())
     com_string = None
-    if scalevalue == 'nuts':
-        com_string = 'ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,3035) from geo.nuts where nuts_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'")
-    else:
-        com_string = 'ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,3035) from geo.lau where comm_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'")
-    os.system(com_string)
+    #if scalevalue == 'nuts':
+        #TODO sanitize/escape all variables
+        #com_string = 'ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+connection_string+'" -sql "select ST_Transform(geom,3035) from geo.nuts where nuts_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'")
+    subprocess.Popen("ogr2ogr",  "-overwrite","-f","ESRI Shapefile",output_shapefile, "PG:"+connection_string+"","-sql","select","ST_Transform(geom,3035)" ,"from" ," geo."+scalevalue+ "","where" ,"nuts_id" ,"IN" ,"("+ id_selected_list +")" ,"AND" ,"year" ,"=" ,"date("'2013-01-01'")",shell=False )
+    #else:
+        #com_string = 'ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+connection_string+'" -sql "select ST_Transform(geom,3035) from geo.lau where comm_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'")
+    #os.system(com_string)
     return output_shapefile
 
 def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed,type_needed, output_directory):

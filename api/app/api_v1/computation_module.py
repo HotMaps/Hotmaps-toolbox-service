@@ -313,6 +313,7 @@ class ComputationModuleClass(Resource):
         data = request.get_json()
         payload = api.payload['payload']
         cm_id = data["cm_id"]
+        print ("cm_id ",cm_id)
         #2 inputs layers from the CM
         type_layer_needed = get_type_layer_needed(cm_id)
         with app.app_context():

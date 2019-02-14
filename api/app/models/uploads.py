@@ -164,7 +164,7 @@ def extract_colormap(xml):
     # create the xml tree
     try:
         root = ET.fromstring(xml)
-    except Exception, e:
+    except Exception as  e:
         raise RequestException(str(xml))
     ns = {'sld': 'http://www.opengis.net/sld'}
     # get the list of Color map
