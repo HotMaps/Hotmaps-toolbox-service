@@ -19,16 +19,16 @@ class LayersStats:
 		year = payload['year']
 		layersPayload = payload['layers']
 		scale_level = payload['scale_level']
-		#print ("scale level ",scale_level)
+		##print ("scale level ",scale_level)
 		selection_areas = ''
 		is_hectare = False
 		noDataLayers=[]
 		layers=[]
 		output=[]
-		#print(layersPayload)
+		##print(layersPayload)
 		if scale_level in constants.NUTS_LAU_VALUES:
 			selection_areas = payload['nuts']
-			#print ("scale in constants.NUTS_LAU_VALUES ")
+			##print ("scale in constants.NUTS_LAU_VALUES ")
 		elif scale_level == constants.hectare_name:
 			selection_areas = payload['areas']
 			geom = helper.areas_to_geom(selection_areas)
@@ -61,7 +61,7 @@ class LayersStats:
 			sql_select = ' SELECT '
 			sql_from = ' FROM '
 			for layer in layers:
-				#print(layer)
+				##print(layer)
 				if len(layersData[layer]['indicators']) != 0 and scale_level in layersData[layer]['data_lvl']:
 					if is_hectare:
 						sql_with += generalData.constructWithPartEachLayerHectare(geometry=selection_areas, year=year, layer=layer, scale_level=scale_level) + ','
@@ -74,7 +74,7 @@ class LayersStats:
 						elif indicator['reference_tablename_indicator_id_1'] in layers and indicator['reference_tablename_indicator_id_2'] in layers:
 								sql_select+= indicator['reference_tablename_indicator_id_1']+indicator['reference_indicator_id_1']+' '+indicator['operator']+' '+indicator['reference_tablename_indicator_id_2']+indicator['reference_indicator_id_2']+','
 					sql_from += layersData[layer]['from_indicator_name']+','
-					#print ("sql_from ", sql_from)
+					##print ("sql_from ", sql_from)
 			
 			
 			# Combine string to a single query
@@ -82,7 +82,7 @@ class LayersStats:
 			sql_select = sql_select[:-1]
 			sql_from = sql_from[:-1]
 			sql_query = sql_with + sql_select + sql_from + ';'
-			print(sql_query)
+			#print(sql_query)
 			# Run the query
 			query_geographic_database_first = model.query_geographic_database_first(sql_query)
 
@@ -116,7 +116,7 @@ class LayersStats:
 					'name':layer,
 					'values':values
 				})
-		#print(count_indic)
+		##print(count_indic)
 		return result
 
 

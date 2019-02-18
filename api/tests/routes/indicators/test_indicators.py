@@ -33,14 +33,14 @@ class TestIndicators(unittest.TestCase):
         for layer in layersData:
             if('NUTS 3' in layersData[layer]['data_lvl']):
                 nuts3_stat['layers'] = [layer]
-                print(nuts3_stat)
+                #print(nuts3_stat)
                 
                 with self.subTest(layer=layer, payload=nuts3_stat):
                     try:
                         rv, json = self.client.post('api/stats/layers/nuts-lau', data=nuts3_stat)
                         self.assertTrue(rv.status_code == 200)
                     except Exception as e:
-                        print(e)
+                        #print(e)
                         self.assertTrue(False)
     
     def test_aggregateddata_statlvl_nutslau(self):
@@ -63,23 +63,23 @@ class TestIndicators(unittest.TestCase):
             if layersData[layer]['data_aggregated'] == True:
                 sql_querie = "select count(*) from "+layersData[layer]['schema_scalelvl']+"."+layersData[layer]['tablename']
                 sql_querie_lau = sql_querie + "_lau limit 100"
-                print(sql_querie_lau)
+                #print(sql_querie_lau)
                 with self.subTest(stat_levl_='lau',tablename=layersData[layer]['schema_scalelvl']+"."+layersData[layer]['tablename']+"_lau"):
                     try:
                         query = query_geographic_database(sql_querie_lau).fetchone()
                         self.assertTrue(int(query[0]) >= 1)
                     except Exception as e:
-                        print(e)
+                        #print(e)
                         self.assertTrue(False)
                 for i in range(0,4):
                     sql_querie_nuts = sql_querie + "_nuts where stat_levl_ = "+str(i)
-                    print(sql_querie_nuts)
+                    #print(sql_querie_nuts)
                     with self.subTest(stat_levl_=i,tablename=layersData[layer]['schema_scalelvl']+"."+layersData[layer]['tablename']+"_nuts"):
                         try:
                             query = query_geographic_database(sql_querie_nuts).fetchone()
                             self.assertTrue(int(query[0]) >= 1)
                         except Exception as e:
-                            print(e)
+                            #print(e)
                             self.assertTrue(False)
                     
             
@@ -99,17 +99,17 @@ class TestIndicators(unittest.TestCase):
             with self.subTest(tablename=layersData[layer]['tablename'],schema_hectare=layersData[layer]['schema_hectare']):
                 sql_query = get_exists_table_query(tbname=layersData[layer]['tablename'], schema=layersData[layer]['schema_hectare'])
                 query = query_geographic_database(sql_query).fetchone()
-                print("schema_hectare:"+layersData[layer]['schema_hectare'] + ", tablename:" + layersData[layer]['tablename'] + " => result:" + str(query[0]))
+                #print("schema_hectare:"+layersData[layer]['schema_hectare'] + ", tablename:" + layersData[layer]['tablename'] + " => result:" + str(query[0]))
                 self.assertTrue(bool(query[0]) == True)
 
             if layersData[layer]['data_aggregated'] == True:
                 with self.subTest(tablename=layersData[layer]['tablename']+"_nuts",schema_scalelvl=layersData[layer]['schema_scalelvl']):
                     sql_query = get_exists_table_query(tbname=layersData[layer]['tablename']+"_nuts", schema=layersData[layer]['schema_scalelvl'])
                     query = query_geographic_database(sql_query).fetchone()
-                    print("schema_scalelvl:"+layersData[layer]['schema_scalelvl'] + ", tablename:" + layersData[layer]['tablename']+"_nuts => result:" + str(query[0]))
+                    #print("schema_scalelvl:"+layersData[layer]['schema_scalelvl'] + ", tablename:" + layersData[layer]['tablename']+"_nuts => result:" + str(query[0]))
                     self.assertTrue(bool(query[0]) == True)
                 with self.subTest(tablename=layersData[layer]['tablename']+"_lau",schema_scalelvl=layersData[layer]['schema_scalelvl']):
                     sql_query = get_exists_table_query(tbname=layersData[layer]['tablename']+"_lau", schema=layersData[layer]['schema_scalelvl'])
                     query = query_geographic_database(sql_query).fetchone()
-                    print("schema_scalelvl:"+layersData[layer]['schema_scalelvl'] + ", tablename:" + layersData[layer]['tablename']+"_lau => result:" + str(query[0]))
+                    #print("schema_scalelvl:"+layersData[layer]['schema_scalelvl'] + ", tablename:" + layersData[layer]['tablename']+"_lau => result:" + str(query[0]))
                     self.assertTrue(bool(query[0]) == True)

@@ -45,9 +45,9 @@ def addRegisterCalulationModule(data):
         authorized_scale = data['authorized_scale']
     except:
         pass
-    cm_link = ""
+    description_link = ""
     try:
-        cm_link = data['cm_link']
+        description_link = data['description_link']
     except:
         pass
 
@@ -68,7 +68,7 @@ def addRegisterCalulationModule(data):
     conn = myCMpool.connect()
     cursor = conn.cursor()
     #c.execute("INSERT INTO calculation_module(cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt) VALUES ({},{},{},{},{},{},{},{})".format(cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt))
-    cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt,type_layer_needed,authorized_scale,cm_link,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?)", ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ,type_layer_needed,authorized_scale,cm_link,vectors_needed))
+    cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt,type_layer_needed,authorized_scale,description_link,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?)", ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ,type_layer_needed,authorized_scale,description_link,vectors_needed))
     cursor.close()
 
 def init_sqlite_caculation_module_database(dbname=DB_NAME):
@@ -76,7 +76,7 @@ def init_sqlite_caculation_module_database(dbname=DB_NAME):
     cursor = conn.cursor()
     cursor.execute("DROP TABLE IF EXISTS calculation_module")
     cursor.execute("CREATE TABLE calculation_module (cm_id INTEGER NOT NULL, cm_name VARCHAR(255), "
-                   "cm_description VARCHAR(255),cm_url VARCHAR(255),category VARCHAR(255),layers_needed VARCHAR(255),authorized_scale VARCHAR(255),cm_link VARCHAR(255),createdAt REAL(255),updatedAt REAL(255),type_layer_needed REAL(255),vectors_needed REAL(255),"
+                   "cm_description VARCHAR(255),cm_url VARCHAR(255),category VARCHAR(255),layers_needed VARCHAR(255),authorized_scale VARCHAR(255),description_link VARCHAR(255),createdAt REAL(255),updatedAt REAL(255),type_layer_needed REAL(255),vectors_needed REAL(255),"
                    " PRIMARY KEY(cm_id))")
     conn.commit()
     cursor.execute("DROP TABLE IF EXISTS inputs_calculation_module")
@@ -105,9 +105,9 @@ def register_calulation_module(data):
         except:
             pass
 
-        cm_link = ""
+        description_link = ""
         try:
-            cm_link = data['cm_link']
+            description_link = data['description_link']
         except:
             pass
         vectors_needed = "[]"
@@ -118,7 +118,7 @@ def register_calulation_module(data):
 
 
 
-        print ("layers_needed",layers_needed)
+        #print ("layers_needed",layers_needed)
         updatedAt = datetime.utcnow()
         createdAt = datetime.utcnow()
         inputs_calculation_module = data['inputs_calculation_module']
@@ -127,9 +127,9 @@ def register_calulation_module(data):
             ln = str(layers_needed)
             tn = str(type_layer_needed)
             authorized_scale = str(authorized_scale)
-            cm_link = str(cm_link)
+            description_link = str(description_link)
             vectors_needed = str(vectors_needed)
-            cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,cm_link,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt,tn,authorized_scale,cm_link,vectors_needed ))
+            cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt,tn,authorized_scale,description_link,vectors_needed ))
             conn.commit()
             for value in inputs_calculation_module:
                 input_name = value['input_name']
@@ -155,21 +155,21 @@ def register_calulation_module(data):
         except ValidationError:
             pass
         except sqlite3.IntegrityError as e:
-            update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,type_layer_needed,authorized_scale,cm_link,vectors_needed,inputs_calculation_module,cursor,conn)
+            update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,type_layer_needed,authorized_scale,description_link,vectors_needed,inputs_calculation_module,cursor,conn)
 
 
-def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,cm_link,vectors_needed ,inputs_calculation_module,cursor,conn):
+def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed ,inputs_calculation_module,cursor,conn):
     try:
 
         ln = str(layers_needed)
         tn = str(type_layer_needed)
         auth_s = str(authorized_scale)
 
-        cm_link = str(cm_link)
+        description_link = str(description_link)
         vn = str(vectors_needed)
 
 
-        cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? ,  type_layer_needed = ?, authorized_scale = ?,cm_link = ?, vectors_needed = ?   WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt, tn,auth_s,cm_link, vn,cm_id ))
+        cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? ,  type_layer_needed = ?, authorized_scale = ?,description_link = ?, vectors_needed = ?   WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt, tn,auth_s,description_link, vn,cm_id ))
         conn.commit()
         cursor.execute("DELETE FROM inputs_calculation_module WHERE cm_id = ? ", (str(cm_id)))
         conn.commit()
@@ -195,7 +195,8 @@ def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, l
     except ValidationError:
         pass
     except sqlite3.IntegrityError as e:
-        print (e)
+        pass
+        #print (e)
 
 
 
@@ -214,9 +215,11 @@ def getCMUrl(cm_id):
         return cm_url
 
     except ValidationError:
-        print ('error')
+        pass
+        #print ('error')
     except sqlite3.IntegrityError as e:
-        print (e)
+        pass
+        #print (e)
 
 def get_type_layer_needed(cm_id):
     try:
@@ -231,9 +234,11 @@ def get_type_layer_needed(cm_id):
         return cm_url
 
     except ValidationError:
-        print ('error')
+        pass
+        #print ('error')
     except sqlite3.IntegrityError as e:
-        print (e)
+        pass
+        #print (e)
 
 def getUI(cm_id):
 
@@ -255,15 +260,17 @@ def get_parameters_needed(cm_id):
                                  (cm_id))
         conn.commit()
         response = []
-        print ('results', results)
+        #print ('results', results)
         for row in results:
             response.append(row[0])
         conn.close()
         return response
     except ValidationError:
-        print ('error')
+        pass
+        #print ('error')
     except sqlite3.IntegrityError as e:
-        print (e)
+        pass
+        #print (e)
 
 def delete_cm(cm_id):
     delete_cm_with_id(cm_id)
@@ -280,9 +287,11 @@ def delete_cm_ui_with_id(cm_id):
         return results
 
     except ValidationError:
-        print ('error')
+        pass
+        #print ('error')
     except sqlite3.IntegrityError as e:
-        print (e)
+        pass
+        #print (e)
 
 
 def delete_cm_with_id(cm_id):
@@ -297,12 +306,14 @@ def delete_cm_with_id(cm_id):
         return results
 
     except ValidationError:
-        print ('error')
+        pass
+        #print ('error')
     except sqlite3.IntegrityError as e:
-        print (e)
+        pass
+        #print (e)
 def getCMList():
     response = helper.retrieve_list_from_sql_result(query_calculation_module_database('select * from calculation_module '))
-    print ('response ' , response)
+    #print ('response ' , response)
     return response
 
 @celery.task(name = 'task-getConnection_db_gis')
@@ -333,10 +344,10 @@ def get_shapefile_from_selection(scalevalue,id_selected_list,ouput_directory):
 def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed,type_needed, output_directory):
     inputs_raster_selection = {}
     wkt_point_3035 = helper.projection_4326_to_3035(wkt_point)
-    #print ('wkt_point_3035 ',wkt_point_3035)
+    ##print ('wkt_point_3035 ',wkt_point_3035)
 
     filename_csv = helper.write_wkt_csv(helper.generate_csv_name(output_directory),wkt_point_3035)
-    print ('filename_csv ',filename_csv)
+    #print ('filename_csv ',filename_csv)
     # retrieve all layer neeeded
     for layer in layer_needed:
         cpt_type = 0
@@ -344,18 +355,18 @@ def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed,type_needed, 
         directory = layer.replace('_tif', '')
         path_to_dataset = datasets_directory + layer.replace('_tif', '')+ "/data/" + layer + ".tif"
         # create a file name as output
-        print ('path_to_dataset ',path_to_dataset)
+        #print ('path_to_dataset ',path_to_dataset)
         filename_tif = helper.generate_geotif_name(output_directory)
         com_string = "gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(filename_csv,path_to_dataset,filename_tif)
         os.system(com_string)
-        print ('com_string ',filename_tif)
+        #print ('com_string ',filename_tif)
         inputs_raster_selection[type] = filename_tif
         cpt_type = cpt_type + 1
     return inputs_raster_selection
 
 def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed,type_needed, output_directory):
-    print('clip_raster_from_shapefile/layer_needed',layer_needed)
-    print('clip_raster_from_shapefile/type_needed',type_needed)
+    #print('clip_raster_from_shapefile/layer_needed',layer_needed)
+    #print('clip_raster_from_shapefile/type_needed',type_needed)
     inputs_raster_selection = {}
     # retrieve all layer neeeded
     for layer in layer_needed:
@@ -364,12 +375,12 @@ def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed,t
         directory = layer.replace('_tif', '')
         path_to_dataset = datasets_directory + directory + "/data/" + layer + ".tif"
         # create a file name as output
-        print ('path_to_dataset ',path_to_dataset)
+        #print ('path_to_dataset ',path_to_dataset)
         filename_tif = helper.generate_geotif_name(output_directory)
         com_string = "gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(shapefile_path,path_to_dataset,filename_tif)
 
         os.system(com_string)
-        print ('com_string ',filename_tif)
+        #print ('com_string ',filename_tif)
         inputs_raster_selection[type] = filename_tif
         cpt_type = cpt_type + 1
     return inputs_raster_selection
@@ -392,7 +403,7 @@ def retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, area
         sql_query = sql_queries.vector_query(scalevalue,vector_table_requested, area_selected,toCRS)
         result = query_geographic_database(sql_query)
         result = helper.retrieve_list_from_sql_result(result)
-        print("result type", result)
+        #print("result type", result)
         inputs_vectors_selection[vector_table_requested] = result
     return inputs_vectors_selection
 

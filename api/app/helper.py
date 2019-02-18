@@ -53,8 +53,9 @@ def unicode_string_to_string(unicode_string):
 
 
 def test_display(value):
-    print ('value ', value)
-    print ('type ', type(value))
+    pass
+    #print ('value ', value)
+    #print ('type ', type(value))
 def getDictFromJson(output):
     outputdumps = json.dumps(output)
     outputloads = json.loads(outputdumps)[0]
@@ -140,7 +141,7 @@ def generate_payload_for_compute(inputs_raster_selection,inputs_parameter_select
 
         'inputs_raster_selection':inputs_raster_selection
     })
-    print ('data_output',data_output)
+    ##print ('data_output',data_output)
     data = json.dumps(data_output)
     return data
 
@@ -183,7 +184,7 @@ def zipdir(path, ziph):
 def retrieve_list_from_sql_result(results):
     response = []
     for value in results:
-        print ('value', value)
+        ##print ('value', value)
         ze_value = {}
         i = 0
         for key in results.description:
@@ -191,12 +192,12 @@ def retrieve_list_from_sql_result(results):
             if isinstance(unicode_string_to_string(value[i]), str):
                 val = unicode_string_to_string(value[i])
                 if val.find('[') == 0: # and value.find(']')==
-                    print ('value ', val)
+                    #print ('value ', val)
                     ze_value[key[0]]= unicode_array_to_string(value[i])
             elif isinstance(value[i], str):
                 val = value[i]
                 if val.find('[') == 0: # and value.find(']')==
-                    print ('value ', val)
+                    #print ('value ', val)
                     ze_value[key[0]]= unicode_array_to_string(value[i])
             i = i + 1
         response.append(ze_value)
