@@ -1,4 +1,4 @@
-import StringIO
+from io import StringIO
 import os
 import shutil
 import shapely.geometry as shapely_geom
