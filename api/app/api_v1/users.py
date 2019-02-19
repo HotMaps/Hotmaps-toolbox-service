@@ -292,7 +292,7 @@ class LoginUser(Resource):
 
         return {
             "message": output,
-            "token": token
+            "token": str(token, 'utf8')
         }
 
 
