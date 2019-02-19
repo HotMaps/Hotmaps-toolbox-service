@@ -9,7 +9,7 @@ from flask import send_file
 from app import celery
 from ..decorators.restplus import api
 from ..decorators.restplus import UserUnidentifiedException, ParameterException, RequestException, \
-    UserDoesntOwnUploadsException, UploadExistingUrlException, UploadNotExistingException, \
+    UserDoesntOwnUploadsException, UploadNotExistingException, \
     HugeRequestException, NotEnoughPointsException
 from ..decorators.serializers import upload_add_output, upload_list_input, upload_list_output,upload_delete_input, \
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
@@ -30,7 +30,6 @@ USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
-@api.response(541, 'Upload URL existing')
 @api.response(542, 'Not Enough Space')
 class AddUploads(Resource):
     @api.marshal_with(upload_add_output)
@@ -85,10 +84,6 @@ class AddUploads(Resource):
         # if the user does not own a repository, we create one
         if not os.path.isdir(user_folder):
             os.makedirs(user_folder)
-
-        # we need to check if the name is already taken for the user
-        if Uploads.query.filter_by(name=name).first() is not None:
-            raise UploadExistingUrlException
 
         # we check if the file extension is valid
         if not allowed_file(file_name):

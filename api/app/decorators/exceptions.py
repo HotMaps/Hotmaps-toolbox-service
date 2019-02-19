@@ -75,13 +75,6 @@ class UserDoesntOwnUploadsException(Exception):
     pass
 
 
-class UploadExistingUrlException(Exception):
-    '''
-    Exception raised when we try to create an upload with an existing URL
-    '''
-    pass
-
-
 class NotEnoughSpaceException(Exception):
     '''
     Exception raised when there is not enough space for the new upload
