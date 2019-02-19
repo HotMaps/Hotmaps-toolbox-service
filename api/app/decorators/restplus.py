@@ -6,8 +6,8 @@ from .. import constants
 from sqlalchemy.orm.exc import NoResultFound
 from ..decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, \
     ParameterException, RequestException, ActivationException, UserExistingException, \
-    WrongCredentialException, UserUnidentifiedException, UserDoesntOwnUploadsException, UploadExistingUrlException, \
-    NotEnoughSpaceException, UploadNotExistingException, UserNotActivatedException, SnapshotNotExistingException
+    WrongCredentialException, UserUnidentifiedException, UserDoesntOwnUploadsException, NotEnoughSpaceException, \
+    UploadNotExistingException, UserNotActivatedException, SnapshotNotExistingException
 
 log = logging.getLogger(__name__)
 
@@ -225,25 +225,6 @@ def handle_doesnt_own_upload(error):
         }
     }
     return response, 540
-
-
-@api.errorhandler(UploadExistingUrlException)
-def handle_existing_url(error):
-    '''
-    decorator called with an error caused when trying to create an upload with an URL already existing
-    :param error -- the called error:
-    :return:
-    '''
-    message = 'An upload with the same URL already exists'
-    response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "541",
-            "statusText": "URL EXISTING"
-        }
-    }
-    return response, 541
 
 
 @api.errorhandler(NotEnoughSpaceException)

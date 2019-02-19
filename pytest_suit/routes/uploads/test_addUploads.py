@@ -44,16 +44,3 @@ class TestAddUploads(TestCase):
         expected_status = '539'
 
         assert output.json()['error']['status'] == expected_status
-
-    def test_post_z_already_existing_url(self):  # the z in the name is used to run the test last
-        """
-        this test will fail because the file url is already existing
-        """
-        files = {'file': open(test_csv_file, 'rb')}
-        values = {'token': test_token, 'name': test_upload_name}
-
-        output = requests.post(url, files=files, data=values)
-
-        expected_status = '541'
-
-        assert output.json()['error']['status'] == expected_status
