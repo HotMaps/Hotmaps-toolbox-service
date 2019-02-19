@@ -3,6 +3,7 @@ from app import constants
 from app import dbGIS as db
 from app import model
 from . import generalData
+from indicators import HEATDEMAND_FACTOR
 from app import celery
 from .. import helper
 #logging.basicConfig()
@@ -43,7 +44,8 @@ class HeatLoadProfile:
 				elif request_type == 'month':
 					data = {
 						'year': year,'month': month,'day': q[4],'granularity': 'day','unit': 'kW','min': round(q[0], constants.NUMBER_DECIMAL_DATA),
-						'max': round(q[1], constants.NUMBER_DECIMAL_DATA),'average': round(q[2], constants.NUMBER_DECIMAL_DATA)
+							'max': round(q[1], constants.NUMBER_DECIMAL_DATA),
+							'average': round(q[2], constants.NUMBER_DECIMAL_DATA)
 					}
 				elif request_type == 'day':
 					data = {
@@ -145,41 +147,36 @@ class HeatLoadProfile:
 
 		# Store query results in a list
 		listAllValues = []
-		for q in query:
+		points = []
+		for n, q in enumerate(query):
+			#listAllValues.append(q[0])
+			points.append({
+				'X':n+1,
+				'Y':float(q[0])
+			})
+	
 
-			listAllValues.append(q[0])
-
-
-		# Creation of points and sampling of the values only if there is data
-		# if listAllValues:
-		# 	finalListPoints = helper.sampling_data(listAllValues)
-		# else:
-		# 	finalListPoints = []
-
-
-		return listAllValues
+		newList = points[0:len(points)-1:10]
+		return newList
 
 	@staticmethod
 	def duration_curve_hectares(year, geometry): #/heat-load-profile/duration-curve/hectares
 
 		# Get the query
 		sql_query = createQueryDataDCHectares(year=year, geometry=geometry)
-		##print(sql_query)
-		# Execution of the query
-		#query = db.session.execute(sql_query)
+
 		query = model.query_geographic_database(sql_query)
-		# Store query results in a list
 		listAllValues = []
-		for q in query:
-			listAllValues.append(q[0])
+		for n, q in enumerate(query):
+			listAllValues.append({
+				'X':n+1,
+				'Y':q[0]
+			})
 
-		# Creation of points and sampling of the values only if there is data
-		if listAllValues:
-			finalListPoints = helper.sampling_data(listAllValues)
-		else:
-			finalListPoints = []		
+		listAllValues = listAllValues[0:len(listAllValues)-1:10]
+	
 
-		return finalListPoints
+		return listAllValues
 
 def createQueryDataLPHectares(year, month, day, geometry):
 	withPart = "with subAreas as (SELECT ST_Intersection(ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258),nuts.geom) as soustracteGeom, " +\
@@ -187,10 +184,10 @@ def createQueryDataLPHectares(year, month, day, geometry):
 						"FROM geo.nuts " +\
 						"where ST_Intersects(nuts.geom,ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258)) " + \
 						"AND STAT_LEVL_=2), " +\
-					"statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density_tif.rast,1, " +\
+					"statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density.rast,1, " +\
 						"ST_Transform(subAreas.soustracteGeom,3035),0,true),1,true)).* as stat, subAreas.gid " +\
-						"FROM subAreas, geo.heat_tot_curr_density_tif " +\
-						"WHERE ST_Intersects(heat_tot_curr_density_tif.rast,ST_Transform(subAreas.soustracteGeom,3035)) group by subAreas.gid), " +\
+						"FROM subAreas, geo.heat_tot_curr_density " +\
+						"WHERE ST_Intersects(heat_tot_curr_density.rast,ST_Transform(subAreas.soustracteGeom,3035)) group by subAreas.gid), " +\
 					"statLoadProfilBySubarea as (select stat.load_profile.nuts_id as load_profile_nutsid, stat.load_profile.value as val_load_profile, " +\
 						"stat.time.month as month_of_year, " +\
 						"stat.time.hour_of_year as hour_of_year, " +\
@@ -299,18 +296,16 @@ def createQueryDataLPNutsLau(year, month, day, nuts, request_type, nuts_level, q
 	query_select=''
 	if query_type == 'duration_curve':
 		select_normalized = 'sum(stat.load_profile.value/valtot*HDtotal) as val, stat.time.hour_of_year as hoy'
-		groupby_normalized = "stat.load_profile.fk_nuts_gid,stat.time.hour_of_year HAVING COUNT(value) = COUNT(*) order by val desc"
-		query_select = "select * from normalizedData;"
+		groupby_normalized = "stat.load_profile.fk_nuts_gid,stat.time.hour_of_year HAVING COUNT(value) = COUNT(*)"
+		query_select = "select sum(val) as values, hoy from normalizedData  group by hoy order by values DESC"
 
 	
 	elif query_type == 'heatload':
 		select_normalized = "avg(stat.load_profile.value / valtot * HDtotal) AS avg_1,min(stat.load_profile.value / valtot * HDtotal) AS min_1, max(stat.load_profile.value / valtot * HDtotal) AS max_1, sum(stat.load_profile.value / valtot * HDtotal) as sum_1,"+time_columns
 		groupby_normalized = " stat.load_profile.fk_nuts_gid, """+group_by_time_columns
 		query_select="""select sum(min_1), sum(max_1), sum(avg_1), sum(sum_1), """+group_by_time_columns
-		query_select+=""" from normalizedData"""
-		query_select+=where_request+"""
-		group by """+group_by_time_columns+"""
-		order by """+group_by_time_columns
+		query_select+=""" from normalizedData """
+		query_select+=where_request+""" group by """+group_by_time_columns+""" order by """+group_by_time_columns
 
 
 
@@ -327,13 +322,11 @@ def createQueryDataLPNutsLau(year, month, day, nuts, request_type, nuts_level, q
 	
 	
 	query = 'with ' + nutsSelectionQuery + query_lp + query_hd + query_normalized + query_select
-	print(query)
 	return query
 
 # ALL QUERIES DATA FOR THE DURATION CURVE BY NUTS
 def createQueryDataDCNutsLau(year, nuts, nuts_level):
 	sql_query = createQueryDataLPNutsLau(year,None,None,nuts,'year',nuts_level,'duration_curve')
-	print(sql_query)
 	return sql_query
 
 # ALL QUERIES DATA FOR THE DURATION CURVE BY HECTARES
@@ -343,10 +336,10 @@ def createQueryDataDCHectares(year, geometry):
 							"FROM geo.nuts " +\
 							"where ST_Intersects(nuts.geom,ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258)) " + \
 							"AND STAT_LEVL_=2 ), " +\
-						"statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density_tif.rast,1, " +\
+						"statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density.rast,1, " +\
 							"ST_Transform(subAreas.soustracteGeom,3035),0,true),1,true)).* as stat, subAreas.gid " +\
-							"FROM subAreas, geo.heat_tot_curr_density_tif " +\
-							"WHERE ST_Intersects(heat_tot_curr_density_tif.rast,ST_Transform(subAreas.soustracteGeom,3035)) group by subAreas.gid), " +\
+							"FROM subAreas, geo.heat_tot_curr_density " +\
+							"WHERE ST_Intersects(heat_tot_curr_density.rast,ST_Transform(subAreas.soustracteGeom,3035)) group by subAreas.gid), " +\
 						"statLoadProfilBySubarea as (select stat.load_profile.nuts_id as load_profile_nutsid, stat.load_profile.value as val_load_profile, " +\
 							"stat.time.month as month_of_year, " +\
 							"stat.time.hour_of_year as hour_of_year, " +\
@@ -367,6 +360,5 @@ def createQueryDataDCHectares(year, geometry):
 							"inner join totalLoadprofile on statLoadProfilBySubarea.load_profile_nutsid = totalLoadprofile.load_profile_nutsid " +\
 							"group by hour_of_year " +\
 							"order by normalizedCalutation DESC;"
-
 	return sql_query
 

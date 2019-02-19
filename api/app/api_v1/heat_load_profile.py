@@ -150,10 +150,10 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         # geom = "SRID=4326;{}".format(multipolygon.wkt)
         geom = multipolygon.wkt
 
-        try:
-            output = HeatLoadProfile.duration_curve_hectares(year=year, geometry=geom)
-        except:
-            raise IntersectionException()
+        #try:
+        output = HeatLoadProfile.duration_curve_hectares(year=year, geometry=geom)
+        #except:
+        #    raise IntersectionException()
 
         return {
             "points": output
