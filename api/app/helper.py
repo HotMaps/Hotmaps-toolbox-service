@@ -8,6 +8,9 @@ from osgeo import ogr
 from osgeo import osr
 from . import constants
 import csv
+import sys
+
+import subprocess
 def find_key_in_dict(key, dictionary):
     for k, v in dictionary.items():
         if k == key:
@@ -51,7 +54,25 @@ def unicode_array_to_string(unicode_string):
 def unicode_string_to_string(unicode_string):
     return str(unicode_string).encode('ascii','ignore')
 
+def execute(command):
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
+    # Poll process for new output until finished
+    while True:
+        nextline = process.stdout.readline()
+        if nextline == '' and process.poll() is not None:
+            break
+        sys.stdout.write(nextline)
+        sys.stdout.flush()
+
+    output = process.communicate()[0]
+    exitCode = process.returncode
+
+    if (exitCode == 0):
+        return output
+    else:
+        pass
+        #raise ProcessException(command, exitCode, output)
 def test_display(value):
     pass
     #print ('value ', value)
@@ -193,12 +214,12 @@ def retrieve_list_from_sql_result(results):
                 val = unicode_string_to_string(value[i])
                 if val.find('[') == 0: # and value.find(']')==
                     #print ('value ', val)
-                    ze_value[key[0]]= unicode_array_to_string(value[i])
+                    ze_value[key[0]]= json.loads(value[i])
             elif isinstance(value[i], str):
                 val = value[i]
                 if val.find('[') == 0: # and value.find(']')==
                     #print ('value ', val)
-                    ze_value[key[0]]= unicode_array_to_string(value[i])
+                    ze_value[key[0]]= json.loads(value[i])
             i = i + 1
         response.append(ze_value)
     return response
@@ -242,7 +263,15 @@ def sampling_data(listValues):
     print('maxValue', maxValue)
     minValue = max(listPoints)
     print('minValue', minValue)
+    """    seq = [x for x in listPoints]
+    print('seq', seq)
+    print('seq', type(seq))
+    maxValue = min(seq)
+    print('maxValue', maxValue)
+    minValue = max(seq)
+    print('minValue', minValue)
 
+    """
     # Concatenate the groups to a new list of points (sampling list)
     finalListPoints = firstGroup+secondGroup+thirdGroup+fourthGroup
 

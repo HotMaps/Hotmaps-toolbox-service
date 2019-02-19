@@ -1,5 +1,8 @@
 from app.decorators.exceptions import ValidationError
-import shlex, subprocess
+try:
+    from shlex import quote
+except ImportError:
+    from pipes import quote
 
 import json
 from app import secrets
@@ -16,7 +19,7 @@ try:
     import ogr
 except ImportError:
     from osgeo import ogr
-
+from helper import execute
 try:
     import osr
 except ImportError:
@@ -95,15 +98,12 @@ def register_calulation_module(data):
         cursor = conn.cursor()
         cm_name = data['cm_name']
         category = data['category']
-        print ('avant type_layer_needed',data['type_layer_needed'])
         type_layer_needed = json.dumps(data['type_layer_needed'])
-        print ('apres type_layer_needed',type_layer_needed)
-
         cm_description = data['cm_description']
         cm_url = data['cm_url']
         cm_id = data['cm_id']
         layers_needed = json.dumps(data['layers_needed'])
-        authorized_scale = "[]"
+        authorized_scale = json.dumps("[]")
         try:
             authorized_scale = data['authorized_scale']
         except:
@@ -114,9 +114,10 @@ def register_calulation_module(data):
             description_link = data['description_link']
         except:
             pass
-        vectors_needed = "[]"
+        vectors_needed = json.dumps("[]")
         try:
-            vectors_needed = data['vectors_needed']
+            vectors_needed = json.dumps(data['vectors_needed'])
+
         except:
             pass
 
@@ -234,9 +235,11 @@ def get_type_layer_needed(cm_id):
                                 (cm_id))
         conn.commit()
         print ("result", result.fetchone())
-        cm_url = str(result.fetchone()[0])
+        print  ("loads result", json.dumps(result.fetchone()))
+        type_layer_needed =result.fetchone()
+        print ("type_layer_needed", type_layer_needed)
         conn.close()
-        return cm_url
+        return type_layer_needed
 
     except ValidationError:
         pass
@@ -335,18 +338,28 @@ def get_connection_string():
     con = "host=" + host + " user=" + user + " dbname=" + database + " port=" + port + " password=" + password + ""
     return con
 
+def get_connection_pg():
+    user = secrets.dev_user
+    host = secrets.dev_host
+    password = secrets.dev_password
+    port = secrets.dev_port
+    database = secrets.dev_database
+    con =  "PG:\"host=" + host + " user=" + user + " dbname=" + database + " port=" + port + " password=" + password + "\""
+
+
+    return con
+
 def get_shapefile_from_selection(scalevalue,id_selected_list,ouput_directory):
-    id_selected_list = quote(helper.adapt_nuts_list(id_selected_list))
+    id ={'nuts': 'nuts_id','lau': 'comm_id',}
+    id_selected_list =  helper.adapt_nuts_list(id_selected_list)
     output_shapefile = quote(helper.generate_shapefile_name(ouput_directory))
-    connection_string = quote(get_connection_string())
-    com_string = None
-    #if scalevalue == 'nuts':
-        #TODO sanitize/escape all variables
-        #com_string = 'ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+connection_string+'" -sql "select ST_Transform(geom,3035) from geo.nuts where nuts_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'")
-    subprocess.Popen("ogr2ogr",  "-overwrite","-f","ESRI Shapefile",output_shapefile, "PG:"+connection_string+"","-sql","select","ST_Transform(geom,3035)" ,"from" ," geo."+scalevalue+ "","where" ,"nuts_id" ,"IN" ,"("+ id_selected_list +")" ,"AND" ,"year" ,"=" ,"date("'2013-01-01'")",shell=False )
-    #else:
-        #com_string = 'ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+connection_string+'" -sql "select ST_Transform(geom,3035) from geo.lau where comm_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'")
-    #os.system(com_string)
+    id_selected_list = '('+ id_selected_list +')'
+    connection_string = get_connection_string()
+    print ("id_selected_list ",id_selected_list)
+    print ("output_shapefile ",output_shapefile)
+    print ("connection_string ",connection_string)
+    com_string = 'ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+connection_string+'" -sql "select ST_Transform(geom,3035) from geo.'+scalevalue+' where '+id[scalevalue]+' IN '+ id_selected_list +' AND year = date({})"'.format("'2013-01-01'")
+    os.system(com_string)
     return output_shapefile
 
 def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed,type_needed, output_directory):
@@ -373,10 +386,13 @@ def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed,type_needed, 
     return inputs_raster_selection
 
 def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed,type_needed, output_directory):
-    #print('clip_raster_from_shapefile/layer_needed',layer_needed)
-    #print('clip_raster_from_shapefile/type_needed',type_needed)
+
     inputs_raster_selection = {}
     # retrieve all layer neeeded
+
+    type_needed = json.dumps(type_needed)
+    print ('layer_needed ',layer_needed)
+    print ('type_needed ',type_needed)
     for layer in layer_needed:
         cpt_type = 0
         type = type_needed[cpt_type]
@@ -406,6 +422,10 @@ def retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, area
     """
     inputs_vectors_selection = {}
 
+    print ('vectors_needed ',vectors_needed)
+    print ('scalevalue ',scalevalue)
+    print ('area_selected ',area_selected)
+
     for vector_table_requested in vectors_needed:
         toCRS = 4258
         sql_query = sql_queries.vector_query(scalevalue,vector_table_requested, area_selected,toCRS)
@@ -421,8 +441,9 @@ def get_vectors_needed(cm_id):
     vectors_needed = cursor.execute('select vectors_needed from calculation_module where cm_id = ?',
                             (cm_id))
     conn.commit()
-    vectors_needed = vectors_needed.fetchone()[0]
-    vectors_needed = helper.unicode_array_to_string(vectors_needed)
+    vectors_needed = vectors_needed.fetchone()
+    print ('vectors_needed', vectors_needed)
+    vectors_needed = json.dumps(vectors_needed)
     conn.close()
     return vectors_needed
 

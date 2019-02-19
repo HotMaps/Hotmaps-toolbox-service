@@ -147,7 +147,7 @@ def savefile(filename,url):
 
 #@celery.task(bind=True)
 @celery.task(name = 'Compute-async')
-def computeTask(data,payload,cm_id,type_layer_needed):
+def computeTask(data,payload,cm_id):
 
     """
     Rdeturns the calculation of a calculation module
@@ -166,9 +166,12 @@ def computeTask(data,payload,cm_id,type_layer_needed):
     #layer_needed = helper.unicode_array_to_string(layerneed)
 
     layer_needed = payload['layers_needed']
-    #print ('layer_needed', layer_needed)
-    #print ('type_layer_needed', type_layer_needed)
-    type_layer_needed = helper.unicode_array_to_string(type_layer_needed)
+    print ('data', data)
+    type_layer_needed = payload['type_layer_needed']
+    print ('layer_needed', layer_needed)
+    print ('type_layer_needed', type_layer_needed)
+
+
 
     vectors_needed = model.get_vectors_needed(cm_id)
 
@@ -200,6 +203,7 @@ def computeTask(data,payload,cm_id,type_layer_needed):
         #print ('****************** BEGIN RASTER CLIP FOR NUTS OR LAU ***************************************************')
         id_list = payload['nuts']
         shapefile_path = model.get_shapefile_from_selection(scalevalue,id_list,UPLOAD_DIRECTORY)
+        print ('raster path ', shapefile_path)
         inputs_raster_selection = model.clip_raster_from_shapefile(DATASET_DIRECTORY ,shapefile_path,layer_needed, type_layer_needed, UPLOAD_DIRECTORY)
         if vectors_needed != None:
             inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, id_list)
@@ -315,9 +319,10 @@ class ComputationModuleClass(Resource):
         cm_id = data["cm_id"]
         print ("cm_id ",cm_id)
         #2 inputs layers from the CM
-        type_layer_needed = get_type_layer_needed(cm_id)
+        #type_layer_needed =
+        # TODO Remove get_type_layer_needed(cm_id)
         with app.app_context():
-            task = computeTask.delay(data,payload,cm_id,type_layer_needed)
+            task = computeTask.delay(data,payload,cm_id)
             return {'status_id': task.id}
 
 
