@@ -287,7 +287,7 @@ load_profile_aggregation_day_input = api.model('Input for load profile (for day)
     'month': fields.Integer(description='Month'),
     'day': fields.Integer(description='Day'),
     'nuts': fields.List(fields.String(descriptions='List of NUTS')),
-    'nuts_level': fields.String(description='Nuts level')
+    'scale_level': fields.String(description='Scale level')
 })
 
 load_profile_aggregation_curve = api.model('Input for load profile duration curve', {

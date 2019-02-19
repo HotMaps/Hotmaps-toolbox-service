@@ -342,3 +342,12 @@ def layers_filter(layersPayload, list):
 			layers.append(l)
 
 	return layers
+def get_nuts_query_selection(nuts, scale_level_table, scale_id):
+    scale_schema = 'geo'
+    return """nutsSelection as (
+            SELECT nuts.nuts_id as nuts2_id, tbl2."""+scale_id+""" as scale_id
+            from geo.nuts nuts, """+scale_schema+"""."""+scale_level_table+""" tbl2
+            where tbl2.year = date('2013-01-01') and tbl2."""+scale_id+""" in ("""+nuts+""")
+            and st_within(st_transform(tbl2.geom,"""+constants.CRS_NUTS+"""),nuts.geom)
+            and nuts.stat_levl_ = 2
+            group by nuts.nuts_id, tbl2."""+scale_id+"""),"""

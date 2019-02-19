@@ -132,10 +132,10 @@ class HeatLoadProfile:
 		}
 
 	@staticmethod
-	def duration_curve_nuts_lau(year, nuts): #/heat-load-profile/duration-curve/nuts-lau
+	def duration_curve_nuts_lau(year, nuts, nuts_level): #/heat-load-profile/duration-curve/nuts-lau
 
 		# Get the query
-		sql_query = createQueryDataDCNutsLau(year=year, nuts=nuts)
+		sql_query = createQueryDataDCNutsLau(year=year, nuts=nuts, nuts_level=nuts_level)
 
 		# Execution of the query
 		#query = db.session.execute(sql_query)
@@ -150,7 +150,7 @@ class HeatLoadProfile:
 			listAllValues.append(q[0])
 
 
-
+		print(listAllValues)
 		# Creation of points and sampling of the values only if there is data
 		if listAllValues:
 			finalListPoints = helper.sampling_data(listAllValues)
@@ -239,7 +239,7 @@ def createQueryDataLPHectares(year, month, day, geometry):
 	return queryData
 
 # ALL QUERIES DATA FOR THE HEAT LOAD PROFILE BY NUTS
-def createQueryDataLPNutsLau(year, month, day, nuts, request_type, nuts_level):
+def createQueryDataLPNutsLau(year, month, day, nuts, request_type, nuts_level, query_type="heatload"):
 	where_request=''
 	nutsSelectionQuery=''
 	scale_schema = 'geo'
@@ -258,10 +258,10 @@ def createQueryDataLPNutsLau(year, month, day, nuts, request_type, nuts_level):
 		group_by_time_columns="hour_of_day, statday, statmonth, statyear"
 		where_request="where statmonth = " + str(month) + " and statday = " + str(day)
 	if nuts_level == 'LAU 2':
-		scale_level_table = 'lau'
+		scale_level_table='lau'
 		scale_id = 'comm_id'
 	else:
-		scale_level_table = 'nuts'
+		scale_level_table='nuts'
 		scale_id = 'nuts_id'
 
 	hd_table = "stat.heat_tot_curr_density_"+scale_level_table
@@ -269,13 +269,7 @@ def createQueryDataLPNutsLau(year, month, day, nuts, request_type, nuts_level):
 	from_hd = hd_table
 
 	if nuts_level in constants.scale_level_loadprofile_aggreagtion:
-		nutsSelectionQuery = """nutsSelection as (
-			SELECT nuts.nuts_id as nuts2_id, tbl2."""+scale_id+""" as scale_id
-			from geo.nuts nuts, """+scale_schema+"""."""+scale_level_table+""" tbl2
-			where tbl2.year = date('2013-01-01') and tbl2."""+scale_id+""" in ("""+nuts+""")
-			and st_within(st_transform(tbl2.geom,"""+constants.CRS_NUTS+"""),nuts.geom)
-			and nuts.stat_levl_ = 2
-			group by nuts.nuts_id, tbl2."""+scale_id+"""),"""
+		nutsSelectionQuery = helper.get_nuts_query_selection(nuts,scale_level_table, scale_id)
 		where_clause_lp = "stat.load_profile.nuts_id = nutsSelection.nuts2_id"
 		from_clause_lp += ',nutsSelection'
 		hd_nuts_select = "nutsSelection.nuts2_id"
@@ -301,45 +295,42 @@ def createQueryDataLPNutsLau(year, month, day, nuts, request_type, nuts_level):
 		group by """+hd_nuts_select+"""
 	), """
 
+	select_normalized = ''
+	groupby_normalized = ''
+	query_select=''
+	if query_type == 'duration_curve':
+		select_normalized = 'sum(stat.load_profile.value/valtot*HDtotal) as val, stat.time.hour_of_year as hoy'
+		groupby_normalized = "stat.load_profile.fk_nuts_gid,stat.time.hour_of_year HAVING COUNT(value) = COUNT(*) order by val desc"
+		query_select = "select * from normalizedData;"
+
+	
+	elif query_type == 'heatload':
+		select_normalized = "avg(stat.load_profile.value / valtot * HDtotal) AS avg_1,min(stat.load_profile.value / valtot * HDtotal) AS min_1, max(stat.load_profile.value / valtot * HDtotal) AS max_1, sum(stat.load_profile.value / valtot * HDtotal) as sum_1,"+time_columns
+		groupby_normalized = " stat.load_profile.fk_nuts_gid, """+group_by_time_columns
+		query_select="""select sum(min_1), sum(max_1), sum(avg_1), sum(sum_1), """+group_by_time_columns
+		query_select+=""" from normalizedData"""
+		query_select+=where_request+"""
+		group by """+group_by_time_columns+"""
+		order by """+group_by_time_columns
+
+
+
 	query_normalized = """normalizedData as (
-		SELECT avg(stat.load_profile.value / valtot * HDtotal) AS avg_1,min(stat.load_profile.value / valtot * HDtotal) AS min_1, max(stat.load_profile.value / valtot * HDtotal) AS max_1, sum(stat.load_profile.value / valtot * HDtotal) as sum_1,
-			"""+time_columns+"""
+		SELECT """+select_normalized+"""
 		FROM """+from_clause_lp+""", heatdemand hd, loadprofile lp, stat.time
 		where  """+where_clause_lp+""" 
 			and stat.time.id = stat.load_profile.fk_time_id and stat.load_profile.nuts_id = hd.nuts2_id and stat.load_profile.nuts_id = lp.nuts_id
-		group by stat.load_profile.fk_nuts_gid, """+group_by_time_columns+""")"""
-
-	query_select = """select sum(min_1), sum(max_1), sum(avg_1), sum(sum_1), """+group_by_time_columns+""" 
-		from normalizedData
-		"""+where_request+"""
-		group by """+group_by_time_columns+"""
-		order by """+group_by_time_columns+"""
-	"""
+		group by """+groupby_normalized+""")"""
+	
 	
 	query = 'with ' + nutsSelectionQuery + query_lp + query_hd + query_normalized + query_select
-	##print(query)
+	print(query)
 	return query
 
 # ALL QUERIES DATA FOR THE DURATION CURVE BY NUTS
-def createQueryDataDCNutsLau(year, nuts):
-	sql_query =	"WITH nutsSelection as (select nuts_id FROM stat.heat_tot_curr_density_tif_nuts WHERE nuts_id IN ("+nuts+")), " +\
-						"loadprofile as (SELECT sum(stat.load_profile.value) as valtot, stat.load_profile.nuts_id from stat.load_profile " +\
-							"INNER JOIN nutsSelection on stat.load_profile.nuts_id = nutsSelection.nuts_id " +\
-							"where stat.load_profile.nuts_id = nutsSelection.nuts_id group by nutsSelection.nuts_id, stat.load_profile.nuts_id), " +\
-						"heatdemand as (SELECT sum as HDtotal, stat.heat_tot_curr_density_tif_nuts.nuts_id from stat.heat_tot_curr_density_tif_nuts " +\
-							"INNER JOIN nutsSelection on stat.heat_tot_curr_density_tif_nuts.nuts_id = nutsSelection.nuts_id " +\
-							"where stat.heat_tot_curr_density_tif_nuts.nuts_id = nutsSelection.nuts_id) " +\
-						"SELECT sum(stat.load_profile.value/valtot*HDtotal) as val, stat.time.hour_of_year as hoy from stat.load_profile " +\
-							"INNER JOIN nutsSelection on stat.load_profile.nuts_id = nutsSelection.nuts_id " +\
-							"INNER JOIN stat.time on stat.load_profile.fk_time_id = stat.time.id " +\
-							"INNER JOIN loadprofile on stat.load_profile.nuts_id = loadprofile.nuts_id " +\
-							"INNER JOIN heatdemand on stat.load_profile.nuts_id = heatdemand.nuts_id " +\
-							"WHERE stat.load_profile.nuts_id is not null and fk_time_id is not null " +\
-							"AND stat.load_profile.nuts_id = nutsSelection.nuts_id " +\
-							"GROUP BY hoy " +\
-							"HAVING	COUNT(value)=COUNT(*) " +\
-							"ORDER BY val DESC;"
-
+def createQueryDataDCNutsLau(year, nuts, nuts_level):
+	sql_query = createQueryDataLPNutsLau(year,None,None,nuts,'year',nuts_level,'duration_curve')
+	print(sql_query)
 	return sql_query
 
 # ALL QUERIES DATA FOR THE DURATION CURVE BY HECTARES
