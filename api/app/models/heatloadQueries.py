@@ -150,15 +150,14 @@ class HeatLoadProfile:
 			listAllValues.append(q[0])
 
 
-		print(listAllValues)
 		# Creation of points and sampling of the values only if there is data
-		if listAllValues:
-			finalListPoints = helper.sampling_data(listAllValues)
-		else:
-			finalListPoints = []
+		# if listAllValues:
+		# 	finalListPoints = helper.sampling_data(listAllValues)
+		# else:
+		# 	finalListPoints = []
 
 
-		return finalListPoints
+		return listAllValues
 
 	@staticmethod
 	def duration_curve_hectares(year, geometry): #/heat-load-profile/duration-curve/hectares
@@ -319,7 +318,11 @@ def createQueryDataLPNutsLau(year, month, day, nuts, request_type, nuts_level, q
 		SELECT """+select_normalized+"""
 		FROM """+from_clause_lp+""", heatdemand hd, loadprofile lp, stat.time
 		where  """+where_clause_lp+""" 
-			and stat.time.id = stat.load_profile.fk_time_id and stat.load_profile.nuts_id = hd.nuts2_id and stat.load_profile.nuts_id = lp.nuts_id
+			and stat.load_profile.nuts_id is not null and 
+			stat.load_profile.fk_time_id is not null and 
+			stat.time.id = stat.load_profile.fk_time_id and 
+			stat.load_profile.nuts_id = hd.nuts2_id and 
+			stat.load_profile.nuts_id = lp.nuts_id 
 		group by """+groupby_normalized+""")"""
 	
 	
