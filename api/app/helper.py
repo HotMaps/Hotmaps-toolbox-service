@@ -360,6 +360,6 @@ def get_nuts_query_selection(nuts, scale_level_table, scale_id):
                 SELECT nuts.nuts_id as nuts2_id, tbl2."""+scale_id+""" as scale_id
                 from geo.nuts nuts, """+scale_schema+"""."""+LAU_TABLE+""" tbl2
                 where tbl2."""+scale_id+""" in ("""+nuts+""")
-                and st_within(tbl2.geom,nuts.geom)
+                and st_within(st_centroid(tbl2.geom),nuts.geom)
                 and nuts.stat_levl_ = 2
                 group by nuts.nuts_id, tbl2."""+scale_id+"""),"""

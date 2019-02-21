@@ -68,7 +68,7 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 	if 'scalelvl_column' in layersData[layer]:
 		scalelvl_column = layersData[layer]['scalelvl_column']
 
-	print('nuts_selection************** ',nuts_selection)
+	
 
 
 
