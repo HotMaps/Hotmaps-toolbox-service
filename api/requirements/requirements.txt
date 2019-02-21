@@ -35,3 +35,5 @@ bcrypt
 Flask-Login
 
 Shapely==1.5.17
+
+# PYthon 3 => Shapely 1.6.4

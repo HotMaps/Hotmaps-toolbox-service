@@ -1,5 +1,5 @@
 from app.models.indicators import *
-from app.constants import CRS_USER_GEOMETRY, NUTS_VAlUES, NUTS_LAU_LEVELS, CRS_NUTS,CRS_LAU
+from app.constants import CRS_USER_GEOMETRY, NUTS_VAlUES, NUTS_LAU_LEVELS, CRS_NUTS,CRS_LAU,LAU_TABLE
 
 
 def constructWithPartEachLayerHectare(geometry, year, layer, scale_level):
@@ -51,23 +51,31 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 	query = ''
 	name_type = ''
 	scalelvl_column=''
+	nust_select_name = "nutsSelection_"+ layer
+	nuts_selection = None
 	if scale_level in NUTS_VAlUES:
 		scale_level_crs = CRS_NUTS
 		scale_level_name = 'nuts_id'
 		name_type = 'nuts'
 		fk_column_id = 'fk_nuts_gid'
+		nuts_selection =  nust_select_name +" as (SELECT geom as geom from geo."+name_type+" where "+name_type+".year = date('"+year+"-01-01') and "+scale_level_name+"  in ("+nuts+")), "
 	else:
 		scale_level_crs = CRS_LAU
 		scale_level_name = 'comm_id'
 		name_type = 'lau'
 		fk_column_id = 'fk_lau_gid'
+		nuts_selection =  nust_select_name +" as (SELECT st_transform(geom,4326) as geom from public."+LAU_TABLE+" where "+scale_level_name+"  in ("+nuts+")), "
 	if 'scalelvl_column' in layersData[layer]:
 		scalelvl_column = layersData[layer]['scalelvl_column']
 
-	nust_select_name = "nutsSelection_"+ layer
+	print('nuts_selection************** ',nuts_selection)
 
-	#TODO: Make a nuts selection like heatload with within where clause in nuts selection. Do not use geom! To slow
-	nuts_selection =  nust_select_name +" as (SELECT geom as geom from geo."+name_type+" where "+name_type+".year = date('"+year+"-01-01') and "+scale_level_name+"  in ("+nuts+")), "
+
+
+	#TODO: Make a nuts selection like heatload with within where clause in nuts selection. Do not use geom! Too slow
+
+
+
 
 	from_part = 'stat_' + layer
 	query_from_part = from_part+" as ("
@@ -92,7 +100,12 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 		query += nuts_selection
 		query += query_from_part 
 		query += query_select
-		query += " from " + nust_select_name + ", "+layer_table_name
+
+		print('nuts_selection',nuts_selection)
+		query_from =" from " + nust_select_name + ", "+layer_table_name
+		query += query_from
+
+
 		if check_if_agg_or_dis_method(layer, scale_level):
 			query += " where st_within(st_centroid("+nust_select_name+".geom),st_transform("+layer_table_name+"."+layersData[layer]['geo_column']+","+scale_level_crs+"))) "			
 		else:
@@ -100,9 +113,13 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 	else:
 		query += query_from_part
 		query += query_select
-		query += " FROM "+layer_table_name + ", geo." + name_type
-		query += " WHERE "+layer_table_name+"."+fk_column_id+" = geo."+name_type+".gid and "+name_type+".year = date('"+year+"-01-01') and "+layer_table_name+"."+scale_level_name+"  IN ("+nuts+") ) "
-				
+		if scale_level in NUTS_VAlUES:
+			query += " FROM "+layer_table_name + ", geo." + name_type
+			query += " WHERE "+layer_table_name+"."+fk_column_id+" = geo."+name_type+".gid and "+name_type+".year = date('"+year+"-01-01') and "+layer_table_name+"."+scale_level_name+"  IN ("+nuts+") ) "
+		else:
+			query += " FROM "+layer_table_name + ", public." + LAU_TABLE
+			query += " WHERE "+layer_table_name+"."+fk_column_id+" = public."+LAU_TABLE+".gid and "+layer_table_name+"."+scale_level_name+"  IN ("+nuts+") ) "
+
 	return query
 
 
@@ -129,7 +146,7 @@ def get_indicator_as_query(indic, layer_table_name, layer, scale_level_name, sca
 	if 'diss_agg_method' in indic and check_if_agg_or_dis_method(layer, scale_level):
 		agg_method = indic['diss_agg_method']
 	quer = switcher.get(agg_method,switcher['sum'])
-	#print(quer)
+
 	return quer
 				
 def check_if_agg_or_dis_method(layer,scale_level):
