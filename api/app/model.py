@@ -194,6 +194,13 @@ def getUI(cm_id):
                                 (cm_id))
         conn.commit()
         response = helper.retrieve_list_from_sql_result(results)
+
+        """        valid_condition = assert((cmd_id) in (get_all_cm_ids())()
+        if valid_condition:
+            results = cursor.execute('select * from inputs_calculation_module where cm_id = ?',
+                                (cm_id))
+        else:
+            return False()"""
         conn.close()
         return response
 
@@ -205,6 +212,7 @@ def delete_cm_ui_with_id(cm_id):
     try:
         conn = myCMpool.connect()
         cursor = conn.cursor()
+
         results = cursor.execute('DELETE FROM inputs_calculation_module WHERE cm_id = ?',
                                  (cm_id))
         conn.commit()
@@ -247,11 +255,13 @@ def get_connection_string():
 
 def get_shapefile_from_selection(scalevalue,id_selected_list,ouput_directory):
     id_selected_list = helper.adapt_nuts_list(id_selected_list)
+    print('id_selected_list ',id_selected_list)
     output_shapefile = quote(helper.generate_shapefile_name(ouput_directory))
     if scalevalue == 'nuts':
         subprocess.call('ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,3035) from geo.nuts where nuts_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'"), shell=True)
     else:
-        subprocess.call('ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,3035) from geo.lau where comm_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'"), shell=True)
+        subprocess.call('ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,3035) from public.tbl_lau1_2 where comm_id IN ('+ id_selected_list +')"', shell=True)
+    print('output_shapefile ',output_shapefile)
     return output_shapefile
 
 def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed,type_needed, output_directory):
