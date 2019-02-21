@@ -1,4 +1,4 @@
-
+from app.constants import LAU_TABLE
 
 import json
 import uuid
@@ -221,7 +221,7 @@ def sampling_data(listValues):
 			'X':n+1,
 			'Y':listValues[n]
 		})
-
+    
 	# Sampling of the values
 	cut1 = int(numberOfValues*constants.POINTS_FIRST_GROUP_PERCENTAGE)
 	cut2 = int(cut1+(numberOfValues*constants.POINTS_SECOND_GROUP_PERCENTAGE))
@@ -342,3 +342,24 @@ def layers_filter(layersPayload, list):
 			layers.append(l)
 
 	return layers
+def get_nuts_query_selection(nuts, scale_level_table, scale_id):
+
+    if scale_level_table == 'nuts':
+        scale_schema = 'geo'
+        return """nutsSelection as (
+            SELECT nuts.nuts_id as nuts2_id, tbl2."""+scale_id+""" as scale_id
+            from geo.nuts nuts, """+scale_schema+"""."""+scale_level_table+""" tbl2
+            where tbl2.year = date('2013-01-01') and tbl2."""+scale_id+""" in ("""+nuts+""")
+            and st_within(st_transform(tbl2.geom,"""+constants.CRS_NUTS+"""),nuts.geom)
+            and nuts.stat_levl_ = 2
+            group by nuts.nuts_id, tbl2."""+scale_id+"""),"""
+
+    else:
+        scale_schema = 'public'
+        return """nutsSelection as (
+                SELECT nuts.nuts_id as nuts2_id, tbl2."""+scale_id+""" as scale_id
+                from geo.nuts nuts, """+scale_schema+"""."""+LAU_TABLE+""" tbl2
+                where tbl2."""+scale_id+""" in ("""+nuts+""")
+                and st_within(tbl2.geom,nuts.geom)
+                and nuts.stat_levl_ = 2
+                group by nuts.nuts_id, tbl2."""+scale_id+"""),"""

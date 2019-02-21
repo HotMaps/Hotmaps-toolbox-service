@@ -61,7 +61,7 @@ LAND_SURFACE_TEMP = 'land_surface_temperature'
 AGRICULTURAL_RESIDUES = 'agricultural_residues_view'
 SOLAR_RADIATION = 'solar_radiation'
 
-
+HEATDEMAND_FACTOR=0.001
 
 stat = 'stat_'
 vector_type = 'vector'
@@ -87,7 +87,7 @@ layersData = {
 			'table_type':raster_type,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'GWh','indicator_id':'consumption','factor':0.001,'agg_method':'sum'},
+				{'table_column': 'sum', 'unit': 'GWh','indicator_id':'consumption','factor':HEATDEMAND_FACTOR,'agg_method':'sum'},
 				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
 				{'table_column': 'min', 'unit': 'MWh/ha','indicator_id':'consumption_min','agg_method':'min'},
 				{'table_column': 'max', 'unit': 'MWh/ha','indicator_id':'consumption_max','agg_method':'max'},

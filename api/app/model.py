@@ -1,8 +1,10 @@
 from app.decorators.exceptions import ValidationError
-
-
-import json
-from app import secrets
+try:
+    from shlex import quote
+except ImportError:
+    from pipes import quote
+import subprocess
+from app.secrets import user_db,host_db,password_db,port_db,database_db
 from datetime import datetime
 import psycopg2
 import sqlalchemy.pool as pool
@@ -50,15 +52,11 @@ def addRegisterCalulationModule(data):
         description_link = data['description_link']
     except:
         pass
-
     vectors_needed = "[]"
     try:
         vectors_needed = data['vectors_needed']
     except:
         pass
-
-
-
     cm_description = data['cm_description']
     cm_url = data['cm_url']
     cm_Id = data['id']
@@ -67,7 +65,6 @@ def addRegisterCalulationModule(data):
     createdAt = datetime.utcnow()
     conn = myCMpool.connect()
     cursor = conn.cursor()
-    #c.execute("INSERT INTO calculation_module(cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt) VALUES ({},{},{},{},{},{},{},{})".format(cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt))
     cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt,type_layer_needed,authorized_scale,description_link,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?)", ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ,type_layer_needed,authorized_scale,description_link,vectors_needed))
     cursor.close()
 
@@ -116,9 +113,6 @@ def register_calulation_module(data):
         except:
             pass
 
-
-
-        #print ("layers_needed",layers_needed)
         updatedAt = datetime.utcnow()
         createdAt = datetime.utcnow()
         inputs_calculation_module = data['inputs_calculation_module']
@@ -160,15 +154,11 @@ def register_calulation_module(data):
 
 def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed ,inputs_calculation_module,cursor,conn):
     try:
-
         ln = str(layers_needed)
         tn = str(type_layer_needed)
         auth_s = str(authorized_scale)
-
         description_link = str(description_link)
         vn = str(vectors_needed)
-
-
         cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? ,  type_layer_needed = ?, authorized_scale = ?,description_link = ?, vectors_needed = ?   WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt, tn,auth_s,description_link, vn,cm_id ))
         conn.commit()
         cursor.execute("DELETE FROM inputs_calculation_module WHERE cm_id = ? ", (str(cm_id)))
@@ -196,52 +186,8 @@ def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, l
         pass
     except sqlite3.IntegrityError as e:
         pass
-        #print (e)
-
-
-
-
-def getCMUrl(cm_id):
-
-    try:
-        conn = myCMpool.connect()
-        cursor = conn.cursor()
-
-        cm_url = cursor.execute('select cm_url from calculation_module where cm_id = ?',
-                                (cm_id))
-        conn.commit()
-        cm_url = str(cm_url.fetchone()[0])
-        conn.close()
-        return cm_url
-
-    except ValidationError:
-        pass
-        #print ('error')
-    except sqlite3.IntegrityError as e:
-        pass
-        #print (e)
-
-def get_type_layer_needed(cm_id):
-    try:
-        conn = myCMpool.connect()
-        cursor = conn.cursor()
-
-        result = cursor.execute('select type_layer_needed from calculation_module where cm_id = ?',
-                                (cm_id))
-        conn.commit()
-        cm_url = str(result.fetchone()[0])
-        conn.close()
-        return cm_url
-
-    except ValidationError:
-        pass
-        #print ('error')
-    except sqlite3.IntegrityError as e:
-        pass
-        #print (e)
 
 def getUI(cm_id):
-
         conn = myCMpool.connect()
         cursor = conn.cursor()
         results = cursor.execute('select * from inputs_calculation_module where cm_id = ?',
@@ -250,27 +196,6 @@ def getUI(cm_id):
         response = helper.retrieve_list_from_sql_result(results)
         conn.close()
         return response
-
-def get_parameters_needed(cm_id):
-    try:
-        conn = myCMpool.connect()
-        cursor = conn.cursor()
-
-        results = cursor.execute('select input_parameter_name from inputs_calculation_module where cm_id = ?',
-                                 (cm_id))
-        conn.commit()
-        response = []
-        #print ('results', results)
-        for row in results:
-            response.append(row[0])
-        conn.close()
-        return response
-    except ValidationError:
-        pass
-        #print ('error')
-    except sqlite3.IntegrityError as e:
-        pass
-        #print (e)
 
 def delete_cm(cm_id):
     delete_cm_with_id(cm_id)
@@ -288,11 +213,8 @@ def delete_cm_ui_with_id(cm_id):
 
     except ValidationError:
         pass
-        #print ('error')
     except sqlite3.IntegrityError as e:
         pass
-        #print (e)
-
 
 def delete_cm_with_id(cm_id):
     try:
@@ -307,13 +229,11 @@ def delete_cm_with_id(cm_id):
 
     except ValidationError:
         pass
-        #print ('error')
     except sqlite3.IntegrityError as e:
         pass
-        #print (e)
+
 def getCMList():
     response = helper.retrieve_list_from_sql_result(query_calculation_module_database('select * from calculation_module '))
-    #print ('response ' , response)
     return response
 
 @celery.task(name = 'task-getConnection_db_gis')
@@ -322,65 +242,62 @@ def getConnection_db_gis():
     return c
 
 def get_connection_string():
-    user = secrets.dev_user
-    host = secrets.dev_host
-    password = secrets.dev_password
-    port = secrets.dev_port
-    database = secrets.dev_database
-    con = "host=" + host + " user=" + user + " dbname=" + database + " port=" + port + " password=" + password + ""
+    con = "host=" + host_db + " user=" + user_db + " dbname=" + database_db + " port=" + port_db + " password=" + password_db + ""
     return con
 
 def get_shapefile_from_selection(scalevalue,id_selected_list,ouput_directory):
     id_selected_list = helper.adapt_nuts_list(id_selected_list)
-    output_shapefile = helper.generate_shapefile_name(ouput_directory)
-    com_string = None
+    output_shapefile = quote(helper.generate_shapefile_name(ouput_directory))
     if scalevalue == 'nuts':
-        com_string = 'ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,3035) from geo.nuts where nuts_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'")
+        subprocess.call('ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,3035) from geo.nuts where nuts_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'"), shell=True)
     else:
-        com_string = 'ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,3035) from geo.lau where comm_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'")
-    os.system(com_string)
+        subprocess.call('ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,3035) from geo.lau where comm_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'"), shell=True)
     return output_shapefile
 
 def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed,type_needed, output_directory):
     inputs_raster_selection = {}
     wkt_point_3035 = helper.projection_4326_to_3035(wkt_point)
-    ##print ('wkt_point_3035 ',wkt_point_3035)
-
     filename_csv = helper.write_wkt_csv(helper.generate_csv_name(output_directory),wkt_point_3035)
-    #print ('filename_csv ',filename_csv)
-    # retrieve all layer neeeded
     for layer in layer_needed:
         cpt_type = 0
         type = type_needed[cpt_type]
         directory = layer.replace('_tif', '')
-        path_to_dataset = datasets_directory + layer.replace('_tif', '')+ "/data/" + layer + ".tif"
-        # create a file name as output
-        #print ('path_to_dataset ',path_to_dataset)
+        root_path = datasets_directory + directory + "/data/"
+        path_to_dataset = root_path + layer + ".tif"
+        if not os.path.abspath(path_to_dataset).startswith(root_path):
+            raise Exception("directory traversal denied")
+    # create a file name as output
         filename_tif = helper.generate_geotif_name(output_directory)
         com_string = "gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(filename_csv,path_to_dataset,filename_tif)
         os.system(com_string)
-        #print ('com_string ',filename_tif)
         inputs_raster_selection[type] = filename_tif
         cpt_type = cpt_type + 1
     return inputs_raster_selection
 
 def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed,type_needed, output_directory):
-    #print('clip_raster_from_shapefile/layer_needed',layer_needed)
-    #print('clip_raster_from_shapefile/type_needed',type_needed)
+    """
+
+    :param datasets_directory: input dataset directory
+    :param shapefile_path:  input shapefile path
+    :param layer_needed: list of layer need for the CM
+    :param type_needed:  list of type needed from the CM
+    :param output_directory: output directory where we c
+    :return: dictionnary
+    """
     inputs_raster_selection = {}
     # retrieve all layer neeeded
     for layer in layer_needed:
         cpt_type = 0
         type = type_needed[cpt_type]
         directory = layer.replace('_tif', '')
-        path_to_dataset = datasets_directory + directory + "/data/" + layer + ".tif"
+        root_path = datasets_directory + directory + "/data/"
+        path_to_dataset = root_path + layer + ".tif"
+        if not os.path.abspath(path_to_dataset).startswith(root_path):
+            raise Exception("directory traversal denied")
         # create a file name as output
-        #print ('path_to_dataset ',path_to_dataset)
         filename_tif = helper.generate_geotif_name(output_directory)
         com_string = "gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(shapefile_path,path_to_dataset,filename_tif)
-
         os.system(com_string)
-        #print ('com_string ',filename_tif)
         inputs_raster_selection[type] = filename_tif
         cpt_type = cpt_type + 1
     return inputs_raster_selection
@@ -403,7 +320,6 @@ def retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, area
         sql_query = sql_queries.vector_query(scalevalue,vector_table_requested, area_selected,toCRS)
         result = query_geographic_database(sql_query)
         result = helper.retrieve_list_from_sql_result(result)
-        #print("result type", result)
         inputs_vectors_selection[vector_table_requested] = result
     return inputs_vectors_selection
 
@@ -419,23 +335,19 @@ def get_vectors_needed(cm_id):
     return vectors_needed
 
 
-
-
-
-
 def query_geographic_database(sql_query):
-
     mypool = pool.QueuePool(getConnection_db_gis, max_overflow=100, pool_size=5)
     # get a connection
     conn = mypool.connect()
     # use it
     cursor = query(sql_query,conn)
     return cursor
+
 def query_geographic_database_first(sql_query):
     cursor = query_geographic_database(sql_query)
     result = cursor.fetchone()
-    #result = helper.remove_None_in_turple(result)
     return result
+
 def check_table_existe(sql_query):
     return query_geographic_database_first(sql_query)
 
