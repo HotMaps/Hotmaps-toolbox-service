@@ -12,7 +12,7 @@ class TestExportRasterHectare(TestCase):
         this test will pass the upload/export/csv/hectare method
         """
         payload = {
-            "layers": "heat_tot_curr_density_tif_ha",
+            "layers": "heat_tot_curr_density_ha",
             "year": "2012",
             "areas": [{
                 "points":   [
@@ -35,7 +35,7 @@ class TestExportRasterHectare(TestCase):
         this test will fail because the wrong parameters are given
         """
         payload = {
-            "lfdsaayers": "heat_tot_curr_density_tif_ha",
+            "lfdsaayers": "heat_tot_curr_density_ha",
             "yefsdaar": "2012",
             "aregfas": [{
                 "points":   [
@@ -58,7 +58,7 @@ class TestExportRasterHectare(TestCase):
         this test will fail because the layer is not corresponding to hectare
         """
         payload = {
-            "layers": "heat_tot_curr_density_tif_ha2",
+            "layers": "heat_tot_curr_density_ha2",
             "year": "2012",
             "areas": [{
                 "points":   [
