@@ -1,7 +1,4 @@
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+import StringIO
 import os
 import shutil
 import shapely.geometry as shapely_geom
@@ -286,11 +283,17 @@ class ExportRasterNuts(Resource):
                     exception_message += ', '
             raise ParameterException(str(exception_message))
         # We must determine if it is a nuts or a lau
+
+        schema = "geo"
+        dateCol = "year"
+
         if str(layers).endswith('lau2'):
             layer_type = 'lau'
             layer_name = layers[: -5]
             id_type = 'comm_id'
             layer_date = LAU_YEAR
+            schema = "public"
+            dateCol = "date"
         else:
             layer_type = 'nuts'
             layer_name = str(layers)[: -6]
@@ -314,13 +317,13 @@ class ExportRasterNuts(Resource):
             sql += "geom"
 
         # We add the first nuts/lau id
-        sql += " FROM geo." + layer_type + " WHERE " + id_type + " = '" + nuts[0] + "'"
+        sql += " FROM " + schema + "." + layer_type + " WHERE " + id_type + " = '" + nuts[0] + "'"
         # we add the rest of the nuts/lau id
         for nut in nuts[1:]:
             sql += " OR " + id_type + " = '" + nut + "'"
 
         # TODO Postpone Manage also the date field
-        sql += """AND year = '{0}-01-01'), 3035 ), 0) AS buffer_geom) SELECT encode(ST_AsTIFF(foo.rast, 'LZW'), 'hex') as tif FROM (SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast FROM (SELECT ST_Union(rast) as rast, ST_Union(buffer_geom) as buffer_geom FROM geo.{1}, buffer WHERE ST_Intersects(rast, buffer_geom)) as rast WHERE ST_Intersects(rast, buffer_geom)) AS foo;""".format(layer_date, layer_name)
+        sql += """AND {2} = '{0}-01-01'), 3035 ), 0) AS buffer_geom) SELECT encode(ST_AsTIFF(foo.rast, 'LZW'), 'hex') as tif FROM (SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast FROM (SELECT ST_Union(rast) as rast, ST_Union(buffer_geom) as buffer_geom FROM geo.{1}, buffer WHERE ST_Intersects(rast, buffer_geom)) as rast WHERE ST_Intersects(rast, buffer_geom)) AS foo;""".format(layer_date, layer_name, dateCol)
 
         hex_file = ''
 
@@ -493,11 +496,15 @@ class ExportCsvNuts(Resource):
             raise ParameterException(str(exception_message))
 
         # We must determine if it is a nuts or a lau
+        dateCol = "year"
+        schema2 = "geo"
         if str(layers).endswith('lau2'):
             layer_type = 'lau'
             layer_name = layers[: -5]
             id_type = 'comm_id'
             layer_date = LAU_YEAR
+            dateCol = "date"
+            schema2 = "public"
         else:
             layer_type = 'nuts'
             layer_name = str(layers)[: -6]
@@ -506,13 +513,13 @@ class ExportCsvNuts(Resource):
             if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
 
-        sql = """SELECT * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform((SELECT ST_UNION(geom) from geo.{3} where {4} = '{5}'""".format(schema, layer_name, year, layer_type, id_type, nuts[0])
+        sql = """SELECT * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform((SELECT ST_UNION(geom) from {6}.{3} where {4} = '{5}'""".format(schema, layer_name, year, layer_type, id_type, nuts[0], schema2)
 
         # we add the rest of the lau id
         for nut in nuts[1:]:
             sql += " OR " + id_type + " = '" + nut + "'"
 
-        sql += " and year = '" + layer_date + "-01-01'), 3035))"
+        sql += " AND {0} = '{1}-01-01'), 3035))".format(dateCol, layer_date)
 
         # execute request
         try:
