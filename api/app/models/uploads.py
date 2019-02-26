@@ -4,6 +4,7 @@ import uuid
 import xml.etree.ElementTree as ET
 import shutil
 from app import celery
+from app.model import run_command, commands_in_array
 from .. import constants, dbGIS as db
 from ..decorators.exceptions import RequestException
 from .. import secrets
@@ -78,14 +79,14 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
 
     try:
         # commands launch to obtain the level of zooms
-        com_create_rgba = "gdaldem color-relief {} {} -alpha {}" \
-            .format(grey_tif, grey2rgb_path, rgb_tif)
-        os.system(com_create_rgba)
+        args_rgba = commands_in_array("gdaldem color-relief {} {} -alpha {}".format(grey_tif, grey2rgb_path, rgb_tif))
+        run_command(args_rgba)
+        #os.system(com_create_rgba)
 
         # commands launch to obtain the level of zooms
-        com_generate_tiles = "python app/helper/gdal2tiles.py -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} " \
-            .format(rgb_tif, tile_path)
-        os.system(com_generate_tiles)
+        args_tiles = commands_in_array("python app/helper/gdal2tiles.py -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} ".format(rgb_tif, tile_path))
+        run_command(args_tiles)
+        #os.system(com_generate_tiles)
     except:
         generate_state = 10
     else:

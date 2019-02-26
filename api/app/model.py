@@ -1,4 +1,5 @@
 from app.decorators.exceptions import ValidationError
+from shlex import split
 try:
     from shlex import quote
 except ImportError:
@@ -278,8 +279,11 @@ def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed,type_needed, 
             raise Exception("directory traversal denied")
     # create a file name as output
         filename_tif = helper.generate_geotif_name(output_directory)
-        com_string = "gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(filename_csv,path_to_dataset,filename_tif)
-        os.system(com_string)
+
+        args = commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(filename_csv,path_to_dataset,filename_tif))
+        print(args)
+        run_command(args)
+        #os.system(com_string)
         inputs_raster_selection[type] = filename_tif
         cpt_type = cpt_type + 1
     return inputs_raster_selection
@@ -306,14 +310,18 @@ def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed,t
             raise Exception("directory traversal denied")
         # create a file name as output
         filename_tif = helper.generate_geotif_name(output_directory)
-        com_string = "gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(shapefile_path,path_to_dataset,filename_tif)
-        os.system(com_string)
+        args = commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(shapefile_path,path_to_dataset,filename_tif))
+        run_command(args)
+        #os.system(com_string)
         inputs_raster_selection[type] = filename_tif
         cpt_type = cpt_type + 1
     return inputs_raster_selection
 
+def commands_in_array(com_string):
+    return split(com_string)
 
-
+def run_command(arr):
+    return subprocess.Popen(arr, shell=False)
 
 def retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, area_selected):
     """

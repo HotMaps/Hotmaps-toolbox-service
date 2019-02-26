@@ -2,11 +2,11 @@ from celery.task.control import revoke
 from flask import request, current_app,jsonify,redirect, \
     url_for,Response
 from app.decorators.restplus import api
-from app.decorators.serializers import  compution_module_class, \
+from app.decorators.serializers import compution_module_class, \
     input_computation_module, test_communication_cm, \
     compution_module_list, uploadfile, cm_id_input
 
-from app.model import register_calulation_module,getUI,getCMList
+from app.model import register_calulation_module,getUI,getCMList,commands_in_array, run_command
 
 
 from app import model
@@ -33,9 +33,12 @@ from app import CalculationModuleRpcClient
 UPLOAD_DIRECTORY = '/var/tmp'
 DATASET_DIRECTORY = '/var/hotmaps/repositories/'
 
-com_string = "chmod +x app/helper/gdal2tiles-multiprocess.py"
-
-os.system(com_string)
+try:
+    args = commands_in_array("chmod +x app/helper/gdal2tiles-multiprocess.py")
+    run_command(args)
+except WindowsError:
+    pass
+#os.system(com_string)
 
 if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
@@ -194,8 +197,9 @@ def generateTiles(raster_layers):
             print ("Creation of the directory %s failed" % tile_path)
         else:
             pass
-        com_string = "gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE && python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
-        os.system(com_string)
+        args = commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE && python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path))
+        run_command(args)
+        #os.system(com_string)
         directory_for_tiles = directory_for_tiles.replace(UPLOAD_DIRECTORY+'/', '')
         layers['path'] = directory_for_tiles
 
