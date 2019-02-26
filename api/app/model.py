@@ -281,7 +281,6 @@ def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed,type_needed, 
         filename_tif = helper.generate_geotif_name(output_directory)
 
         args = commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(filename_csv,path_to_dataset,filename_tif))
-        print(args)
         run_command(args)
         #os.system(com_string)
         inputs_raster_selection[type] = filename_tif
