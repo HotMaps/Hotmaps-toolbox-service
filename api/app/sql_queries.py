@@ -76,11 +76,12 @@ def vector_query_lau(vector_table_requested, area_selected,toCRS):
     :return
     """
 
-    query= "with selected_zone as ( SELECT ST_Transform(geom,"+ str(toCRS) +") as geom" \
-                                                                       " from geo.lau where comm_id IN("+ area_selected+") AND year = to_date('2013', 'YYYY') )," \
-                                                                                                                        " subAreas as ( SELECT distinct geo.nuts.nuts_id FROM selected_zone, geo.nuts " \
-                                                                                                                        "where ST_Intersects( geo.nuts.geom, selected_zone.geom ) AND geo.nuts.STAT_LEVL_ = 0 " \
-                                                                                                                        "AND geo.nuts.year = to_date('2013', 'YYYY') ) select * from stat." + vector_table_requested + ",subAreas where nuts0_id = subAreas.nuts_id"
+    query= "with selected_zone as ( SELECT geom, as geom" \
+                                                       " from public.tbl_lau1_2 where comm_id IN("+ area_selected+")  )," \
+                                                                                                        " subAreas as ( SELECT distinct geo.nuts.nuts_id FROM selected_zone, geo.nuts " \
+                                                                                                        "where ST_Intersects( geo.nuts.geom, selected_zone.geom ) AND geo.nuts.STAT_LEVL_ = 0 " \
+                                                                                                        "AND geo.nuts.year = to_date('2013', 'YYYY') ) select * from stat." + vector_table_requested + ",subAreas where nuts0_id = subAreas.nuts_id"
+    print ('query ',query)
 
     return query
 
