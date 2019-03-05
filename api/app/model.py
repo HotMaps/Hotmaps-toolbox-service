@@ -320,7 +320,11 @@ def commands_in_array(com_string):
     return split(com_string)
 
 def run_command(arr):
-    return subprocess.Popen(arr, shell=False)
+
+    process = subprocess.Popen(arr, shell=False)
+    process.communicate()
+
+
 
 def retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, area_selected):
     """
@@ -354,7 +358,7 @@ def get_vectors_needed(cm_id):
 
 def query_geographic_database(sql_query):
     mypool = pool.QueuePool(getConnection_db_gis, max_overflow=100, pool_size=5)
-    # get a connection
+    # get a connectioncommands_in_array
     conn = mypool.connect()
     # use it
     cursor = query(sql_query,conn)

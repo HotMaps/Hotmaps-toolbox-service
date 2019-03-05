@@ -75,11 +75,9 @@ class HeatLoadProfile:
 
 		# Construction of the query
 		sql_query = queryData[by]['with'] + queryData[by]['select']
-
 		# Execution of the query
 		#query = db.session.execute(sql_query)
 		query = model.query_geographic_database(sql_query)
-
 		# Storing the results only if there is data
 		output = []
 		if by == 'byYear':
@@ -176,15 +174,15 @@ class HeatLoadProfile:
 		return listAllValues
 
 def createQueryDataLPHectares(year, month, day, geometry):
-	withPart = "with subAreas as (SELECT ST_Intersection(ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258),nuts.geom) as soustracteGeom, " +\
-						"nuts.gid " +\
-						"FROM geo.nuts " +\
-						"where ST_Intersects(nuts.geom,ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258)) " + \
-						"AND STAT_LEVL_=2), " +\
-					"statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density.rast,1, " +\
-						"ST_Transform(subAreas.soustracteGeom,3035),0,true),1,true)).* as stat, subAreas.gid " +\
-						"FROM subAreas, geo.heat_tot_curr_density " +\
-						"WHERE ST_Intersects(heat_tot_curr_density.rast,ST_Transform(subAreas.soustracteGeom,3035)) group by subAreas.gid), " +\
+	withPart = "with geomInput AS (SELECT ST_Transform(ST_GeomFromText('"+geometry+"',4326),4258) AS geometry), " + \
+			   "nuts2 AS (SELECT nuts.geom, nuts.gid FROM geo.nuts WHERE nuts.year = '2010-01-01' AND nuts.stat_levl_ = 2)," + \
+			   "subAreas as (SELECT ST_Transform(ST_Intersection(geomInput.geometry ,nuts2.geom),3035) as soustracteGeom, " +\
+						"nuts2.gid " +\
+						"FROM nuts2, geomInput " +\
+						"where ST_Intersects(nuts2.geom,geomInput.geometry)), " + \
+					"statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density.rast,1, subAreas.soustracteGeom,0,true),1,true)).* as stat, subAreas.gid " +\
+						"FROM subAreas, geo.heat_tot_curr_density, geomInput " +\
+						"WHERE ST_Intersects(heat_tot_curr_density.rast,subAreas.soustracteGeom) group by subAreas.gid), " +\
 					"statLoadProfilBySubarea as (select stat.load_profile.nuts_id as load_profile_nutsid, stat.load_profile.value as val_load_profile, " +\
 						"stat.time.month as month_of_year, " +\
 						"stat.time.hour_of_year as hour_of_year, " +\
@@ -330,34 +328,36 @@ def createQueryDataDCNutsLau(year, nuts, nuts_level):
 
 # ALL QUERIES DATA FOR THE DURATION CURVE BY HECTARES
 def createQueryDataDCHectares(year, geometry):
-	sql_query = "with subAreas as (SELECT ST_Intersection(ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258),nuts.geom) as soustracteGeom, " +\
-							"nuts.gid " +\
-							"FROM geo.nuts " +\
-							"where ST_Intersects(nuts.geom,ST_Transform(ST_GeomFromText(\'" + geometry +"\',4326),4258)) " + \
-							"AND STAT_LEVL_=2 ), " +\
-						"statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density.rast,1, " +\
-							"ST_Transform(subAreas.soustracteGeom,3035),0,true),1,true)).* as stat, subAreas.gid " +\
-							"FROM subAreas, geo.heat_tot_curr_density " +\
-							"WHERE ST_Intersects(heat_tot_curr_density.rast,ST_Transform(subAreas.soustracteGeom,3035)) group by subAreas.gid), " +\
-						"statLoadProfilBySubarea as (select stat.load_profile.nuts_id as load_profile_nutsid, stat.load_profile.value as val_load_profile, " +\
-							"stat.time.month as month_of_year, " +\
-							"stat.time.hour_of_year as hour_of_year, " +\
-							"stat.time.day as day_of_month, " +\
-							"stat.time.hour_of_day as hour_of_day, " +\
-							"statBySubAreas.count as statCount, statBySubAreas.sum as statSum_HD " +\
-							"from stat.load_profile " +\
-							"left join statBySubAreas on statBySubAreas.gid = stat.load_profile.fk_nuts_gid " +\
-							"inner join stat.time on stat.load_profile.fk_time_id = stat.time.id " +\
-							"WHERE fk_nuts_gid is not null and fk_time_id is not null " +\
-							"AND statBySubAreas.gid = stat.load_profile.fk_nuts_gid AND stat.time.year = " + str(year) + " " +\
-							"order by stat.time.hour_of_year), " +\
-						"totalLoadprofile as ( " +\
-							"select sum(val_load_profile) as tot_load_profile,load_profile_nutsid " +\
-							"from statLoadProfilBySubarea group by load_profile_nutsid) " +\
-						"select sum(val_load_profile/tot_load_profile*statSum_HD) as normalizedCalutation,hour_of_year " +\
-							"from statLoadProfilBySubarea " +\
-							"inner join totalLoadprofile on statLoadProfilBySubarea.load_profile_nutsid = totalLoadprofile.load_profile_nutsid " +\
-							"group by hour_of_year " +\
-							"order by normalizedCalutation DESC;"
+	sql_query = "with geomInput AS (SELECT ST_Transform(ST_GeomFromText('"+geometry+"',4326),4258) AS geometry), " + \
+			   "nuts2 AS (SELECT nuts.geom, nuts.gid FROM geo.nuts WHERE nuts.year = '2010-01-01' AND nuts.stat_levl_ = 2)," + \
+			   "subAreas as (SELECT ST_Transform(ST_Intersection(geomInput.geometry ,nuts2.geom),3035) as soustracteGeom, " + \
+			   "nuts2.gid " + \
+			   "FROM nuts2, geomInput " + \
+			   "where ST_Intersects(nuts2.geom,geomInput.geometry)), " + \
+			   "statBySubAreas as (SELECT (ST_SummaryStatsAgg(ST_Clip(heat_tot_curr_density.rast,1, " +\
+				"subAreas.soustracteGeom,0,true),1,true)).* as stat, subAreas.gid " +\
+				"FROM subAreas, geo.heat_tot_curr_density " +\
+				"WHERE ST_Intersects(heat_tot_curr_density.rast,subAreas.soustracteGeom) group by subAreas.gid), " +\
+				"statLoadProfilBySubarea as (select stat.load_profile.nuts_id as load_profile_nutsid, stat.load_profile.value as val_load_profile, " +\
+				"stat.time.month as month_of_year, " +\
+				"stat.time.hour_of_year as hour_of_year, " +\
+				"stat.time.day as day_of_month, " +\
+				"stat.time.hour_of_day as hour_of_day, " +\
+				"statBySubAreas.count as statCount, statBySubAreas.sum as statSum_HD " +\
+				"from stat.load_profile " +\
+				"left join statBySubAreas on statBySubAreas.gid = stat.load_profile.fk_nuts_gid " +\
+				"inner join stat.time on stat.load_profile.fk_time_id = stat.time.id " +\
+				"WHERE fk_nuts_gid is not null and fk_time_id is not null " +\
+				"AND statBySubAreas.gid = stat.load_profile.fk_nuts_gid AND stat.time.year = " + str(year) + " " +\
+				"order by stat.time.hour_of_year), " +\
+				"totalLoadprofile as ( " +\
+				"select sum(val_load_profile) as tot_load_profile,load_profile_nutsid " +\
+				"from statLoadProfilBySubarea group by load_profile_nutsid) " +\
+				"select sum(val_load_profile/tot_load_profile*statSum_HD) as normalizedCalutation,hour_of_year " +\
+				"from statLoadProfilBySubarea " +\
+				"inner join totalLoadprofile on statLoadProfilBySubarea.load_profile_nutsid = totalLoadprofile.load_profile_nutsid " +\
+				"group by hour_of_year " +\
+				"order by normalizedCalutation DESC;"
+	print(sql_query)
 	return sql_query
 

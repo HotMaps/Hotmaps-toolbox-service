@@ -167,6 +167,7 @@ def computeTask(data,payload,cm_id):
     helper.test_display(data_output)
     #****************** WILL GENERATE TILES ***************************************************'.format(cm_id))
     try:
+        print ('time to generate tilexs generateTiles')
         if data_output['result']['raster_layers'] is not None and len(data_output['result']['raster_layers'])>0:
             raster_layers = data_output['result']['raster_layers']
             generateTiles(raster_layers)
@@ -181,10 +182,14 @@ def computeTask(data,payload,cm_id):
         # no vector_layers
         pass
 
+    print ('data_output',json.dumps(data_output))
     return data_output
 
 def generateTiles(raster_layers):
+    print ('generateTiles')
+    print ('raster_layers',raster_layers)
     for layers in raster_layers:
+        print ('in the loop')
         file_path_input = layers['path']
         directory_for_tiles = file_path_input.replace('.tif', '')
         intermediate_raster = helper.generate_geotif_name(UPLOAD_DIRECTORY)
@@ -192,20 +197,27 @@ def generateTiles(raster_layers):
         access_rights = 0o755
         try:
             os.mkdir(tile_path, access_rights)
+            print ('tile_path',tile_path)
+
         except OSError:
             pass
             print ("Creation of the directory %s failed" % tile_path)
         else:
             pass
+        #import sys
+        #sys.append('app/helper/')
         args_gdal = commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE ".format(file_path_input, intermediate_raster))
-        args_pyth = commands_in_array("python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {}".format(intermediate_raster, tile_path))
+        args_pyth = commands_in_array("sudo python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {}".format(intermediate_raster, tile_path))
         run_command(args_gdal)
         run_command(args_pyth)
+        #com_string = "gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE && python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
+        #os.system(com_string)
         #os.system(com_string)
         directory_for_tiles = directory_for_tiles.replace(UPLOAD_DIRECTORY+'/', '')
         layers['path'] = directory_for_tiles
+        print ('path', directory_for_tiles)
 
-
+    print ('finished generate Tiles')
     return file_path_input, directory_for_tiles
 
 def generate_shape(vector_layers):
