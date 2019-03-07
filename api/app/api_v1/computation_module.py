@@ -207,7 +207,7 @@ def generateTiles(raster_layers):
         #import sys
         #sys.append('app/helper/')
         args_gdal = commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE ".format(file_path_input, intermediate_raster))
-        args_pyth = commands_in_array("sudo python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {}".format(intermediate_raster, tile_path))
+        args_pyth = commands_in_array("python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {}".format(intermediate_raster, tile_path))
         run_command(args_gdal)
         run_command(args_pyth)
         #com_string = "gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE && python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
