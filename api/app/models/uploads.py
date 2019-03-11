@@ -70,6 +70,14 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
     auth = secrets.GEOSERVER_AUTH
     result = requests.get(url, auth=auth)
     xml = result.content
+
+    # This piece of code is temporary, this should be removed when the workspaces on geoserver are unified
+    if xml == 'No such style: ' + layer:
+        # As some layer are inside workspaces, we need to specify the workspace in order to find the correct style
+        url = secrets.GEOSERVER_API_URL + 'workspaces/hotmaps/styles/' + layer + '.sld'
+        result = requests.get(url, auth=auth)
+        xml = result.content
+
     color_map_objects = extract_colormap(xml)
 
     # we want to use a unique id for the file to be sure that it will not be duplicated in case two
