@@ -64,15 +64,14 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
                     exception_message += ', '
             raise ParameterException(exception_message + '')
 
+        nuts_level = api.payload['scale_level']
         # Stop execution if nuts list is empty
         if not nuts:
             return
-
-        nuts = helper.transform_nuts_list(nuts)
-
+        nuts = helper.nuts_array_to_string(nuts)
         output = {}
 
-        output = HeatLoadProfile.duration_curve_nuts_lau(year=year, nuts=nuts)
+        output = HeatLoadProfile.duration_curve_nuts_lau(year=year, nuts=nuts, nuts_level=nuts_level)
 
         return {
             "points": output
@@ -151,10 +150,10 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         # geom = "SRID=4326;{}".format(multipolygon.wkt)
         geom = multipolygon.wkt
 
-        try:
-            output = HeatLoadProfile.duration_curve_hectares(year=year, geometry=geom)
-        except:
-            raise IntersectionException()
+        #try:
+        output = HeatLoadProfile.duration_curve_hectares(year=year, geometry=geom)
+        #except:
+        #    raise IntersectionException()
 
         return {
             "points": output
@@ -301,9 +300,10 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
         # Stop execution if nuts list is empty
         if not nuts:
             return
-            
-        nuts = helper.transform_nuts_list(nuts)
-        
+        #print(nuts)
+        nuts = helper.nuts_array_to_string(nuts)
+        #print(nuts)
+
         if 'month' in api.payload.keys():
           month = api.payload["month"]
         else:
@@ -315,11 +315,10 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
           day = 0
 
         output = {}
-
-        try:
-            res = HeatLoadProfile.heatloadprofile_nuts_lau(nuts=nuts, year=year, month=month, day=day)
-        except Exception, e:
-            raise IntersectionException
-        output = res
+        nuts_level = api.payload["scale_level"]
+        """ try: """
+        output = HeatLoadProfile.heatloadprofile_nuts_lau(nuts=nuts, year=year, month=month, day=day, nuts_level=nuts_level)
+        """ except Exception as e:
+            raise IntersectionException """
 
         return output

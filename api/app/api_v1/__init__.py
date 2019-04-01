@@ -10,14 +10,14 @@ from .snapshot import nsSnapshot
 
 @api.before_request
 def before_request():
-    """All routes in this blueprint require authentication."""
+    """All routes in this blue#print require authentication."""
     pass
 
 
 @api.after_request
 @etag
 def after_request(rv):
-    """Generate an ETag header for all routes in this blueprint."""
+    """Generate an ETag header for all routes in this blue#print."""
 
     return rv
 

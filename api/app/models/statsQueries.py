@@ -3,7 +3,7 @@ from .. import helper
 from app import dbGIS as db
 from app import constants
 from decimal import *
-from app.models.indicators import layersData
+from app.models.indicators import layersData, ELECRICITY_MIX
 from app import celery
 from . import generalData
 from app import model
@@ -17,18 +17,23 @@ class LayersStats:
 	def run_stat(payload):
 		
 		year = payload['year']
+		print ('year ',year)
 		layersPayload = payload['layers']
+		print ('layersPayload ',layersPayload)
 		scale_level = payload['scale_level']
-		#print ("scale level ",scale_level)
+		print ('scale_level ',scale_level)
+
+		#must sanitize this
+
 		selection_areas = ''
 		is_hectare = False
 		noDataLayers=[]
 		layers=[]
 		output=[]
-		#print(layersPayload)
+
 		if scale_level in constants.NUTS_LAU_VALUES:
 			selection_areas = payload['nuts']
-			#print ("scale in constants.NUTS_LAU_VALUES ")
+
 		elif scale_level == constants.hectare_name:
 			selection_areas = payload['areas']
 			geom = helper.areas_to_geom(selection_areas)
@@ -61,7 +66,7 @@ class LayersStats:
 			sql_select = ' SELECT '
 			sql_from = ' FROM '
 			for layer in layers:
-				#print(layer)
+
 				if len(layersData[layer]['indicators']) != 0 and scale_level in layersData[layer]['data_lvl']:
 					if is_hectare:
 						sql_with += generalData.constructWithPartEachLayerHectare(geometry=selection_areas, year=year, layer=layer, scale_level=scale_level) + ','
@@ -74,7 +79,7 @@ class LayersStats:
 						elif indicator['reference_tablename_indicator_id_1'] in layers and indicator['reference_tablename_indicator_id_2'] in layers:
 								sql_select+= indicator['reference_tablename_indicator_id_1']+indicator['reference_indicator_id_1']+' '+indicator['operator']+' '+indicator['reference_tablename_indicator_id_2']+indicator['reference_indicator_id_2']+','
 					sql_from += layersData[layer]['from_indicator_name']+','
-					#print ("sql_from ", sql_from)
+
 			
 			
 			# Combine string to a single query
@@ -82,7 +87,8 @@ class LayersStats:
 			sql_select = sql_select[:-1]
 			sql_from = sql_from[:-1]
 			sql_query = sql_with + sql_select + sql_from + ';'
-			#print(sql_query)
+
+			
 			# Run the query
 			query_geographic_database_first = model.query_geographic_database_first(sql_query)
 
@@ -116,7 +122,7 @@ class LayersStats:
 					'name':layer,
 					'values':values
 				})
-		#print(count_indic)
+
 		return result
 
 
@@ -126,8 +132,8 @@ class ElectricityMix:
 
 	def getEnergyMixNutsLau(nuts):
 
-		sql_query = "WITH energy_total as (SELECT sum(electricity_generation) as value FROM " + constants.ELECRICITY_MIX + " WHERE nuts0_code IN ("+nuts+") )" + \
-					"SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM " + constants.ELECRICITY_MIX + " ,energy_total WHERE nuts0_code IN ("+nuts+")  GROUP BY energy_carrier ORDER BY energy_carrier ASC" ;
+		sql_query = "WITH energy_total as (SELECT sum(electricity_generation) as value FROM " + ELECRICITY_MIX + " WHERE nuts0_code IN ("+nuts+") )" + \
+					"SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM " + ELECRICITY_MIX + " ,energy_total WHERE nuts0_code IN ("+nuts+")  GROUP BY energy_carrier ORDER BY energy_carrier ASC" ;
 
 
 

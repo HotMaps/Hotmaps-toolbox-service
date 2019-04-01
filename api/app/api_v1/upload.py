@@ -9,7 +9,7 @@ from flask import send_file
 from app import celery
 from ..decorators.restplus import api
 from ..decorators.restplus import UserUnidentifiedException, ParameterException, RequestException, \
-    UserDoesntOwnUploadsException, UploadExistingUrlException, UploadNotExistingException, \
+    UserDoesntOwnUploadsException, UploadNotExistingException, \
     HugeRequestException, NotEnoughPointsException
 from ..decorators.serializers import upload_add_output, upload_list_input, upload_list_output,upload_delete_input, \
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
@@ -30,7 +30,6 @@ USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
-@api.response(541, 'Upload URL existing')
 @api.response(542, 'Not Enough Space')
 class AddUploads(Resource):
     @api.marshal_with(upload_add_output)
@@ -55,7 +54,7 @@ class AddUploads(Resource):
             wrong_parameter.append('name')
         try:
             file_name = args['file'].filename
-        except Exception, e:
+        except Exception as e:
             wrong_parameter.append('file')
         try:
             layer = args['layer']
@@ -85,10 +84,6 @@ class AddUploads(Resource):
         # if the user does not own a repository, we create one
         if not os.path.isdir(user_folder):
             os.makedirs(user_folder)
-
-        # we need to check if the name is already taken for the user
-        if Uploads.query.filter_by(name=name).first() is not None:
-            raise UploadExistingUrlException
 
         # we check if the file extension is valid
         if not allowed_file(file_name):
@@ -288,11 +283,17 @@ class ExportRasterNuts(Resource):
                     exception_message += ', '
             raise ParameterException(str(exception_message))
         # We must determine if it is a nuts or a lau
+
+        schema = "geo"
+        dateCol = "year"
+
         if str(layers).endswith('lau2'):
             layer_type = 'lau'
             layer_name = layers[: -5]
             id_type = 'comm_id'
             layer_date = LAU_YEAR
+            schema = "public"
+            dateCol = "date"
         else:
             layer_type = 'nuts'
             layer_name = str(layers)[: -6]
@@ -316,18 +317,14 @@ class ExportRasterNuts(Resource):
             sql += "geom"
 
         # We add the first nuts/lau id
-        sql += " FROM geo." + layer_type + " WHERE " + id_type + " = '" + nuts[0] + "'"
+        sql += " FROM " + schema + "." + layer_type + " WHERE " + id_type + " = '" + nuts[0] + "'"
         # we add the rest of the nuts/lau id
         for nut in nuts[1:]:
             sql += " OR " + id_type + " = '" + nut + "'"
-        sql += " AND year = '" + layer_date + "-01-01'"
 
-        sql += "), 3035 ), 0) AS buffer_geom) " \
-            "SELECT encode(ST_AsTIFF(foo.rast, 'LZW'), 'hex') as tif " \
-            "FROM " \
-                "(SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast " \
-                "FROM geo." + layer_name + ", buffer " \
-                "WHERE ST_Intersects(rast, buffer_geom)) AS foo;"  # TODO Postpone Manage also the date field
+        # TODO Postpone Manage also the date field
+        sql += """AND {2} = '{0}-01-01'), 3035 ), 0) AS buffer_geom) SELECT encode(ST_AsTIFF(foo.rast, 'LZW'), 'hex') as tif FROM (SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast FROM (SELECT ST_Union(rast) as rast, ST_Union(buffer_geom) as buffer_geom FROM geo.{1}, buffer WHERE ST_Intersects(rast, buffer_geom)) as rast WHERE ST_Intersects(rast, buffer_geom)) AS foo;""".format(layer_date, layer_name, dateCol)
+
         hex_file = ''
 
         # execute request
@@ -339,7 +336,7 @@ class ExportRasterNuts(Resource):
             # write hex_file
             for row in result:
                 hex_file += row['tif']
-        except Exception, e:
+        except Exception as e:
             raise RequestException("There is no result for this selection")
 
         # decode hex_file
@@ -422,10 +419,9 @@ class ExportRasterHectare(Resource):
         # convert array of polygon into multipolygon
         multipolygon = shapely_geom.MultiPolygon(polyArray)
 
-        sql = "WITH buffer AS ( SELECT ST_Buffer( ST_Transform( ST_GeomFromText('"+str(multipolygon)+"', 4258) " \
-                ", 3035), 0) AS buffer_geom) SELECT encode(ST_AsTIFF(foo.rast, 'LZW'), 'hex') as tif FROM " \
-                "( SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast FROM geo." + layer_name + \
-                ", buffer WHERE ST_Intersects(rast, buffer_geom)) AS foo;"  # TODO Postpone Manage also the date field
+        # TODO Postpone Manage also the date field
+        sql = """WITH buffer AS ( SELECT ST_Buffer( ST_Transform( ST_GeomFromText('{0}', 4258) , 3035), 0) AS buffer_geom) SELECT encode(ST_AsTIFF(foo.rast, 'LZW'), 'hex') as tif FROM ( SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast FROM ( SELECT ST_Union(rast) as rast, ST_Union(buffer_geom) as buffer_geom FROM geo.{1}, buffer WHERE ST_Intersects(rast, buffer_geom)) AS raster) AS foo;""".format(str(multipolygon), layer_name)
+
 
         hex_file = ''
         # execute request
@@ -500,11 +496,15 @@ class ExportCsvNuts(Resource):
             raise ParameterException(str(exception_message))
 
         # We must determine if it is a nuts or a lau
+        dateCol = "year"
+        schema2 = "geo"
         if str(layers).endswith('lau2'):
             layer_type = 'lau'
             layer_name = layers[: -5]
             id_type = 'comm_id'
             layer_date = LAU_YEAR
+            dateCol = "date"
+            schema2 = "public"
         else:
             layer_type = 'nuts'
             layer_name = str(layers)[: -6]
@@ -513,15 +513,13 @@ class ExportCsvNuts(Resource):
             if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
 
-        sql = "SELECT * FROM " + schema + "." + layer_name + " WHERE date = '" + year + "-01-01' AND ST_Within(" \
-              + schema + "." + layer_name + ".geometry, st_transform((SELECT ST_UNION(geom) from geo." \
-              + layer_type + " where " + id_type + " = '" + nuts[0] + "'"
+        sql = """SELECT * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform((SELECT ST_UNION(geom) from {6}.{3} where {4} = '{5}'""".format(schema, layer_name, year, layer_type, id_type, nuts[0], schema2)
 
         # we add the rest of the lau id
         for nut in nuts[1:]:
             sql += " OR " + id_type + " = '" + nut + "'"
 
-        sql += " and year = '" + layer_date + "-01-01'), 3035))"
+        sql += " AND {0} = '{1}-01-01'), 3035))".format(dateCol, layer_date)
 
         # execute request
         try:
@@ -628,9 +626,7 @@ class ExportCsvHectare(Resource):
         # convert array of polygon into multipolygon
         multipolygon = shapely_geom.MultiPolygon(polyArray)
 
-        sql = "SELECT * FROM " + schema + "." + layer_name + " WHERE date = '" + year + "-01-01' AND ST_Within(" \
-              + schema + "." + layer_name + ".geometry, st_transform(st_geomfromtext('" + str(multipolygon) \
-              + "', 4258), 3035)) "
+        sql = """SELECT * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform(st_geomfromtext('{3}', 4258), 3035))""".format(schema, layer_name, year, str(multipolygon))
 
         # execute request
         try:

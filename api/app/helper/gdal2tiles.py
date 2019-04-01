@@ -1147,7 +1147,7 @@ def optparse_init():
                        "as 0.703125 or 2 tiles at zoom level 0."))
     p.add_option("-v", "--verbose",
                  action="store_true", dest="verbose",
-                 help="Print status messages to stdout")
+                 help="print status messages to stdout")
     p.add_option("-x", "--exclude",
                  action="store_true", dest="exclude_transparent",
                  help="Exclude transparent tiles from result tileset")

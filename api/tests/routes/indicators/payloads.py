@@ -21,7 +21,7 @@ nuts3_stat = {
 lau1_stat = {
     "year": 2012,
     "scale_level": "LAU 1",
-    "nuts": ["FR"]
+    "nuts": [""]
 }
 lau2_stat = {
     "year": 2012,
