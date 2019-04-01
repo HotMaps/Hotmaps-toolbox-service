@@ -57,9 +57,9 @@ class CalculationModuleRpcClient(object):
                                    ),
                                    body='')
         while self.response is None:
-            #print ('Cm with cm id {} is not connected',cm_id)
+            ##print ('Cm with cm id {} is not connected',cm_id)
             self.connection.process_data_events()
-        print ('self.response ',self.response)
+        #print ('self.response ',self.response)
         return self.response
 
 
@@ -107,9 +107,6 @@ def create_app(config_name):
 
     from .api_v1 import nsUpload
     api_rest_plus.add_namespace(nsUpload)
-
-    from .api_v1 import nsSnapshot
-    api_rest_plus.add_namespace(nsSnapshot)
 
     from .api_v1 import load_profile_namespace as main_heat_load_profile_namespace
     api_rest_plus.add_namespace(main_heat_load_profile_namespace)

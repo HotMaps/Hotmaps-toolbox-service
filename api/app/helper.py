@@ -1,4 +1,4 @@
-
+from app.constants import LAU_TABLE
 
 import json
 import uuid
@@ -53,8 +53,9 @@ def unicode_string_to_string(unicode_string):
 
 
 def test_display(value):
-    print ('value ', value)
-    print ('type ', type(value))
+    pass
+    #print ('value ', value)
+    #print ('type ', type(value))
 def getDictFromJson(output):
     outputdumps = json.dumps(output)
     outputloads = json.loads(outputdumps)[0]
@@ -140,7 +141,7 @@ def generate_payload_for_compute(inputs_raster_selection,inputs_parameter_select
 
         'inputs_raster_selection':inputs_raster_selection
     })
-    print ('data_output',data_output)
+    ##print ('data_output',data_output)
     data = json.dumps(data_output)
     return data
 
@@ -183,7 +184,7 @@ def zipdir(path, ziph):
 def retrieve_list_from_sql_result(results):
     response = []
     for value in results:
-        print ('value', value)
+        ##print ('value', value)
         ze_value = {}
         i = 0
         for key in results.description:
@@ -191,12 +192,12 @@ def retrieve_list_from_sql_result(results):
             if isinstance(unicode_string_to_string(value[i]), str):
                 val = unicode_string_to_string(value[i])
                 if val.find('[') == 0: # and value.find(']')==
-                    print ('value ', val)
+                    #print ('value ', val)
                     ze_value[key[0]]= unicode_array_to_string(value[i])
             elif isinstance(value[i], str):
                 val = value[i]
                 if val.find('[') == 0: # and value.find(']')==
-                    print ('value ', val)
+                    #print ('value ', val)
                     ze_value[key[0]]= unicode_array_to_string(value[i])
             i = i + 1
         response.append(ze_value)
@@ -220,7 +221,7 @@ def sampling_data(listValues):
 			'X':n+1,
 			'Y':listValues[n]
 		})
-
+    
 	# Sampling of the values
 	cut1 = int(numberOfValues*constants.POINTS_FIRST_GROUP_PERCENTAGE)
 	cut2 = int(cut1+(numberOfValues*constants.POINTS_SECOND_GROUP_PERCENTAGE))
@@ -247,6 +248,9 @@ def sampling_data(listValues):
 		finalListPoints.append(minValue)
 
 	return finalListPoints
+def nuts_array_to_string(nuts):
+    nuts_transformed = ''.join("'"+str(nu)+"'," for nu in nuts)[:-1]
+    return nuts_transformed
 
 def transform_nuts_list(nuts):
 		# Store nuts in new custom list
@@ -338,3 +342,24 @@ def layers_filter(layersPayload, list):
 			layers.append(l)
 
 	return layers
+def get_nuts_query_selection(nuts, scale_level_table, scale_id):
+
+    if scale_level_table == 'nuts':
+        scale_schema = 'geo'
+        return """nutsSelection as (
+            SELECT nuts.nuts_id as nuts2_id, tbl2."""+scale_id+""" as scale_id
+            from geo.nuts nuts, """+scale_schema+"""."""+scale_level_table+""" tbl2
+            where tbl2.year = date('2013-01-01') and tbl2."""+scale_id+""" in ("""+nuts+""")
+            and st_within(st_transform(tbl2.geom,"""+constants.CRS_NUTS+"""),nuts.geom)
+            and nuts.stat_levl_ = 2
+            group by nuts.nuts_id, tbl2."""+scale_id+"""),"""
+
+    else:
+        scale_schema = 'public'
+        return """nutsSelection as (
+                SELECT nuts.nuts_id as nuts2_id, tbl2."""+scale_id+""" as scale_id
+                from geo.nuts nuts, """+scale_schema+"""."""+LAU_TABLE+""" tbl2
+                where tbl2."""+scale_id+""" in ("""+nuts+""")
+                and st_within(st_centroid(tbl2.geom),nuts.geom)
+                and nuts.stat_levl_ = 2
+                group by nuts.nuts_id, tbl2."""+scale_id+"""),"""

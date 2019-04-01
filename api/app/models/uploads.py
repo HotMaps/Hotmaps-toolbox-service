@@ -4,6 +4,7 @@ import uuid
 import xml.etree.ElementTree as ET
 import shutil
 from app import celery
+from app.model import run_command, commands_in_array
 from .. import constants, dbGIS as db
 from ..decorators.exceptions import RequestException
 from .. import secrets
@@ -69,6 +70,14 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
     auth = secrets.GEOSERVER_AUTH
     result = requests.get(url, auth=auth)
     xml = result.content
+
+    # This piece of code is temporary, this should be removed when the workspaces on geoserver are unified
+    if xml == 'No such style: ' + layer:
+        # As some layer are inside workspaces, we need to specify the workspace in order to find the correct style
+        url = secrets.GEOSERVER_API_URL + 'workspaces/hotmaps/styles/' + layer + '.sld'
+        result = requests.get(url, auth=auth)
+        xml = result.content
+
     color_map_objects = extract_colormap(xml)
 
     # we want to use a unique id for the file to be sure that it will not be duplicated in case two
@@ -78,14 +87,14 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
 
     try:
         # commands launch to obtain the level of zooms
-        com_create_rgba = "gdaldem color-relief {} {} -alpha {}" \
-            .format(grey_tif, grey2rgb_path, rgb_tif)
-        os.system(com_create_rgba)
+        args_rgba = commands_in_array("gdaldem color-relief {} {} -alpha {}".format(grey_tif, grey2rgb_path, rgb_tif))
+        run_command(args_rgba)
+        #os.system(com_create_rgba)
 
         # commands launch to obtain the level of zooms
-        com_generate_tiles = "python app/helper/gdal2tiles.py -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} " \
-            .format(rgb_tif, tile_path)
-        os.system(com_generate_tiles)
+        args_tiles = commands_in_array("python app/helper/gdal2tiles.py -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} ".format(rgb_tif, tile_path))
+        run_command(args_tiles)
+        #os.system(com_generate_tiles)
     except:
         generate_state = 10
     else:
@@ -164,7 +173,7 @@ def extract_colormap(xml):
     # create the xml tree
     try:
         root = ET.fromstring(xml)
-    except Exception, e:
+    except Exception as e:
         raise RequestException(str(xml))
     ns = {'sld': 'http://www.opengis.net/sld'}
     # get the list of Color map

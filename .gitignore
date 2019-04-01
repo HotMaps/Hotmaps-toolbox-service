@@ -6,7 +6,11 @@ venv/
 tests/.pytest_cache
 .idea/*
 app/app/secrets\.py
+<<<<<<< HEAD
 api/app/secrets.py
+=======
+app/app/secrets.py
+>>>>>>> master
 .idea/workspace.xml
 .vscode
 venv

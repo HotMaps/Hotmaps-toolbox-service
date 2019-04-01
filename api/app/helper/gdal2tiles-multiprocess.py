@@ -619,7 +619,7 @@ class GDAL2Tiles(object):
     # -------------------------------------------------------------------------
 
     def error(self, msg, details=''):
-        """Print an error message and stop the processing"""
+        """print an error message and stop the processing"""
 
         if details:
             self.parser.error(msg + '''
@@ -631,7 +631,7 @@ class GDAL2Tiles(object):
     # -------------------------------------------------------------------------
 
     def progressbar(self, complete=0.0):
-        """Print progressbar for float value 0..1"""
+        """print progressbar for float value 0..1"""
 
         gdal.TermProgress_nocb(complete)
 
@@ -883,7 +883,7 @@ gdal_vrtmerge.py -o merged.vrt %s"""
                      )
         p.add_option('-v', '--verbose', action='store_true',
                      dest='verbose',
-                     help='Print status messages to stdout')
+                     help='print status messages to stdout')
 
         # KML options
 

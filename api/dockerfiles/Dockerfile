@@ -23,6 +23,8 @@ MAINTAINER lesly Houndole <lesly.houndole@crem.ch>
 RUN mkdir -p /data
 VOLUME /data
 
+RUN mkdir -p /var/hotmaps/users
+
 
 # Build commands
 RUN apt-get update && apt-get dist-upgrade -y && apt-get autoremove -y
