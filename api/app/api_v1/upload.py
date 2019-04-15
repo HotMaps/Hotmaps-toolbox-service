@@ -155,6 +155,43 @@ class TilesUploads(Resource):
                          mimetype='image/png')
 
 
+@ns.route('/csv/<string:token>/<string:upload_id>')
+@api.response(530, 'Request error')
+@api.response(531, 'Missing parameter')
+@api.response(539, 'User Unidentified')
+@api.response(543, 'Uploads doesn\'t exists')
+class ReadCsv(Resource):
+    def get(self, token, upload_id):
+        """
+        The method called to get the csv of an upload
+        :return:
+        """
+
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise UserUnidentifiedException
+
+        # find upload to display
+        upload = Uploads.query.filter_by(id=upload_id).first()
+        if upload is None:
+            raise UploadNotExistingException
+
+        # check if the user can display the upload
+        if upload.user_id != user.id:
+            raise UserDoesntOwnUploadsException
+
+        folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
+
+        csvFile = folder_url+"/data.csv"
+
+        if not os.path.exists(csvFile):
+            return
+        # send the file to the client
+        return send_file(csvFile,
+                         mimetype='text/csv')
+
+
 @ns.route('/list')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
