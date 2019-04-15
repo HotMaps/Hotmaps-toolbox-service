@@ -15,7 +15,8 @@ from ..decorators.serializers import upload_add_output, upload_list_input, uploa
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
     upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input
 from .. import dbGIS as db
-from ..models.uploads import Uploads, generate_tiles, allowed_file, check_map_size, calculate_total_space
+from ..models.uploads import Uploads, generate_tiles, allowed_file, check_map_size, calculate_total_space, \
+    generate_csv_string
 from ..models.user import User
 from ..decorators.parsers import file_upload
 
@@ -513,7 +514,7 @@ class ExportCsvNuts(Resource):
             if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
 
-        sql = """SELECT * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform((SELECT ST_UNION(geom) from {6}.{3} where {4} = '{5}'""".format(schema, layer_name, year, layer_type, id_type, nuts[0], schema2)
+        sql = """SELECT ST_ASTEXT(geometry) as geometryText, ST_SRID(geometry) as srid, * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform((SELECT ST_UNION(geom) from {6}.{3} where {4} = '{5}'""".format(schema, layer_name, year, layer_type, id_type, nuts[0], schema2)
 
         # we add the rest of the lau id
         for nut in nuts[1:]:
@@ -527,33 +528,12 @@ class ExportCsvNuts(Resource):
         except:
             raise RequestException("Problem with your SQL query")
 
-        # write csv_file
-        number_of_columns = len(result._metadata.keys)
-        csv_file = ''
-        for header in result._metadata.keys[:-1]:
-            csv_file += header + ', '
-
-        csv_file += result._metadata.keys[number_of_columns - 1] + '\r\n'
-        rowcount = 0
-        for row in result:
-            rowcount += 1
-            for attribute in row[:-1]:
-                    csv_file += str(attribute) + ', '
-            csv_file += str(row[number_of_columns - 1]) + '\r\n'
-
-        # if the result is empty, we raise an error
-        if rowcount is 0:
-            raise RequestException('There is no result for this selection')
-
-        # write string buffer
-        str_io = StringIO.StringIO()
-        str_io.write(csv_file)
-        str_io.seek(0)
+        csvResult = generate_csv_string(result)
 
         # send the file to the client
-        return send_file(str_io,
+        return send_file(csvResult['csv'],
                          mimetype='text/csv',
-                         attachment_filename="hotmaps.csv",
+                         attachment_filename="hotmaps_"+csvResult['srid']+".csv",
                          as_attachment=True)
 
 
@@ -626,7 +606,7 @@ class ExportCsvHectare(Resource):
         # convert array of polygon into multipolygon
         multipolygon = shapely_geom.MultiPolygon(polyArray)
 
-        sql = """SELECT * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform(st_geomfromtext('{3}', 4258), 3035))""".format(schema, layer_name, year, str(multipolygon))
+        sql = """SELECT ST_ASTEXT(geometry) as geometryText, ST_SRID(geometry) as srid, * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform(st_geomfromtext('{3}', 4258), 3035))""".format(schema, layer_name, year, str(multipolygon))
 
         # execute request
         try:
@@ -634,34 +614,13 @@ class ExportCsvHectare(Resource):
         except:
             raise RequestException("Problem with your SQL query")
 
-        # write csv_file
-        number_of_columns = len(result._metadata.keys)
-        csv_file = ''
-        for header in result._metadata.keys[:-1]:
-            csv_file += header + ', '
-        rowcount = 0
-        csv_file += result._metadata.keys[number_of_columns - 1] + '\r\n'
-        for row in result:
-            rowcount += 1
-            for attribute in row[:-1]:
-                    csv_file += str(attribute) + ', '
-            csv_file += str(row[number_of_columns - 1]) + '\r\n'
-
-        # if the result is empty, we raise an error
-        if rowcount is 0:
-            raise RequestException('There is no result for this selection')
-
-        # write string buffer>
-        str_io = StringIO.StringIO()
-        str_io.write(csv_file)
-        str_io.seek(0)
+        csvResult = generate_csv_string(result)
 
         # send the file to the client
-        return send_file(str_io,
+        return send_file(csvResult['csv'],
                          mimetype='text/csv',
-                         attachment_filename="hotmaps.csv",
+                         attachment_filename="hotmaps_"+csvResult['srid']+".csv",
                          as_attachment=True)
-
 
 @ns.route('/download')
 @api.response(530, 'Request error')

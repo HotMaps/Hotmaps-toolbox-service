@@ -14,14 +14,14 @@ class TestExportCsvLau(TestCase):
             "layers": "wwtp_capacity_lau2",
             "year": "2012",
             "schema": "public",
-            "nuts": ["AT90001"]
+            "nuts": ["AT30639"]
         }
 
         expected_output_file = open(test_lau_wwtp, "r")
         expected_output = expected_output_file.read()
 
         output = requests.post(url, json=payload)
-
+        print(output.content)
         assert output.content == expected_output
 
     def test_port_wrong_parameters(self):
@@ -32,7 +32,7 @@ class TestExportCsvLau(TestCase):
             "fdslayers": "wwtp_capacity_lau2",
             "ydfsear": "2012",
             "scfdsahema": "public",
-            "nuts": ["AT90001"]
+            "nuts": ["AT30639"]
             }
 
         output = requests.post(url, json=payload)
@@ -49,7 +49,7 @@ class TestExportCsvLau(TestCase):
             "layers": "wwtp_capacity_lau1",
             "year": "2012",
             "schema": "public",
-            "nuts": ["AT90001"]
+            "nuts": ["AT30639"]
         }
 
         output = requests.post(url, json=payload)

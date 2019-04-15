@@ -3,6 +3,8 @@ import requests
 import uuid
 import xml.etree.ElementTree as ET
 import shutil
+import StringIO
+import pandas as pd
 from app import celery
 from app.model import run_command, commands_in_array
 from .. import constants, dbGIS as db
@@ -89,13 +91,12 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
         # commands launch to obtain the level of zooms
         args_rgba = commands_in_array("gdaldem color-relief {} {} -alpha {}".format(grey_tif, grey2rgb_path, rgb_tif))
         run_command(args_rgba)
-        #os.system(com_create_rgba)
 
         # commands launch to obtain the level of zooms
-        args_tiles = commands_in_array("python app/helper/gdal2tiles.py -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} ".format(rgb_tif, tile_path))
-        run_command(args_tiles)
-        #os.system(com_generate_tiles)
-    except:
+        args_tiles = commands_in_array("python app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-14' {} {} ".format(rgb_tif, tile_path))
+        # run_command(args_tiles)
+
+    except :
         generate_state = 10
     else:
         generate_state = 0
@@ -189,6 +190,33 @@ def extract_colormap(xml):
         # add the color map object to the list
         color_map_objects.append(color_map_object)
     return color_map_objects
+
+
+def generate_csv_string(result):
+    csv_file = ",".join(result._metadata.keys) + '\r\n'
+    rowcount = 0
+    for row in result:
+        rowcount += 1
+        csv_file += ",".join(map(str, row)) + '\r\n'
+
+    # if the result is empty, we raise an error
+    if rowcount is 0:
+        raise RequestException('There is no result for this selection')
+
+    # write string buffer
+    str_io = StringIO.StringIO()
+    str_io.write(csv_file)
+    str_io.seek(0)
+
+    pandas_csv = pd.read_csv(str_io)
+    srid = str(pandas_csv.at[1, 'srid'])
+    pandas_csv = pandas_csv.drop(['srid', 'geometry'], axis=1)
+
+    resultIO = StringIO.StringIO()
+    pandas_csv.to_csv(resultIO, index=False)
+    resultIO.seek(0)
+
+    return {"csv": resultIO, "srid": srid}
 
 
 def hex_to_rgb(value):
