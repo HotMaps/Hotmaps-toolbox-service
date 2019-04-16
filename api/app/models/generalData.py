@@ -110,6 +110,7 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 			query += " where st_within(st_centroid("+nust_select_name+".geom),st_transform("+layer_table_name+"."+layersData[layer]['geo_column']+","+scale_level_crs+"))) "			
 		else:
 			query += " where st_within(st_transform("+layer_table_name+"."+layersData[layer]['geo_column']+","+scale_level_crs+"), "+nust_select_name+".geom)) "
+		print ('query for data aggregated ', query)
 	else:
 		query += query_from_part
 		query += query_select
@@ -119,6 +120,7 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 		else:
 			query += " FROM "+layer_table_name + ", public." + LAU_TABLE
 			query += " WHERE "+layer_table_name+"."+fk_column_id+" = public."+LAU_TABLE+".gid and "+layer_table_name+"."+scale_level_name+"  IN ("+nuts+") ) "
+
 
 	return query
 
@@ -151,4 +153,3 @@ def get_indicator_as_query(indic, layer_table_name, layer, scale_level_name, sca
 				
 def check_if_agg_or_dis_method(layer,scale_level):
 	return 'level_of_data' in layersData[layer] and NUTS_LAU_LEVELS[layersData[layer]['level_of_data']] < NUTS_LAU_LEVELS[scale_level]
-	 

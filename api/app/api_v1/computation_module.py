@@ -99,6 +99,9 @@ class getRasterTile(Resource):
          download a file from the main web service
          :return:
              """
+        print ( 'x {} y {} z {}'.format(x,y,z))
+
+
         tile_filename = UPLOAD_DIRECTORY +'/'+directory+"/%d/%d/%d.png" % (z,x,y)
         if not os.path.exists(tile_filename):
             if not os.path.exists(os.path.dirname(tile_filename)):
@@ -139,23 +142,32 @@ def computeTask(data,payload,cm_id):
     vectors_needed = payload['vectors_needed']
     #retriving scale level 3 possiblity hectare,nuts, lau
     scalevalue = data['scalevalue']
+    nuts_within = None
     if scalevalue == 'hectare':
         #****************** BEGIN RASTER CLIP FOR HECTAR ***************************************************
         areas = payload['areas']
         geom =  helper.area_to_geom(areas)
+        print ("geom", geom)
+
+        nuts_within = model.nuts_within_the_selection(geom)
+
         inputs_raster_selection = model.get_raster_from_csv(DATASET_DIRECTORY ,geom,layer_needed, type_layer_needed, UPLOAD_DIRECTORY)
         inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, geom)
+        #nut2_nuts3_area =
         #print ('inputs_raster_selection',inputs_raster_selection)
         #****************** FINISH RASTER CLIP FOR HECTAR ***************************************************'
     else:
         #****************** BEGIN RASTER CLIP FOR NUTS OR LAU ***************************************************'
         id_list = payload['nuts']
+        print ("id_list", id_list)
+        nuts_within = model.nuts2_within_the_selection_nuts_lau(scalevalue,id_list)
         shapefile_path = model.get_shapefile_from_selection(scalevalue,id_list,UPLOAD_DIRECTORY)
         inputs_raster_selection = model.clip_raster_from_shapefile(DATASET_DIRECTORY ,shapefile_path,layer_needed, type_layer_needed, UPLOAD_DIRECTORY)
         if vectors_needed != None:
             inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, id_list)
         #****************** FINISH RASTER CLIP FOR NUTS  OR LAU ***************************************************
-    data = generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection)
+    print ("nuts_within", nuts_within)
+    data = generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection,nuts_within)
 
 
     # send the result to the right CM
@@ -225,7 +237,7 @@ def generate_shape(vector_layers):
         file_path_input = layers['path']
     return file_path_input, file_path_input
 
-def generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection):
+def generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection,nuts):
     inputs = data["inputs"]
     inputs_parameter_selection = {}
     data_output = {}
@@ -234,11 +246,13 @@ def generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_sele
          parameters['input_parameter_name']: parameters['input_value']
         })
     data_output.update({
+        'nuts':nuts,
         'inputs_parameter_selection':inputs_parameter_selection,
         'inputs_raster_selection':inputs_raster_selection,
         'inputs_vector_selection':inputs_vector_selection
     })
     data = json.dumps(data_output)
+    print ('data',data)
     return data
 
 @ns.route('/compute-async/', methods=['POST'])

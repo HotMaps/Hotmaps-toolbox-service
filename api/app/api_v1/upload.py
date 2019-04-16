@@ -117,7 +117,7 @@ class AddUploads(Resource):
         }
 
 
-@ns.route('/tiles/<string:token>/<string:upload_id>/<int:z>/<int:x>/<int:y>')
+@ns.route('/ /<string:token>/<string:upload_id>/<int:z>/<int:x>/<int:y>')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')

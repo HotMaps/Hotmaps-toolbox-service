@@ -203,6 +203,14 @@ def retrieve_list_from_sql_result(results):
         response.append(ze_value)
     return response
 
+
+def from_dict_to_unique_array(results,key):
+    response = []
+    for value in results:
+        ze_value = value[key]
+        response.append(ze_value)
+    return response
+
 def force_decode(string, codecs=['utf8', 'cp1252']):
     for i in codecs:
         try:

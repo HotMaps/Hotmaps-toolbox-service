@@ -324,7 +324,24 @@ def run_command(arr):
     process = subprocess.Popen(arr, shell=False)
     process.communicate()
 
+def nuts2_within_the_selection_nuts_lau(scalevalue, nuts):
+    toCRS = 4258
+    sql_query = sql_queries.nuts2_within_the_selection_nuts_lau(scalevalue, nuts, toCRS)
+    print ("sql_query ",sql_query)
+    result = query_geographic_database(sql_query)
+    print ("result ",result)
+    result = helper.retrieve_list_from_sql_result(result)
+    result = helper.from_dict_to_unique_array(result,'nuts_id')
+    return result
 
+def nuts_within_the_selection(geom):
+    toCRS = 4258
+    sql_query = sql_queries.nuts_within_the_selection(geom,toCRS)
+    print ("sql_query ",sql_query)
+    result = query_geographic_database(sql_query)
+    result = helper.retrieve_list_from_sql_result(result)
+    result = helper.from_dict_to_unique_array(result,'nuts_id')
+    return result
 
 def retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, area_selected):
     """
@@ -339,6 +356,7 @@ def retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, area
     for vector_table_requested in vectors_needed:
         toCRS = 4258
         sql_query = sql_queries.vector_query(scalevalue,vector_table_requested, area_selected,toCRS)
+        print ("sql_query ",sql_query)
         result = query_geographic_database(sql_query)
         result = helper.retrieve_list_from_sql_result(result)
         inputs_vectors_selection[vector_table_requested] = result
