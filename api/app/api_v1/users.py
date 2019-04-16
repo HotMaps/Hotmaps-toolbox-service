@@ -553,6 +553,6 @@ class FeedbackUser(Resource):
             raise RequestException(str(e))
         
         return { 'message':'Your feedback has been sent successfully. It will be examined and processed as soon as possible' }
-    @async
+    @celery.task(nam
     def send_async_mail():
         pass
