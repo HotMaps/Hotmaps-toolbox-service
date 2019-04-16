@@ -6,7 +6,7 @@ from flask_mail import Message
 from flask_restplus import Resource
 from flask_security import SQLAlchemySessionUserDatastore
 from itsdangerous import (URLSafeTimedSerializer, BadSignature, SignatureExpired)
-from flask import request
+from flask import request, current_app
 from passlib.hash import bcrypt
 
 from app import celery
@@ -516,7 +516,6 @@ class FeedbackUser(Resource):
     @api.expect(file_upload_feedback)
     @celery.task(name='user feedback')
     def post(self):
-        print('/feedback')
         args = file_upload_feedback.parse_args()
         name=args['firstname']
         email=args['email']
@@ -546,6 +545,7 @@ class FeedbackUser(Resource):
             with open(file_upload_path, 'rb') as f:
                 msg.attach(file.filename, "image/*", f.read())
             os.remove(file_upload_path)
+        app = current_app._get_current_object()
         try:
             mail.send(msg)
         except Exception as e:
@@ -553,3 +553,6 @@ class FeedbackUser(Resource):
             raise RequestException(str(e))
         
         return { 'message':'Your feedback has been sent successfully. It will be examined and processed as soon as possible' }
+    @async
+    def send_async_mail():
+        pass
