@@ -1,12 +1,16 @@
 import datetime
+import os
+import uuid
 
 from flask_mail import Message
 from flask_restplus import Resource
 from flask_security import SQLAlchemySessionUserDatastore
 from itsdangerous import (URLSafeTimedSerializer, BadSignature, SignatureExpired)
+from flask import request
 from passlib.hash import bcrypt
 
 from app import celery
+from celery import app
 from .upload import calculate_total_space
 from .. import constants, mail, login_manager
 from ..decorators.exceptions import ParameterException, RequestException, ActivationException, \
@@ -17,17 +21,20 @@ from ..decorators.serializers import user_register_input, user_register_output, 
     user_activate_output, user_ask_recovery_input, user_ask_recovery_output, user_recovery_output, \
     user_recovery_input, user_login_input, user_login_output, user_logout_input, user_logout_output, \
     user_profile_input, user_profile_output, user_get_information_output, user_get_information_input, \
-    upload_space_used_output, upload_space_used_input
+    upload_space_used_output, upload_space_used_input, feedback_output
 from .. import dbGIS as db
 from ..secrets import FLASK_SECRET_KEY, FLASK_SALT
 from ..models.user import User
 from ..models.role import Role
+from ..decorators.parsers import file_upload_feedback
+
 
 # Setup Flask-Security
 user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
 
 nsUsers = api.namespace('users', description='Operations related to users')
 ns = nsUsers
+USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
 
 
 @ns.route('/recovery/ask')
@@ -468,7 +475,7 @@ def generate_confirmation_token(email):
         })
     user = User.query.filter_by(email=email).first()
     user.active_token = token
-    db.session.commit();
+    db.session.commit()
     return token
 
 
@@ -500,3 +507,49 @@ def load_user(user_id):
 	:return:
 	'''
     return User.query.filter_by(id=user_id).first()
+
+
+
+@ns.route('/feedback', methods=['POST'])
+class FeedbackUser(Resource):
+    @api.marshal_with(feedback_output)
+    @api.expect(file_upload_feedback)
+    @celery.task(name='user feedback')
+    def post(self):
+        print('/feedback')
+        args = file_upload_feedback.parse_args()
+        name=args['firstname']
+        email=args['email']
+        company=args['company']
+        feedback_type=args['feedback_type']
+        feedback_priority=args['feedback_priority']
+        title=args['title']
+        description=args['description']
+
+        msg = Message()
+        msg.add_recipient(email)
+        msg.add_recipient(constants.MAIL_FEEDBACK)
+        msg.subject = 'Hotmaps feedback - '+title
+        msg.html = "<h3>{}</h3> \
+            <strong>Date :</strong> {} <br /> \
+            <strong>Firstname / Lastname :</strong> {} <br /> \
+            <strong>Company :</strong> {} <br /> \
+            <strong>Feedback type :</strong> {} <br /> \
+            <strong>Feedback priority :</strong> {} <br /> \
+            <strong>Description :</strong><p>{}</p>".format(title,datetime.date.today(),name,company,feedback_type,feedback_priority, description)
+        
+
+        if 'file' in args and args['file'] is not None:
+            file=args['file']
+            file_upload_path = os.path.join(USER_UPLOAD_FOLDER, str(uuid.uuid4())+'_'+file.filename)
+            file.save(file_upload_path)
+            with open(file_upload_path, 'rb') as f:
+                msg.attach(file.filename, "image/*", f.read())
+            os.remove(file_upload_path)
+        try:
+            mail.send(msg)
+        except Exception as e:
+            print(str(e))
+            raise RequestException(str(e))
+        
+        return { 'message':'Your feedback has been sent successfully. It will be examined and processed as soon as possible' }

@@ -32,7 +32,9 @@ password = secrets.prod_password
 port = secrets.prod_port
 database = secrets.prod_database
 
-MAIL_SERVER = 'smtp.gmail.com'
+#MAIL_SERVER = 'smtp.gmail.com'
+MAIL_SERVER = 'mail.hotmaps.eu'
+
 MAIL_PORT = 465
 MAIL_USE_SSL = True
 MAIL_USERNAME = secrets.MAIL_USERNAME

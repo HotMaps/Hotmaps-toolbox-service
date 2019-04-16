@@ -32,9 +32,11 @@ password = secrets.dev_password
 port = secrets.dev_port
 database = secrets.dev_database
 
-MAIL_SERVER = 'smtp.gmail.com'
-MAIL_PORT = 465
-MAIL_USE_SSL = True
+#MAIL_SERVER = 'smtp.gmail.com'
+MAIL_SERVER = 'secure1.fc-net.fr'
+MAIL_PORT = 25
+#MAIL_USE_SSL = False
+#MAIL_USE_TLS = True
 MAIL_USERNAME = secrets.MAIL_USERNAME
 MAIL_PASSWORD = secrets.MAIL_PASSWORD
 MAIL_DEFAULT_SENDER = secrets.MAIL_USERNAME

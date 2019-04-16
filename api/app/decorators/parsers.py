@@ -16,3 +16,19 @@ file_upload.add_argument('file',
                          location='files',
                          required=True,
                          help='file')
+
+
+
+file_upload_feedback = reqparse.RequestParser()
+file_upload_feedback.add_argument('firstname', type=str, required=True, help='firstname')
+file_upload_feedback.add_argument('email', type=str, required=True, help='email')
+file_upload_feedback.add_argument('company', type=str, required=True, help='company')
+file_upload_feedback.add_argument('feedback_type', type=str, required=True, help='feedback_type')
+file_upload_feedback.add_argument('feedback_priority', type=str, required=True, help='feedback_priority')
+file_upload_feedback.add_argument('title', type=str, required=True, help='title')
+file_upload_feedback.add_argument('description', type=str, required=True, help='description')
+file_upload_feedback.add_argument('file',
+                         type=werkzeug.datastructures.FileStorage,
+                         location='files',
+                         required=False,
+                         help='file')
