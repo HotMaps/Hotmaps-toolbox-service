@@ -568,10 +568,11 @@ class ExportCsvNuts(Resource):
         csvResult = generate_csv_string(result)
 
         # send the file to the client
-        return send_file(csvResult['csv'],
+        return send_file(csvResult,
                          mimetype='text/csv',
-                         attachment_filename="hotmaps_"+csvResult['srid']+".csv",
+                         attachment_filename="hotmaps.csv",
                          as_attachment=True)
+
 
 
 @ns.route('/export/csv/hectare')
@@ -654,9 +655,9 @@ class ExportCsvHectare(Resource):
         csvResult = generate_csv_string(result)
 
         # send the file to the client
-        return send_file(csvResult['csv'],
+        return send_file(csvResult,
                          mimetype='text/csv',
-                         attachment_filename="hotmaps_"+csvResult['srid']+".csv",
+                         attachment_filename="hotmaps.csv",
                          as_attachment=True)
 
 @ns.route('/download')
