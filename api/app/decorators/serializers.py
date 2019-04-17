@@ -428,7 +428,9 @@ user_login_output = api.model('output for user login', {
     'message': fields.String(description='message'),
     'token': fields.String(description='authentification token'),
 })
-
+feedback_output = api.model('output for user feedback', {
+    'message': fields.String(description='message')
+})
 user_logout_input = api.model('input for the user logout', {
     'token': fields.String(description='authentification token'),
 })
