@@ -10,7 +10,6 @@ from flask import request, current_app
 from passlib.hash import bcrypt
 
 from app import celery
-from celery import app
 from .upload import calculate_total_space
 from .. import constants, mail, login_manager
 from ..decorators.exceptions import ParameterException, RequestException, ActivationException, \
@@ -547,12 +546,13 @@ class FeedbackUser(Resource):
             os.remove(file_upload_path)
         app = current_app._get_current_object()
         try:
-            mail.send(msg)
+            self.send_async_mail(msg)
         except Exception as e:
             print(str(e))
             raise RequestException(str(e))
         
         return { 'message':'Your feedback has been sent successfully. It will be examined and processed as soon as possible' }
-    @celery.task(nam
-    def send_async_mail():
-        pass
+
+    @celery.task(name='send mail feedback')
+    def send_async_mail(msg):
+        mail.send(msg)
