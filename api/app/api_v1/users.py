@@ -534,7 +534,7 @@ class FeedbackUser(Resource):
             <strong>Company :</strong> {} <br /> \
             <strong>Feedback type :</strong> {} <br /> \
             <strong>Feedback priority :</strong> {} <br /> \
-            <strong>Description :</strong><p>{}</p>".format(title,datetime.date.today(),name,company,feedback_type,feedback_priority, description)
+            <strong>Description :</strong><p>{}</p>".format(title, datetime.date.today(), name,company,feedback_type,feedback_priority, description)
         
 
         if 'file' in args and args['file'] is not None:
@@ -548,7 +548,6 @@ class FeedbackUser(Resource):
         try:
             self.send_async_mail(msg)
         except Exception as e:
-            print(str(e))
             raise RequestException(str(e))
         
         return { 'message':'Your feedback has been sent successfully. It will be examined and processed as soon as possible' }
