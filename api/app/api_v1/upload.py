@@ -227,8 +227,7 @@ class ReadCsv(Resource):
         if not os.path.exists(csvFile):
             return
         # send the file to the client
-        return send_file(csvFile,
-                         mimetype='text/csv')
+        return jsonify(csv_to_geojson(csvFile))
 
 
 @ns.route('/list')
@@ -585,13 +584,13 @@ class ExportCsvNuts(Resource):
             layer_date = LAU_YEAR
             dateCol = "date"
             schema2 = "public"
-            srid = '3035'
+
         else:
             layer_type = 'nuts'
             layer_name = str(layers)[: -6]
             id_type = 'nuts_id'
             layer_date = NUTS_YEAR
-            srid = '4258'
+
             if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
 
@@ -757,7 +756,8 @@ class Download(Resource):
             mimetype = 'image/TIFF'
         elif os.path.exists(url + '/data.csv'):
             url += '/data.csv'
-            return jsonify(csv_to_geojson(url))
+            extension = '.csv'
+            mimetype = 'text/csv'
 
         # send the file to the client
         return send_file(url,
