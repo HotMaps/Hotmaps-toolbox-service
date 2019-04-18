@@ -94,7 +94,7 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
 
         # commands launch to obtain the level of zooms
         args_tiles = commands_in_array("python app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-14' {} {} ".format(rgb_tif, tile_path))
-        # run_command(args_tiles)
+        run_command(args_tiles)
 
     except :
         generate_state = 10
@@ -193,6 +193,11 @@ def extract_colormap(xml):
 
 
 def generate_csv_string(result):
+    '''
+    This method will generate the csv stringIO containing the result of a query without extra data
+    :param result: the sql result of a csv export
+    :return resultIO: the StringIO result formatted appropriately
+    '''
     csv_file = ",".join(result._metadata.keys) + '\r\n'
     rowcount = 0
     for row in result:
@@ -209,14 +214,13 @@ def generate_csv_string(result):
     str_io.seek(0)
 
     pandas_csv = pd.read_csv(str_io)
-    srid = str(pandas_csv.at[1, 'srid'])
-    pandas_csv = pandas_csv.drop(['srid', 'geometry'], axis=1)
+    pandas_csv = pandas_csv.drop(['geometry'], axis=1)
 
     resultIO = StringIO.StringIO()
     pandas_csv.to_csv(resultIO, index=False)
     resultIO.seek(0)
 
-    return {"csv": resultIO, "srid": srid}
+    return resultIO
 
 
 def hex_to_rgb(value):
