@@ -4,7 +4,6 @@
 #
 
 
-
 #
 # hotmaps/cm image Dockerfile
 #
@@ -24,6 +23,8 @@ MAINTAINER lesly Houndole <lesly.houndole@crem.ch>
 RUN mkdir -p /data
 VOLUME /data
 
+RUN mkdir -p /var/hotmaps/users
+
 
 # Build commands
 RUN apt-get update && apt-get dist-upgrade -y && apt-get autoremove -y
@@ -36,9 +37,18 @@ RUN apt-get update \
     build-essential \
     software-properties-common \
     wget \
+    gdal-bin \
     ca-certificates \
+    curl \
     gcc \
     git \
+    libpq-dev \
+    libgeos-dev \
+    libgdal-dev \
+    python-gdal \
+    make \
+    python-pip \
+    ssh \
     && apt-get autoremove \
     && apt-get clean
 
@@ -47,12 +57,9 @@ RUN apt-get update \
 
 
 
-
-
-
 # Setup app server
 RUN mkdir -p /data
-COPY . /api
+COPY .. /api
 WORKDIR /api
 
 RUN ls
@@ -65,14 +72,12 @@ RUN apt-get update \
     wget
 
 RUN wget https://bootstrap.pypa.io/get-pip.py
-RUN python get-pip.py
+RUN python3 get-pip.py
+
+RUN pip3 install gunicorn
 
 
-
-RUN pip install gunicorn
-
-
-RUN pip install -r requirements/requirements_flower.txt
+RUN pip3 install -r requirements/flower/requirements.txt
 # Install required python modules
 
 

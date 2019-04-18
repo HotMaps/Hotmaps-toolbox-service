@@ -35,24 +35,24 @@ class HeatLoadProfile:
 				data={}
 				if request_type == 'year':
 					data = {
-						'year': year,'month': q[4],'granularity': 'month','unit': 'kW','min': round(q[0], constants.NUMBER_DECIMAL_DATA),
-						'max': round(q[1], constants.NUMBER_DECIMAL_DATA),'average': round(q[2], constants.NUMBER_DECIMAL_DATA)
+						'year': year,'month': q[4],'granularity': 'month','unit': 'kW','min': str(round(q[0], constants.NUMBER_DECIMAL_DATA)),
+						'max': str(round(q[1], constants.NUMBER_DECIMAL_DATA)),'average': str(round(q[2], constants.NUMBER_DECIMAL_DATA))
 					}
 				elif request_type == 'month':
 					data = {
-						'year': year,'month': month,'day': q[4],'granularity': 'day','unit': 'kW','min': round(q[0], constants.NUMBER_DECIMAL_DATA),
-							'max': round(q[1], constants.NUMBER_DECIMAL_DATA),
-							'average': round(q[2], constants.NUMBER_DECIMAL_DATA)
+						'year': year,'month': month,'day': q[4],'granularity': 'day','unit': 'kW','min': str(round(q[0], constants.NUMBER_DECIMAL_DATA)),
+							'max': str(round(q[1], constants.NUMBER_DECIMAL_DATA)),
+							'average': str(round(q[2], constants.NUMBER_DECIMAL_DATA))
 					}
 				elif request_type == 'day':
 					data = {
 						'year': year,'month': month,'day': day,'hour_of_day': q[4],'granularity': 'hour',
-						'unit': 'kW','value': round(q[3], constants.NUMBER_DECIMAL_DATA)
+						'unit': 'kW','value': str(round(q[3], constants.NUMBER_DECIMAL_DATA))
 					}
 				output.append(data)
 			else:
 				output = []
-		
+
 		return {
 			"values": output
 		}
