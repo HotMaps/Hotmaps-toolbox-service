@@ -19,12 +19,51 @@ from ..models.uploads import Uploads, generate_tiles, allowed_file, check_map_si
     generate_csv_string
 from ..models.user import User
 from ..decorators.parsers import file_upload
+import csv, json
+from geojson import Feature, FeatureCollection, Point
+import shapely.wkt as shapely_wkt
+from flask import jsonify
 
 nsUpload = api.namespace('upload', description='Operations related to file upload')
 ns = nsUpload
 NUTS_YEAR = "2013"
 LAU_YEAR = NUTS_YEAR
 USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
+
+
+def csv_to_geojson(url):
+    features = []
+    srid = None
+    with open(url, 'r') as csvfile:
+        reader = csv.DictReader(csvfile, delimiter=',')
+        for row in reader:
+            geom = None
+            properties = {}
+
+            for field in reader.fieldnames:
+                value = row[field]
+                if field == 'geometry_wkt' or field == 'geometry' or field == 'geom':
+                    try:
+                        wkt = shapely_wkt.loads(value)
+                        geom = shapely_geom.mapping(wkt)
+                    except:
+                        wkt = None
+                        geom = None
+                elif srid is None and field == 'srid':
+                    srid = value
+                else:
+                    properties[field] = value
+
+            features.append(Feature(geometry=geom, properties=properties))
+
+    crs = {
+        "type": "name",
+        "properties": {
+            "name": "EPSG:{0}".format(srid)
+        }
+    }
+
+    return FeatureCollection(features, crs=crs)
 
 
 @ns.route('/add')
@@ -556,9 +595,9 @@ class ExportCsvNuts(Resource):
             if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
 
-        sql = """SELECT ST_ASTEXT(geometry) as geometryText, ST_SRID(geometry) as srid, * FROM {0}.{1} WHERE date = '{2}-01-01' 
+        sql = """SELECT ST_ASTEXT(geometry) as geometry_wkt, ST_SRID(geometry) as srid, * FROM {0}.{1} WHERE date = '{2}-01-01' 
                  AND ST_Within({0}.{1}.geometry, st_transform(
-                   (SELECT ST_UNION(geom) from {6}.{3} where {4} IN ({5}) AND {7} = '{8}-01-01'),
+                   (SELECT ST_UNION(geom) FROM {6}.{3} WHERE {4} IN ({5}) AND {7} = '{8}-01-01'),
                    {9}
                  ));""".format(schema, layer_name, year, layer_type, id_type, ', '.join("'{0}'".format(n) for n in nuts), schema2, dateCol, layer_date, csv_layer_srid)
 
@@ -647,7 +686,7 @@ class ExportCsvHectare(Resource):
         # convert array of polygon into multipolygon
         multipolygon = shapely_geom.MultiPolygon(polyArray)
 
-        sql = """SELECT ST_ASTEXT(geometry) as geometryText, ST_SRID(geometry) as srid, * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform(st_geomfromtext('{3}', 4258), 3035))""".format(schema, layer_name, year, str(multipolygon))
+        sql = """SELECT ST_ASTEXT(geometry) as geometry_wkt, ST_SRID(geometry) as srid, * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform(st_geomfromtext('{3}', 4258), 3035))""".format(schema, layer_name, year, str(multipolygon))
 
         # execute request
         try:
@@ -718,8 +757,7 @@ class Download(Resource):
             mimetype = 'image/TIFF'
         elif os.path.exists(url + '/data.csv'):
             url += '/data.csv'
-            extension= '.csv'
-            mimetype = 'text/csv'
+            return jsonify(csv_to_geojson(url))
 
         # send the file to the client
         return send_file(url,
