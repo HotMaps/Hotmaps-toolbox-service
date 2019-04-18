@@ -52,7 +52,7 @@ class HeatLoadProfile:
 				output.append(data)
 			else:
 				output = []
-		
+
 		return {
 			"values": output
 		}
@@ -123,6 +123,7 @@ class HeatLoadProfile:
 						})
 				else:
 					output = []
+
 		
 		return {
 			"values": output
