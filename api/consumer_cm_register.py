@@ -28,7 +28,7 @@ class Consumer(object):
     ROUTING_KEY = 'reply-to'
 
     def __init__(self, amqp_url):
-        print ('type_ amq ', type(amqp_url))
+        ##print ('type_ amq ', type(amqp_url))
         """Create a new instance of the consumer class, passing in the AMQP
         URL used to connect to RabbitMQ.
 
@@ -50,7 +50,7 @@ class Consumer(object):
 
         """
         LOGGER.info('Connecting to %s', self._url)
-        print ('Connecting to %s', type(self._url))
+        ##print ('Connecting to %s', type(self._url))
         return pika.SelectConnection(pika.URLParameters(self._url),
                                      self.on_connection_open,
                                      stop_ioloop_on_close=False)
@@ -246,7 +246,7 @@ class Consumer(object):
         :param str|unicode body: The message body
 
         """
-        print ('application',application)
+        ##print ('application',application)
         if application is not None:
             LOGGER.info('Application is ready')
             LOGGER.info('Received message # %s from %s: %s',
@@ -256,16 +256,17 @@ class Consumer(object):
             headers = {'Content-Type':  'application/json'}
             ip = socket.gethostbyname(socket.gethostname())
 
-            base_url = 'http://'+ str(ip) +':'+'5001'+'/api/cm/register/'
+            base_url = 'http://'+ str(ip) +':'+str(constants.PORT)+'/api/cm/register/'
             LOGGER.info('base_url is %s', base_url)
-
+            LOGGER.info('body is %s', body)
+            LOGGER.info('type  of body is %s', type(body))
             res = requests.post(base_url, data = body, headers = headers)
             response = res.text
             LOGGER.info('response is %s', response)
-            print (type(props.reply_to))
+            ##print (type(props.reply_to))
             if response is None :
                 response = 'not register'
-            print ('onRequest response', response)
+            ##print ('onRequest response', response)
             ch.basic_publish(exchange='',
                              routing_key=props.reply_to,
                              properties=pika.BasicProperties(correlation_id = str(constants.CM_REGISTER_Q)),
