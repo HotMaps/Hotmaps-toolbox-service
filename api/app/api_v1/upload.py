@@ -23,6 +23,9 @@ import csv, json
 from geojson import Feature, FeatureCollection, Point
 import shapely.wkt as shapely_wkt
 from flask import jsonify
+from shapely.ops import transform
+import pyproj
+from functools import partial
 
 nsUpload = api.namespace('upload', description='Operations related to file upload')
 ns = nsUpload
@@ -34,23 +37,34 @@ USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
 def csv_to_geojson(url):
     features = []
     srid = None
+    output_srid = '4326'
+
+    # parse file
     with open(url, 'r') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',')
         for row in reader:
             geom = None
             properties = {}
+            srid = row['srid']
 
+            # read each column
             for field in reader.fieldnames:
                 value = row[field]
+
+                # get geometry and reproject (transform)
                 if field == 'geometry_wkt' or field == 'geometry' or field == 'geom':
                     try:
                         wkt = shapely_wkt.loads(value)
-                        geom = shapely_geom.mapping(wkt)
+                        geometry = shapely_geom.mapping(wkt)
+                        project = partial(
+                            pyproj.transform,
+                            pyproj.Proj(init='epsg:{0}'.format(srid)),
+                            pyproj.Proj(init='epsg:4326')
+                        )
+                        geom = transform(project, shapely_geom.shape(geometry))
                     except:
-                        wkt = None
+                        print('Exception raised: could not retrieve/transform geometry from file.')
                         geom = None
-                elif srid is None and field == 'srid':
-                    srid = value
                 else:
                     properties[field] = value
 
@@ -59,7 +73,7 @@ def csv_to_geojson(url):
     crs = {
         "type": "name",
         "properties": {
-            "name": "EPSG:{0}".format(srid)
+            "name": "EPSG:{0}".format(output_srid)
         }
     }
 
