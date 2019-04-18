@@ -1,7 +1,4 @@
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 import os
 import shutil
 import shapely.geometry as shapely_geom
@@ -120,7 +117,7 @@ class AddUploads(Resource):
         }
 
 
-@ns.route('/ /<string:token>/<string:upload_id>/<int:z>/<int:x>/<int:y>')
+@ns.route('/tiles/<string:token>/<string:upload_id>/<int:z>/<int:x>/<int:y>')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
