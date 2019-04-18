@@ -533,6 +533,9 @@ class ExportCsvNuts(Resource):
                     exception_message += ', '
             raise ParameterException(str(exception_message))
 
+        # TODO: get SRID
+        csv_layer_srid = '3035'
+
         # We must determine if it is a nuts or a lau
         dateCol = "year"
         schema2 = "geo"
@@ -543,21 +546,21 @@ class ExportCsvNuts(Resource):
             layer_date = LAU_YEAR
             dateCol = "date"
             schema2 = "public"
+            srid = '3035'
         else:
             layer_type = 'nuts'
             layer_name = str(layers)[: -6]
             id_type = 'nuts_id'
             layer_date = NUTS_YEAR
+            srid = '4258'
             if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
 
-        sql = """SELECT ST_ASTEXT(geometry) as geometryText, ST_SRID(geometry) as srid, * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform((SELECT ST_UNION(geom) from {6}.{3} where {4} = '{5}'""".format(schema, layer_name, year, layer_type, id_type, nuts[0], schema2)
-
-        # we add the rest of the lau id
-        for nut in nuts[1:]:
-            sql += " OR " + id_type + " = '" + nut + "'"
-
-        sql += " AND {0} = '{1}-01-01'), 3035))".format(dateCol, layer_date)
+        sql = """SELECT ST_ASTEXT(geometry) as geometryText, ST_SRID(geometry) as srid, * FROM {0}.{1} WHERE date = '{2}-01-01' 
+                 AND ST_Within({0}.{1}.geometry, st_transform(
+                   (SELECT ST_UNION(geom) from {6}.{3} where {4} IN ({5}) AND {7} = '{8}-01-01'),
+                   {9}
+                 ));""".format(schema, layer_name, year, layer_type, id_type, ', '.join("'{0}'".format(n) for n in nuts), schema2, dateCol, layer_date, csv_layer_srid)
 
         # execute request
         try:
