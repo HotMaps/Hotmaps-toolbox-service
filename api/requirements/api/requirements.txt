@@ -1,3 +1,6 @@
+psycopg2-binary==2.8.2
+python3-pika==0.9.14
+pika==0.10.0
 aniso8601==1.2.1
 click==6.7
 click-plugins==1.0.3
@@ -18,22 +21,16 @@ munch==2.1.1
 numpy==1.13.0
 pandas==0.20.2
 passlib
-psycopg2
-psycopg2-binary
 python-dateutil==2.6.0
 pytz==2017.2
-
 six==1.10.0
 Werkzeug==0.14.1
 celery==4.2.0
 requests==2.19.1
 redis==2.10.6
 SQLAlchemy==1.0.11
-Pika==0.10.0
-bcrypt
 bcrypt
 Flask-Login
-
 Shapely==1.5.17
 
 # PYthon 3 => Shapely 1.6.4

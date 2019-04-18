@@ -5,12 +5,12 @@
 
 
 #!/usr/bin/env python
-import pika
+
 import uuid
 import time
 import logging
 import pika
-import json
+
 from app.model import getCMList,delete_cm
 from app import constants
 

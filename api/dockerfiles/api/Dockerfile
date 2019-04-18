@@ -42,12 +42,8 @@ RUN apt-get update \
     curl \
     gcc \
     git \
-    libpq-dev \
-    libgeos-dev \
-    libgdal-dev \
-    python-gdal \
     make \
-    python-pip \
+
     ssh \
     && apt-get autoremove \
     && apt-get clean
