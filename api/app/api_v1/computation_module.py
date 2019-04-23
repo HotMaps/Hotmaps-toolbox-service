@@ -176,8 +176,10 @@ def computeTask(data,payload,cm_id):
     response = calculation_module_rpc.call(cm_id,data.encode('utf-8'))
     print('response',response)
     print('response type',type(response))
+    buf = response.read()
+    data_output = json.loads(buf.decode('utf-8'))
     #'****************** RETRIVED RESULT FROM CM WITH ID {} ***************************************************'.format(cm_id))
-    data_output = json.loads(str(response))
+
     helper.test_display(data_output)
     #****************** WILL GENERATE TILES ***************************************************'.format(cm_id))
     try:
