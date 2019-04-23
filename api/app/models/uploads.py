@@ -1,17 +1,29 @@
 import os
+import csv
+import shapely.wkt as shapely_wkt
+import pyproj
 import requests
 import uuid
 import xml.etree.ElementTree as ET
 import shutil
 import StringIO
 import pandas as pd
+import shapely.geometry as shapely_geom
+
 from app import celery
 from app.model import run_command, commands_in_array
 from .. import constants, dbGIS as db
 from ..decorators.exceptions import RequestException
 from .. import secrets
-ALLOWED_EXTENSIONS = set(['tif', 'csv'])
+from shapely.ops import transform
+from functools import partial
+from geojson import Feature, FeatureCollection
 
+ALLOWED_EXTENSIONS = set(['tif', 'csv'])
+GREATER_OR_EQUAL = 'greaterOrEqual'
+GREATER = 'greater'
+LESSER_OR_EQUAL = 'lesserOrEqual'
+LESSER = 'lesser'
 
 class Uploads(db.Model):
     '''
@@ -67,18 +79,7 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
     else:
         print ("Successfully created the directory %s" % tile_path)
 
-    # get the sld file
-    url = secrets.GEOSERVER_API_URL + 'styles/' + layer + '.sld'
-    auth = secrets.GEOSERVER_AUTH
-    result = requests.get(url, auth=auth)
-    xml = result.content
-
-    # This piece of code is temporary, this should be removed when the workspaces on geoserver are unified
-    if xml == 'No such style: ' + layer:
-        # As some layer are inside workspaces, we need to specify the workspace in order to find the correct style
-        url = secrets.GEOSERVER_API_URL + 'workspaces/hotmaps/styles/' + layer + '.sld'
-        result = requests.get(url, auth=auth)
-        xml = result.content
+    xml = get_style_from_geoserver(layer)
 
     color_map_objects = extract_colormap(xml)
 
@@ -223,6 +224,163 @@ def generate_csv_string(result):
     return resultIO
 
 
+def find_property_column(style_sheet, headers):
+    '''
+    This method will find the column that contains the property
+    :param style_sheet: the style sheet
+    :param headers: the available headers of our CSV
+    :return: the property column name
+    '''
+    # create the xml tree
+    try:
+        root = ET.fromstring(style_sheet)
+    except Exception as e:
+        raise RequestException(str(style_sheet))
+    ns = {
+        'se': 'http://www.opengis.net/se',
+        'ogc': 'http://www.opengis.net/ogc'
+    }
+    rules = root.findall(".//se:Rule", ns)
+    filters = rules[0].findall('./ogc:Filter/ogc:And', ns)
+    for filter_element in filters:
+
+        greater = filter_element.find('./ogc:PropertyIsGreaterThanOrEqualTo', ns)
+        if greater is None:
+            greater = filter_element.find('./ogc:PropertyIsGreaterThan', ns)
+
+        if greater is None:
+            continue
+
+        property_name = greater.find('./ogc:PropertyName', ns).text
+
+        if property_name in headers:
+            return property_name
+
+        else:
+            return None
+
+
+def find_rule(style_sheet, literal):
+    '''
+    This method will find a specific rule in a sld stylesheet
+    :param style_sheet: the sld stylesheet
+    :param literal: the value we need to check
+    :return style: the style corresponding to the rule
+    '''
+    # create the xml tree
+    try:
+        root = ET.fromstring(style_sheet)
+    except Exception as e:
+        raise RequestException(str(style_sheet))
+    ns = {
+        'se': 'http://www.opengis.net/se',
+        'ogc': 'http://www.opengis.net/ogc'
+    }
+
+    # get the list of rules
+    rules = root.findall(".//se:Rule", ns)
+    for rule in rules:
+        filters = rule.findall('ogc:Filter/ogc:And', ns)
+        greater_type = None
+        lesser_type = None
+
+        for filter_type in filters:
+
+            greater = filter_type.find('ogc:PropertyIsGreaterThanOrEqualTo', ns)
+            if greater is not None:
+                greater_type = GREATER_OR_EQUAL
+                continue
+            greater = filter_type.find('ogc:PropertyIsGreaterThan', ns)
+            if greater is not None:
+                greater_type = GREATER
+                continue
+
+            lesser = filter_type.find('ogc:PropertyIsLessThanOrEqualTo', ns)
+            if lesser is not None:
+                lesser_type = LESSER_OR_EQUAL
+                continue
+
+            lesser = filter_type.find('ogc:PropertyIsLessThan', ns)
+            if lesser is not None:
+                lesser_type = LESSER
+                continue
+
+        if greater_type == GREATER_OR_EQUAL:
+            if not greater.find('ogc:Literal', ns).text >= literal:
+                continue
+        elif greater_type == GREATER:
+            if not greater.find('ogc:Literal', ns).text > literal:
+                continue
+
+        if lesser_type == LESSER_OR_EQUAL:
+            if not lesser.find('ogc:Literal', ns).text <= literal:
+                continue
+        elif lesser_type == LESSER:
+            if not lesser.find('ogc:Literal', ns).text < literal:
+                continue
+
+        style = {
+            "name": rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:WellKnownName', ns).text,
+            "fill": rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:Fill/se:SvgParameter', ns).text,
+            "stroke": rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:Stroke/se:SvgParameter', ns).text,
+            "size": rule.find('se:PointSymbolizer/se:Graphic/se:Size', ns).text
+        }
+        return style
+    return "No corresponding style"
+
+
+def csv_to_geojson(url, layer):
+    '''
+    This method will convert the CSV to a geojson file
+    :param url: the URL of the CSV file
+    :param layer: the layer of the CSV file
+    :return: the geojson
+    '''
+    features = []
+    srid = None
+    output_srid = '4326'
+    sld_file = get_style_from_geoserver(layer)
+    # parse file
+    with open(url, 'r') as csvfile:
+        reader = csv.DictReader(csvfile, delimiter=',')
+        for row in reader:
+            geom = None
+            properties = {}
+            srid = row['srid']
+            property_column = find_property_column(sld_file, reader.fieldnames)
+            # read each column
+            for field in reader.fieldnames:
+                value = row[field]
+
+                # get geometry and reproject (transform)
+                if field == 'geometry_wkt' or field == 'geometry' or field == 'geom':
+                    try:
+                        wkt = shapely_wkt.loads(value)
+                        geometry = shapely_geom.mapping(wkt)
+                        project = partial(
+                            pyproj.transform,
+                            pyproj.Proj(init='epsg:{0}'.format(srid)),
+                            pyproj.Proj(init='epsg:4326')
+                        )
+                        geom = transform(project, shapely_geom.shape(geometry))
+                    except:
+                        print('Exception raised: could not retrieve/transform geometry from file.')
+                        geom = None
+                else:
+                    properties[field] = value
+            style = find_rule(sld_file, float(row[property_column]))
+
+            features.append(Feature(geometry=geom, properties=properties, style=style))
+
+    crs = {
+        "type": "name",
+        "properties": {
+            "name": "EPSG:{0}".format(output_srid)
+        }
+    }
+    return FeatureCollection(features, crs=crs)
+
+
 def hex_to_rgb(value):
     '''
     This method is used to convert an hexadecimal into a tuple of rgb values
@@ -257,3 +415,20 @@ def allowed_file(filename):
     '''
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
+def get_style_from_geoserver(layer):
+    '''
+    This method will get the style from the geoserver using GET method
+    :param layer: the layer to select
+    :return xml: the sld style file
+    '''
+    url = secrets.GEOSERVER_API_URL + 'styles/' + layer + '.sld'
+    result = requests.get(url)
+    xml = result.content
+    # This piece of code is temporary, this should be removed when the workspaces on geoserver are unified
+    if xml == 'No such style: ' + layer:
+        # As some layer are inside workspaces, we need to specify the workspace in order to find the correct style
+        url = secrets.GEOSERVER_API_URL + 'workspaces/hotmaps/styles/' + layer + '.sld'
+        result = requests.get(url)
+        xml = result.content
+    return xml

@@ -7,6 +7,7 @@ from flask_restplus import Resource
 from binascii import unhexlify
 from flask import send_file
 from app import celery
+
 from ..decorators.restplus import api
 from ..decorators.restplus import UserUnidentifiedException, ParameterException, RequestException, \
     UserDoesntOwnUploadsException, UploadNotExistingException, \
@@ -16,68 +17,16 @@ from ..decorators.serializers import upload_add_output, upload_list_input, uploa
     upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input
 from .. import dbGIS as db
 from ..models.uploads import Uploads, generate_tiles, allowed_file, check_map_size, calculate_total_space, \
-    generate_csv_string
+    generate_csv_string, csv_to_geojson
 from ..models.user import User
 from ..decorators.parsers import file_upload
-import csv, json
-from geojson import Feature, FeatureCollection, Point
-import shapely.wkt as shapely_wkt
 from flask import jsonify
-from shapely.ops import transform
-import pyproj
-from functools import partial
 
 nsUpload = api.namespace('upload', description='Operations related to file upload')
 ns = nsUpload
 NUTS_YEAR = "2013"
 LAU_YEAR = NUTS_YEAR
 USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
-
-
-def csv_to_geojson(url):
-    features = []
-    srid = None
-    output_srid = '4326'
-
-    # parse file
-    with open(url, 'r') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=',')
-        for row in reader:
-            geom = None
-            properties = {}
-            srid = row['srid']
-
-            # read each column
-            for field in reader.fieldnames:
-                value = row[field]
-
-                # get geometry and reproject (transform)
-                if field == 'geometry_wkt' or field == 'geometry' or field == 'geom':
-                    try:
-                        wkt = shapely_wkt.loads(value)
-                        geometry = shapely_geom.mapping(wkt)
-                        project = partial(
-                            pyproj.transform,
-                            pyproj.Proj(init='epsg:{0}'.format(srid)),
-                            pyproj.Proj(init='epsg:4326')
-                        )
-                        geom = transform(project, shapely_geom.shape(geometry))
-                    except:
-                        print('Exception raised: could not retrieve/transform geometry from file.')
-                        geom = None
-                else:
-                    properties[field] = value
-
-            features.append(Feature(geometry=geom, properties=properties))
-
-    crs = {
-        "type": "name",
-        "properties": {
-            "name": "EPSG:{0}".format(output_srid)
-        }
-    }
-
-    return FeatureCollection(features, crs=crs)
 
 
 @ns.route('/add')
@@ -239,9 +188,9 @@ class ReadCsv(Resource):
         csvFile = folder_url+"/data.csv"
 
         if not os.path.exists(csvFile):
-            return
+            return "No csv Existing"
         # send the file to the client
-        return jsonify(csv_to_geojson(csvFile))
+        return jsonify(csv_to_geojson(csvFile, upload.layer))
 
 
 @ns.route('/list')
