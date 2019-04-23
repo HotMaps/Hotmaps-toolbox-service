@@ -1,3 +1,3 @@
-geometrytext,srid,gid,capacity,unit,date
+geometry_wkt,srid,gid,capacity,unit,date
 POINT(4791250.45009089 2788745.95172686),3035,53960,33000,kW,2012-01-01
 POINT(4790067.34742427 2789024.13286029),3035,55101,15000,kW,2012-01-01
