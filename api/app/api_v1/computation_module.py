@@ -177,7 +177,7 @@ def computeTask(data,payload,cm_id):
     print('response',response)
     print('response type',type(response))
     #'****************** RETRIVED RESULT FROM CM WITH ID {} ***************************************************'.format(cm_id))
-    data_output = json.loads(response)
+    data_output = json.loads(str(response))
     helper.test_display(data_output)
     #****************** WILL GENERATE TILES ***************************************************'.format(cm_id))
     try:
