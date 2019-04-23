@@ -411,6 +411,7 @@ class GetUserInformation(Resource):
 
         # check token
         user = User.verify_auth_token(token)
+        print(token, user)
         if user is None:
             raise UserUnidentifiedException
 

@@ -1,4 +1,4 @@
--r requirements.txt
+#-r requirements.txt
 amqp==2.2.2
 Babel==2.5.3
 billiard==3.5.0.3

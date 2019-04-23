@@ -18,12 +18,11 @@ from .. import dbGIS as db
 from ..models.uploads import Uploads, generate_tiles, allowed_file, check_map_size, calculate_total_space
 from ..models.user import User
 from ..decorators.parsers import file_upload
-
+from app.constants import USER_UPLOAD_FOLDER
 nsUpload = api.namespace('upload', description='Operations related to file upload')
 ns = nsUpload
 NUTS_YEAR = "2013"
 LAU_YEAR = NUTS_YEAR
-USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
 
 
 @ns.route('/add')
@@ -144,7 +143,7 @@ class TilesUploads(Resource):
             raise UserDoesntOwnUploadsException
 
         folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
-
+        print(folder_url)
         tile_filename = folder_url+"/tiles/%d/%d/%d.png" % (z, x, y)
 
         if not os.path.exists(tile_filename):
@@ -173,19 +172,22 @@ class ListUploads(Resource):
         except:
             raise ParameterException('token')
 
+        uploads = self.get_uploads(token)
+
+        # output
+        return {
+            "uploads": uploads
+        }
+    
+    @staticmethod
+    def get_uploads(token=None):
         # check token
         user = User.verify_auth_token(token)
         if user is None:
             raise UserUnidentifiedException
 
         # get the user uploads
-        uploads = user.uploads
-
-        # output
-        return {
-            "uploads": uploads
-        }
-
+        return user.uploads
 
 @ns.route('/delete')
 @api.response(530, 'Request error')

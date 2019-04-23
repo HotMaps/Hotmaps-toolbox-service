@@ -1,6 +1,10 @@
 from app import celery
 import logging
 import re
+import os.path
+import pandas as pd
+import numpy as np
+from osgeo import gdal
 
 from flask_restplus import Resource
 from app.decorators.serializers import  stats_layers_hectares_output,\
@@ -8,10 +12,11 @@ from app.decorators.serializers import  stats_layers_hectares_output,\
 	stats_layers_hectares_input, stats_list_nuts_input, stats_list_label_dataset
 from app.decorators.restplus import api
 from app.decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, ParameterException, RequestException
+from ..models.user import User
 
 from app.models.statsQueries import ElectricityMix
 from app.models.statsQueries import LayersStats
-
+from app.api_v1.upload import Uploads
 
 from app.models.indicators import layersData
 import shapely.geometry as shapely_geom
@@ -194,7 +199,33 @@ class StatsLayersNutsInArea(Resource):
 
 		# Remove scale for each layer
 
+@ns.route('/personal-layers')
+class StatsPersonalLayers(Resource):
+	def post(self):
+		print(api.payload)
+		for pay in api.payload:
+			print(api.payload[pay])
+			token = api.payload[pay]['user_token']
+			layer_id = api.payload[pay]['id']
+			layer_name = api.payload[pay]['layer_name']
 
+			user = User.verify_auth_token(token)
+			upload = Uploads.query.filter_by(id=layer_id).first()
+			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)+'/'+upload.name
+			print(upload_url)
+			
+			ds = gdal.Open(upload_url)
+			arr = ds.GetRasterBand(1).ReadAsArray()
+			df = pd.DataFrame(arr)
+			sum_tif = df.sum().sum()
+			df_without_zero = df[df.iloc[:] != 0]
+			counted_withdata_cells = df_without_zero.count().sum()
+			min_value = df_without_zero.min().min()
+			max_value = df_without_zero.max().max()
+			average = sum_tif/counted_withdata_cells
+			print(sum_tif,counted_withdata_cells,average,max_value,min_value)
+
+			#TODO
 
 
 @celery.task(name = 'energy_mix_nuts_lau')

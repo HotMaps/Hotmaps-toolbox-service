@@ -111,3 +111,4 @@ NUTS_LAU_LEVELS = {nuts0:0,nuts1:1,nuts2:2,nuts3:3,lau2:4,hectare_name:5}
 scale_level_loadprofile_aggreagtion = [nuts3,lau2]
 
 MAIL_FEEDBACK = 'albain.dufils@crem.ch'
+USER_UPLOAD_FOLDER = '/var/hotmaps/users/'

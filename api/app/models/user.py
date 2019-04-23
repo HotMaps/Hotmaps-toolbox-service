@@ -74,6 +74,7 @@ class User(db.Model, UserMixin):
         except BadSignature:
             return None  # invalid token
         user = User.query.filter_by(id=data['id']).first()
+
         if user.active_token != token:
             return None  # the user has been logout
         return user
