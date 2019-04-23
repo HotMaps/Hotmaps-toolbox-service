@@ -174,6 +174,8 @@ def computeTask(data,payload,cm_id):
     #****************** WILL SEND PAYLOAD TO CM WITH ID {} ***************************************************'.format(cm_id))
     calculation_module_rpc = CalculationModuleRpcClient()
     response = calculation_module_rpc.call(cm_id,data.encode('utf-8'))
+    print('response',response)
+    print('response type',type(response))
     #'****************** RETRIVED RESULT FROM CM WITH ID {} ***************************************************'.format(cm_id))
     data_output = json.loads(response)
     helper.test_display(data_output)
