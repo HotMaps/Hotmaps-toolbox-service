@@ -9,6 +9,7 @@ import shutil
 import StringIO
 import pandas as pd
 import shapely.geometry as shapely_geom
+import json
 
 from app import celery
 from app.model import run_command, commands_in_array
@@ -18,6 +19,7 @@ from .. import secrets
 from shapely.ops import transform
 from functools import partial
 from geojson import Feature, FeatureCollection
+from flask import jsonify
 
 ALLOWED_EXTENSIONS = set(['tif', 'csv'])
 GREATER_OR_EQUAL = 'greaterOrEqual'
@@ -56,7 +58,7 @@ class ColorMap:
         self.quantity = quantity
 
 
-@celery.task(name = 'generate_tiles_file_upload')
+@celery.task(name='generate_tiles_file_upload')
 def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_used_space):
     '''
     This function is used to generate the various tiles of a layer in the db.
@@ -94,7 +96,7 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
         run_command(args_rgba)
 
         # commands launch to obtain the level of zooms
-        args_tiles = commands_in_array("python app/helper/gdal2tiles.py -p 'geodetic' -r 'average' -z '4-14' {} {} ".format(rgb_tif, tile_path))
+        args_tiles = commands_in_array("python app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-14' {} {} ".format(rgb_tif, tile_path))
         run_command(args_tiles)
 
     except :
@@ -112,6 +114,33 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
     upload.is_generated = generate_state
     db.session.commit()
 
+    check_map_size(upload_folder, user_currently_used_space, upload_uuid)
+    return generate_state
+
+
+def generate_geojson(upload_folder, layer, upload_uuid, user_currently_used_space):
+    '''
+    This function is used to generate the geojson of a layer in the db.
+    :param upload_folder: the folder of the upload
+    :param layer: the name of the layer choosen for the input
+    :param upload_uuid: the uuid of the upload
+    :param user_currently_used_space: the space currently used by the user
+    '''
+    upload_csv = upload_folder + '/data.csv'
+
+    try:
+        geojson_file_path = upload_folder + '/data.json'
+        with open(geojson_file_path, 'w') as geojson_file:
+            json.dump(csv_to_geojson(upload_csv, layer), geojson_file)
+    except :
+        generate_state = 10
+    else:
+        generate_state = 0
+
+    # updating generate state of upload
+    upload = Uploads.query.filter_by(uuid=upload_uuid).first()
+    upload.is_generated = generate_state
+    db.session.commit()
     check_map_size(upload_folder, user_currently_used_space, upload_uuid)
     return generate_state
 
@@ -260,12 +289,11 @@ def find_property_column(style_sheet, headers):
             return None
 
 
-def find_rule(style_sheet, literal):
+def generate_rule_dictionary(style_sheet):
     '''
-    This method will find a specific rule in a sld stylesheet
+    This method will generate a dictionnary of rule giving the stylesheet
     :param style_sheet: the sld stylesheet
-    :param literal: the value we need to check
-    :return style: the style corresponding to the rule
+    :return: the dictionnary of rules
     '''
     # create the xml tree
     try:
@@ -279,7 +307,8 @@ def find_rule(style_sheet, literal):
 
     # get the list of rules
     rules = root.findall(".//se:Rule", ns)
-
+    rules_dictionary = {}
+    i = 0
     for rule in rules:
         filters = rule.findall('ogc:Filter/ogc:And', ns)
         greater_type = None
@@ -302,25 +331,54 @@ def find_rule(style_sheet, literal):
                 lesser = filter_type.find('ogc:PropertyIsLessThan', ns)
                 if lesser is not None:
                     lesser_type = LESSER
+        greater = float(greater.find('ogc:Literal', ns).text)
+        lesser = float(lesser.find('ogc:Literal', ns).text)
+        mark_name = rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:WellKnownName', ns).text,
+        fill = rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:Fill/se:SvgParameter', ns).text,
+        stroke = rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:Stroke/se:SvgParameter', ns).text,
+        size = rule.find('se:PointSymbolizer/se:Graphic/se:Size', ns).text
 
-        if greater_type == GREATER_OR_EQUAL:
-            if not literal >= float(greater.find('ogc:Literal', ns).text):
+        rules_dictionary[i] = {
+            'greater_type': greater_type,
+            'lesser_type': lesser_type,
+            'greater': greater,
+            'lesser': lesser,
+            'mark_name': mark_name,
+            'fill': fill,
+            'stroke': stroke,
+            'size': size
+        }
+
+        i += 1
+    return rules_dictionary
+
+
+def find_rule(literal, rules_dictionary):
+    '''
+    This method will find a specific rule in a rule dictionary
+    :param literal: the value we need to check
+    :param rules_dictionary: the dictionary of the rules used in the stylesheet
+    :return style: the style corresponding to the rule
+    '''
+    for rule_id, rule_info in rules_dictionary.items():
+        if rule_info['greater_type'] == GREATER_OR_EQUAL:
+            if not literal >= rule_info['greater']:
                 continue
-        elif greater_type == GREATER:
-            if not literal > float(greater.find('ogc:Literal', ns).text):
+        elif rule_info['greater_type'] == GREATER:
+            if not literal > rule_info['greater']:
                 continue
 
-        if lesser_type == LESSER_OR_EQUAL:
-            if not literal <= float(lesser.find('ogc:Literal', ns).text):
+        if rule_info['lesser_type'] == LESSER_OR_EQUAL:
+            if not literal <= rule_info['lesser']:
                 continue
-        elif lesser_type == LESSER:
-            if not literal < float(lesser.find('ogc:Literal', ns).text):
+        elif rule_info['lesser_type'] == LESSER:
+            if not literal < rule_info['lesser']:
                 continue
         style = {
-            "name": rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:WellKnownName', ns).text,
-            "fill": rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:Fill/se:SvgParameter', ns).text,
-            "stroke": rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:Stroke/se:SvgParameter', ns).text,
-            "size": rule.find('se:PointSymbolizer/se:Graphic/se:Size', ns).text
+            "name": rule_info['mark_name'],
+            "fill": rule_info['fill'],
+            "stroke": rule_info['stroke'],
+            "size": rule_info['size']
         }
         return style
     return "No corresponding style"
@@ -337,6 +395,7 @@ def csv_to_geojson(url, layer):
     srid = None
     output_srid = '4326'
     sld_file = get_style_from_geoserver(layer)
+    rule_dictionary = generate_rule_dictionary(sld_file)
     # parse file
     with open(url, 'r') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',')
@@ -365,7 +424,7 @@ def csv_to_geojson(url, layer):
                         geom = None
                 else:
                     properties[field] = value
-            style = find_rule(sld_file, float(row[property_column]))
+            style = find_rule(float(row[property_column]), rule_dictionary)
 
             features.append(Feature(geometry=geom, properties=properties, style=style))
 

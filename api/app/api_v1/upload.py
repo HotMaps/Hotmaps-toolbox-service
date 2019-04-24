@@ -16,8 +16,8 @@ from ..decorators.serializers import upload_add_output, upload_list_input, uploa
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
     upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input
 from .. import dbGIS as db
-from ..models.uploads import Uploads, generate_tiles, allowed_file, check_map_size, calculate_total_space, \
-    generate_csv_string, csv_to_geojson
+from ..models.uploads import Uploads, generate_tiles, allowed_file, generate_geojson, calculate_total_space, \
+    generate_csv_string
 from ..models.user import User
 from ..decorators.parsers import file_upload
 from flask import jsonify
@@ -111,7 +111,7 @@ class AddUploads(Resource):
         if file_name.endswith('.tif'):
             generate_tiles.delay(upload_folder, url, layer, upload_uuid, user_currently_used_space)
         else:
-            check_map_size(upload_folder, user_currently_used_space, upload_uuid)
+            generate_geojson(upload_folder, layer, upload_uuid, user_currently_used_space)
 
         # output
         output = 'file ' + name + ' added for the user ' + user.first_name
@@ -185,12 +185,13 @@ class ReadCsv(Resource):
 
         folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
 
-        csvFile = folder_url+"/data.csv"
+        geoJSON = folder_url+"/data.json"
 
-        if not os.path.exists(csvFile):
-            return "No csv Existing"
+        if not os.path.exists(geoJSON):
+            raise RequestException("No csv Existing")
         # send the file to the client
-        return jsonify(csv_to_geojson(csvFile, upload.layer))
+        return send_file(geoJSON,
+                         mimetype='application/json')
 
 
 @ns.route('/list')
@@ -578,7 +579,6 @@ class ExportCsvNuts(Resource):
                          as_attachment=True)
 
 
-
 @ns.route('/export/csv/hectare')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing Parameters')
@@ -663,6 +663,7 @@ class ExportCsvHectare(Resource):
                          mimetype='text/csv',
                          attachment_filename="hotmaps.csv",
                          as_attachment=True)
+
 
 @ns.route('/download')
 @api.response(530, 'Request error')
