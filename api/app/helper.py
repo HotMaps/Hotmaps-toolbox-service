@@ -82,6 +82,15 @@ def getGenerationMixColor(value):
 
     raise Exception(msg)
 
+def get_result_formatted(name='not_defined', value=0, unit='unit'):
+    return {
+        'name': name,
+        'value': value,
+        'unit': unit
+    }
+
+
+
 def generate_geotif_name(directory):
     filename = generate_file(directory, '.tif')
     return filename

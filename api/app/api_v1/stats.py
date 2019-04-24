@@ -25,7 +25,7 @@ from app import constants
 
 from app.models import generalData
 from app.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator, createAllLayers,\
-	getTypeScale, adapt_layers_list, adapt_nuts_list, removeScaleLayers, layers_filter, getTypeScale
+	getTypeScale, adapt_layers_list, adapt_nuts_list, removeScaleLayers, layers_filter, getTypeScale, get_result_formatted
 import app
 import json
 from app.model import check_table_existe
@@ -203,29 +203,45 @@ class StatsLayersNutsInArea(Resource):
 class StatsPersonalLayers(Resource):
 	def post(self):
 		print(api.payload)
+		noDataLayer=[]
+		result=[]
 		for pay in api.payload:
-			print(api.payload[pay])
+			values=[]
 			token = api.payload[pay]['user_token']
 			layer_id = api.payload[pay]['id']
 			layer_name = api.payload[pay]['layer_name']
 
 			user = User.verify_auth_token(token)
 			upload = Uploads.query.filter_by(id=layer_id).first()
-			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)+'/'+upload.name
-			print(upload_url)
-			
-			ds = gdal.Open(upload_url)
-			arr = ds.GetRasterBand(1).ReadAsArray()
-			df = pd.DataFrame(arr)
+			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)+ '/' + upload.name
+			if os.path.isfile(upload_url):
+				ds = gdal.Open(upload_url)
+				arr = ds.GetRasterBand(1).ReadAsArray()
+				df = pd.DataFrame(arr)
+			else:
+				noDataLayer.append(layer_name)
+				continue
 			sum_tif = df.sum().sum()
 			df_without_zero = df[df.iloc[:] != 0]
+			values.append(get_result_formatted(layer_name+'_sum',str(sum_tif),'KWh'))
 			counted_withdata_cells = df_without_zero.count().sum()
+			values.append(get_result_formatted(layer_name+'_cells',counted_withdata_cells,'cells'))
 			min_value = df_without_zero.min().min()
+			values.append(get_result_formatted(layer_name+'_min',min_value,'MWh/ha'))
 			max_value = df_without_zero.max().max()
+			values.append(get_result_formatted(layer_name+'_max',max_value,'MWh/ha'))
 			average = sum_tif/counted_withdata_cells
-			print(sum_tif,counted_withdata_cells,average,max_value,min_value)
+			values.append(get_result_formatted(layer_name+'_avg',average,'MWh/ha'))
 
-			#TODO
+			result.append({
+				'name':layer_name,
+				'values':values
+			})
+		return {
+			"layers": result,
+			"no_data_layers": noDataLayer,
+			"no_table_layers": []
+		}
 
 
 @celery.task(name = 'energy_mix_nuts_lau')
