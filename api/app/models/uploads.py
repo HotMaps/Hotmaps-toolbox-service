@@ -94,7 +94,7 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
         run_command(args_rgba)
 
         # commands launch to obtain the level of zooms
-        args_tiles = commands_in_array("python app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-14' {} {} ".format(rgb_tif, tile_path))
+        args_tiles = commands_in_array("python app/helper/gdal2tiles.py -p 'geodetic' -r 'average' -z '4-14' {} {} ".format(rgb_tif, tile_path))
         run_command(args_tiles)
 
     except :
@@ -279,6 +279,7 @@ def find_rule(style_sheet, literal):
 
     # get the list of rules
     rules = root.findall(".//se:Rule", ns)
+
     for rule in rules:
         filters = rule.findall('ogc:Filter/ogc:And', ns)
         greater_type = None
@@ -289,36 +290,32 @@ def find_rule(style_sheet, literal):
             greater = filter_type.find('ogc:PropertyIsGreaterThanOrEqualTo', ns)
             if greater is not None:
                 greater_type = GREATER_OR_EQUAL
-                continue
-            greater = filter_type.find('ogc:PropertyIsGreaterThan', ns)
-            if greater is not None:
-                greater_type = GREATER
-                continue
+            else:
+                greater = filter_type.find('ogc:PropertyIsGreaterThan', ns)
+                if greater is not None:
+                    greater_type = GREATER
 
             lesser = filter_type.find('ogc:PropertyIsLessThanOrEqualTo', ns)
             if lesser is not None:
                 lesser_type = LESSER_OR_EQUAL
-                continue
-
-            lesser = filter_type.find('ogc:PropertyIsLessThan', ns)
-            if lesser is not None:
-                lesser_type = LESSER
-                continue
+            else:
+                lesser = filter_type.find('ogc:PropertyIsLessThan', ns)
+                if lesser is not None:
+                    lesser_type = LESSER
 
         if greater_type == GREATER_OR_EQUAL:
-            if not greater.find('ogc:Literal', ns).text >= literal:
+            if not literal >= float(greater.find('ogc:Literal', ns).text):
                 continue
         elif greater_type == GREATER:
-            if not greater.find('ogc:Literal', ns).text > literal:
+            if not literal > float(greater.find('ogc:Literal', ns).text):
                 continue
 
         if lesser_type == LESSER_OR_EQUAL:
-            if not lesser.find('ogc:Literal', ns).text <= literal:
+            if not literal <= float(lesser.find('ogc:Literal', ns).text):
                 continue
         elif lesser_type == LESSER:
-            if not lesser.find('ogc:Literal', ns).text < literal:
+            if not literal < float(lesser.find('ogc:Literal', ns).text):
                 continue
-
         style = {
             "name": rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:WellKnownName', ns).text,
             "fill": rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:Fill/se:SvgParameter', ns).text,
