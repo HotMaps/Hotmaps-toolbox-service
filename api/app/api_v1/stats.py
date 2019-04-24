@@ -209,10 +209,12 @@ class StatsPersonalLayers(Resource):
 			values=[]
 			token = api.payload[pay]['user_token']
 			layer_id = api.payload[pay]['id']
+			layer_type = api.payload[pay]['layer_id']
 			layer_name = api.payload[pay]['layer_name']
 
 			user = User.verify_auth_token(token)
 			upload = Uploads.query.filter_by(id=layer_id).first()
+			
 			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)+ '/' + upload.name
 			if os.path.isfile(upload_url):
 				ds = gdal.Open(upload_url)
@@ -221,18 +223,10 @@ class StatsPersonalLayers(Resource):
 			else:
 				noDataLayer.append(layer_name)
 				continue
-			sum_tif = df.sum().sum()
-			df_without_zero = df[df.iloc[:] != 0]
-			values.append(get_result_formatted(layer_name+'_sum',str(sum_tif),'KWh'))
-			counted_withdata_cells = df_without_zero.count().sum()
-			values.append(get_result_formatted(layer_name+'_cells',counted_withdata_cells,'cells'))
-			min_value = df_without_zero.min().min()
-			values.append(get_result_formatted(layer_name+'_min',min_value,'MWh/ha'))
-			max_value = df_without_zero.max().max()
-			values.append(get_result_formatted(layer_name+'_max',max_value,'MWh/ha'))
-			average = sum_tif/counted_withdata_cells
-			values.append(get_result_formatted(layer_name+'_avg',average,'MWh/ha'))
+			df = df[df.iloc[:] != 0]
 
+			values = self.set_indicators_in_array(df, layer_type)
+			
 			result.append({
 				'name':layer_name,
 				'values':values
@@ -240,9 +234,23 @@ class StatsPersonalLayers(Resource):
 		return {
 			"layers": result,
 			"no_data_layers": noDataLayer,
-			"no_table_layers": []
+			"no_table_layers": ""
 		}
+	def set_indicators_in_array(self, df, layer_name):
+		values=[]
+		# Set result in variables
+		sum_tif = df.sum().sum()
+		counted_cells = df.count().sum()
+		min_tif = df.min().min()
+		max_tif = df.max().max()
 
+		# Assign indicator to results
+		values.append(get_result_formatted(layer_name+'_consumption', str(sum_tif), 'KWh'))
+		values.append(get_result_formatted(layer_name+'_count_cell', str(counted_cells), 'cells'))
+		values.append(get_result_formatted(layer_name+'_consumption_min', str(min_tif), 'MWh/ha'))
+		values.append(get_result_formatted(layer_name+'_consumption_max', str(max_tif), 'MWh/ha'))
+		values.append(get_result_formatted(layer_name+'_density', str(sum_tif/counted_cells), 'MWh/ha'))
+		return values
 
 @celery.task(name = 'energy_mix_nuts_lau')
 def processGenerationMix(nuts):

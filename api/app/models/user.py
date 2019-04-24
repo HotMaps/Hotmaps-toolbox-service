@@ -57,7 +57,7 @@ class User(db.Model, UserMixin):
             })
         self.active_token = token
         db.session.commit();
-        return token
+        return str(token, 'utf8')
 
     @staticmethod
     def verify_auth_token(token):
