@@ -205,6 +205,7 @@ class StatsPersonalLayers(Resource):
 		print(api.payload)
 		noDataLayer=[]
 		result=[]
+
 		for pay in api.payload:
 			values=[]
 			token = api.payload[pay]['user_token']
@@ -214,7 +215,7 @@ class StatsPersonalLayers(Resource):
 
 			user = User.verify_auth_token(token)
 			upload = Uploads.query.filter_by(id=layer_id).first()
-			
+
 			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)+ '/' + upload.name
 			if os.path.isfile(upload_url):
 				ds = gdal.Open(upload_url)
