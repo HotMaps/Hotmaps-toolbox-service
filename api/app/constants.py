@@ -26,7 +26,7 @@ CM_REGISTER_Q = 'rpc_queue_CM_register'
 #TODO ********************setup this URL depending on which version you are running***************************
 
 CELERY_BROKER_URL = CELERY_BROKER_URL_DOCKER
-CLIENT_URL = CLIENT_URL_LOCAL
+CLIENT_URL = CLIENT_URL_DEV
 PORT = PORT_DOCKER
 
 

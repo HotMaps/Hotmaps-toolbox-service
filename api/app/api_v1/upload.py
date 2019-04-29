@@ -343,7 +343,8 @@ class ExportRasterNuts(Resource):
         hex_file_decoded = unhexlify(hex_file)
 
         # write string buffer
-        str_io = StringIO.StringIO()
+        #str_io = StringIO.StringIO() patch py3
+        str_io = StringIO()
         str_io.write(hex_file_decoded)
         str_io.seek(0)
 
@@ -444,7 +445,8 @@ class ExportRasterHectare(Resource):
         hex_file_decoded = unhexlify(hex_file)
 
         # write string buffer
-        str_io = StringIO.StringIO()
+        #str_io = StringIO.StringIO() patch py3
+        str_io = StringIO()
         str_io.write(hex_file_decoded)
         str_io.seek(0)
 
@@ -546,7 +548,8 @@ class ExportCsvNuts(Resource):
             raise RequestException('There is no result for this selection')
 
         # write string buffer
-        str_io = StringIO.StringIO()
+        #str_io = StringIO.StringIO() patch py3
+        str_io = StringIO()
         str_io.write(csv_file)
         str_io.seek(0)
 
@@ -652,7 +655,8 @@ class ExportCsvHectare(Resource):
             raise RequestException('There is no result for this selection')
 
         # write string buffer>
-        str_io = StringIO.StringIO()
+        #str_io = StringIO.StringIO() patch py3
+        str_io = StringIO()
         str_io.write(csv_file)
         str_io.seek(0)
 
