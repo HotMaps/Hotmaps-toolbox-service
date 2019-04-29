@@ -341,10 +341,12 @@ class ExportRasterNuts(Resource):
 
         # decode hex_file
         hex_file_decoded = unhexlify(hex_file)
-
+        print ('hex_file_decoded',hex_file_decoded)
+        hex_file_decoded = hex_file_decoded.decode("utf-8")
         # write string buffer
         #str_io = StringIO.StringIO() patch py3
         str_io = StringIO()
+
         str_io.write(hex_file_decoded)
         str_io.seek(0)
 
@@ -443,7 +445,8 @@ class ExportRasterHectare(Resource):
 
         # decode hex_file
         hex_file_decoded = unhexlify(hex_file)
-
+        print ('hex_file_decoded',hex_file_decoded)
+        hex_file_decoded = hex_file_decoded.decode("utf-8")
         # write string buffer
         #str_io = StringIO.StringIO() patch py3
         str_io = StringIO()
