@@ -340,9 +340,10 @@ class ExportRasterNuts(Resource):
             raise RequestException("There is no result for this selection")
 
         # decode hex_file
+        print ('hex_file',hex_file)
         hex_file_decoded = unhexlify(hex_file)
         print ('hex_file_decoded',hex_file_decoded)
-        hex_file_decoded = hex_file_decoded.decode("utf-8")
+
         # write string buffer
         #str_io = StringIO.StringIO() patch py3
         str_io = StringIO()
@@ -446,7 +447,7 @@ class ExportRasterHectare(Resource):
         # decode hex_file
         hex_file_decoded = unhexlify(hex_file)
         print ('hex_file_decoded',hex_file_decoded)
-        hex_file_decoded = hex_file_decoded.decode("utf-8")
+
         # write string buffer
         #str_io = StringIO.StringIO() patch py3
         str_io = StringIO()
