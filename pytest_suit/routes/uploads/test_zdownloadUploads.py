@@ -1,6 +1,6 @@
 import requests
 from unittest import TestCase
-from . import BASE_URL, test_token
+from . import BASE_URL, test_token, test_csv_file
 
 url = BASE_URL + "/upload/download"
 
@@ -24,7 +24,8 @@ class TestDownload(TestCase):
         }
 
         output = requests.post(url, json=payload)
-        expected_output = "name, size\r\ntest, 10"
+        expected_output_file = open(test_csv_file, "r")
+        expected_output = expected_output_file.read()
         assert output.content == expected_output
 
     def test_download_missing_parameter(self):

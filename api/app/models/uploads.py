@@ -118,6 +118,7 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
     return generate_state
 
 
+@celery.task(name='generate_geojson_file_upload')
 def generate_geojson(upload_folder, layer, upload_uuid, user_currently_used_space):
     '''
     This function is used to generate the geojson of a layer in the db.
