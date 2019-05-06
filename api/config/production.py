@@ -32,9 +32,8 @@ password = secrets.prod_password
 port = secrets.prod_port
 database = secrets.prod_database
 
-MAIL_SERVER = 'smtp.gmail.com'
-MAIL_PORT = 465
-MAIL_USE_SSL = True
 MAIL_USERNAME = secrets.MAIL_USERNAME
 MAIL_PASSWORD = secrets.MAIL_PASSWORD
 MAIL_DEFAULT_SENDER = secrets.MAIL_USERNAME
+MAIL_SERVER = secrets.MAIL_SERVER
+MAIL_PORT = secrets.MAIL_PORT
