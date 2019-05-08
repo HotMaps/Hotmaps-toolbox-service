@@ -199,7 +199,7 @@ class StatsLayersNutsInArea(Resource):
 
 		# Remove scale for each layer
 
-@ns.route('/personal-layers')
+@ns.route('/personnal-layers')
 class StatsPersonalLayers(Resource):
 	@api.marshal_with(stats_layers_nuts_output)
 	@api.expect(stats_layer_personnal_layer_input)
