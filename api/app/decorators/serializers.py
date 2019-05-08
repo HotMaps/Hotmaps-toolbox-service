@@ -211,6 +211,16 @@ stats_layers_hectares_output = api.model('Stats for selected layers, year and ar
     'no_table_layers': fields.List(fields.String(description='Layer'))
 })
 
+stats_layer_personnal_layer = api.model('personnal layer', {
+    'id': fields.Integer(description='Upload id'),
+    'user_token': fields.String(description='User token'),    
+    'layer_id': fields.String(description='Default layer that user upload from'),
+    'layer_name': fields.String(description='Upload name')
+})
+stats_layer_personnal_layer_input = api.model('Input for stats on personnal layer', {
+    'layers':fields.List(fields.Nested(stats_layer_personnal_layer))
+})
+
 stats_layers_area_nuts_input = api.model('Input for statistics on layers, area and year', {
     'layers': fields.List(fields.String(description='Layer')),
     'nuts_level': fields.String(description='Nuts level'),
@@ -294,6 +304,7 @@ load_profile_aggregation_curve = api.model('Input for load profile duration curv
     'year': fields.Integer(description='Year'),
     'nuts': fields.List(fields.String(descriptions='List of NUTS'))
 })
+
 load_profile_aggregation_curve_output = api.model('Output for load profile duration curve', {
     'points': fields.List(fields.Nested(point_curve))
 })
@@ -322,7 +333,6 @@ stats_layers_nuts_output = api.model('Stats for selected layers, year and area',
     'layers': fields.List(fields.Nested(stats_layer_aggregation)),
     'no_data_layers': fields.List(fields.String(description='Layer')),
     'no_table_layers': fields.List(fields.String(description='Layer'))
-    #'load_profile_month': fields.Nested(load_profile_aggregation_year),
 })
 
 data = api.model('data', {

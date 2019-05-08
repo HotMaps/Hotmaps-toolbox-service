@@ -9,7 +9,7 @@ from osgeo import gdal
 from flask_restplus import Resource
 from app.decorators.serializers import  stats_layers_hectares_output,\
 	stats_layers_nuts_input, stats_layers_nuts_output,\
-	stats_layers_hectares_input, stats_list_nuts_input, stats_list_label_dataset
+	stats_layers_hectares_input, stats_list_nuts_input, stats_list_label_dataset,stats_layer_personnal_layer_input
 from app.decorators.restplus import api
 from app.decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, ParameterException, RequestException
 from ..models.user import User
@@ -178,7 +178,7 @@ class StatsLayersNutsInArea(Resource):
 		:return:
 		"""
 		# Entries
-		wrong_parameter = [];
+		wrong_parameter = []
 		try:
 			nuts = api.payload['nuts']
 		except:
@@ -201,17 +201,20 @@ class StatsLayersNutsInArea(Resource):
 
 @ns.route('/personal-layers')
 class StatsPersonalLayers(Resource):
+	@api.marshal_with(stats_layers_nuts_output)
+	@api.expect(stats_layer_personnal_layer_input)
 	def post(self):
 		print(api.payload)
 		noDataLayer=[]
 		result=[]
 
-		for pay in api.payload:
+		for pay in api.payload['layers']:
+			print()
 			values=[]
-			token = api.payload[pay]['user_token']
-			layer_id = api.payload[pay]['id']
-			layer_type = api.payload[pay]['layer_id']
-			layer_name = api.payload[pay]['layer_name']
+			token = pay['user_token']
+			layer_id = pay['id']
+			layer_type = pay['layer_id']
+			layer_name = pay['layer_name']
 
 			user = User.verify_auth_token(token)
 			upload = Uploads.query.filter_by(id=layer_id).first()
@@ -235,7 +238,7 @@ class StatsPersonalLayers(Resource):
 		return {
 			"layers": result,
 			"no_data_layers": noDataLayer,
-			"no_table_layers": ""
+			"no_table_layers": []
 		}
 	def set_indicators_in_array(self, df, layer_name):
 		values=[]
