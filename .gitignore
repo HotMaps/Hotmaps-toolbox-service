@@ -13,3 +13,5 @@ venv
 test-python.py
 venv3
 README.md
+.cache/
+.cache/*

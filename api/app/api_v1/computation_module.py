@@ -147,7 +147,7 @@ def computeTask(data,payload,cm_id):
         #****************** BEGIN RASTER CLIP FOR HECTAR ***************************************************
         areas = payload['areas']
         geom =  helper.area_to_geom(areas)
-        print ("geom", geom)
+       
 
         nuts_within = model.nuts_within_the_selection(geom)
 
@@ -159,7 +159,7 @@ def computeTask(data,payload,cm_id):
     else:
         #****************** BEGIN RASTER CLIP FOR NUTS OR LAU ***************************************************'
         id_list = payload['nuts']
-        print ("id_list", id_list)
+
         nuts_within = model.nuts2_within_the_selection_nuts_lau(scalevalue,id_list)
         shapefile_path = model.get_shapefile_from_selection(scalevalue,id_list,UPLOAD_DIRECTORY)
         inputs_raster_selection = model.clip_raster_from_shapefile(DATASET_DIRECTORY ,shapefile_path,layer_needed, type_layer_needed, UPLOAD_DIRECTORY)
