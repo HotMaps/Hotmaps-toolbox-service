@@ -1,4 +1,4 @@
-from io import StringIO
+from io import StringIO,BytesIO
 import os
 import shutil
 import shapely.geometry as shapely_geom
@@ -18,12 +18,11 @@ from .. import dbGIS as db
 from ..models.uploads import Uploads, generate_tiles, allowed_file, check_map_size, calculate_total_space
 from ..models.user import User
 from ..decorators.parsers import file_upload
-
+from app.constants import USER_UPLOAD_FOLDER, UPLOAD_BASE_NAME
 nsUpload = api.namespace('upload', description='Operations related to file upload')
 ns = nsUpload
 NUTS_YEAR = "2013"
 LAU_YEAR = NUTS_YEAR
-USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
 
 
 @ns.route('/add')
@@ -92,7 +91,7 @@ class AddUploads(Resource):
         user_currently_used_space = calculate_total_space(user.uploads)
 
         if file_name.endswith('.tif'):
-            url = upload_folder + '/grey.tif'
+            url = upload_folder + '/' + UPLOAD_BASE_NAME
         else:
             url = upload_folder + '/data.csv'
 
@@ -144,7 +143,7 @@ class TilesUploads(Resource):
             raise UserDoesntOwnUploadsException
 
         folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
-
+        print(folder_url)
         tile_filename = folder_url+"/tiles/%d/%d/%d.png" % (z, x, y)
 
         if not os.path.exists(tile_filename):
@@ -173,19 +172,22 @@ class ListUploads(Resource):
         except:
             raise ParameterException('token')
 
+        uploads = self.get_uploads(token)
+
+        # output
+        return {
+            "uploads": uploads
+        }
+    
+    @staticmethod
+    def get_uploads(token=None):
         # check token
         user = User.verify_auth_token(token)
         if user is None:
             raise UserUnidentifiedException
 
         # get the user uploads
-        uploads = user.uploads
-
-        # output
-        return {
-            "uploads": uploads
-        }
-
+        return user.uploads
 
 @ns.route('/delete')
 @api.response(530, 'Request error')
@@ -341,17 +343,15 @@ class ExportRasterNuts(Resource):
 
         # decode hex_file
 
-        hex_file_decoded = str(unhexlify(hex_file))
+        hex_file_decoded = unhexlify(hex_file)
 
         # write string buffer
-        #str_io = StringIO.StringIO() patch py3
-        str_io = StringIO()
-
-        str_io.write(hex_file_decoded)
-        str_io.seek(0)
+        bt_io = BytesIO()
+        bt_io.write(hex_file_decoded)
+        bt_io.seek(0)
 
         # send the file to the client
-        return send_file(str_io,
+        return send_file(bt_io,
                          mimetype='image/TIF',
                          attachment_filename="hotmaps.tif",
                          as_attachment=True)
@@ -445,16 +445,16 @@ class ExportRasterHectare(Resource):
 
         # decode hex_file
 
-        hex_file_decoded = str(unhexlify(hex_file))
+        hex_file_decoded = unhexlify(hex_file)
 
         # write string buffer
         #str_io = StringIO.StringIO() patch py3
-        str_io = StringIO()
-        str_io.write(hex_file_decoded)
-        str_io.seek(0)
+        bt_io = BytesIO()
+        bt_io.write(hex_file_decoded)
+        bt_io.seek(0)
 
         # send the file to the client
-        return send_file(str_io,
+        return send_file(bt_io,
                          mimetype='image/TIF',
                          attachment_filename="hotmaps.tif",
                          as_attachment=True)
@@ -719,8 +719,8 @@ class Download(Resource):
 
         url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
 
-        if os.path.exists(url + '/grey.tif'):
-            url += '/grey.tif'
+        if os.path.exists(url + '/'+ UPLOAD_BASE_NAME):
+            url += '/'+UPLOAD_BASE_NAME
             extension = '.tif'
             mimetype = 'image/TIFF'
         elif os.path.exists(url + '/data.csv'):

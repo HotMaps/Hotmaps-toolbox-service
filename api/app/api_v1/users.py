@@ -33,7 +33,6 @@ user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
 
 nsUsers = api.namespace('users', description='Operations related to users')
 ns = nsUsers
-USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
 
 
 @ns.route('/recovery/ask')
@@ -411,6 +410,7 @@ class GetUserInformation(Resource):
 
         # check token
         user = User.verify_auth_token(token)
+        print(token, user)
         if user is None:
             raise UserUnidentifiedException
 
@@ -539,7 +539,7 @@ class FeedbackUser(Resource):
 
         if 'file' in args and args['file'] is not None:
             file=args['file']
-            file_upload_path = os.path.join(USER_UPLOAD_FOLDER, str(uuid.uuid4())+'_'+file.filename)
+            file_upload_path = os.path.join(constants.USER_UPLOAD_FOLDER, str(uuid.uuid4())+'_'+file.filename)
             file.save(file_upload_path)
             with open(file_upload_path, 'rb') as f:
                 msg.attach(file.filename, "image/*", f.read())

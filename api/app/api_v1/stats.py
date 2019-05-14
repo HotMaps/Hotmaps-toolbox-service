@@ -1,17 +1,22 @@
 from app import celery
 import logging
 import re
+import os.path
+import pandas as pd
+import numpy as np
+from osgeo import gdal
 
 from flask_restplus import Resource
 from app.decorators.serializers import  stats_layers_hectares_output,\
 	stats_layers_nuts_input, stats_layers_nuts_output,\
-	stats_layers_hectares_input, stats_list_nuts_input, stats_list_label_dataset
+	stats_layers_hectares_input, stats_list_nuts_input, stats_list_label_dataset,stats_layer_personnal_layer_input
 from app.decorators.restplus import api
 from app.decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, ParameterException, RequestException
+from ..models.user import User
 
 from app.models.statsQueries import ElectricityMix
 from app.models.statsQueries import LayersStats
-
+from app.api_v1.upload import Uploads
 
 from app.models.indicators import layersData
 import shapely.geometry as shapely_geom
@@ -20,7 +25,7 @@ from app import constants
 
 from app.models import generalData
 from app.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator, createAllLayers,\
-	getTypeScale, adapt_layers_list, adapt_nuts_list, removeScaleLayers, layers_filter, getTypeScale
+	getTypeScale, adapt_layers_list, adapt_nuts_list, removeScaleLayers, layers_filter, getTypeScale, get_result_formatted
 import app
 import json
 from app.model import check_table_existe
@@ -173,7 +178,7 @@ class StatsLayersNutsInArea(Resource):
 		:return:
 		"""
 		# Entries
-		wrong_parameter = [];
+		wrong_parameter = []
 		try:
 			nuts = api.payload['nuts']
 		except:
@@ -194,8 +199,62 @@ class StatsLayersNutsInArea(Resource):
 
 		# Remove scale for each layer
 
+@ns.route('/personnal-layers')
+class StatsPersonalLayers(Resource):
+	@api.marshal_with(stats_layers_nuts_output)
+	@api.expect(stats_layer_personnal_layer_input)
+	def post(self):
+		print(api.payload)
+		noDataLayer=[]
+		result=[]
 
+		for pay in api.payload['layers']:
+			print()
+			values=[]
+			token = pay['user_token']
+			layer_id = pay['id']
+			layer_type = pay['layer_id']
+			layer_name = pay['layer_name']
 
+			user = User.verify_auth_token(token)
+			upload = Uploads.query.filter_by(id=layer_id).first()
+
+			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)+ '/' + constants.UPLOAD_BASE_NAME
+			if os.path.isfile(upload_url):
+				ds = gdal.Open(upload_url)
+				arr = ds.GetRasterBand(1).ReadAsArray()
+				df = pd.DataFrame(arr)
+			else:
+				noDataLayer.append(layer_name)
+				continue
+			df = df[df.iloc[:] != 0]
+
+			values = self.set_indicators_in_array(df, layer_type)
+			
+			result.append({
+				'name':layer_name,
+				'values':values
+			})
+		return {
+			"layers": result,
+			"no_data_layers": noDataLayer,
+			"no_table_layers": []
+		}
+	def set_indicators_in_array(self, df, layer_name):
+		values=[]
+		# Set result in variables
+		sum_tif = df.sum().sum()
+		counted_cells = df.count().sum()
+		min_tif = df.min().min()
+		max_tif = df.max().max()
+
+		# Assign indicator to results
+		values.append(get_result_formatted(layer_name+'_consumption', str(sum_tif), 'KWh'))
+		values.append(get_result_formatted(layer_name+'_count_cell', str(counted_cells), 'cells'))
+		values.append(get_result_formatted(layer_name+'_consumption_min', str(min_tif), 'MWh/ha'))
+		values.append(get_result_formatted(layer_name+'_consumption_max', str(max_tif), 'MWh/ha'))
+		values.append(get_result_formatted(layer_name+'_density', str(sum_tif/counted_cells), 'MWh/ha'))
+		return values
 
 @celery.task(name = 'energy_mix_nuts_lau')
 def processGenerationMix(nuts):
