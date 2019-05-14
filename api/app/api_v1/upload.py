@@ -1,4 +1,4 @@
-from io import StringIO
+from io import StringIO,BytesIO
 import os
 import shutil
 import shapely.geometry as shapely_geom
@@ -345,12 +345,12 @@ class ExportRasterNuts(Resource):
         hex_file_decoded = unhexlify(hex_file)
 
         # write string buffer
-        str_io = StringIO.StringIO()
-        str_io.write(hex_file_decoded)
-        str_io.seek(0)
+        bt_io = BytesIO()
+        bt_io.write(hex_file_decoded)
+        bt_io.seek(0)
 
         # send the file to the client
-        return send_file(str_io,
+        return send_file(bt_io,
                          mimetype='image/TIF',
                          attachment_filename="hotmaps.tif",
                          as_attachment=True)
@@ -443,10 +443,10 @@ class ExportRasterHectare(Resource):
             raise RequestException('There is no result for this selection')
 
         # decode hex_file
-        hex_file_decoded = unhexlify(hex_file)
+        hex_file_decoded = str(unhexlify(hex_file))
 
         # write string buffer
-        str_io = StringIO.StringIO()
+        str_io = StringIO()
         str_io.write(hex_file_decoded)
         str_io.seek(0)
 
@@ -548,7 +548,7 @@ class ExportCsvNuts(Resource):
             raise RequestException('There is no result for this selection')
 
         # write string buffer
-        str_io = StringIO.StringIO()
+        str_io = StringIO()
         str_io.write(csv_file)
         str_io.seek(0)
 
@@ -654,7 +654,7 @@ class ExportCsvHectare(Resource):
             raise RequestException('There is no result for this selection')
 
         # write string buffer>
-        str_io = StringIO.StringIO()
+        str_io = StringIO()
         str_io.write(csv_file)
         str_io.seek(0)
 
