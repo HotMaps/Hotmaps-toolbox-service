@@ -25,9 +25,9 @@ CM_REGISTER_Q = 'rpc_queue_CM_register'
 
 #TODO ********************setup this URL depending on which version you are running***************************
 
-CELERY_BROKER_URL = CELERY_BROKER_URL_DOCKER
-CLIENT_URL = CLIENT_URL_DEV
-PORT = PORT_DOCKER
+CELERY_BROKER_URL = CELERY_BROKER_URL_LOCAL
+CLIENT_URL = CLIENT_URL_LOCAL
+PORT = PORT_LOCAL
 
 
 #TODO *******************************************************************************
@@ -111,3 +111,6 @@ NUTS_LAU_LEVELS = {nuts0:0,nuts1:1,nuts2:2,nuts3:3,lau2:4,hectare_name:5}
 scale_level_loadprofile_aggreagtion = [nuts3,lau2]
 
 MAIL_FEEDBACK = 'albain.dufils@crem.ch'
+USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
+
+UPLOAD_BASE_NAME = 'grey.tif'
