@@ -1,5 +1,7 @@
 # HotMaps-toolbox Docker image
 
+![Build Status](https://vlheasilab.hevs.ch/buildStatus/icon?job=Hotmaps-toolbox-service%2Ffeature-continuous-integration)
+
 This Docker image offers a GIS Flask + uWSGI + Nginx setup to run a webservice in Python 3.6.
 It is based on Ubuntu 16.04.
 
