@@ -1,24 +1,28 @@
-from io import StringIO,BytesIO
 import os
 import shutil
-import shapely.geometry as shapely_geom
 import uuid
-from flask_restplus import Resource
 from binascii import unhexlify
-from flask import send_file
+from io import BytesIO
+
+import shapely.geometry as shapely_geom
 from app import celery
-from ..decorators.restplus import api
+from app.constants import USER_UPLOAD_FOLDER, UPLOAD_BASE_NAME
+from flask import send_file
+from flask_restplus import Resource
+
+from .. import dbGIS as db
+from ..decorators.parsers import file_upload
 from ..decorators.restplus import UserUnidentifiedException, ParameterException, RequestException, \
     UserDoesntOwnUploadsException, UploadNotExistingException, \
     HugeRequestException, NotEnoughPointsException
-from ..decorators.serializers import upload_add_output, upload_list_input, upload_list_output,upload_delete_input, \
+from ..decorators.restplus import api
+from ..decorators.serializers import upload_add_output, upload_list_input, upload_list_output, upload_delete_input, \
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
     upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input
-from .. import dbGIS as db
-from ..models.uploads import Uploads, generate_tiles, allowed_file, check_map_size, calculate_total_space
+from ..models.uploads import Uploads, generate_tiles, allowed_file, generate_geojson, calculate_total_space, \
+    generate_csv_string
 from ..models.user import User
-from ..decorators.parsers import file_upload
-from app.constants import USER_UPLOAD_FOLDER, UPLOAD_BASE_NAME
+
 nsUpload = api.namespace('upload', description='Operations related to file upload')
 ns = nsUpload
 NUTS_YEAR = "2013"
@@ -107,7 +111,7 @@ class AddUploads(Resource):
         if file_name.endswith('.tif'):
             generate_tiles.delay(upload_folder, url, layer, upload_uuid, user_currently_used_space)
         else:
-            check_map_size(upload_folder, user_currently_used_space, upload_uuid)
+            generate_geojson.delay(upload_folder, layer, upload_uuid, user_currently_used_space)
 
         # output
         output = 'file ' + name + ' added for the user ' + user.first_name
@@ -151,6 +155,43 @@ class TilesUploads(Resource):
         # send the file to the client
         return send_file(tile_filename,
                          mimetype='image/png')
+
+
+@ns.route('/csv/<string:token>/<string:upload_id>')
+@api.response(530, 'Request error')
+@api.response(531, 'Missing parameter')
+@api.response(539, 'User Unidentified')
+@api.response(543, 'Uploads doesn\'t exists')
+class ReadCsv(Resource):
+    def get(self, token, upload_id):
+        """
+        The method called to get the csv of an upload
+        :return:
+        """
+
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise UserUnidentifiedException
+
+        # find upload to display
+        upload = Uploads.query.filter_by(id=upload_id).first()
+        if upload is None:
+            raise UploadNotExistingException
+
+        # check if the user can display the upload
+        if upload.user_id != user.id:
+            raise UserDoesntOwnUploadsException
+
+        folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
+
+        geoJSON = folder_url+"/data.json"
+
+        if not os.path.exists(geoJSON):
+            raise RequestException("No csv Existing")
+        # send the file to the client
+        return send_file(geoJSON,
+                         mimetype='application/json')
 
 
 @ns.route('/list')
@@ -501,6 +542,9 @@ class ExportCsvNuts(Resource):
                     exception_message += ', '
             raise ParameterException(str(exception_message))
 
+        # TODO: get SRID
+        csv_layer_srid = '3035'
+
         # We must determine if it is a nuts or a lau
         dateCol = "year"
         schema2 = "geo"
@@ -511,21 +555,21 @@ class ExportCsvNuts(Resource):
             layer_date = LAU_YEAR
             dateCol = "date"
             schema2 = "public"
+
         else:
             layer_type = 'nuts'
             layer_name = str(layers)[: -6]
             id_type = 'nuts_id'
             layer_date = NUTS_YEAR
+
             if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
 
-        sql = """SELECT * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform((SELECT ST_UNION(geom) from {6}.{3} where {4} = '{5}'""".format(schema, layer_name, year, layer_type, id_type, nuts[0], schema2)
-
-        # we add the rest of the lau id
-        for nut in nuts[1:]:
-            sql += " OR " + id_type + " = '" + nut + "'"
-
-        sql += " AND {0} = '{1}-01-01'), 3035))".format(dateCol, layer_date)
+        sql = """SELECT ST_ASTEXT(geometry) as geometry_wkt, ST_SRID(geometry) as srid, * FROM {0}.{1} WHERE date = '{2}-01-01' 
+                 AND ST_Within({0}.{1}.geometry, st_transform(
+                   (SELECT ST_UNION(geom) FROM {6}.{3} WHERE {4} IN ({5}) AND {7} = '{8}-01-01'),
+                   {9}
+                 ));""".format(schema, layer_name, year, layer_type, id_type, ', '.join("'{0}'".format(n) for n in nuts), schema2, dateCol, layer_date, csv_layer_srid)
 
         # execute request
         try:
@@ -533,32 +577,10 @@ class ExportCsvNuts(Resource):
         except:
             raise RequestException("Problem with your SQL query")
 
-        # write csv_file
-        number_of_columns = len(result._metadata.keys)
-        csv_file = ''
-        for header in result._metadata.keys[:-1]:
-            csv_file += header + ', '
-
-        csv_file += result._metadata.keys[number_of_columns - 1] + '\r\n'
-        rowcount = 0
-        for row in result:
-            rowcount += 1
-            for attribute in row[:-1]:
-                    csv_file += str(attribute) + ', '
-            csv_file += str(row[number_of_columns - 1]) + '\r\n'
-
-        # if the result is empty, we raise an error
-        if rowcount is 0:
-            raise RequestException('There is no result for this selection')
-
-        # write string buffer
-        #str_io = StringIO.StringIO() patch py3
-        str_io = StringIO()
-        str_io.write(csv_file)
-        str_io.seek(0)
+        csvResult = generate_csv_string(result)
 
         # send the file to the client
-        return send_file(str_io,
+        return send_file(csvResult,
                          mimetype='text/csv',
                          attachment_filename="hotmaps.csv",
                          as_attachment=True)
@@ -633,7 +655,7 @@ class ExportCsvHectare(Resource):
         # convert array of polygon into multipolygon
         multipolygon = shapely_geom.MultiPolygon(polyArray)
 
-        sql = """SELECT * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform(st_geomfromtext('{3}', 4258), 3035))""".format(schema, layer_name, year, str(multipolygon))
+        sql = """SELECT ST_ASTEXT(geometry) as geometry_wkt, ST_SRID(geometry) as srid, * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform(st_geomfromtext('{3}', 4258), 3035))""".format(schema, layer_name, year, str(multipolygon))
 
         # execute request
         try:
@@ -641,31 +663,10 @@ class ExportCsvHectare(Resource):
         except:
             raise RequestException("Problem with your SQL query")
 
-        # write csv_file
-        number_of_columns = len(result._metadata.keys)
-        csv_file = ''
-        for header in result._metadata.keys[:-1]:
-            csv_file += header + ', '
-        rowcount = 0
-        csv_file += result._metadata.keys[number_of_columns - 1] + '\r\n'
-        for row in result:
-            rowcount += 1
-            for attribute in row[:-1]:
-                    csv_file += str(attribute) + ', '
-            csv_file += str(row[number_of_columns - 1]) + '\r\n'
-
-        # if the result is empty, we raise an error
-        if rowcount is 0:
-            raise RequestException('There is no result for this selection')
-
-        # write string buffer>
-        #str_io = StringIO.StringIO() patch py3
-        str_io = StringIO()
-        str_io.write(csv_file)
-        str_io.seek(0)
+        csvResult = generate_csv_string(result)
 
         # send the file to the client
-        return send_file(str_io,
+        return send_file(csvResult,
                          mimetype='text/csv',
                          attachment_filename="hotmaps.csv",
                          as_attachment=True)
@@ -726,7 +727,7 @@ class Download(Resource):
             mimetype = 'image/TIFF'
         elif os.path.exists(url + '/data.csv'):
             url += '/data.csv'
-            extension= '.csv'
+            extension = '.csv'
             mimetype = 'text/csv'
 
         # send the file to the client
