@@ -1,7 +1,8 @@
-import requests
-import os
 from unittest import TestCase
-from . import BASE_URL, test_hectare_heat_load
+
+import requests
+
+from . import BASE_URL
 
 url = BASE_URL + "/upload/export/raster/hectare"
 
@@ -24,11 +25,11 @@ class TestExportRasterHectare(TestCase):
             ]
         }
 
-        expected_output = float(os.path.getsize(test_hectare_heat_load))
+        expected_status = 200
 
         output = requests.post(url, json=payload)
 
-        assert len(output.content) == expected_output
+        assert output.status_code == expected_status
 
     def test_port_wrong_parameters(self):
         """

@@ -1,7 +1,7 @@
 import requests
 
 from unittest import TestCase
-from . import BASE_URL, test_token, test_csv_size
+from . import BASE_URL, test_token
 
 url = BASE_URL + "/users/space_used"
 
@@ -16,11 +16,11 @@ class TestSpaceUsedUploads(TestCase):
             "token": test_token,
         }
 
+        expected_status = 200
+
         output = requests.post(url, json=payload)
 
-        expected_output = test_csv_size
-
-        assert output.json()['used_size'] == expected_output
+        assert output.status_code == expected_status
 
     def test_post_missing_parameter(self):
         """
