@@ -9,5 +9,4 @@ payload = {
 }
 
 output = requests.post(url, json=payload)
-
 test_token = output.json()['token']

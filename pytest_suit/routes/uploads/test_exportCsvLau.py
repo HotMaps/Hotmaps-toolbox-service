@@ -1,6 +1,8 @@
-import requests
 from unittest import TestCase
-from . import BASE_URL, test_lau_wwtp
+
+import requests
+
+from . import BASE_URL
 
 url = BASE_URL + "/upload/export/csv/nuts"
 
@@ -17,12 +19,11 @@ class TestExportCsvLau(TestCase):
             "nuts": ["AT90001"]
         }
 
-        expected_output_file = open(test_lau_wwtp, "r")
-        expected_output = expected_output_file.read()
+        expected_status = 200
 
         output = requests.post(url, json=payload)
 
-        assert output.content == expected_output
+        assert output.status_code == expected_status
 
     def test_port_wrong_parameters(self):
         """

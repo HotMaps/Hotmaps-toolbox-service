@@ -1,12 +1,14 @@
-from app import create_app
-import unittest
-from app import dbGIS as db
 import os.path
-from ..test_client import TestClient
+import unittest
+
+from app import create_app
 from app.model import query_geographic_database
 from app.models.indicators import layersData
 from app.sql_queries import get_exists_table_query
+
 from .payloads import nuts3_stat
+from ..test_client import TestClient
+
 
 class TestIndicators(unittest.TestCase):
     
