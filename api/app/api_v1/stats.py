@@ -5,6 +5,7 @@ import os.path
 import pandas as pd
 import numpy as np
 from osgeo import gdal
+import datetime
 
 from flask_restplus import Resource
 from app.decorators.serializers import  stats_layers_hectares_output,\
@@ -24,11 +25,14 @@ import shapely.geometry as shapely_geom
 from app import constants
 
 from app.models import generalData
+from app.models.indicators import HEATDEMAND_FACTOR
 from app.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator, createAllLayers,\
-	getTypeScale, adapt_layers_list, adapt_nuts_list, removeScaleLayers, layers_filter, getTypeScale, get_result_formatted
+	getTypeScale, adapt_layers_list, adapt_nuts_list, removeScaleLayers, layers_filter, getTypeScale, get_result_formatted, generate_geotif_name, area_to_geom, \
+	write_wkt_csv, generate_csv_name,projection_4326_to_3035
 import app
 import json
 from app.model import check_table_existe
+from app import model
 
 
 
@@ -204,12 +208,19 @@ class StatsPersonalLayers(Resource):
 	@api.marshal_with(stats_layers_nuts_output)
 	@api.expect(stats_layer_personnal_layer_input)
 	def post(self):
-		print(api.payload)
 		noDataLayer=[]
 		result=[]
-
+		path_test = '/var/hotmaps/test'
+		#nuts_within = model.nuts2_within_the_selection_nuts_lau('nuts',api.payload['nuts'])
+		#print(nuts_within)
+		areas = api.payload['areas']
+		
+		if api.payload['scale_level'] == 'hectare':
+			areas = area_to_geom(api.payload['areas'])
+			cutline_input = write_wkt_csv(generate_csv_name(path_test),projection_4326_to_3035(areas))
+		else:
+			cutline_input = model.get_shapefile_from_selection(api.payload['scale_level'], areas, path_test)
 		for pay in api.payload['layers']:
-			print()
 			values=[]
 			token = pay['user_token']
 			layer_id = pay['id']
@@ -218,44 +229,57 @@ class StatsPersonalLayers(Resource):
 
 			user = User.verify_auth_token(token)
 			upload = Uploads.query.filter_by(id=layer_id).first()
-
 			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)+ '/' + constants.UPLOAD_BASE_NAME
-			if os.path.isfile(upload_url):
-				ds = gdal.Open(upload_url)
+			filename_tif = generate_geotif_name(path_test)
+			args = model.commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(cutline_input,upload_url,filename_tif))
+			model.run_command(args)
+			if os.path.isfile(filename_tif):
+				ds = gdal.Open(filename_tif)
 				arr = ds.GetRasterBand(1).ReadAsArray()
 				df = pd.DataFrame(arr)
 			else:
 				noDataLayer.append(layer_name)
 				continue
-			df = df[df.iloc[:] != 0]
-
+			#df = df[df.iloc[:] != 0].fillna(0)
+			#os.remove(filename_tif)
+			#os.remove(cutline_input)
 			values = self.set_indicators_in_array(df, layer_type)
 			
 			result.append({
 				'name':layer_name,
 				'values':values
 			})
+		
 		return {
-			"layers": result,
-			"no_data_layers": noDataLayer,
-			"no_table_layers": []
-		}
-	def set_indicators_in_array(self, df, layer_name):
+				"layers": result,
+				"no_data_layers": noDataLayer,
+				"no_table_layers": []
+			}
+		
+	@staticmethod
+	def set_indicators_in_array(df, layer_name):
 		values=[]
 		# Set result in variables
-		sum_tif = df.sum().sum()
+		df=df[df!=0]
 		counted_cells = df.count().sum()
-		min_tif = df.min().min()
-		max_tif = df.max().max()
-
+		sum_tif=0
+		min_tif = 0
+		max_tif = 0
+		density_tif = 0
+		if counted_cells != 0:
+			sum_tif = df.sum().sum()
+			min_tif = df.min().min()
+			max_tif = df.max().max()
+			density_tif = sum_tif/counted_cells
+		print(max_tif,counted_cells,min_tif,max_tif)
 		# Assign indicator to results
-		values.append(get_result_formatted(layer_name+'_consumption', str(sum_tif), 'KWh'))
+		values.append(get_result_formatted(layer_name+'_consumption', str(sum_tif*HEATDEMAND_FACTOR), 'GWh'))
 		values.append(get_result_formatted(layer_name+'_count_cell', str(counted_cells), 'cells'))
 		values.append(get_result_formatted(layer_name+'_consumption_min', str(min_tif), 'MWh/ha'))
 		values.append(get_result_formatted(layer_name+'_consumption_max', str(max_tif), 'MWh/ha'))
-		values.append(get_result_formatted(layer_name+'_density', str(sum_tif/counted_cells), 'MWh/ha'))
+		values.append(get_result_formatted(layer_name+'_density', str(density_tif), 'MWh/ha'))
 		return values
-
+	
 @celery.task(name = 'energy_mix_nuts_lau')
 def processGenerationMix(nuts):
 	if not nuts:
@@ -263,4 +287,3 @@ def processGenerationMix(nuts):
 	res = ElectricityMix.getEnergyMixNutsLau(adapt_nuts_list(nuts))
 
 	return res
-
