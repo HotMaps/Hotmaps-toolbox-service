@@ -17,11 +17,11 @@ class LayersStats:
 	def run_stat(payload):
 		
 		year = payload['year']
-		print ('year ',year)
+
 		layersPayload = payload['layers']
-		print ('layersPayload ',layersPayload)
+
 		scale_level = payload['scale_level']
-		print ('scale_level ',scale_level)
+
 
 		#must sanitize this
 

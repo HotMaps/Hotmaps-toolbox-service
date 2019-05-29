@@ -256,13 +256,13 @@ def get_connection_string():
 
 def get_shapefile_from_selection(scalevalue,id_selected_list,ouput_directory):
     id_selected_list = helper.adapt_nuts_list(id_selected_list)
-    print('id_selected_list ',id_selected_list)
+
     output_shapefile = quote(helper.generate_shapefile_name(ouput_directory))
     if scalevalue == 'nuts':
         subprocess.call('ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,3035) from geo.nuts where nuts_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'"), shell=True)
     else:
         subprocess.call('ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,3035) from public.tbl_lau1_2 where comm_id IN ('+ id_selected_list +')"', shell=True)
-    print('output_shapefile ',output_shapefile)
+
     return output_shapefile
 
 def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed,type_needed, output_directory):
@@ -299,9 +299,12 @@ def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed,t
     """
     inputs_raster_selection = {}
     # retrieve all layer neeeded
+    print ('layer_needed',layer_needed)
+    print ('type_needed',type_needed)
+    cpt_type = 0
     for layer in layer_needed:
-        cpt_type = 0
         type = type_needed[cpt_type]
+        print ('type',type)
         directory = layer.replace('_tif', '')
         root_path = datasets_directory + directory + "/data/"
         path_to_dataset = root_path + layer + ".tif"
@@ -311,9 +314,9 @@ def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed,t
         filename_tif = helper.generate_geotif_name(output_directory)
         args = commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(shapefile_path,path_to_dataset,filename_tif))
         run_command(args)
-        #os.system(com_string)
         inputs_raster_selection[type] = filename_tif
         cpt_type = cpt_type + 1
+
     return inputs_raster_selection
 
 def commands_in_array(com_string):
@@ -327,9 +330,7 @@ def run_command(arr):
 def nuts2_within_the_selection_nuts_lau(scalevalue, nuts):
     toCRS = 4258
     sql_query = sql_queries.nuts2_within_the_selection_nuts_lau(scalevalue, nuts, toCRS)
-    print ("sql_query ",sql_query)
     result = query_geographic_database(sql_query)
-    print ("result ",result)
     result = helper.retrieve_list_from_sql_result(result)
     result = helper.from_dict_to_unique_array(result,'nuts_id')
     return result
@@ -337,7 +338,6 @@ def nuts2_within_the_selection_nuts_lau(scalevalue, nuts):
 def nuts_within_the_selection(geom):
     toCRS = 4258
     sql_query = sql_queries.nuts_within_the_selection(geom,toCRS)
-    print ("sql_query ",sql_query)
     result = query_geographic_database(sql_query)
     result = helper.retrieve_list_from_sql_result(result)
     result = helper.from_dict_to_unique_array(result,'nuts_id')
@@ -356,7 +356,6 @@ def retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, area
     for vector_table_requested in vectors_needed:
         toCRS = 4258
         sql_query = sql_queries.vector_query(scalevalue,vector_table_requested, area_selected,toCRS)
-        print ("sql_query ",sql_query)
         result = query_geographic_database(sql_query)
         result = helper.retrieve_list_from_sql_result(result)
         inputs_vectors_selection[vector_table_requested] = result

@@ -197,7 +197,6 @@ def computeTask(data,payload,cm_id):
         # no vector_layers
         pass
 
-    print ('data_output',json.dumps(data_output))
     return data_output
 
 def generateTiles(raster_layers):
@@ -255,7 +254,6 @@ def generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_sele
         'inputs_vector_selection':inputs_vector_selection
     })
     data = json.dumps(data_output)
-    print ('data',data)
     return data
 
 @ns.route('/compute-async/', methods=['POST'])
