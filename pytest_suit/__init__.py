@@ -3,4 +3,5 @@
 The Application tests collection
 ================================
 """
-BASE_URL = "http://153.109.130.81:5000/api"
+# TODO change this url to correspond to your local api URL
+BASE_URL = "http://localhost:5000/api"

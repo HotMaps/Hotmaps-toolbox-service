@@ -1,5 +1,7 @@
-import requests
 from unittest import TestCase
+
+import requests
+
 from . import BASE_URL, test_token
 
 url = BASE_URL + "/upload/download"
@@ -23,9 +25,11 @@ class TestDownload(TestCase):
             "id": test_upload_id
         }
 
+        expected_status = 200
+
         output = requests.post(url, json=payload)
-        expected_output = "name, size\r\ntest, 10"
-        assert output.content == expected_output
+
+        assert output.status_code == expected_status
 
     def test_download_missing_parameter(self):
         """

@@ -25,7 +25,7 @@ def handle_request_exception(error):
     :param error -- the called error:
     :return:
     '''
-    message = error.message
+    message = str(error)
     response = {
        "message": message,
        "error": {
@@ -44,7 +44,7 @@ def handle_false_parameters(error):
     :param error -- the called error:
     :return:
     '''
-    message = 'Missing Parameter: ' + error.message
+    message = 'Missing Parameter: ' + str(error)
     response = {
         "message": message,
         "error": {
@@ -120,7 +120,7 @@ def handle_mail_existing(error):
     :param error -- the called error:
     :return:
     '''
-    message = 'the user '+error.message+' already exists !'
+    message = 'the user '+str(error)+' already exists !'
     response = {
         "message": message,
         "error": {
