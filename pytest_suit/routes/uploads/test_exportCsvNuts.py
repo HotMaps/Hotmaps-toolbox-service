@@ -16,7 +16,7 @@ class TestExportCsvLau(TestCase):
             "layers": "wwtp_capacity_nuts3",
             "year": "2012",
             "schema": "public",
-            "nuts": ["AT130"]
+            "nuts": ["AT127"]
         }
 
         expected_status = 200
@@ -33,7 +33,7 @@ class TestExportCsvLau(TestCase):
             "fdslayers": "wwtp_capacity_nuts3",
             "ydfsear": "2012",
             "scfdsahema": "public",
-            "nuts": ["AT90001"]
+            "nuts": ["AT127"]
             }
 
         output = requests.post(url, json=payload)
@@ -50,7 +50,7 @@ class TestExportCsvLau(TestCase):
             "layers": "wwtp_capacity_nuts2",
             "year": "2012",
             "schema": "public",
-            "nuts": ["AT90001"]
+            "nuts": ["AT127"]
         }
 
         output = requests.post(url, json=payload)
