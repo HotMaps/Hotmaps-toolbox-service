@@ -274,19 +274,25 @@ class StatsPersonalLayers(Resource):
 		print(max_tif,counted_cells,min_tif,max_tif)
 		# Assign indicator to results
 		#if get_unit('min', layer_name) is not None: 
-		values.append(get_result_formatted(layer_name+'_consumption', str(sum_tif*HEATDEMAND_FACTOR), get_unit('sum', layer_name)))
-		values.append(get_result_formatted(layer_name+'_count_cell', str(counted_cells), get_unit('count', layer_name)))
-		values.append(get_result_formatted(layer_name+'_min', str(min_tif), get_unit('min', layer_name)))
-		values.append(get_result_formatted(layer_name+'_max', str(max_tif), get_unit('max', layer_name)))
-		values.append(get_result_formatted(layer_name+'_density', str(density_tif), get_unit('mean', layer_name)))
+		values.append(get_result_formatted(get_businness_id('sum', layer_name), str(sum_tif*HEATDEMAND_FACTOR), get_unit('sum', layer_name)))
+		values.append(get_result_formatted(get_businness_id('count', layer_name), str(counted_cells), get_unit('count', layer_name)))
+		values.append(get_result_formatted(get_businness_id('min', layer_name), str(min_tif), get_unit('min', layer_name)))
+		values.append(get_result_formatted(get_businness_id('max', layer_name), str(max_tif), get_unit('max', layer_name)))
+		values.append(get_result_formatted(get_businness_id('mean', layer_name), str(density_tif), get_unit('mean', layer_name)))
 		return values
 
 def get_unit(id, layer):
-	#print(indicators.layersData[layer]['indicators'])
+	filtered_indicators = list(filter(lambda x: 'table_column' in x and x['table_column'] == id,indicators.layersData[layer]['indicators']))
 	try:
 		return list(filter(lambda x: 'table_column' in x and x['table_column'] == id,indicators.layersData[layer]['indicators']))[0]['unit']
 	except IndexError:
 		return layer + '_unit_' + id
+def get_businness_id(id, layer):
+	filtered_indicators = list(filter(lambda x: 'table_column' in x and x['table_column'] == id,indicators.layersData[layer]['indicators']))
+	try:
+		return layer + '_' + filtered_indicators[0]['indicator_id']
+	except IndexError:
+		return layer + '_' + id
 
 @celery.task(name = 'energy_mix_nuts_lau')
 def processGenerationMix(nuts):
