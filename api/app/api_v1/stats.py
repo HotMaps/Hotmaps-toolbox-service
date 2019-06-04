@@ -5,7 +5,6 @@ import os.path
 import pandas as pd
 import numpy as np
 from osgeo import gdal
-import datetime
 
 from flask_restplus import Resource
 from app.decorators.serializers import  stats_layers_hectares_output,\
@@ -244,7 +243,7 @@ class StatsPersonalLayers(Resource):
 			#os.remove(filename_tif)
 			#os.remove(cutline_input)
 			values = self.set_indicators_in_array(df, layer_type)
-			
+
 			result.append({
 				'name':layer_name,
 				'values':values
@@ -253,7 +252,7 @@ class StatsPersonalLayers(Resource):
 		return {
 				"layers": result,
 				"no_data_layers": noDataLayer,
-				"no_table_layers": []
+				"no_table_layers": noDataLayer
 			}
 		
 	@staticmethod

@@ -18,7 +18,7 @@ jsonschema==2.6.0
 lxml==3.8.0
 MarkupSafe==1.0
 munch==2.1.1
-numpy==1.13.0
+numpy==1.16.2
 pandas==0.20.2
 passlib
 python-dateutil==2.6.0
