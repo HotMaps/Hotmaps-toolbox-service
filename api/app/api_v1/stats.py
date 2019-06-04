@@ -285,10 +285,25 @@ def get_indicators_from_result(id,layer,result):
 	value = result
 	name = layer + '_' + id
 	if len(filtered_indicators)>=1:
+		name = layer + '_' + filtered_indicators[0]['indicator_id']
 		if 'unit' in filtered_indicators[0]: unit = filtered_indicators[0]['unit']
 		if 'factor' in filtered_indicators[0]: value = result*filtered_indicators[0]['factor']
 	return get_result_formatted(name,str(value),unit)
 	
+
+def get_unit(id, layer):
+	filtered_indicators = list(filter(lambda x: 'table_column' in x and x['table_column'] == id,indicators.layersData[layer]['indicators']))
+	try:
+		return list(filter(lambda x: 'table_column' in x and x['table_column'] == id,indicators.layersData[layer]['indicators']))[0]['unit']
+	except IndexError:
+		return layer + '_unit_' + id
+def get_businness_id(id, layer):
+	filtered_indicators = list(filter(lambda x: 'table_column' in x and x['table_column'] == id,indicators.layersData[layer]['indicators']))
+	try:
+		return layer + '_' + filtered_indicators[0]['indicator_id']
+	except IndexError:
+		return layer + '_' + id
+
 @celery.task(name = 'energy_mix_nuts_lau')
 def processGenerationMix(nuts):
 	if not nuts:
