@@ -218,7 +218,9 @@ stats_layer_personnal_layer = api.model('personnal layer', {
     'layer_name': fields.String(description='Upload name')
 })
 stats_layer_personnal_layer_input = api.model('Input for stats on personnal layer', {
-    'layers':fields.List(fields.Nested(stats_layer_personnal_layer))
+    'layers': fields.List(fields.Nested(stats_layer_personnal_layer)),
+    'nuts': fields.List(fields.String(descriptions='List of NUTS')),
+    'scale_level': fields.String(description='Scale level')
 })
 
 stats_layers_area_nuts_input = api.model('Input for statistics on layers, area and year', {
