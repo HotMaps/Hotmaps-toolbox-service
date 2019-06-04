@@ -23,15 +23,13 @@ from app.decorators.exceptions import ValidationError, ComputationalModuleError
 import os
 import json
 from flask import send_from_directory
-
+from app.constants import UPLOAD_DIRECTORY, DATASET_DIRECTORY
 
 from app import CalculationModuleRpcClient
 
 
 
 #TODO Add url to find  right computation module
-UPLOAD_DIRECTORY = '/var/tmp'
-DATASET_DIRECTORY = '/var/hotmaps/repositories/'
 
 try:
     args = commands_in_array("chmod +x app/helper/gdal2tiles-multiprocess.py")

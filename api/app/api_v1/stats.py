@@ -209,16 +209,15 @@ class StatsPersonalLayers(Resource):
 	def post(self):
 		noDataLayer=[]
 		result=[]
-		path_test = '/var/hotmaps/test'
 		#nuts_within = model.nuts2_within_the_selection_nuts_lau('nuts',api.payload['nuts'])
 		#print(nuts_within)
 		areas = api.payload['areas']
 		
 		if api.payload['scale_level'] == 'hectare':
 			areas = area_to_geom(api.payload['areas'])
-			cutline_input = write_wkt_csv(generate_csv_name(path_test),projection_4326_to_3035(areas))
+			cutline_input = write_wkt_csv(generate_csv_name(constants.UPLOAD_DIRECTORY),projection_4326_to_3035(areas))
 		else:
-			cutline_input = model.get_shapefile_from_selection(api.payload['scale_level'], areas, path_test)
+			cutline_input = model.get_shapefile_from_selection(api.payload['scale_level'], areas, constants.UPLOAD_DIRECTORY)
 		for pay in api.payload['layers']:
 			values=[]
 			token = pay['user_token']
@@ -229,7 +228,7 @@ class StatsPersonalLayers(Resource):
 			user = User.verify_auth_token(token)
 			upload = Uploads.query.filter_by(id=layer_id).first()
 			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)+ '/' + constants.UPLOAD_BASE_NAME
-			filename_tif = generate_geotif_name(path_test)
+			filename_tif = generate_geotif_name(constants.UPLOAD_DIRECTORY)
 			args = model.commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(cutline_input,upload_url,filename_tif))
 			model.run_command(args)
 			if os.path.isfile(filename_tif):
