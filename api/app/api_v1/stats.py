@@ -262,7 +262,7 @@ class StatsPersonalLayers(Resource):
 		# Set result in variables
 		df=df[df!=0]
 		counted_cells = df.count().sum()
-		sum_tif=0
+		sum_tif = 0
 		min_tif = 0
 		max_tif = 0
 		density_tif = 0
@@ -271,29 +271,24 @@ class StatsPersonalLayers(Resource):
 			min_tif = df.min().min()
 			max_tif = df.max().max()
 			density_tif = sum_tif/counted_cells
-		print(max_tif,counted_cells,min_tif,max_tif)
+		#print(max_tif,counted_cells,min_tif,max_tif)
 		# Assign indicator to results
-		#if get_unit('min', layer_name) is not None: 
-		values.append(get_result_formatted(get_businness_id('sum', layer_name), str(sum_tif*HEATDEMAND_FACTOR), get_unit('sum', layer_name)))
-		values.append(get_result_formatted(get_businness_id('count', layer_name), str(counted_cells), get_unit('count', layer_name)))
-		values.append(get_result_formatted(get_businness_id('min', layer_name), str(min_tif), get_unit('min', layer_name)))
-		values.append(get_result_formatted(get_businness_id('max', layer_name), str(max_tif), get_unit('max', layer_name)))
-		values.append(get_result_formatted(get_businness_id('mean', layer_name), str(density_tif), get_unit('mean', layer_name)))
+		values.append(get_indicators_from_result('sum', layer_name, sum_tif))
+		values.append(get_indicators_from_result('count', layer_name, counted_cells))
+		values.append(get_indicators_from_result('min', layer_name, min_tif))
+		values.append(get_indicators_from_result('max', layer_name, max_tif))
+		values.append(get_indicators_from_result('mean', layer_name, density_tif))
 		return values
-
-def get_unit(id, layer):
-	filtered_indicators = list(filter(lambda x: 'table_column' in x and x['table_column'] == id,indicators.layersData[layer]['indicators']))
-	try:
-		return list(filter(lambda x: 'table_column' in x and x['table_column'] == id,indicators.layersData[layer]['indicators']))[0]['unit']
-	except IndexError:
-		return layer + '_unit_' + id
-def get_businness_id(id, layer):
-	filtered_indicators = list(filter(lambda x: 'table_column' in x and x['table_column'] == id,indicators.layersData[layer]['indicators']))
-	try:
-		return layer + '_' + filtered_indicators[0]['indicator_id']
-	except IndexError:
-		return layer + '_' + id
-
+def get_indicators_from_result(id,layer,result):
+	filtered_indicators = list(filter(lambda x: 'table_column' in x and x['table_column'] == id, indicators.layersData[layer]['indicators']))
+	unit = layer + '_unit_' + id
+	value = result
+	name = layer + '_' + id
+	if len(filtered_indicators)>=1:
+		if 'unit' in filtered_indicators[0]: unit = filtered_indicators[0]['unit']
+		if 'factor' in filtered_indicators[0]: value = result*filtered_indicators[0]['factor']
+	return get_result_formatted(name,str(value),unit)
+	
 @celery.task(name = 'energy_mix_nuts_lau')
 def processGenerationMix(nuts):
 	if not nuts:
