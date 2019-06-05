@@ -96,7 +96,7 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
         run_command(args_rgba)
 
         # commands launch to obtain the level of zooms
-        args_tiles = commands_in_array("python app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-14' {} {} ".format(rgb_tif, tile_path))
+        args_tiles = commands_in_array("python app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-11' {} {} ".format(rgb_tif, tile_path))
         run_command(args_tiles)
 
     except :
