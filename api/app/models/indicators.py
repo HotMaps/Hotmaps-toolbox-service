@@ -87,16 +87,16 @@ layersData = {
 			'table_type':raster_type,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'GWh','indicator_id':'consumption','factor':HEATDEMAND_FACTOR,'agg_method':'sum'},
+				{'table_column': 'sum', 'unit': 'GWh/yr','indicator_id':'consumption','factor':HEATDEMAND_FACTOR,'agg_method':'sum'},
 				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
-				{'table_column': 'min', 'unit': 'MWh/ha','indicator_id':'consumption_min','agg_method':'min'},
-				{'table_column': 'max', 'unit': 'MWh/ha','indicator_id':'consumption_max','agg_method':'max'},
-				{'table_column': 'mean', 'unit': 'MWh/ha','indicator_id':'density','agg_method':'mean_weighted_cells'},    
+				{'table_column': 'min', 'unit': 'MWh/(ha*yr)','indicator_id':'consumption_min','agg_method':'min'},
+				{'table_column': 'max', 'unit': 'MWh/(ha*yr)','indicator_id':'consumption_max','agg_method':'max'},
+				{'table_column': 'mean', 'unit': 'MWh/(ha*yr)','indicator_id':'density','agg_method':'mean_weighted_cells'},    
 				{
 					'reference_indicator_id_1': 'consumption','reference_tablename_indicator_id_1':HEAT_DENSITY_TOT, 
 					'operator': '/',
 					'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 
-					'unit':'MWh/person', 'indicator_id':HEAT_DENSITY_TOT+'_per_'+POPULATION_TOT,'agg_method':'sum'
+					'unit':'MWh/(person*yr)', 'indicator_id':HEAT_DENSITY_TOT+'_per_'+POPULATION_TOT,'agg_method':'sum'
 				},
 			]},
 	HEAT_DENSITY_RES:{'tablename':HEAT_DENSITY_RES,
@@ -109,13 +109,13 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'GWh','indicator_id':'consumption','factor':0.001,'agg_method':'sum'},
+				{'table_column': 'sum', 'unit': 'GWh/yr','indicator_id':'consumption','factor':0.001,'agg_method':'sum'},
             {'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
-            {'table_column': 'mean', 'unit': 'MWh/ha','indicator_id':'density','agg_method':'mean_weighted_cells'},
+            {'table_column': 'mean', 'unit': 'MWh/(ha*yr)','indicator_id':'density','agg_method':'mean_weighted_cells'},
 				{'reference_indicator_id_1': 'consumption', 'reference_tablename_indicator_id_1':HEAT_DENSITY_RES, 					
                  'operator': '/',
     				'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 
-                'unit':'MWh/person', 'indicator_id':HEAT_DENSITY_RES+'_per_'+POPULATION_TOT,'agg_method':'sum'
+                'unit':'MWh/(person*yr)', 'indicator_id':HEAT_DENSITY_RES+'_per_'+POPULATION_TOT,'agg_method':'sum'
 				},
 			]
 			},
@@ -129,13 +129,13 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'GWh','indicator_id':'consumption','factor':0.001,'agg_method':'sum'},
+				{'table_column': 'sum', 'unit': 'GWh/yr','indicator_id':'consumption','factor':0.001,'agg_method':'sum'},
             {'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
-            {'table_column': 'mean', 'unit': 'MWh/ha','indicator_id':'density','agg_method':'mean_weighted_cells'},
+            {'table_column': 'mean', 'unit': 'MWh/(ha*yr)','indicator_id':'density','agg_method':'mean_weighted_cells'},
 				{'reference_indicator_id_1': 'consumption', 'reference_tablename_indicator_id_1':HEAT_DENSITY_NON_RES, 					
                  'operator': '/',
     				'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 
-                'unit':'MWh/person', 'indicator_id':HEAT_DENSITY_NON_RES+'_per_'+POPULATION_TOT,'agg_method':'sum'
+                'unit':'MWh/(person*yr)', 'indicator_id':HEAT_DENSITY_NON_RES+'_per_'+POPULATION_TOT,'agg_method':'sum'
 				},
 			]},
 	COOL_DENSITY_TOT:{'tablename':COOL_DENSITY_TOT,
@@ -148,15 +148,15 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'sum', 'unit': 'GWh','indicator_id':'consumption','factor':0.001,'agg_method':'sum'},
+				{'table_column': 'sum', 'unit': 'GWh/yr','indicator_id':'consumption','factor':0.001,'agg_method':'sum'},
             {'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
-				{'table_column': 'min', 'unit': 'MWh/ha','indicator_id':'consumption_min','agg_method':'min'},
-				{'table_column': 'max', 'unit': 'MWh/ha','indicator_id':'consumption_max','agg_method':'max'},
-            {'table_column': 'mean', 'unit': 'MWh/ha','indicator_id':'density','agg_method':'mean_weighted_cells'},
+				{'table_column': 'min', 'unit': 'MWh/(ha*yr)','indicator_id':'consumption_min','agg_method':'min'},
+				{'table_column': 'max', 'unit': 'MWh/(ha*yr)','indicator_id':'consumption_max','agg_method':'max'},
+            {'table_column': 'mean', 'unit': 'MWh/(ha*yr)','indicator_id':'density','agg_method':'mean_weighted_cells'},
 				{'reference_indicator_id_1': 'consumption', 'reference_tablename_indicator_id_1':COOL_DENSITY_TOT,
                  'operator': '/',
     				'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT,
-                'unit':'MWh/person', 'indicator_id':COOL_DENSITY_TOT+'_per_'+POPULATION_TOT,'agg_method':'sum'
+                'unit':'MWh/(person*yr)', 'indicator_id':COOL_DENSITY_TOT+'_per_'+POPULATION_TOT,'agg_method':'sum'
 				},
 			]},
 	GRASS_FLOOR_AREA_TOT:{'tablename':GRASS_FLOOR_AREA_TOT,
@@ -287,7 +287,7 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':False,
 			'indicators':[
-				{'table_column': 'emissions_ets_2014', 'unit': 'Tons/year','indicator_id':'value'},
+				{'table_column': 'emissions_ets_2014', 'unit': 't/yr','indicator_id':'value'},
 			]
 			},
 	INDUSTRIAL_SITES_EXCESS_HEAT:{'tablename':INDUSTRIAL_SITES_EXCESS_HEAT,
@@ -300,10 +300,10 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			
 			'data_aggregated':False,'indicators':[
-				{'table_column': 'excess_heat_100_200c', 'unit': 'GWh','indicator_id':'value1'},
-				{'table_column': 'excess_heat_200_500c', 'unit': 'GWh','indicator_id':'value2'},
-				{'table_column': 'excess_heat_500c', 'unit': 'GWh','indicator_id':'value3'},
-				{'table_column': 'excess_heat_total', 'unit': 'GWh','indicator_id':'total'}
+				{'table_column': 'excess_heat_100_200c', 'unit': 'GWh/yr','indicator_id':'value1'},
+				{'table_column': 'excess_heat_200_500c', 'unit': 'GWh/yr','indicator_id':'value2'},
+				{'table_column': 'excess_heat_500c', 'unit': 'GWh/yr','indicator_id':'value3'},
+				{'table_column': 'excess_heat_total', 'unit': 'GWh/yr','indicator_id':'total'}
 			]
 			},                 
 	POPULATION_TOT:{
@@ -373,7 +373,7 @@ layersData = {
          	'level_of_data':nuts3,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':False,'indicators':[
-				{'table_column': 'value', 'unit': 'GWh','indicator_id':'NUTS_potential','factor':277.778,'agg_method':'sum','diss_agg_method':'NUTS_result'},
+				{'table_column': 'value', 'unit': 'GWh/yr','indicator_id':'NUTS_potential','factor':277.778,'agg_method':'sum','diss_agg_method':'NUTS_result'},
             			
 			]},
     AGRICULTURAL_RESIDUES:{'tablename':AGRICULTURAL_RESIDUES,
@@ -388,7 +388,7 @@ layersData = {
 			'scalelvl_column':'nuts_id',
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':False,'indicators':[
-				{'table_column': 'value', 'unit': 'GWh','indicator_id':'NUTS_potential','factor':277.778,'agg_method':'sum','diss_agg_method':'NUTS_result'},
+				{'table_column': 'value', 'unit': 'GWh/yr','indicator_id':'NUTS_potential','factor':277.778,'agg_method':'sum','diss_agg_method':'NUTS_result'},
 			]},
 	POTENTIAL_FOREST:{'tablename':POTENTIAL_FOREST,
             'schema_scalelvl': stat_schema,
@@ -400,8 +400,8 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'from_indicator_name':stat + POTENTIAL_FOREST,
 			'data_aggregated':True,'indicators':[
-				{'table_column': 'mean', 'unit': 'MWh/ha','indicator_id':'average','agg_method':'mean_weighted_cells'},
-            {'table_column': 'sum', 'unit': 'GWh','indicator_id':'value','factor':0.001,'agg_method':'sum'},    
+				{'table_column': 'mean', 'unit': 'MWh/(ha/yr)','indicator_id':'average','agg_method':'mean_weighted_cells'},
+            {'table_column': 'sum', 'unit': 'GWh/yr','indicator_id':'value','factor':0.001,'agg_method':'sum'},    
 				{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},
 			]
 			},            
@@ -417,7 +417,7 @@ layersData = {
 			'scalelvl_column':'nuts_id',
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':False,'indicators':[
-				{'table_column': 'value', 'unit': 'GWh','indicator_id':'val','factor':277.778,'agg_method':'sum','diss_agg_method':'NUTS_result'},
+				{'table_column': 'value', 'unit': 'GWh/yr','indicator_id':'val','factor':277.778,'agg_method':'sum','diss_agg_method':'NUTS_result'},
 			]},    
 	GEOTHERMAL_POTENTIAL_HEAT_COND:{'tablename':GEOTHERMAL_POTENTIAL_HEAT_COND,
 		   'from_indicator_name':stat + GEOTHERMAL_POTENTIAL_HEAT_COND,
@@ -441,11 +441,11 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],	
 			'data_aggregated':True,
 			'indicators':[
-            {'table_column': 'mean', 'unit': u'kWh/m²','indicator_id':'average','agg_method':'mean_weighted_cell'},
-            {'table_column': 'min', 'unit': u'kWh/m²','indicator_id':'min','agg_method':'min'},
-            {'table_column': 'max', 'unit': u'kWh/m²','indicator_id':'max','agg_method':'max'},
+            {'table_column': 'mean', 'unit': u'kWh/(m²*year)','indicator_id':'average','agg_method':'mean_weighted_cell'},
+            {'table_column': 'min', 'unit': u'kWh/(m²*year)','indicator_id':'min','agg_method':'min'},
+            {'table_column': 'max', 'unit': u'kWh/(m²*year)','indicator_id':'max','agg_method':'max'},
         		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},
-            {'table_column': 'sum', 'unit': 'GWh','indicator_id':'potential_5_percent','factor':0.0045,'agg_method':'sum'},
+            {'table_column': 'sum', 'unit': 'GWh/yr','indicator_id':'potential_5_percent','factor':0.0045,'agg_method':'sum'},
 			]
 			},
 	WIND_POTENTIAL:{'tablename':WIND_POTENTIAL,
@@ -523,10 +523,10 @@ layersData = {
 			'table_type':raster_type,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':True,'indicators':[
-            {'table_column': 'mean', 'unit': u'kWh/m²','indicator_id':'average','agg_method':'mean_weighted_cell'},
-            {'table_column': 'min', 'unit': u'kWh/m²','indicator_id':'min','agg_method':'min'},
-            {'table_column': 'max', 'unit': u'kWh/m²','indicator_id':'max','agg_method':'max'},
-            {'table_column': 'sum', 'unit': 'GWh','indicator_id':'total_radiation','factor':0.01,'agg_method':'sum'},
+            {'table_column': 'mean', 'unit': u'kWh/(m²*year)','indicator_id':'average','agg_method':'mean_weighted_cell'},
+            {'table_column': 'min', 'unit': u'kWh/(m²*year)','indicator_id':'min','agg_method':'min'},
+            {'table_column': 'max', 'unit': u'kWh/(m²*year)','indicator_id':'max','agg_method':'max'},
+            {'table_column': 'sum', 'unit': 'GWh/yr','indicator_id':'total_radiation','factor':0.01,'agg_method':'sum'},
         		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},	
 			]},
 	WIND_SPEED:{'tablename':WIND_SPEED,
