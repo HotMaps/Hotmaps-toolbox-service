@@ -315,6 +315,7 @@ def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed,t
         args = commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(shapefile_path,path_to_dataset,filename_tif))
         run_command(args)
         inputs_raster_selection[type] = filename_tif
+        print("inputs_raster_selection[type]", filename_tif)
         cpt_type = cpt_type + 1
 
     return inputs_raster_selection
