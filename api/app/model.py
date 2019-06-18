@@ -42,13 +42,7 @@ def addRegisterCalulationModule(data):
 
     cm_name = data['cm_name']
     category = data['category']
-
-    type_layer_needed = "[]"
-    try:
-        type_layer_needed = data['type_layer_needed']
-    except:
-        pass
-
+    type_layer_needed = data['type_layer_needed']
     authorized_scale = "[]"
     try:
         authorized_scale = data['authorized_scale']
@@ -67,11 +61,7 @@ def addRegisterCalulationModule(data):
     cm_description = data['cm_description']
     cm_url = data['cm_url']
     cm_Id = data['id']
-    layers_needed = "[]"
-    try:
-        layers_needed = data['layers_needed']
-    except:
-        pass
+    layers_needed = data['layers_needed']
     updatedAt = datetime.utcnow()
     createdAt = datetime.utcnow()
     conn = myCMpool.connect()
@@ -101,22 +91,12 @@ def register_calulation_module(data):
         cursor = conn.cursor()
         cm_name = data['cm_name']
         category = data['category']
+        type_layer_needed = data['type_layer_needed']
 
-        type_layer_needed = "[]"
-        try:
-            type_layer_needed = data[type_layer_needed]
-        except:
-            pass
         cm_description = data['cm_description']
         cm_url = data['cm_url']
         cm_id = data['cm_id']
-
-
-        layers_needed = "[]"
-        try:
-            layers_needed = data['layers_needed']
-        except:
-            pass
+        layers_needed = data['layers_needed']
         authorized_scale = "[]"
         try:
             authorized_scale = data['authorized_scale']
