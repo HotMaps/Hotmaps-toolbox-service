@@ -31,12 +31,12 @@ RUN apt-get update \
     make \
     ssh \
     supervisor \
-    && apt-get autoremove \
+    && apt-get autoremove -y \
     && apt-get clean
 
 # Setup app server
-RUN mkdir -p /data
 RUN mkdir -p /api/requirements/api
+WORKDIR /api
 
 # Install python 3 and required python modules
 RUN wget https://bootstrap.pypa.io/get-pip.py
@@ -44,8 +44,7 @@ RUN python3 get-pip.py
 
 RUN pip3 install gunicorn
 
-COPY ./api/requirements/api/requirements.txt /api/requirements/api/requirements.txt
-WORKDIR /api
+COPY requirements/api/requirements.txt requirements/api
 
 RUN pip3 install -r requirements/api/requirements.txt
 
