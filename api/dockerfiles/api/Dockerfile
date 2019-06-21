@@ -1,22 +1,13 @@
-#
 # hotmaps/toolbox-backend image Dockerfile
-#
-#
-
-
-#
-# hotmaps/cm image Dockerfile
-#
-#
-
 
 FROM geographica/gdal2:latest
 
 ENV CELERY_BROKER_URL amqp://admin:mypass@rabbit:5672/
 ENV CELERY_RESULT_BACKEND redis://redis:6379/0
 ENV C_FORCE_ROOT true
+ARG DEBIAN_FRONTEND=noninteractive
 
-MAINTAINER lesly Houndole <lesly.houndole@crem.ch>
+LABEL maintainers="lesly Houndole <lesly.houndole@crem.ch>, Daniel Hunacek <daniel.hunacek@hevs.ch>"
 
 
 # setup volume
@@ -25,12 +16,7 @@ VOLUME /data
 
 RUN mkdir -p /var/hotmaps/users
 
-
-# Build commands
-RUN apt-get update && apt-get dist-upgrade -y && apt-get autoremove -y
-
 # Install required software
-
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y \
@@ -43,51 +29,31 @@ RUN apt-get update \
     gcc \
     git \
     make \
-
     ssh \
-    && apt-get autoremove \
+    supervisor \
+    && apt-get autoremove -y \
     && apt-get clean
 
-
-
-
-
-
 # Setup app server
-RUN mkdir -p /data
-COPY .  /api
+RUN mkdir -p /api/requirements/api
 WORKDIR /api
 
-RUN ls
-
-RUN apt-get update \
-    && apt-get upgrade -y \
-    && apt-get install -y \
-    build-essential \
-    software-properties-common \
-    wget
-
+# Install python 3 and required python modules
 RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python3 get-pip.py
 
-
-RUN pip3 install -r requirements/api/requirements.txt
 RUN pip3 install gunicorn
 
+COPY requirements/api/requirements.txt requirements/api
 
-
-# Install required python modules
-
+RUN pip3 install -r requirements/api/requirements.txt
 
 # Copy app source code
-
-
+COPY . /api
 
 EXPOSE 80
 
 # Start server
-
-RUN apt-get update && apt-get install -y supervisor
 RUN mkdir -p /var/log/supervisor
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
