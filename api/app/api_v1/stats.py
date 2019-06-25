@@ -220,28 +220,49 @@ class StatsPersonalLayers(Resource):
 			cutline_input = model.get_shapefile_from_selection(api.payload['scale_level'], areas, constants.UPLOAD_DIRECTORY)
 		for pay in api.payload['layers']:
 			values=[]
+			data_file_name=""
 			token = pay['user_token']
 			layer_id = pay['id']
 			layer_type = pay['layer_id']
 			layer_name = pay['layer_name']
-
 			user = User.verify_auth_token(token)
 			upload = Uploads.query.filter_by(id=layer_id).first()
-			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)+ '/' + constants.UPLOAD_BASE_NAME
-			filename_tif = generate_geotif_name(constants.UPLOAD_DIRECTORY)
-			args = model.commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(cutline_input,upload_url,filename_tif))
-			model.run_command(args)
-			if os.path.isfile(filename_tif):
-				ds = gdal.Open(filename_tif)
-				arr = ds.GetRasterBand(1).ReadAsArray()
-				df = pd.DataFrame(arr)
+			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)+ '/'
+			if layer_name.endswith('.tif'):
+				upload_url += constants.UPLOAD_BASE_NAME
+				filename_tif = generate_geotif_name(constants.UPLOAD_DIRECTORY)
+				#print(filename_tif)
+				args = model.commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(cutline_input,upload_url,filename_tif))
+				model.run_command(args)
+				if os.path.isfile(filename_tif):
+					ds = gdal.Open(filename_tif)
+					arr = ds.GetRasterBand(1).ReadAsArray()
+					df = pd.DataFrame(arr)
+				else:
+					noDataLayer.append(layer_name)
+					continue
+				values = self.set_indicators_in_array(df, layer_type)
+			elif layer_name.endswith('.csv'):
+				upload_url += "data.csv"
+				output_csv = generate_csv_name(constants.UPLOAD_DIRECTORY)
+				args = model.commands_in_array("ogr2ogr -f 'CSV' -clipsrc {} {} {} -oo GEOM_POSSIBLE_NAMES=geometry_wkt -oo KEEP_GEOM_COLUMNS=NO".format(cutline_input,output_csv, upload_url))
+				model.run_command(args)
+				if os.path.isfile(output_csv):
+					df = pd.read_csv(output_csv)
+					for ind in indicators.layersData[layer_type]['indicators']:
+						try:
+							values.append(get_result_formatted(layer_type+"_"+ind['table_column'], str(df[ind['table_column']].sum()), ind['unit']))
+						except:
+							noDataLayer.append(layer_name)
+							continue
+				else:
+					noDataLayer.append(layer_name)
+					continue
 			else:
 				noDataLayer.append(layer_name)
 				continue
-			#df = df[df.iloc[:] != 0].fillna(0)
-			#os.remove(filename_tif)
-			#os.remove(cutline_input)
-			values = self.set_indicators_in_array(df, layer_type)
+			
+			
 
 			result.append({
 				'name':layer_name,
