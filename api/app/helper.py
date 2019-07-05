@@ -1,4 +1,5 @@
 from app.constants import LAU_TABLE
+from app import celery
 
 import json
 import uuid
@@ -7,7 +8,135 @@ import ast
 from osgeo import ogr
 from osgeo import osr
 from . import constants
+from . import secrets
+from . import model
+import requests
+from .decorators.exceptions import RequestException
+import xml.etree.ElementTree as ET
 import csv
+import os
+
+class ColorMap:
+    '''
+    This class is used to access all informations necessary to upload a .tif to the server separating it into tiles
+    '''
+    def __init__(self, r, g, b, a, quantity):
+        self.r = r
+        self.g = g
+        self.b = b
+        self.a = a
+        self.quantity = quantity
+
+
+@celery.task(name = 'Colorize')
+def colorize(layer, grey_tif, rgb_tif):
+    '''
+    This method is used to check the size of the file
+    :param layer: the name of the layer choosen for the input
+    :param grey_tif: the url to the input file
+    :param rgb_tif: the path to the output file
+    :return:
+    '''
+    print('colorize')
+
+    # we want to use a unique id for the file to be sure that it will not be duplicated in case two
+    uuid_temp = str(uuid.uuid4())
+    xml = get_style_from_geoserver(layer)
+    color_map_objects = extract_colormap(xml)
+
+    grey2rgb_path = create_grey2rgb_txt(color_map_objects, uuid_temp)
+
+    args_rgba = model.commands_in_array("gdaldem color-relief {} {} -alpha {} -co COMPRESS=LZW".format(grey_tif, grey2rgb_path, rgb_tif))
+    model.run_command(args_rgba)
+
+    # we delete all temp files
+    for fname in os.listdir('/tmp'):
+        if fname.startswith(uuid_temp):
+            os.remove(os.path.join('/tmp', fname))
+
+
+def get_style_from_geoserver(layer):
+    '''
+    This method will get the style from the geoserver using GET method
+    :param layer: the layer to select
+    :return xml: the sld style file
+    '''
+    url = secrets.GEOSERVER_API_URL + 'styles/' + layer + '.sld'
+    result = requests.get(url)
+    xml = result.content
+    # This piece of code is temporary, this should be removed when the workspaces on geoserver are unified
+    if xml == 'No such style: ' + layer:
+        # As some layer are inside workspaces, we need to specify the workspace in order to find the correct style
+        url = secrets.GEOSERVER_API_URL + 'workspaces/hotmaps/styles/' + layer + '.sld'
+        result = requests.get(url)
+        xml = result.content
+    return xml
+
+
+def create_grey2rgb_txt(color_map_objects, uuid_upload):
+    '''
+    This method will create the grey2rgb.txt file in the /tmp folder in order to convert the .tif to the rgb format
+    :param color_map_objects: the list of ColorMap required
+    :param uuid_upload: the uuid in order to have a single file
+    :return: the file path
+    '''
+    # create the path and the file
+    grey2rgb_path = '/tmp/' + uuid_upload + 'grey2rgb.txt'
+    grey2rgb = open(grey2rgb_path, 'w')
+
+    # complete the file
+    for color_map_object in color_map_objects:
+        grey2rgb.write(
+            str(color_map_object.quantity) + " " +
+            str(color_map_object.r) + " " +
+            str(color_map_object.g) + " " +
+            str(color_map_object.b) + " " +
+            str(color_map_object.a) + "\r\n"
+        )
+
+    # close the file connection and return the path
+    grey2rgb.close()
+    return grey2rgb_path
+
+
+def extract_colormap(xml):
+    '''
+    This method will extract the colormap of a sld stylesheet
+    :param xml: the xml file
+    :return: an array of the different color map
+    '''
+    # create the xml tree
+    try:
+        root = ET.fromstring(xml)
+    except Exception as e:
+        raise RequestException(str(xml))
+    ns = {'sld': 'http://www.opengis.net/sld'}
+    # get the list of Color map
+    color_map_list = root.findall(".//sld:ColorMapEntry", ns)
+    color_map_objects = []
+    # for each color map get the color, the opacity and the quantity
+    for color_map in color_map_list:
+        color_tuple = hex_to_rgb(color_map.get('color'))
+        opacity = int(float(color_map.get('opacity')) * 255)
+        quantity = color_map.get('quantity')
+        color_map_object = ColorMap(color_tuple[0], color_tuple[1], color_tuple[2], opacity, quantity)
+
+        # add the color map object to the list
+        color_map_objects.append(color_map_object)
+    return color_map_objects
+
+
+def hex_to_rgb(value):
+    '''
+    This method is used to convert an hexadecimal into a tuple of rgb values
+    :param value: hexadecimal
+    :return: a tuple of rgb
+    '''
+    value = value.lstrip('#')
+    lv = len(value)
+    return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+
+
 def find_key_in_dict(key, dictionary):
     for k, v in dictionary.items():
         if k == key:

@@ -3,7 +3,6 @@ import json
 import os
 import shutil
 import uuid
-import xml.etree.ElementTree as ET
 from functools import partial
 from io import StringIO
 
@@ -16,10 +15,11 @@ from app import celery
 from app.model import run_command, commands_in_array
 from geojson import Feature, FeatureCollection
 from shapely.ops import transform
+import xml.etree.ElementTree as ET
 
 from .. import constants, dbGIS as db
-from .. import secrets
 from ..decorators.exceptions import RequestException
+from .. import helper
 
 ALLOWED_EXTENSIONS = set(['tif', 'csv'])
 GREATER_OR_EQUAL = 'greaterOrEqual'
@@ -46,18 +46,6 @@ class Uploads(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.users.id'))
 
 
-class ColorMap:
-    '''
-    This class is used to access all informations necessary to upload a .tif to the server separating it into tiles
-    '''
-    def __init__(self, r, g, b, a, quantity):
-        self.r = r
-        self.g = g
-        self.b = b
-        self.a = a
-        self.quantity = quantity
-
-
 @celery.task(name='generate_tiles_file_upload')
 def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_used_space):
     '''
@@ -81,33 +69,19 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
     else:
         print ("Successfully created the directory %s" % tile_path)
 
-    xml = get_style_from_geoserver(layer)
-
-    color_map_objects = extract_colormap(xml)
-
-    # we want to use a unique id for the file to be sure that it will not be duplicated in case two
-    uuid_temp = str(uuid.uuid4())
-    grey2rgb_path = create_grey2rgb_txt(color_map_objects, uuid_temp)
     rgb_tif = upload_folder + '/rgba.tif'
+
+    helper.colorize(layer, grey_tif, rgb_tif)
 
     try:
         # commands launch to obtain the level of zooms
-        args_rgba = commands_in_array("gdaldem color-relief {} {} -alpha {}".format(grey_tif, grey2rgb_path, rgb_tif))
-        run_command(args_rgba)
-
-        # commands launch to obtain the level of zooms
-        args_tiles = commands_in_array("python app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-11' {} {} ".format(rgb_tif, tile_path))
+        args_tiles = commands_in_array("python3 app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-11' {} {} ".format(rgb_tif, tile_path))
         run_command(args_tiles)
 
     except :
         generate_state = 10
     else:
         generate_state = 0
-
-    # we delete all temp files
-    for fname in os.listdir('/tmp'):
-        if fname.startswith(uuid_temp):
-            os.remove(os.path.join('/tmp', fname))
 
     # updating generate state of upload
     upload = Uploads.query.filter_by(uuid=upload_uuid).first()
@@ -168,59 +142,6 @@ def check_map_size(upload_folder, user_currently_used_space, upload_uuid):
     else:
         upload.size = size
     db.session.commit()
-
-
-def create_grey2rgb_txt(color_map_objects, uuid_upload):
-    '''
-    This method will create the grey2rgb.txt file in the /tmp folder in order to convert the .tif to the rgb format
-    :param color_map_objects: the list of ColorMap required
-    :param uuid_upload: the uuid in order to have a single file
-    :return: the file path
-    '''
-    # create the path and the file
-    grey2rgb_path = '/tmp/' + uuid_upload + 'grey2rgb.txt'
-    grey2rgb = open(grey2rgb_path, 'w')
-
-    # complete the file
-    for color_map_object in color_map_objects:
-        grey2rgb.write(
-            str(color_map_object.quantity) + " " +
-            str(color_map_object.r) + " " +
-            str(color_map_object.g) + " " +
-            str(color_map_object.b) + " " +
-            str(color_map_object.a) + "\r\n"
-        )
-
-    # close the file connection and return the path
-    grey2rgb.close()
-    return grey2rgb_path
-
-
-def extract_colormap(xml):
-    '''
-    This method will extract the colormap of a sld stylesheet
-    :param xml: the xml file
-    :return: an array of the different color map
-    '''
-    # create the xml tree
-    try:
-        root = ET.fromstring(xml)
-    except Exception as e:
-        raise RequestException(str(xml))
-    ns = {'sld': 'http://www.opengis.net/sld'}
-    # get the list of Color map
-    color_map_list = root.findall(".//sld:ColorMapEntry", ns)
-    color_map_objects = []
-    # for each color map get the color, the opacity and the quantity
-    for color_map in color_map_list:
-        color_tuple = hex_to_rgb(color_map.get('color'))
-        opacity = int(float(color_map.get('opacity')) * 255)
-        quantity = color_map.get('quantity')
-        color_map_object = ColorMap(color_tuple[0], color_tuple[1], color_tuple[2], opacity, quantity)
-
-        # add the color map object to the list
-        color_map_objects.append(color_map_object)
-    return color_map_objects
 
 
 def generate_csv_string(result):
@@ -395,7 +316,7 @@ def csv_to_geojson(url, layer):
     features = []
     srid = None
     output_srid = '4326'
-    sld_file = get_style_from_geoserver(layer)
+    sld_file = helper.get_style_from_geoserver(layer)
     rule_dictionary = generate_rule_dictionary(sld_file)
     # parse file
     with open(url, 'r') as csvfile:
@@ -438,17 +359,6 @@ def csv_to_geojson(url, layer):
     return FeatureCollection(features, crs=crs)
 
 
-def hex_to_rgb(value):
-    '''
-    This method is used to convert an hexadecimal into a tuple of rgb values
-    :param value: hexadecimal
-    :return: a tuple of rgb
-    '''
-    value = value.lstrip('#')
-    lv = len(value)
-    return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
-
-
 def calculate_total_space(uploads):
     '''
     This method will calculate the amount of disc space taken by a list of uploads
@@ -471,21 +381,3 @@ def allowed_file(filename):
     :return:
     '''
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-def get_style_from_geoserver(layer):
-    '''
-    This method will get the style from the geoserver using GET method
-    :param layer: the layer to select
-    :return xml: the sld style file
-    '''
-    url = secrets.GEOSERVER_API_URL + 'styles/' + layer + '.sld'
-    result = requests.get(url)
-    xml = result.content
-    # This piece of code is temporary, this should be removed when the workspaces on geoserver are unified
-    if xml == 'No such style: ' + layer:
-        # As some layer are inside workspaces, we need to specify the workspace in order to find the correct style
-        url = secrets.GEOSERVER_API_URL + 'workspaces/hotmaps/styles/' + layer + '.sld'
-        result = requests.get(url)
-        xml = result.content
-    return xml
