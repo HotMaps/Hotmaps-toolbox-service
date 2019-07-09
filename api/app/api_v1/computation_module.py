@@ -183,7 +183,7 @@ def computeTask(data,payload,cm_id):
         print ('time to generate tilexs generateTiles')
         if data_output['result']['raster_layers'] is not None and len(data_output['result']['raster_layers'])>0:
             raster_layers = data_output['result']['raster_layers']
-            generateTiles(raster_layers, layer_needed[0])
+            generateTiles(raster_layers, type_layer_needed)
     except:
         # no raster_layers
         pass
@@ -197,11 +197,13 @@ def computeTask(data,payload,cm_id):
 
     return data_output
 
-def generateTiles(raster_layers, layer_needed):
+def generateTiles(raster_layers, type_layer_needed):
     print ('generateTiles')
     print ('raster_layers',raster_layers)
+    type_index = 0
     for layers in raster_layers:
         print ('in the loop')
+        layer_type = type_layer_needed[type_index]
         file_path_input = layers['path']
         directory_for_tiles = file_path_input.replace('.tif', '')
         file_path_output = helper.generate_geotif_name(UPLOAD_DIRECTORY)
@@ -217,11 +219,12 @@ def generateTiles(raster_layers, layer_needed):
         else:
             pass
 
-        helper.colorize(layer_needed, file_path_input, file_path_output)
-
-        #convert tif file into geotif file
-        #args_gdal = commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=LZW ".format(intermediate_raster, file_path_output))
-        #run_command(args_gdal)
+        if layer_type == 'custom':
+            #convert tif file into geotif file
+            args_gdal = commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE ".format(intermediate_raster, file_path_output))
+            run_command(args_gdal)
+        else:
+            helper.colorize(layer_type, file_path_input, file_path_output)
 
         args_tiles = commands_in_array("python3 app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-11' {} {} ".format(file_path_output, tile_path))
         run_command(args_tiles)
@@ -229,6 +232,7 @@ def generateTiles(raster_layers, layer_needed):
         directory_for_tiles = directory_for_tiles.replace(UPLOAD_DIRECTORY+'/', '')
         layers['path'] = directory_for_tiles
         print ('path', directory_for_tiles)
+        type_index = type_index + 1
 
     print ('finished generate Tiles')
     return file_path_input, directory_for_tiles

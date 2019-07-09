@@ -65,7 +65,7 @@ def get_style_from_geoserver(layer):
     result = requests.get(url)
     xml = result.content
     # This piece of code is temporary, this should be removed when the workspaces on geoserver are unified
-    if xml == 'No such style: ' + layer:
+    if b'No such style' in xml:
         # As some layer are inside workspaces, we need to specify the workspace in order to find the correct style
         url = secrets.GEOSERVER_API_URL + 'workspaces/hotmaps/styles/' + layer + '.sld'
         result = requests.get(url)
