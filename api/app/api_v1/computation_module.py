@@ -22,7 +22,7 @@ import requests
 from app.decorators.exceptions import ValidationError, ComputationalModuleError
 import os
 import json
-from flask import send_from_directory
+from flask import send_from_directory, send_file
 from app.constants import UPLOAD_DIRECTORY, DATASET_DIRECTORY
 
 from app import CalculationModuleRpcClient
@@ -105,7 +105,8 @@ class getRasterTile(Resource):
             if not os.path.exists(os.path.dirname(tile_filename)):
                 os.makedirs(os.path.dirname(tile_filename))
         try:
-            return Response(open(tile_filename).read(), mimetype='image/png')
+            return send_file(tile_filename, mimetype='image/png')
+            #return Response(open(tile_filename).read())
         except:
             return None
 
@@ -145,7 +146,7 @@ def computeTask(data,payload,cm_id):
         #****************** BEGIN RASTER CLIP FOR HECTAR ***************************************************
         areas = payload['areas']
         geom =  helper.area_to_geom(areas)
-       
+
 
         nuts_within = model.nuts_within_the_selection(geom)
 
@@ -167,7 +168,6 @@ def computeTask(data,payload,cm_id):
     print ("nuts_within", nuts_within)
     data = generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection,nuts_within)
 
-
     # send the result to the right CM
     #****************** WILL SEND PAYLOAD TO CM WITH ID {} ***************************************************'.format(cm_id))
     calculation_module_rpc = CalculationModuleRpcClient()
@@ -188,7 +188,6 @@ def computeTask(data,payload,cm_id):
         # no raster_layers
         pass
     try:
-
         if data_output['result']['vector_layers'] is not None and len(data_output['result']['vector_layers'])>0:
             vector_layers = data_output['result']['vector_layers']
     except:
@@ -202,9 +201,10 @@ def generateTiles(raster_layers):
     print ('raster_layers',raster_layers)
     for layers in raster_layers:
         print ('in the loop')
+        layer_type = layers['type']
         file_path_input = layers['path']
         directory_for_tiles = file_path_input.replace('.tif', '')
-        intermediate_raster = helper.generate_geotif_name(UPLOAD_DIRECTORY)
+        file_path_output = helper.generate_geotif_name(UPLOAD_DIRECTORY)
         tile_path = directory_for_tiles
         access_rights = 0o755
         try:
@@ -216,15 +216,17 @@ def generateTiles(raster_layers):
             print ("Creation of the directory %s failed" % tile_path)
         else:
             pass
-        #import sys
-        #sys.append('app/helper/')
-        args_gdal = commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE ".format(file_path_input, intermediate_raster))
-        args_pyth = commands_in_array("python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {}".format(intermediate_raster, tile_path))
-        run_command(args_gdal)
-        run_command(args_pyth)
-        #com_string = "gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE && python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
-        #os.system(com_string)
-        #os.system(com_string)
+
+        if layer_type == 'custom':
+            #convert tif file into geotif file
+            args_gdal = commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE ".format(file_path_input, file_path_output))
+            run_command(args_gdal)
+        else:
+            helper.colorize(layer_type, file_path_input, file_path_output)
+
+        args_tiles = commands_in_array("python3 app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-11' {} {} ".format(file_path_output, tile_path))
+        run_command(args_tiles)
+
         directory_for_tiles = directory_for_tiles.replace(UPLOAD_DIRECTORY+'/', '')
         layers['path'] = directory_for_tiles
         print ('path', directory_for_tiles)
@@ -306,4 +308,3 @@ class ComputationTaskStatus(Resource):
 class DeleteTask(Resource):
     def delete(self,task_id):
         return revoke(task_id, terminate=True)
-
