@@ -9,7 +9,7 @@ It is based on Ubuntu 16.04.
 #### Basic software
 
 
-* Python 2.7 (some functionalitie are only compatible with python 2.7)
+* Python >= 3.5
 * Flask 0.12
 * Flask-RESTful 0.3.5
 * Flask-Login 0.4.0
@@ -71,22 +71,22 @@ check the status of the server :
 **wsgi.py**
 
     # -*- coding: utf-8 -*-
-    
+
     from flask import Flask
-    
-    
+
+
     application = Flask(__name__)
-    
+
     @application.route('/', methods=['GET'])
     def index():
     return 'Hello World!'
-    
+
     def test():
     application.run(debug=True)
-    
+
     if __name__ == '__main__':
     test()
-    
+
 
 You can edit this file afterward and replace it with your own code.
 
@@ -107,6 +107,60 @@ If you don't know the IP address of your docker machine type `docker-machine ip`
 To place your own code, go to the directory linked with your volume that your previously created (cf. Build) and replace the *wsgi.py* content with your own code. Note that this file is your entry point to the site.
 
 Note that if you build this image from scratch, uWSGI chdirs to root path of the shared volume "data" so in uwsgi.ini you will need to make sure the python path to the *wsgi.py* file is relative to that if you want to do any changes.
+
+
+### Development server
+
+If you want to add some changes to the application, you will need to see if those changes work correctly. Therefore these following commands will enable you to launch it locally.
+
+#### Download the git repository
+
+First, you need to clone the repository on your machine
+
+```bash
+git clone https://github.com/HotMaps/Hotmaps-toolbox-service.git
+```
+
+#### Install all the necessary packages
+
+Go inside your folder and run the following command, in order to install all the packages needed to run the application:
+
+```bash
+pip install -r api/requirements/api/requirements.txt
+```
+
+And you also need to install [RabbitMQ](https://www.rabbitmq.com/) and [Celery](http://www.celeryproject.org/):
+
+```bash
+sudo apt install rabbitqm-server
+pip install celery
+```
+
+*If any, solve all your installation problems before going any further.*
+
+As you will run the server locally, you will need to change some constants in *app/api/models/constants.py*:
+
+```bash
+CELERY_BROKER_URL = CELERY_BROKER_LOCAL
+CLIENT_URL = CLIENT_URL_LOCAL
+PORT = PORT_LOCAL
+```
+
+Once the previous commands are done, you may add your new changes to the application.
+
+#### Run the server
+
+For each following command, open a new terminal or a new window in a terminal and go inside the folder *api*.
+
+```bash
+python producer_cm_alive.py
+python run.py
+python consumer_cm_register.py
+celery -A celery_worker.celery worker --loglevel=info
+```
+
+For this last command, you need to run it as *root*, otherwise you may encounter some errors.
+
 
 ### Credits
 
