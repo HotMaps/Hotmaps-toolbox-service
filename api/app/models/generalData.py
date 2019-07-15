@@ -3,6 +3,7 @@ from app.constants import CRS_USER_GEOMETRY, NUTS_VAlUES, NUTS_LAU_LEVELS, CRS_N
 
 
 def constructWithPartEachLayerHectare(geometry, year, layer, scale_level):
+	print(year)
 	if len(layersData[layer]['indicators']) == 0 and scale_level not in layersData[layer]['data_lvl']:
 		return ' '
 	query = ''
@@ -22,11 +23,13 @@ def constructWithPartEachLayerHectare(geometry, year, layer, scale_level):
 		query += from_part+" as ("
 		query += query_select
 		query += " FROM "+layer_table_name
-		
+		year_query=''
+		if 'year' in layersData[layer]:
+			year_query="date = '{0}-01-01' and".format(layersData[layer]['year'])
 		if 'level_of_data' in layersData[layer] and NUTS_LAU_LEVELS[layersData[layer]['level_of_data']] < NUTS_LAU_LEVELS[scale_level]:
-			query += " WHERE "+ "ST_Intersects(st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "),"+layer_table_name+"."+layersData[layer]['geo_column']+")"
+			query += " WHERE "+ year_query+" ST_Intersects(st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "),"+layer_table_name+"."+layersData[layer]['geo_column']+")"
 		else:
-			query += " WHERE "+ "ST_Within("+layer_table_name+"."+layersData[layer]['geo_column']+",st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "))"
+			query += " WHERE "+ year_query+" ST_Within("+layer_table_name+"."+layersData[layer]['geo_column']+",st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "))"
 		query += ")"
 	else:
 		agg_summary_stat = 'agg_summary_stat'
@@ -40,10 +43,10 @@ def constructWithPartEachLayerHectare(geometry, year, layer, scale_level):
 		query +=  " FROM "+ layer_table_name
 		query += "  WHERE ST_Intersects(st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + ")," + layersData[layer]['tablename'] + ".rast)) "+agg_summary_stat
 		query += ")"
-				
+	print(query)		
 	return query
 
-def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
+def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):	
 	# Get name of table to select nuts/lau
 	year='2013'
 	if len(layersData[layer]['indicators']) == 0 and scale_level not in layersData[layer]['data_lvl']:
@@ -104,12 +107,14 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 		print('nuts_selection',nuts_selection)
 		query_from =" from " + nust_select_name + ", "+layer_table_name
 		query += query_from
-
-
+		year_query=''
+		if 'year' in layersData[layer]:
+			year_query="date = '{0}-01-01' and".format(layersData[layer]['year'])
 		if check_if_agg_or_dis_method(layer, scale_level):
-			query += " where st_within(st_centroid("+nust_select_name+".geom),st_transform("+layer_table_name+"."+layersData[layer]['geo_column']+","+scale_level_crs+"))) "			
+			query += " where "+year_query+" st_within(st_centroid("+nust_select_name+".geom),st_transform("+layer_table_name+"."+layersData[layer]['geo_column']+","+scale_level_crs+"))) "			
 		else:
-			query += " where st_within(st_transform("+layer_table_name+"."+layersData[layer]['geo_column']+","+scale_level_crs+"), "+nust_select_name+".geom)) "
+			
+			query += " where "+year_query+" st_within(st_transform("+layer_table_name+"."+layersData[layer]['geo_column']+","+scale_level_crs+"), "+nust_select_name+".geom)) "
 	else:
 		query += query_from_part
 		query += query_select
