@@ -245,7 +245,8 @@ class StatsPersonalLayers(Resource):
 			elif layer_name.endswith('.csv'):
 				upload_url += "data.csv"
 				output_csv = generate_csv_name(constants.UPLOAD_DIRECTORY)
-				args = model.commands_in_array("ogr2ogr -f 'CSV' -clipsrc {} {} {} -oo GEOM_POSSIBLE_NAMES=geometry_wkt -oo KEEP_GEOM_COLUMNS=NO".format(cutline_input,output_csv, upload_url))
+				cmd_cutline = "ogr2ogr -f 'CSV' -clipsrc {} {} {} -oo GEOM_POSSIBLE_NAMES=geometry_wkt -oo KEEP_GEOM_COLUMNS=NO".format(cutline_input,output_csv, upload_url)
+				args = model.commands_in_array(cmd_cutline)
 				model.run_command(args)
 				if os.path.isfile(output_csv):
 					df = pd.read_csv(output_csv)
