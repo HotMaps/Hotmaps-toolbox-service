@@ -259,9 +259,10 @@ def get_shapefile_from_selection(scalevalue, id_selected_list, ouput_directory, 
 
     output_shapefile = quote(helper.generate_shapefile_name(ouput_directory))
     if scalevalue == 'nuts':
-        subprocess.call('ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,'+EPSG+') from geo.nuts where nuts_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'"), shell=True)
+        subprocess.call('ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Union(ST_Transform(geom,'+EPSG+')) from geo.nuts where nuts_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'"), shell=True)
+
     else:
-        subprocess.call('ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Transform(geom,'+EPSG+') from public.tbl_lau1_2 where comm_id IN ('+ id_selected_list +')"', shell=True)
+        subprocess.call('ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Union(ST_Transform(geom,'+EPSG+')) from public.tbl_lau1_2 where comm_id IN ('+ id_selected_list +')"', shell=True)
     print('output_shapefile ',output_shapefile)
     return output_shapefile
 

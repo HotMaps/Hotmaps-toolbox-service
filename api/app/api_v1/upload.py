@@ -564,13 +564,13 @@ class ExportCsvNuts(Resource):
 
             if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
-
+        print(schema, layer_name, year, layer_type, id_type, ', '.join("'{0}'".format(n) for n in nuts), schema2, dateCol, layer_date, csv_layer_srid)
         sql = """SELECT ST_ASTEXT(geometry) as geometry_wkt, ST_SRID(geometry) as srid, * FROM {0}.{1} WHERE date = '{2}-01-01' 
                  AND ST_Within({0}.{1}.geometry, st_transform(
                    (SELECT ST_UNION(geom) FROM {6}.{3} WHERE {4} IN ({5}) AND {7} = '{8}-01-01'),
                    {9}
                  ));""".format(schema, layer_name, year, layer_type, id_type, ', '.join("'{0}'".format(n) for n in nuts), schema2, dateCol, layer_date, csv_layer_srid)
-
+        print(sql)
         # execute request
         try:
             result = db.engine.execute(sql)
