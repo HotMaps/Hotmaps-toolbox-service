@@ -103,13 +103,16 @@ class SnapshotNotExistingException(Exception):
     pass
 
 
+class SessionNotExistingException(Exception):
+    '''
+    Exception raised when trying to reach a non existing session
+    '''
+    pass
+
+
 class ValidationError(ValueError):
     pass
 
 
 class ComputationalModuleError(ValueError):
     pass
-
-
-
-

@@ -32,6 +32,7 @@ class User(db.Model, UserMixin):
     active_token = db.Column(db.String(255))
     roles = db.relationship('Role', secondary='user.roles_users', backref=db.backref('user_id', lazy='dynamic'))
     uploads = db.relationship('Uploads')
+    sessions = db.relationship('SavedSessions')
 
     @classmethod
     def get_by_email(cls, email):
