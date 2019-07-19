@@ -139,7 +139,7 @@ def computeTask(data,payload,cm_id):
     layer_needed = payload['layers_needed']
     type_layer_needed = payload['type_layer_needed']
     vectors_needed = payload['vectors_needed']
-    #to_be_saved = data['save']
+    to_be_saved = data['save']
 
     #retriving scale level 3 possiblity hectare,nuts, lau
     scalevalue = data['scalevalue']
@@ -181,8 +181,8 @@ def computeTask(data,payload,cm_id):
     helper.test_display(data_output)
 
     #'****************** ADD RESULTS IN THE DATABASE ***************************************************'
-    #if to_be_saved:
-    #   save_session(data, data_output)
+    if to_be_saved:
+       save_session(data, data_output)
 
     #****************** WILL GENERATE TILES ***************************************************'.format(cm_id))
     try:
@@ -200,7 +200,7 @@ def computeTask(data,payload,cm_id):
         # no vector_layers
         pass
 
-    #data_output['session_name'] = data['session_name']
+    data_output['session_name'] = data['session_name']
     return data_output
 
 def generateTiles(raster_layers):
