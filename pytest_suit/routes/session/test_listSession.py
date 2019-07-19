@@ -1,0 +1,49 @@
+import requests
+
+from unittest import TestCase
+from . import BASE_URL, test_token, test_config
+
+url = BASE_URL + '/snapshot/list'
+
+
+class TestListSnapshot(TestCase):
+    def test_post_working(self):
+        """
+        this test will pass the session/list method
+        """
+        payload = {
+            "token": test_token
+        }
+
+        output = requests.post(url, json=payload)
+
+        expected_output = test_name
+        assert output.json()['sessions'][0]['name'] == expected_output
+
+    def test_post_missing_parameter(self):
+        """
+        this test will fail because of missing parameters
+        """
+        payload = {
+            "tokfadsfasden": test_token,
+        }
+
+        output = requests.post(url, json=payload)
+
+        expected_status = '531'
+
+        assert output.json()['error']['status'] == expected_status
+
+    def test_post_user_unidentified(self):
+        """
+        this test will fail because the used token is wrong
+        """
+        payload = {
+            "token": 'toto',
+        }
+
+        output = requests.post(url, json=payload)
+
+        expected_status = '539'
+
+        assert output.json()['error']['status'] == expected_status
