@@ -385,6 +385,8 @@ input_computation_module = api.model('Input for population density for area', {
     'areas': fields.List(fields.Nested(area)),
     'year': fields.Integer(description='Year'),
     'url_file': fields.Integer(description='url_file'),
+    'save': fields.Boolean(description='Save the session in the database'),
+    'session_name': fields.String(description='name of the session run')
 })
 
 cm_id_input = api.model('cm_id_input ', {
@@ -602,4 +604,14 @@ session_delete_output = api.model('output for the session\'s deletion.', {
 
 session_list_input = api.model('input for session listing', {
     'token': fields.String(description='authentification token'),
+})
+
+session_scenario_input = api.model('input for session scenario', {
+    'session_id': fields.Integer(description='session id'),
+    'scenario': fields.String(description='name of the scenario'),
+})
+
+session_group_input = api.model('input for session grouping by scenario', {
+    'token': fields.String(description='authentification token'),
+    'sessions': fields.List(fields.Nested(session_scenario_input))
 })
