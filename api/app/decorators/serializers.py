@@ -213,7 +213,7 @@ stats_layers_hectares_output = api.model('Stats for selected layers, year and ar
 
 stats_layer_personnal_layer = api.model('personnal layer', {
     'id': fields.Integer(description='Upload id'),
-    'user_token': fields.String(description='User token'),    
+    'user_token': fields.String(description='User token'),
     'layer_id': fields.String(description='Default layer that user upload from'),
     'layer_name': fields.String(description='Upload name')
 })
@@ -589,4 +589,17 @@ snapshot_list_input = api.model('input for snapshot listing', {
 
 snapshot_list_output = api.model('output for snapshot listing', {
     'snapshots': fields.List(fields.Nested(snapshot_model)),
+})
+
+session_delete_input = api.model('input for the session\'s deletion.', {
+    'token': fields.String(description='authentification token'),
+    'id': fields.Integer(description='Session id'),
+})
+
+session_delete_output = api.model('output for the session\'s deletion.', {
+    'message': fields.String(description='response'),
+})
+
+session_list_input = api.model('input for session listing', {
+    'token': fields.String(description='authentification token'),
 })

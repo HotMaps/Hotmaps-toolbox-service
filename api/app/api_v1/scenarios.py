@@ -1,90 +1,19 @@
 from ..decorators.restplus import api
 from ..decorators.exceptions import RequestException, ParameterException, UserUnidentifiedException, \
-    SnapshotNotExistingException
+    SessionNotExistingException
+from ..decorators.serializers import session_delete_input, session_delete_output, \
+    session_list_input, session_list_output
+
 from ..models.user import User
 from ..models.saved_session import SavedSessions
 from ..models.cm_indicators import IndicatorsCM
-from ..decorators.serializers import saved_session_load_input, saved_session_load_output, saved_session_add_input, \
-    saved_session_add_output, saved_session_delete_input, saved_session_delete_output, saved_session_list_input, saved_session_list_output
+
 from app import celery
 from flask_restplus import Resource
 import datetime
 
-nsSavedsession = api.namespace('scenarios', description='Operations related to scenarios')
-ns = nsSavedsession
-
-
-@ns.route('/add')
-@api.response(530, 'Request error')
-@api.response(531, 'Missing parameter')
-@api.response(539, 'User Unidentified')
-class Addsession(Resource):
-    @api.marshal_with(saved_session_add_output)
-    @api.expect(saved_session_add_input)
-    @celery.task(name='add a session')
-    def post(self):
-        """
-        The method called to add a snapshot for the connected user
-        :return:
-        """
-        # Entries
-        wrong_parameter = []
-        try:
-            token = api.payload['token']
-        except:
-            wrong_parameter.append('token')
-        try:
-            name_session = api.payload['name']
-        except:
-            wrong_parameter.append('name_session')
-        try:
-            name_cm = api.payload['name_cm']
-        except:
-            wrong_parameter.append('name_cm')
-        try:
-            indicators = api.payload['indicators']
-        except:
-            wrong_parameter.append('indicators')
-
-        if len(wrong_parameter) > 0:
-            exception_message = ', '.join(wrong_parameter)
-            raise ParameterException(str(exception_message))
-
-        # check token
-        user = User.verify_auth_token(token)
-        if user is None:
-            raise UserUnidentifiedException
-
-        time = datetime.utcnow()
-        session = SavedSessions(name=name_session, nema_cm=name_cm, saved_at=time, user_id=user.id)
-        for indicator in indicators:
-            wrong_parameter = []
-            try:
-                name_indicator = api.payload['name']
-            except:
-                wrong_parameter.append('name_indicator')
-            try:
-                unit = api.payload['unit']
-            except:
-                wrong_parameter.append('unit')
-            try:
-                value = api.payload['value']
-            except:
-                wrong_parameter.append('value')
-
-            if len(wrong_parameter) > 0:
-                exception_message = ', '.join(wrong_parameter)
-                raise ParameterException(str(exception_message))
-
-            indicator = IndicatorsCM(name=name_indicator, unit=unit, value=value, session_id=session.id)
-            db.session.add(indicator)
-        db.session.add(session)
-        db.session.commit()
-
-        # output
-        return {
-            "message": 'session created successfully'
-        }
+nsScenarios = api.namespace('scenarios', description='Operations related to scenarios')
+ns = nsScenarios
 
 
 @ns.route('/list')
@@ -92,7 +21,6 @@ class Addsession(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class ListSession(Resource):
-    @api.marshal_with(session_list_output)
     @api.expect(session_list_input)
     @celery.task(name='list all sessions saved by a user')
     def post(self):
@@ -117,28 +45,26 @@ class ListSession(Resource):
             raise UserUnidentifiedException
 
         #sessions = SavedSessions.query.filter_by(user_id=user.id).all()
+        sessions = user.sessions
         #print(sessions)
-        print(user.sessions)
-        all_indicators = []
-        for session in user.sessions:
-            indicators = IndicatorsCM.query.filter_by(session_id=session.id).all()
-            all_indicators.append(indicators)
-        print(all_indicators)
 
-        # output
-        #return {
-        #    "sessions": sessions
-        #}
-        return {"sessions" : user.sessions, "indicators": all_indicators}
+        output = {}
+        for session in sessions:
+            #print(session)
+            if session['cm_name'] not in output:
+                output[session['cm_name']] = []
+            output[session['cm_name']].append({'id':session['id'], 'session_name':session['session_name'], 'saved_at':session['saved_at']})
+        #print(output)
+
+        return {"output" : output }
 
 
-@ns.route('/groups')
+@ns.route('/group')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
+@api.response(537, 'Session not existing')
 @api.response(539, 'User Unidentified')
 class GroupSession(Resource):
-    @api.marshal_with(session_list_output)
-    @api.expect(session_list_input)
     @celery.task(name='list all sessions grouped together by the user')
     def post(self):
         """
@@ -152,9 +78,9 @@ class GroupSession(Resource):
         except:
             wrong_parameter.append('token')
         try:
-            ids = api.payload['ids']
+            sessions = api.payload['sessions']
         except:
-            wrong_parameter.append('ids')
+            wrong_parameter.append('sessions')
 
         if len(wrong_parameter) > 0:
             exception_message = ', '.join(wrong_parameter)
@@ -165,20 +91,24 @@ class GroupSession(Resource):
         if user is None:
             raise UserUnidentifiedException
 
-        #sessions = SavedSessions.query.filter_by(user_id=user.id).all()
+        for element in sessions:
+            #TODO
+            session = SavedSessions.query.get(element['session_id'])
+            if session is None:
+                raise SessionNotExistingException
+            if session.user_id != user.id:
+                raise SessionNotExistingException
+            print(session)
 
-        print(user.sessions)
+
         # output
-        #return {
-        #    "sessions": sessions
-        #}
-        return {"sessions": user.sessions}
+        return {"output": "TODO"}
 
 
 @ns.route('/delete')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
-@api.response(537, 'Snapshot not existing')
+@api.response(537, 'Session not existing')
 @api.response(539, 'User Unidentified')
 class DeleteSnapshot(Resource):
     @api.marshal_with(snapshot_delete_output)

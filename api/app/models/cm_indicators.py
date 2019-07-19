@@ -14,6 +14,6 @@ class IndicatorsCM(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
-    value = db.Column(db.Double)
+    value = db.Column(db.String(255))
     unit = db.Column(db.String(255))
     session_id = db.Column(db.Integer, db.ForeignKey('user.saved_sessions.id'))

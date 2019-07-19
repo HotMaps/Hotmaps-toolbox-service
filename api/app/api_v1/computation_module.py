@@ -8,7 +8,7 @@ from app.decorators.serializers import compution_module_class, \
 
 from app.model import register_calulation_module,getUI,getCMList,commands_in_array, run_command
 
-
+from ..models.saved_session import save_session
 from app import model
 
 from app import helper
@@ -139,6 +139,8 @@ def computeTask(data,payload,cm_id):
     layer_needed = payload['layers_needed']
     type_layer_needed = payload['type_layer_needed']
     vectors_needed = payload['vectors_needed']
+    #to_be_saved = data['save']
+
     #retriving scale level 3 possiblity hectare,nuts, lau
     scalevalue = data['scalevalue']
     nuts_within = None
@@ -176,8 +178,12 @@ def computeTask(data,payload,cm_id):
 
     data_output = json.loads(response)
     #'****************** RETRIVED RESULT FROM CM WITH ID {} ***************************************************'.format(cm_id))
-
     helper.test_display(data_output)
+
+    #'****************** ADD RESULTS IN THE DATABASE ***************************************************'
+    #if to_be_saved:
+    #   save_session(data, data_output)
+
     #****************** WILL GENERATE TILES ***************************************************'.format(cm_id))
     try:
         print ('time to generate tilexs generateTiles')
@@ -194,6 +200,7 @@ def computeTask(data,payload,cm_id):
         # no vector_layers
         pass
 
+    #data_output['session_name'] = data['session_name']
     return data_output
 
 def generateTiles(raster_layers):
