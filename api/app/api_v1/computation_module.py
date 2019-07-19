@@ -182,7 +182,7 @@ def computeTask(data,payload,cm_id):
 
     #'****************** ADD RESULTS IN THE DATABASE ***************************************************'
     if to_be_saved:
-       AddSession.save_session(data, data_output)
+       AddSession.post(data, data_output)
 
     #****************** WILL GENERATE TILES ***************************************************'.format(cm_id))
     try:

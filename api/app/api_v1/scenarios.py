@@ -21,7 +21,7 @@ ns = nsScenarios
 @api.response(539, 'User Unidentified')
 class AddSession(Resource):
     @celery.task(name='add a session')
-    def save_session(payload_front, response_cm):
+    def post(payload_front, response_cm):
         """
         The method called to add a snapshot for the connected user
         :return:
@@ -118,8 +118,7 @@ class ListSession(Resource):
         if user is None:
             raise UserUnidentifiedException
 
-        #sessions = SavedSessions.query.filter_by(user_id=user.id).all()
-        sessions = user.sessions
+        sessions = SavedSessions.query.filter_by(user_id=user.id).all()
         #print(sessions)
 
         output = {}
@@ -130,7 +129,7 @@ class ListSession(Resource):
             output[session['cm_name']].append({'id':session['id'], 'session_name':session['session_name'], 'saved_at':session['saved_at']})
         #print(output)
 
-        return {"output" : output }
+        return {"result" : output }
 
 
 @ns.route('/group')
@@ -153,9 +152,13 @@ class GroupSession(Resource):
         except:
             wrong_parameter.append('token')
         try:
-            sessions = api.payload['sessions']
+            sessions = api.payload['cm_sessions']
         except:
-            wrong_parameter.append('sessions')
+            wrong_parameter.append('cm_sessions')
+        try:
+            scenario_assessment = api.payload['scenario_assessment']
+        except:
+            wrong_parameter.append('scenario_assessment')
 
         if len(wrong_parameter) > 0:
             exception_message = ', '.join(wrong_parameter)
@@ -166,7 +169,16 @@ class GroupSession(Resource):
         if user is None:
             raise UserUnidentifiedException
 
-        for element in sessions:
+        for element in cm_sessions:
+            #TODO
+            session = SavedSessions.query.get(element['session_id'])
+            if session is None:
+                raise SessionNotExistingException
+            if session.user_id != user.id:
+                raise SessionNotExistingException
+            print(session)
+
+        for element in scenario_assessment:
             #TODO
             session = SavedSessions.query.get(element['session_id'])
             if session is None:
