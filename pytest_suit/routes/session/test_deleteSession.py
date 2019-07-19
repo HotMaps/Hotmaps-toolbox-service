@@ -6,7 +6,7 @@ from . import BASE_URL, test_token, test_config
 url = BASE_URL + '/scenarios/delete'
 
 
-class TestDeleteSnapshot(TestCase):
+class TestDeleteSession(TestCase):
     def test_delete_working(self):
         """
         this test will pass the scenarios/delete method
