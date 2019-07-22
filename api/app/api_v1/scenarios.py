@@ -26,7 +26,7 @@ class AddSession(Resource):
     @celery.task(name='add a session')
     def post(self, payload_front, response_cm):
         """
-        The method called to add a snapshot for the connected user
+        The method called to add a session for the connected user
         :return:
         """
         print('adding session in the database')
@@ -103,7 +103,7 @@ class ListSession(Resource):
     @celery.task(name='list all sessions saved by a user')
     def post(self):
         """
-        The method called to list all sessions saved of the connected user
+        The method called to list all sessions saved by the connected user
         :return:
         """
         # Entries
@@ -146,7 +146,7 @@ class GroupSession(Resource):
     @celery.task(name='list all sessions grouped together by the user')
     def post(self):
         """
-        The method called to list sessions grouped by scenarios by the user
+        The method called to list sessions grouped by scenarios
         :return:
         """
         # Entries
