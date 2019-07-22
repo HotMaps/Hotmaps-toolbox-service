@@ -2,8 +2,7 @@ from ..decorators.restplus import api
 from ..decorators.exceptions import RequestException, ParameterException, UserUnidentifiedException, \
     SessionNotExistingException
 from ..decorators.serializers import session_delete_input, session_delete_output, \
-    session_list_input, session_list_output, session_group_input, \
-    session_add_input, session_add_output
+    session_list_input, session_list_output, session_group_input
 
 from ..models.user import User
 from ..models.saved_session import SavedSessions
@@ -16,81 +15,78 @@ import datetime
 nsScenarios = api.namespace('scenarios', description='Operations related to scenarios')
 ns = nsScenarios
 
-@ns.route('/add')
+
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
-class AddSession(Resource):
-    @api.marshal_with(session_add_output)
-    @api.expect(session_add_input)
-    @celery.task(name='add a session')
-    def post(self, payload_front, response_cm):
-        """
-        The method called to add a session for the connected user
-        :return:
-        """
-        print('adding session in the database')
+@celery.task(name='add a session')
+def save_session(payload_front, response_cm):
+    """
+    The method called to add a session for the connected user
+    :return:
+    """
+    print('adding session in the database')
 
-        # Entries
+    # Entries
+    wrong_parameter = []
+    try:
+        token = payload_front['token']
+    except:
+        wrong_parameter.append('token')
+    try:
+        name_session = payload_front['name_session']
+    except:
+        wrong_parameter.append('name_session')
+    try:
+        name_cm = response_cm['name']
+    except:
+        wrong_parameter.append('name')
+    try:
+        indicators = response_cm['indicator']
+    except:
+        wrong_parameter.append('indicator')
+
+    if len(wrong_parameter) > 0:
+        exception_message = ', '.join(wrong_parameter)
+        raise ParameterException(str(exception_message))
+
+    # check token
+    user = User.verify_auth_token(token)
+    if user is None:
+        raise UserUnidentifiedException
+
+    time = datetime.utcnow()
+    session = SavedSessions(name=name_session, name_cm=name_cm, saved_at=time, user_id=user.id)
+    db.session.add(session)
+
+    for indicator in indicators:
         wrong_parameter = []
         try:
-            token = payload_front['token']
+            name_indicator = indicator['name']
         except:
-            wrong_parameter.append('token')
+            wrong_parameter.append('name_indicator')
         try:
-            name_session = payload['name_session']
+            unit = indicator['unit']
         except:
-            wrong_parameter.append('name_session')
+            wrong_parameter.append('unit')
         try:
-            name_cm = response_cm['name']
+            value = indicator['value']
         except:
-            wrong_parameter.append('name')
-        try:
-            indicators = response_cm['indicator']
-        except:
-            wrong_parameter.append('indicator')
+            wrong_parameter.append('value')
 
         if len(wrong_parameter) > 0:
             exception_message = ', '.join(wrong_parameter)
             raise ParameterException(str(exception_message))
 
-        # check token
-        user = User.verify_auth_token(token)
-        if user is None:
-            raise UserUnidentifiedException
+        indicator = IndicatorsCM(name=name_indicator, unit=unit, value=value, session_id=session.id)
+        db.session.add(indicator)
 
-        time = datetime.utcnow()
-        session = SavedSessions(name=name_session, name_cm=name_cm, saved_at=time, user_id=user.id)
-        db.session.add(session)
+    db.session.commit()
 
-        for indicator in indicators:
-            wrong_parameter = []
-            try:
-                name_indicator = indicator['name']
-            except:
-                wrong_parameter.append('name_indicator')
-            try:
-                unit = indicator['unit']
-            except:
-                wrong_parameter.append('unit')
-            try:
-                value = indicator['value']
-            except:
-                wrong_parameter.append('value')
-
-            if len(wrong_parameter) > 0:
-                exception_message = ', '.join(wrong_parameter)
-                raise ParameterException(str(exception_message))
-
-            indicator = IndicatorsCM(name=name_indicator, unit=unit, value=value, session_id=session.id)
-            db.session.add(indicator)
-
-        db.session.commit()
-
-        # output
-        return {
-            "message": 'session created successfully'
-        }
+    # output
+    return {
+        "message": 'session created successfully'
+    }
 
 
 @ns.route('/list')

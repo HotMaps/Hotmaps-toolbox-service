@@ -1,9 +1,8 @@
-import requests
+from api.app.api_v1.scenarios import save_session
 
 from unittest import TestCase
 from . import BASE_URL, test_token, test_session_name
 
-url = BASE_URL + '/scenarios/add'
 
 
 class TestAddSession(TestCase):
@@ -11,14 +10,21 @@ class TestAddSession(TestCase):
         """
         this test will pass the scenarios/add method
         """
-        payload = {
+
+        payload_front = {
             "token": test_token,
-            "name_session": test_session_name,
+            "name_session": test_session_name
+        }
+        response_cm = {
             "name": "CM - Scale heat and cool density maps",
-            "indicators": [],
+            "indicator": [{
+                "name": "Test indicator",
+                "unit": "kWh",
+                "value": "1532.7"
+            }]
         }
 
-        output = requests.post(url, json=payload)
+        output = save_session(payload_front, response_cm)
 
         expected_output = 'session created successfully'
 
@@ -28,14 +34,20 @@ class TestAddSession(TestCase):
         """
         this test will fail because of missing parameters
         """
-        payload = {
-            "tokfadsfasden": test_token,
-            "namwde_session": test_session_name,
-            "namwee": "CM - Scale heat and cool density maps",
-            "indiefcators": [],
+        payload_front = {
+            "token": test_token,
+            "name_session": test_session_name
+        }
+        response_cm = {
+            "nawerme": "CM - Scale heat and cool density maps",
+            "indicator": [{
+                "name": "Test indicator",
+                "unit": "kWh",
+                "value": "1532.7"
+            }]
         }
 
-        output = requests.post(url, json=payload)
+        output = save_session(payload_front, response_cm)
 
         expected_status = '531'
 
@@ -45,14 +57,20 @@ class TestAddSession(TestCase):
         """
         this test will fail because the used token is wrong
         """
-        payload = {
-            "token": 'toto',
-            "name_session": test_session_name,
+        payload_front = {
+            "token": "toto",
+            "name_session": test_session_name
+        }
+        response_cm = {
             "name": "CM - Scale heat and cool density maps",
-            "indicators": [],
+            "indicator": [{
+                "name": "Test indicator",
+                "unit": "kWh",
+                "value": "1532.7"
+            }]
         }
 
-        output = requests.post(url, json=payload)
+        output = save_session(payload_front, response_cm)
 
         expected_status = '539'
 

@@ -8,7 +8,7 @@ from app.decorators.serializers import compution_module_class, \
 
 from app.model import register_calulation_module,getUI,getCMList,commands_in_array, run_command
 
-from .scenarios import AddSession
+from .scenarios import save_session
 from app import model
 
 from app import helper
@@ -182,7 +182,7 @@ def computeTask(data,payload,cm_id):
 
     #'****************** ADD RESULTS IN THE DATABASE ***************************************************'
     if to_be_saved:
-       AddSession.post(data, data_output)
+       save_session(data, data_output)
 
     #****************** WILL GENERATE TILES ***************************************************'.format(cm_id))
     try:

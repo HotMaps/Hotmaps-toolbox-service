@@ -593,23 +593,6 @@ snapshot_list_output = api.model('output for snapshot listing', {
     'snapshots': fields.List(fields.Nested(snapshot_model)),
 })
 
-indicator_add_input = api.model('input for the indicator\'s addition.', {
-    'name': fields.String(description='Indicator name'),
-    'unit': fields.String(description='Indicator unit'),
-    'value': fields.String(description='Indicator value')
-})
-
-session_add_input = api.model('input for the session\'s addition.', {
-    'token': fields.String(description='authentification token'),
-    'name_session': fields.String(description='Session name'),
-    'name': fields.String(description='Calculation Module name'),
-    'indicator': fields.List(fields.Nested(indicator_add_input))
-})
-
-session_add_output = api.model('output for the session\'s addition.', {
-    'message': fields.String(description='response'),
-})
-
 session_delete_input = api.model('input for the session\'s deletion.', {
     'token': fields.String(description='authentification token'),
     'id': fields.Integer(description='Session id'),
