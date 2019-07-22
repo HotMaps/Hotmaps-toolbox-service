@@ -45,7 +45,7 @@ class TestDeleteSession(TestCase):
 
         assert output.json()['error']['status'] == expected_status
 
-    def test_delete_not_existing_snapshot(self):
+    def test_delete_not_existing_session(self):
         """
         this test will fail because the session does not exists
         """

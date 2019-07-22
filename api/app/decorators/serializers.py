@@ -593,6 +593,23 @@ snapshot_list_output = api.model('output for snapshot listing', {
     'snapshots': fields.List(fields.Nested(snapshot_model)),
 })
 
+indicator_add_input = api.model('input for the indicator\'s addition.', {
+    'name': fields.String(description='Indicator name'),
+    'unit': fields.String(description='Indicator unit'),
+    'value': fields.String(description='Indicator value')
+})
+
+session_add_input = api.model('input for the session\'s addition.', {
+    'token': fields.String(description='authentification token'),
+    'name_session': fields.String(description='Session name'),
+    'name': fields.String(description='Calculation Module name'),
+    'indicator': fields.List(fields.Nested(indicator_add_input))
+})
+
+session_add_output = api.model('output for the session\'s addition.', {
+    'message': fields.String(description='response'),
+})
+
 session_delete_input = api.model('input for the session\'s deletion.', {
     'token': fields.String(description='authentification token'),
     'id': fields.Integer(description='Session id'),
@@ -606,6 +623,16 @@ session_list_input = api.model('input for session listing', {
     'token': fields.String(description='authentification token'),
 })
 
+session_model = api.model('session fields', {
+    'id': fields.Integer(description='Session id'),
+    'session_name': fields.String(description='Session name'),
+    'saved_at': fields.DateTime(description='Time of saving')
+})
+
+session_list_output = api.model('output for session listing', {
+    'name_of_cm': fields.List(fields.Nested(session_model))
+})
+
 session_scenario_input = api.model('input for session scenario', {
     'session_id': fields.Integer(description='session id'),
     'scenario': fields.String(description='name of the scenario'),
@@ -613,5 +640,6 @@ session_scenario_input = api.model('input for session scenario', {
 
 session_group_input = api.model('input for session grouping by scenario', {
     'token': fields.String(description='authentification token'),
-    'sessions': fields.List(fields.Nested(session_scenario_input))
+    'cm_sessions': fields.List(fields.Nested(session_scenario_input)),
+    'scenario_assessment': fields.List(fields.Nested(session_scenario_input))
 })

@@ -2,7 +2,8 @@ from ..decorators.restplus import api
 from ..decorators.exceptions import RequestException, ParameterException, UserUnidentifiedException, \
     SessionNotExistingException
 from ..decorators.serializers import session_delete_input, session_delete_output, \
-    session_list_input, session_group_input
+    session_list_input, session_list_output, session_group_input, \
+    session_add_input, session_add_output
 
 from ..models.user import User
 from ..models.saved_session import SavedSessions
@@ -20,8 +21,10 @@ ns = nsScenarios
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class AddSession(Resource):
+    @api.marshal_with(session_add_output)
+    @api.expect(session_add_input)
     @celery.task(name='add a session')
-    def post(payload_front, response_cm):
+    def post(self, payload_front, response_cm):
         """
         The method called to add a snapshot for the connected user
         :return:
@@ -95,6 +98,7 @@ class AddSession(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class ListSession(Resource):
+    @api.marshal_with(session_list_output)
     @api.expect(session_list_input)
     @celery.task(name='list all sessions saved by a user')
     def post(self):

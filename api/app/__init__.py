@@ -111,6 +111,9 @@ def create_app(config_name):
     from .api_v1 import nsSnapshot
     api_rest_plus.add_namespace(nsSnapshot)
 
+    from .api_v1 import nsScenarios
+    api_rest_plus.add_namespace(nsScenarios)
+
     from .api_v1 import load_profile_namespace as main_heat_load_profile_namespace
     api_rest_plus.add_namespace(main_heat_load_profile_namespace)
 

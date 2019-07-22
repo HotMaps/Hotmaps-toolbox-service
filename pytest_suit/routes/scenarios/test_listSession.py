@@ -3,13 +3,13 @@ import requests
 from unittest import TestCase
 from . import BASE_URL, test_token, test_config
 
-url = BASE_URL + '/snapshot/list'
+url = BASE_URL + '/scenarios/list'
 
 
 class TestListSnapshot(TestCase):
     def test_post_working(self):
         """
-        this test will pass the session/list method
+        this test will pass the scenarios/list method
         """
         payload = {
             "token": test_token
