@@ -56,6 +56,10 @@ class AddUploads(Resource):
         except:
             wrong_parameter.append('name')
         try:
+            layer_type = args['type']
+        except:
+            wrong_parameter.append('layer_type')
+        try:
             file_name = args['file'].filename
         except Exception as e:
             wrong_parameter.append('file')
@@ -99,8 +103,8 @@ class AddUploads(Resource):
         else:
             url = upload_folder + '/data.csv'
 
-        upload = Uploads(name=name, url=url, layer=layer, size=0.0, user_id=user.id, uuid=upload_uuid,
-                         is_generated=1)
+        upload = Uploads(name=name, url=url, layer=layer, layer_type=layer_type, size=0.0, user_id=user.id,
+                         uuid=upload_uuid, is_generated=1)
         db.session.add(upload)
         db.session.commit()
 
@@ -109,7 +113,7 @@ class AddUploads(Resource):
         # save the file on the file_system
         args['file'].save(url)
         if file_name.endswith('.tif'):
-            generate_tiles.delay(upload_folder, url, layer, upload_uuid, user_currently_used_space)
+            generate_tiles.delay(upload_folder, url, layer_type, upload_uuid, user_currently_used_space)
         else:
             generate_geojson.delay(upload_folder, layer, upload_uuid, user_currently_used_space)
 
@@ -219,7 +223,7 @@ class ListUploads(Resource):
         return {
             "uploads": uploads
         }
-    
+
     @staticmethod
     def get_uploads(token=None):
         # check token
@@ -565,7 +569,7 @@ class ExportCsvNuts(Resource):
             if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
         print(schema, layer_name, year, layer_type, id_type, ', '.join("'{0}'".format(n) for n in nuts), schema2, dateCol, layer_date, csv_layer_srid)
-        sql = """SELECT ST_ASTEXT(geometry) as geometry_wkt, ST_SRID(geometry) as srid, * FROM {0}.{1} WHERE date = '{2}-01-01' 
+        sql = """SELECT ST_ASTEXT(geometry) as geometry_wkt, ST_SRID(geometry) as srid, * FROM {0}.{1} WHERE date = '{2}-01-01'
                  AND ST_Within({0}.{1}.geometry, st_transform(
                    (SELECT ST_UNION(geom) FROM {6}.{3} WHERE {4} IN ({5}) AND {7} = '{8}-01-01'),
                    {9}
