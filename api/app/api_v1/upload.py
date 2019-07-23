@@ -56,7 +56,7 @@ class AddUploads(Resource):
         except:
             wrong_parameter.append('name')
         try:
-            layer_type = args['type']
+            layer_type = args['layer_type']
         except:
             wrong_parameter.append('layer_type')
         try:

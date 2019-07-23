@@ -10,6 +10,7 @@ pagination_arguments.add_argument('per_page', type=int, required=False, choices=
 file_upload = reqparse.RequestParser()
 file_upload.add_argument('token', type=str, required=True, help='Login token')
 file_upload.add_argument('layer', type=str, required=False, help='file layer')
+file_upload.add_argument('layer_type', type=str, required=False, help='layer type')
 file_upload.add_argument('name', type=str, required=True, help='upload name')
 file_upload.add_argument('file',
                          type=werkzeug.datastructures.FileStorage,
