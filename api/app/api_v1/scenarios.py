@@ -16,7 +16,6 @@ nsScenarios = api.namespace('scenarios', description='Operations related to scen
 ns = nsScenarios
 
 
-@api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 @celery.task(name='add a session')
@@ -40,7 +39,7 @@ def save_session(payload_front, response_cm):
     try:
         name_cm = response_cm['name']
     except:
-        wrong_parameter.append('name')
+        wrong_parameter.append('name_cm')
     try:
         indicators = response_cm['indicator']
     except:
@@ -53,7 +52,8 @@ def save_session(payload_front, response_cm):
     # check token
     user = User.verify_auth_token(token)
     if user is None:
-        raise UserUnidentifiedException
+        raise UserUnidentifiedException("User unidentified")
+
 
     time = datetime.utcnow()
     session = SavedSessions(name=name_session, name_cm=name_cm, saved_at=time, user_id=user.id)
@@ -129,7 +129,7 @@ class ListSession(Resource):
             output[session['cm_name']].append({'id':session['id'], 'session_name':session['session_name'], 'saved_at':session['saved_at']})
         #print(output)
 
-        return {"result" : output }
+        return output
 
 
 @ns.route('/group')

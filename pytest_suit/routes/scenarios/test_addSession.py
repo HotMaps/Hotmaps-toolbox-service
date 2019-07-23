@@ -2,7 +2,8 @@ from api.app.api_v1.scenarios import save_session
 
 from unittest import TestCase
 from . import BASE_URL, test_token, test_session_name
-
+import pytest
+from api.app.decorators.exceptions import ParameterException, UserUnidentifiedException
 
 
 class TestAddSession(TestCase):
@@ -35,23 +36,19 @@ class TestAddSession(TestCase):
         this test will fail because of missing parameters
         """
         payload_front = {
-            "token": test_token,
-            "name_session": test_session_name
+            "tokxcen": test_token,
+            "namexcv_session": test_session_name
         }
         response_cm = {
             "nawerme": "CM - Scale heat and cool density maps",
-            "indicator": [{
+            "indicafdtor": [{
                 "name": "Test indicator",
                 "unit": "kWh",
                 "value": "1532.7"
             }]
         }
-
-        output = save_session(payload_front, response_cm)
-
-        expected_status = '531'
-
-        assert output.json()['error']['status'] == expected_status
+        with pytest.raises(Exception, match="token, name_session, name_cm, indicator"):
+             assert save_session(payload_front, response_cm)
 
     def test_post_user_unidentified(self):
         """
@@ -70,8 +67,5 @@ class TestAddSession(TestCase):
             }]
         }
 
-        output = save_session(payload_front, response_cm)
-
-        expected_status = '539'
-
-        assert output.json()['error']['status'] == expected_status
+        with pytest.raises(Exception, match="User unidentified"):
+            assert save_session(payload_front, response_cm)

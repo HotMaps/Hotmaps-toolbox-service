@@ -11,13 +11,13 @@ class TestDeleteSession(TestCase):
         """
         this test will pass the scenarios/delete method
         """
-        list_url = BASE_URL + "/scenarios/delete"
+        list_url = BASE_URL + "/scenarios/list"
         payload = {
             "token": test_token,
         }
 
         output = requests.post(list_url, json=payload)
-        test_scenario_id = output.json()['scenarios'][0]['id']
+        test_scenario_id = output.json()["CM - Scale heat and cool density maps"][0]['id']
 
         payload = {
             "token": test_token,
