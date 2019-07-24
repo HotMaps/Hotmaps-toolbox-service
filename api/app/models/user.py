@@ -31,7 +31,8 @@ class User(db.Model, UserMixin):
     confirmed_at = db.Column(db.DateTime())
     active_token = db.Column(db.String(255))
     roles = db.relationship('Role', secondary='user.roles_users', backref=db.backref('user_id', lazy='dynamic'))
-    uploads = db.relationship('Uploads')
+    uploads = db.relationship('Uploads', cascade="delete")
+    snapshots = db.relationship('Snapshots', cascade="delete")
 
     @classmethod
     def get_by_email(cls, email):
