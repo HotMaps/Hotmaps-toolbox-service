@@ -115,7 +115,7 @@ class AddUploads(Resource):
         if file_name.endswith('.tif'):
             generate_tiles.delay(upload_folder, url, layer_type, upload_uuid, user_currently_used_space)
         else:
-            generate_geojson.delay(upload_folder, layer, upload_uuid, user_currently_used_space)
+            generate_geojson.delay(upload_folder, layer_type, upload_uuid, user_currently_used_space)
 
         # output
         output = 'file ' + name + ' added for the user ' + user.first_name

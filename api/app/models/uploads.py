@@ -307,17 +307,17 @@ def find_rule(literal, rules_dictionary):
     return "No corresponding style"
 
 
-def csv_to_geojson(url, layer):
+def csv_to_geojson(url, layer_type):
     '''
     This method will convert the CSV to a geojson file
     :param url: the URL of the CSV file
-    :param layer: the layer of the CSV file
+    :param layer_type: the type of the layer of the CSV file
     :return: the geojson
     '''
     features = []
     srid = None
     output_srid = '4326'
-    sld_file = helper.get_style_from_geoserver(layer)
+    sld_file = helper.get_style_from_geoserver(layer_type)
     rule_dictionary = generate_rule_dictionary(sld_file)
     # parse file
     with open(url, 'r') as csvfile:
