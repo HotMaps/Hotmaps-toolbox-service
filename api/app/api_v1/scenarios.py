@@ -135,7 +135,7 @@ class ListSession(Resource):
 @ns.route('/group')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
-@api.response(537, 'Session not existing')
+@api.response(545, 'Session not existing')
 @api.response(539, 'User Unidentified')
 class GroupSession(Resource):
     @api.expect(session_group_input)
@@ -195,7 +195,7 @@ class GroupSession(Resource):
 @ns.route('/delete')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
-@api.response(537, 'Session not existing')
+@api.response(545, 'Session not existing')
 @api.response(539, 'User Unidentified')
 class DeleteSession(Resource):
     @api.marshal_with(session_delete_output)

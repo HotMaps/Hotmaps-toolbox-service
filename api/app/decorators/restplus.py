@@ -7,7 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from ..decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, \
     ParameterException, RequestException, ActivationException, UserExistingException, \
     WrongCredentialException, UserUnidentifiedException, UserDoesntOwnUploadsException, NotEnoughSpaceException, \
-    UploadNotExistingException, UserNotActivatedException, SnapshotNotExistingException
+    UploadNotExistingException, UserNotActivatedException, SnapshotNotExistingException, SessionNotExistingException
 
 log = logging.getLogger(__name__)
 
@@ -283,6 +283,23 @@ def handle_user_not_activated(error):
         }
     return response, 544
 
+@api.errorhandler(SessionNotExistingException)
+def handle_activation_failure(error):
+    '''
+    decorator called with an error caused when you reach a non existing snapshot
+    :param error -- the called error:
+    :return:
+    '''
+    message = 'This session does not exists'
+    response = {
+        "message": message,
+        "error": {
+            "message": message,
+            "status": "545",
+            "statusText": "SESSION MISSING"
+        }
+    }
+    return response, 545
 
 @api.errorhandler
 def default_error_handler(e):

@@ -5,7 +5,7 @@ class IndicatorsCM(db.Model):
     '''
     The model for an indicator of a CM
     '''
-    __tablename__ = 'indicators_cm'
+    __tablename__ = 'cm_indicators'
     __table_args__ = (
         {
             "schema": 'user',

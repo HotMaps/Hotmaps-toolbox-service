@@ -56,7 +56,7 @@ class TestDeleteSession(TestCase):
 
         output = requests.delete(url, json=payload)
 
-        expected_status = '537'
+        expected_status = '545'
 
         assert output.json()['error']['status'] == expected_status
 
