@@ -213,7 +213,7 @@ stats_layers_hectares_output = api.model('Stats for selected layers, year and ar
 
 stats_layer_personnal_layer = api.model('personnal layer', {
     'id': fields.Integer(description='Upload id'),
-    'user_token': fields.String(description='User token'),    
+    'user_token': fields.String(description='User token'),
     'layer_id': fields.String(description='Default layer that user upload from'),
     'layer_name': fields.String(description='Upload name')
 })
@@ -468,6 +468,10 @@ user_get_information_output = api.model('output for getting user information', {
 })
 
 user_get_information_input = api.model('input for getting user information', {
+    'token': fields.String(description='authentification token'),
+})
+
+user_get_cm_list = api.model('input for getting the list of cms', {
     'token': fields.String(description='authentification token'),
 })
 

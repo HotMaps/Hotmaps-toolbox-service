@@ -4,11 +4,12 @@ from flask import request, current_app,jsonify,redirect, \
 from app.decorators.restplus import api
 from app.decorators.serializers import compution_module_class, \
     input_computation_module, test_communication_cm, \
-    compution_module_list, uploadfile, cm_id_input
+    compution_module_list, uploadfile, cm_id_input, \
+    user_get_cm_list
 
 from app.model import register_calulation_module,getUI,getCMList,commands_in_array, run_command
 
-
+from ..models.user import User
 from app import model
 
 from app import helper
@@ -19,7 +20,9 @@ from flask_restplus import Resource
 from app import celery
 import requests
 
-from app.decorators.exceptions import ValidationError, ComputationalModuleError
+from app.decorators.exceptions import ValidationError, ComputationalModuleError, \
+    UserUnidentifiedException
+
 import os
 import json
 from flask import send_from_directory, send_file
@@ -48,13 +51,25 @@ if not os.path.exists(DATASET_DIRECTORY):
 
 
 @ns.route('/list')
+@api.response(539, 'User Unidentified')
 class ComputationModuleList(Resource):
     #@api.marshal_with(stats_layers_nuts_output)
+    @api.expect(user_get_cm_list)
     def post(self):
         """
         Returns the list of the available calculation module
         :return:
         """
+        try:
+            token = api.payload['token']
+        except:
+            raise ParameterException('token')
+
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise UserUnidentifiedException
+
         return getCMList()
 
 @ns.route('/user-interface/', methods=['POST'])
@@ -150,7 +165,7 @@ def computeTask(data,payload,cm_id):
 
         nuts_within = model.nuts_within_the_selection(geom)
 
-        inputs_raster_selection = model.get_raster_from_csv(DATASET_DIRECTORY ,geom,layer_needed, type_layer_needed, UPLOAD_DIRECTORY)
+        inputs_raster_selection = model.get_raster_from_csv(DATASET_DIRECTORY, geom, layer_needed, UPLOAD_DIRECTORY)
         inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, geom)
         #nut2_nuts3_area =
         #print ('inputs_raster_selection',inputs_raster_selection)
@@ -161,7 +176,7 @@ def computeTask(data,payload,cm_id):
 
         nuts_within = model.nuts2_within_the_selection_nuts_lau(scalevalue,id_list)
         shapefile_path = model.get_shapefile_from_selection(scalevalue,id_list,UPLOAD_DIRECTORY)
-        inputs_raster_selection = model.clip_raster_from_shapefile(DATASET_DIRECTORY ,shapefile_path,layer_needed, type_layer_needed, UPLOAD_DIRECTORY)
+        inputs_raster_selection = model.clip_raster_from_shapefile(DATASET_DIRECTORY, shapefile_path, layer_needed, UPLOAD_DIRECTORY)
         if vectors_needed != None:
             inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, id_list)
         #****************** FINISH RASTER CLIP FOR NUTS  OR LAU ***************************************************

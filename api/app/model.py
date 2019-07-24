@@ -133,7 +133,7 @@ def register_calulation_module(data):
                 input_value = str(value['input_value'])
                 input_priority = 0
                 try:
-                    input_priority = value['input_priority'] 
+                    input_priority = value['input_priority']
                 except:
                     pass
                 input_unit = value['input_unit']
@@ -266,13 +266,12 @@ def get_shapefile_from_selection(scalevalue, id_selected_list, ouput_directory, 
     print('output_shapefile ',output_shapefile)
     return output_shapefile
 
-def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed,type_needed, output_directory):
+def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed, output_directory):
     inputs_raster_selection = {}
     wkt_point_3035 = helper.projection_4326_to_3035(wkt_point)
     filename_csv = helper.write_wkt_csv(helper.generate_csv_name(output_directory),wkt_point_3035)
     for layer in layer_needed:
-        cpt_type = 0
-        type = type_needed[cpt_type]
+        type = layer['type']
         directory = layer.replace('_tif', '')
         root_path = datasets_directory + directory + "/data/"
         path_to_dataset = root_path + layer + ".tif"
@@ -285,16 +284,14 @@ def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed,type_needed, 
         run_command(args)
         #os.system(com_string)
         inputs_raster_selection[type] = filename_tif
-        cpt_type = cpt_type + 1
     return inputs_raster_selection
 
-def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed,type_needed, output_directory):
+def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed, output_directory):
     """
 
     :param datasets_directory: input dataset directory
     :param shapefile_path:  input shapefile path
     :param layer_needed: list of layer need for the CM
-    :param type_needed:  list of type needed from the CM
     :param output_directory: output directory where we c
     :return: dictionnary
     """
@@ -302,9 +299,8 @@ def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed,t
     # retrieve all layer neeeded
     print ('layer_needed',layer_needed)
     print ('type_needed',type_needed)
-    cpt_type = 0
     for layer in layer_needed:
-        type = type_needed[cpt_type]
+        type = layer['type']
         print ('type',type)
         directory = layer.replace('_tif', '')
         root_path = datasets_directory + directory + "/data/"
@@ -317,7 +313,6 @@ def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed,t
         run_command(args)
         inputs_raster_selection[type] = filename_tif
         print("inputs_raster_selection[type]", filename_tif)
-        cpt_type = cpt_type + 1
 
     return inputs_raster_selection
 
@@ -416,9 +411,3 @@ def query(sql_query,conn):
 
 
     return cursor
-
-
-
-
-
-
