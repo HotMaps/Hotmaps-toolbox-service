@@ -471,10 +471,6 @@ user_get_information_input = api.model('input for getting user information', {
     'token': fields.String(description='authentification token'),
 })
 
-user_get_cm_list = api.model('input for getting the list of cms', {
-    'token': fields.String(description='authentification token'),
-})
-
 upload_add_input = api.model('input for uploads adding', {
     'token': fields.String(description='authentification token'),
     'name': fields.String(description='Upload name'),

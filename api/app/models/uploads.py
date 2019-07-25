@@ -12,7 +12,7 @@ import requests
 import shapely.geometry as shapely_geom
 import shapely.wkt as shapely_wkt
 from app import celery
-from app.model import run_command, commands_in_array
+from app import model
 from geojson import Feature, FeatureCollection
 from shapely.ops import transform
 import xml.etree.ElementTree as ET
@@ -75,8 +75,8 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
 
     try:
         # commands launch to obtain the level of zooms
-        args_tiles = commands_in_array("python3 app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-11' {} {} ".format(rgb_tif, tile_path))
-        run_command(args_tiles)
+        args_tiles = model.commands_in_array("python3 app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-11' {} {} ".format(rgb_tif, tile_path))
+        model.run_command(args_tiles)
 
     except :
         generate_state = 10
