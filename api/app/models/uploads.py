@@ -40,6 +40,7 @@ class Uploads(db.Model):
     uuid = db.Column(db.String(255))
     name = db.Column(db.String(255))
     layer = db.Column(db.String(255))
+    layer_type = db.Column(db.String(255))
     size = db.Column(db.Numeric)
     url = db.Column(db.String(255))
     is_generated = db.Column(db.Integer)
@@ -47,12 +48,12 @@ class Uploads(db.Model):
 
 
 @celery.task(name='generate_tiles_file_upload')
-def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_used_space):
+def generate_tiles(upload_folder, grey_tif, layer_type, upload_uuid, user_currently_used_space):
     '''
     This function is used to generate the various tiles of a layer in the db.
     :param upload_folder: the folder of the upload
     :param grey_tif: the url to the input file
-    :param layer: the name of the layer choosen for the input
+    :param layer_type: the type of the layer chosen for the input
     :param upload_uuid: the uuid of the upload
     :param user_currently_used_space: the space currently used by the user
 
@@ -71,7 +72,7 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
 
     rgb_tif = upload_folder + '/rgba.tif'
 
-    helper.colorize(layer, grey_tif, rgb_tif)
+    helper.colorize(layer_type, grey_tif, rgb_tif)
 
     try:
         # commands launch to obtain the level of zooms
@@ -306,17 +307,17 @@ def find_rule(literal, rules_dictionary):
     return "No corresponding style"
 
 
-def csv_to_geojson(url, layer):
+def csv_to_geojson(url, layer_type):
     '''
     This method will convert the CSV to a geojson file
     :param url: the URL of the CSV file
-    :param layer: the layer of the CSV file
+    :param layer_type: the type of the layer of the CSV file
     :return: the geojson
     '''
     features = []
     srid = None
     output_srid = '4326'
-    sld_file = helper.get_style_from_geoserver(layer)
+    sld_file = helper.get_style_from_geoserver(layer_type)
     rule_dictionary = generate_rule_dictionary(sld_file)
     # parse file
     with open(url, 'r') as csvfile:
