@@ -85,7 +85,7 @@ def generate_tiles(upload_folder, grey_tif, layer_type, upload_uuid, user_curren
         generate_state = 0
 
     # updating generate state of upload
-    upload = Uploads.query.filter_by(uuid=upload_uuid).first()
+    upload = Uploads.query.filter_by(url=grey_tif).first()
     upload.is_generated = generate_state
     db.session.commit()
 
