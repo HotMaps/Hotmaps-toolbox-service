@@ -6,6 +6,7 @@ except ImportError:
     from pipes import quote
 import subprocess
 from app.secrets import user_db,host_db,password_db,port_db,database_db
+from app.constants import DATASET_DIRECTORY
 from datetime import datetime
 import psycopg2
 import sqlalchemy.pool as pool
@@ -14,6 +15,7 @@ from app import celery
 from app.constants import CM_DB_NAME
 from app import helper
 from app import sql_queries
+from .models.uploads import Uploads
 import os
 try:
     import ogr
@@ -133,7 +135,7 @@ def register_calulation_module(data):
                 input_value = str(value['input_value'])
                 input_priority = 0
                 try:
-                    input_priority = value['input_priority'] 
+                    input_priority = value['input_priority']
                 except:
                     pass
                 input_unit = value['input_unit']
@@ -266,58 +268,60 @@ def get_shapefile_from_selection(scalevalue, id_selected_list, ouput_directory, 
     print('output_shapefile ',output_shapefile)
     return output_shapefile
 
-def get_raster_from_csv(datasets_directory ,wkt_point,layer_needed,type_needed, output_directory):
+def get_raster_from_csv(wkt_point, layer_needed, output_directory):
     inputs_raster_selection = {}
     wkt_point_3035 = helper.projection_4326_to_3035(wkt_point)
     filename_csv = helper.write_wkt_csv(helper.generate_csv_name(output_directory),wkt_point_3035)
     for layer in layer_needed:
-        cpt_type = 0
-        type = type_needed[cpt_type]
-        directory = layer.replace('_tif', '')
-        root_path = datasets_directory + directory + "/data/"
-        path_to_dataset = root_path + layer + ".tif"
-        if not os.path.abspath(path_to_dataset).startswith(root_path):
-            raise Exception("directory traversal denied")
-    # create a file name as output
-        filename_tif = helper.generate_geotif_name(output_directory)
+        type = layer['layer_type']
+        if layer['id'] == 0:
+            dataset_directory = DATASET_DIRECTORY
+            directory = layer['workspaceName']
+            root_path = dataset_directory + directory + "/data/"
+            path_to_dataset = root_path + layer['workspaceName'] + ".tif"
+            if not os.path.abspath(path_to_dataset).startswith(root_path):
+                raise Exception("directory traversal denied")
+        else:
+            upload = Uploads.query.get(layer['id'])
+            path_to_dataset = upload.url
 
+        # create a file name as output
+        filename_tif = helper.generate_geotif_name(output_directory)
         args = commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(filename_csv,path_to_dataset,filename_tif))
         run_command(args)
         #os.system(com_string)
         inputs_raster_selection[type] = filename_tif
-        cpt_type = cpt_type + 1
     return inputs_raster_selection
 
-def clip_raster_from_shapefile(datasets_directory ,shapefile_path,layer_needed,type_needed, output_directory):
+def clip_raster_from_shapefile(shapefile_path,layer_needed, output_directory):
     """
 
     :param datasets_directory: input dataset directory
     :param shapefile_path:  input shapefile path
     :param layer_needed: list of layer need for the CM
-    :param type_needed:  list of type needed from the CM
     :param output_directory: output directory where we c
     :return: dictionnary
     """
     inputs_raster_selection = {}
     # retrieve all layer neeeded
-    print ('layer_needed',layer_needed)
-    print ('type_needed',type_needed)
-    cpt_type = 0
     for layer in layer_needed:
-        type = type_needed[cpt_type]
-        print ('type',type)
-        directory = layer.replace('_tif', '')
-        root_path = datasets_directory + directory + "/data/"
-        path_to_dataset = root_path + layer + ".tif"
-        if not os.path.abspath(path_to_dataset).startswith(root_path):
-            raise Exception("directory traversal denied")
+        type = layer['layer_type']
+        if layer['id'] == 0:
+            dataset_directory = DATASET_DIRECTORY
+            directory = layer['workspaceName']
+            root_path = dataset_directory + directory + "/data/"
+            path_to_dataset = root_path + layer['workspaceName'] + ".tif"
+            if not os.path.abspath(path_to_dataset).startswith(root_path):
+                raise Exception("directory traversal denied")
+        else:
+            upload = Uploads.query.filter_by(id=layer['id']).first()
+            path_to_dataset = upload.url
         # create a file name as output
         filename_tif = helper.generate_geotif_name(output_directory)
         args = commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(shapefile_path,path_to_dataset,filename_tif))
         run_command(args)
         inputs_raster_selection[type] = filename_tif
         print("inputs_raster_selection[type]", filename_tif)
-        cpt_type = cpt_type + 1
 
     return inputs_raster_selection
 
@@ -416,9 +420,3 @@ def query(sql_query,conn):
 
 
     return cursor
-
-
-
-
-
-

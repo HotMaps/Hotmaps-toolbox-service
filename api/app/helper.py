@@ -29,10 +29,10 @@ class ColorMap:
 
 
 @celery.task(name = 'Colorize')
-def colorize(layer, grey_tif, rgb_tif):
+def colorize(layer_type, grey_tif, rgb_tif):
     '''
     This method is used to check the size of the file
-    :param layer: the name of the layer choosen for the input
+    :param layer_type: the name of the layer type chosen for the input
     :param grey_tif: the url to the input file
     :param rgb_tif: the path to the output file
     :return:
@@ -41,7 +41,7 @@ def colorize(layer, grey_tif, rgb_tif):
 
     # we want to use a unique id for the file to be sure that it will not be duplicated in case two
     uuid_temp = str(uuid.uuid4())
-    xml = get_style_from_geoserver(layer)
+    xml = get_style_from_geoserver(layer_type)
     color_map_objects = extract_colormap(xml)
 
     grey2rgb_path = create_grey2rgb_txt(color_map_objects, uuid_temp)
@@ -55,19 +55,19 @@ def colorize(layer, grey_tif, rgb_tif):
             os.remove(os.path.join('/tmp', fname))
 
 
-def get_style_from_geoserver(layer):
+def get_style_from_geoserver(layer_type):
     '''
     This method will get the style from the geoserver using GET method
-    :param layer: the layer to select
+    :param layer_type: the layer type to select
     :return xml: the sld style file
     '''
-    url = secrets.GEOSERVER_API_URL + 'styles/' + layer + '.sld'
+    url = secrets.GEOSERVER_API_URL + 'styles/' + layer_type + '.sld'
     result = requests.get(url)
     xml = result.content
     # This piece of code is temporary, this should be removed when the workspaces on geoserver are unified
     if b'No such style' in xml:
         # As some layer are inside workspaces, we need to specify the workspace in order to find the correct style
-        url = secrets.GEOSERVER_API_URL + 'workspaces/hotmaps/styles/' + layer + '.sld'
+        url = secrets.GEOSERVER_API_URL + 'workspaces/hotmaps/styles/' + layer_type + '.sld'
         result = requests.get(url)
         xml = result.content
     return xml

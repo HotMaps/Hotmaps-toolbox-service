@@ -213,7 +213,7 @@ stats_layers_hectares_output = api.model('Stats for selected layers, year and ar
 
 stats_layer_personnal_layer = api.model('personnal layer', {
     'id': fields.Integer(description='Upload id'),
-    'user_token': fields.String(description='User token'),    
+    'user_token': fields.String(description='User token'),
     'layer_id': fields.String(description='Default layer that user upload from'),
     'layer_name': fields.String(description='Upload name')
 })
@@ -485,6 +485,7 @@ upload_model = api.model('all upload fields', {
     'name': fields.String(description='Upload name'),
     'size': fields.Float(description='size'),
     'layer': fields.String(description='layer'),
+    'layer_type': fields.String(description='layer type'),
     'is_generated': fields.Integer(description='Stat of the tiles generation')
 })
 

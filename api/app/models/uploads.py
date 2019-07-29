@@ -12,7 +12,7 @@ import requests
 import shapely.geometry as shapely_geom
 import shapely.wkt as shapely_wkt
 from app import celery
-from app.model import run_command, commands_in_array
+from app import model
 from geojson import Feature, FeatureCollection
 from shapely.ops import transform
 import xml.etree.ElementTree as ET
@@ -40,6 +40,7 @@ class Uploads(db.Model):
     uuid = db.Column(db.String(255))
     name = db.Column(db.String(255))
     layer = db.Column(db.String(255))
+    layer_type = db.Column(db.String(255))
     size = db.Column(db.Numeric)
     url = db.Column(db.String(255))
     is_generated = db.Column(db.Integer)
@@ -47,12 +48,12 @@ class Uploads(db.Model):
 
 
 @celery.task(name='generate_tiles_file_upload')
-def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_used_space):
+def generate_tiles(upload_folder, grey_tif, layer_type, upload_uuid, user_currently_used_space):
     '''
     This function is used to generate the various tiles of a layer in the db.
     :param upload_folder: the folder of the upload
     :param grey_tif: the url to the input file
-    :param layer: the name of the layer choosen for the input
+    :param layer_type: the type of the layer chosen for the input
     :param upload_uuid: the uuid of the upload
     :param user_currently_used_space: the space currently used by the user
 
@@ -71,12 +72,12 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
 
     rgb_tif = upload_folder + '/rgba.tif'
 
-    helper.colorize(layer, grey_tif, rgb_tif)
+    helper.colorize(layer_type, grey_tif, rgb_tif)
 
     try:
         # commands launch to obtain the level of zooms
-        args_tiles = commands_in_array("python3 app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-11' {} {} ".format(rgb_tif, tile_path))
-        run_command(args_tiles)
+        args_tiles = model.commands_in_array("python3 app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-11' {} {} ".format(rgb_tif, tile_path))
+        model.run_command(args_tiles)
 
     except :
         generate_state = 10
@@ -84,7 +85,7 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
         generate_state = 0
 
     # updating generate state of upload
-    upload = Uploads.query.filter_by(uuid=upload_uuid).first()
+    upload = Uploads.query.filter_by(url=grey_tif).first()
     upload.is_generated = generate_state
     db.session.commit()
 
@@ -93,11 +94,11 @@ def generate_tiles(upload_folder, grey_tif, layer, upload_uuid, user_currently_u
 
 
 @celery.task(name='generate_geojson_file_upload')
-def generate_geojson(upload_folder, layer, upload_uuid, user_currently_used_space):
+def generate_geojson(upload_folder, layer_type, upload_uuid, user_currently_used_space):
     '''
     This function is used to generate the geojson of a layer in the db.
     :param upload_folder: the folder of the upload
-    :param layer: the name of the layer choosen for the input
+    :param layer_type: the name of the layer type choosen for the input
     :param upload_uuid: the uuid of the upload
     :param user_currently_used_space: the space currently used by the user
     '''
@@ -106,7 +107,7 @@ def generate_geojson(upload_folder, layer, upload_uuid, user_currently_used_spac
     try:
         geojson_file_path = upload_folder + '/data.json'
         with open(geojson_file_path, 'w') as geojson_file:
-            json.dump(csv_to_geojson(upload_csv, layer), geojson_file)
+            json.dump(csv_to_geojson(upload_csv, layer_type), geojson_file)
     except :
         generate_state = 10
     else:
@@ -306,17 +307,17 @@ def find_rule(literal, rules_dictionary):
     return "No corresponding style"
 
 
-def csv_to_geojson(url, layer):
+def csv_to_geojson(url, layer_type):
     '''
     This method will convert the CSV to a geojson file
     :param url: the URL of the CSV file
-    :param layer: the layer of the CSV file
+    :param layer_type: the type of the layer of the CSV file
     :return: the geojson
     '''
     features = []
     srid = None
     output_srid = '4326'
-    sld_file = helper.get_style_from_geoserver(layer)
+    sld_file = helper.get_style_from_geoserver(layer_type)
     rule_dictionary = generate_rule_dictionary(sld_file)
     # parse file
     with open(url, 'r') as csvfile:
