@@ -16,9 +16,10 @@ class TestDownload(TestCase):
         payload = {
             "token": test_token,
         }
-
+        
         output = requests.post(list_url, json=payload)
-        test_upload_id = output.json()['uploads'][0]['id']
+        # should be the file added in add 'test_addUploads.py'
+        test_upload_id = sorted(output.json()['uploads'], key=lambda upload: upload["id"], reverse=True)[0]["id"]
 
         payload = {
             "token": test_token,

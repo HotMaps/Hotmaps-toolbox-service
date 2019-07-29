@@ -81,6 +81,11 @@ class NotEnoughSpaceException(Exception):
     '''
     pass
 
+class UploadFileNotExistingException(Exception):
+    '''
+    Exception raised when we try to access a non existing upload file
+    '''
+    pass
 
 class UploadNotExistingException(Exception):
     '''
