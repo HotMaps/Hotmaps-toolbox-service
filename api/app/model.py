@@ -314,7 +314,7 @@ def clip_raster_from_shapefile(shapefile_path,layer_needed, output_directory):
             if not os.path.abspath(path_to_dataset).startswith(root_path):
                 raise Exception("directory traversal denied")
         else:
-            upload = Uploads.query.get(layer['id'])
+            upload = Uploads.query.filter_by(id=layer['id']).first()
             path_to_dataset = upload.url
         # create a file name as output
         filename_tif = helper.generate_geotif_name(output_directory)

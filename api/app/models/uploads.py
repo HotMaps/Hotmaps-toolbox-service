@@ -94,11 +94,11 @@ def generate_tiles(upload_folder, grey_tif, layer_type, upload_uuid, user_curren
 
 
 @celery.task(name='generate_geojson_file_upload')
-def generate_geojson(upload_folder, layer, upload_uuid, user_currently_used_space):
+def generate_geojson(upload_folder, layer_type, upload_uuid, user_currently_used_space):
     '''
     This function is used to generate the geojson of a layer in the db.
     :param upload_folder: the folder of the upload
-    :param layer: the name of the layer choosen for the input
+    :param layer_type: the name of the layer type choosen for the input
     :param upload_uuid: the uuid of the upload
     :param user_currently_used_space: the space currently used by the user
     '''
@@ -107,7 +107,7 @@ def generate_geojson(upload_folder, layer, upload_uuid, user_currently_used_spac
     try:
         geojson_file_path = upload_folder + '/data.json'
         with open(geojson_file_path, 'w') as geojson_file:
-            json.dump(csv_to_geojson(upload_csv, layer), geojson_file)
+            json.dump(csv_to_geojson(upload_csv, layer_type), geojson_file)
     except :
         generate_state = 10
     else:
