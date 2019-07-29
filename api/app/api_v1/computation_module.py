@@ -8,7 +8,7 @@ from app.decorators.serializers import compution_module_class, \
 
 from app.model import register_calulation_module,getUI,getCMList,commands_in_array, run_command
 
-
+from ..models.user import User
 from app import model
 
 from app import helper
@@ -20,6 +20,7 @@ from app import celery
 import requests
 
 from app.decorators.exceptions import ValidationError, ComputationalModuleError
+
 import os
 import json
 from flask import send_from_directory, send_file
@@ -150,7 +151,7 @@ def computeTask(data,payload,cm_id):
 
         nuts_within = model.nuts_within_the_selection(geom)
 
-        inputs_raster_selection = model.get_raster_from_csv(DATASET_DIRECTORY ,geom,layer_needed, type_layer_needed, UPLOAD_DIRECTORY)
+        inputs_raster_selection = model.get_raster_from_csv(geom, layer_needed, UPLOAD_DIRECTORY)
         inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, geom)
         #nut2_nuts3_area =
         #print ('inputs_raster_selection',inputs_raster_selection)
@@ -161,7 +162,7 @@ def computeTask(data,payload,cm_id):
 
         nuts_within = model.nuts2_within_the_selection_nuts_lau(scalevalue,id_list)
         shapefile_path = model.get_shapefile_from_selection(scalevalue,id_list,UPLOAD_DIRECTORY)
-        inputs_raster_selection = model.clip_raster_from_shapefile(DATASET_DIRECTORY ,shapefile_path,layer_needed, type_layer_needed, UPLOAD_DIRECTORY)
+        inputs_raster_selection = model.clip_raster_from_shapefile(shapefile_path, layer_needed, UPLOAD_DIRECTORY)
         if vectors_needed != None:
             inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, id_list)
         #****************** FINISH RASTER CLIP FOR NUTS  OR LAU ***************************************************
