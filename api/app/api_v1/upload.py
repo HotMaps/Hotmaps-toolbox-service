@@ -14,7 +14,7 @@ from .. import dbGIS as db
 from ..decorators.parsers import file_upload
 from ..decorators.restplus import UserUnidentifiedException, ParameterException, RequestException, \
     UserDoesntOwnUploadsException, UploadNotExistingException, \
-    HugeRequestException, NotEnoughPointsException
+    HugeRequestException, NotEnoughPointsException, UploadFileNotExistingException
 from ..decorators.restplus import api
 from ..decorators.serializers import upload_add_output, upload_list_input, upload_list_output, upload_delete_input, \
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
@@ -239,6 +239,7 @@ class ListUploads(Resource):
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
+@api.response(541, 'Upload File doesn\'t exists')
 @api.response(543, 'Uploads doesn\'t exists')
 class DeleteUploads(Resource):
     @api.marshal_with(upload_delete_output)
@@ -259,6 +260,7 @@ class DeleteUploads(Resource):
             token = api.payload['token']
         except:
             wrong_parameter.append('token')
+
         # raise exception if parameters are false
         if len(wrong_parameter) > 0:
             exception_message = ''
@@ -283,12 +285,16 @@ class DeleteUploads(Resource):
 
         folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload_to_delete.uuid)
 
+        if os.path.exists(folder_url):
+            # delete the file
+            shutil.rmtree(folder_url)
+        # Force DB deletion
+        elif not ("force" in api.payload and api.payload["force"]):
+            raise UploadFileNotExistingException("blah")
+
         # delete the upload
         db.session.delete(upload_to_delete)
         db.session.commit()
-
-        # delete the file
-        shutil.rmtree(folder_url)
 
         # output
         return {
@@ -681,6 +687,7 @@ class ExportCsvHectare(Resource):
 @api.response(531, 'Missing Parameters')
 @api.response(539, 'User Unidentified')
 @api.response(540, 'User doesn\'t own the upload')
+@api.response(541, 'Upload File doesn\'t exists')
 @api.response(543, 'Uploads doesn\'t exists')
 class Download(Resource):
     @api.expect(upload_download_input)
@@ -725,7 +732,7 @@ class Download(Resource):
 
         url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
 
-        if os.path.exists(url + '/'+ UPLOAD_BASE_NAME):
+        if os.path.exists(url + '/' + UPLOAD_BASE_NAME):
             url += '/'+UPLOAD_BASE_NAME
             extension = '.tif'
             mimetype = 'image/TIFF'
@@ -733,6 +740,8 @@ class Download(Resource):
             url += '/data.csv'
             extension = '.csv'
             mimetype = 'text/csv'
+        else:
+            raise UploadFileNotExistingException
 
         # send the file to the client
         return send_file(url,

@@ -414,6 +414,14 @@ user_activate_output = api.model('output for user activation', {
     'message': fields.String(description='message'),
 })
 
+user_deletion_input = api.model('input for user deletion', {
+    'token': fields.String(description='token'),
+})
+
+user_deletion_output = api.model('output for user deletion', {
+    'message': fields.String(description='message'),
+})
+
 user_ask_recovery_input = api.model('input for user password recovery request', {
     'email': fields.String(description='email'),
 })
@@ -507,8 +515,9 @@ upload_space_used_output = api.model('output for uploads space used function', {
 })
 
 upload_delete_input = api.model('input for uploads deleting', {
-    'token': fields.String(description='authentification token'),
+    "token": fields.String(description='authentification token'),
     "id": fields.Integer(description='Upload id'),
+    "force": fields.Boolean(False, description='force deletion')
 })
 
 upload_delete_output = api.model('output for uploads deleting', {

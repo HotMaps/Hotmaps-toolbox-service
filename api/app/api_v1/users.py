@@ -17,10 +17,10 @@ from ..decorators.exceptions import ParameterException, RequestException, Activa
     UserNotActivatedException
 from ..decorators.restplus import api
 from ..decorators.serializers import user_register_input, user_register_output, user_activate_input, \
-    user_activate_output, user_ask_recovery_input, user_ask_recovery_output, user_recovery_output, \
-    user_recovery_input, user_login_input, user_login_output, user_logout_input, user_logout_output, \
-    user_profile_input, user_profile_output, user_get_information_output, user_get_information_input, \
-    upload_space_used_output, upload_space_used_input, feedback_output
+    user_activate_output, user_deletion_input, user_deletion_output, user_ask_recovery_input, \
+    user_ask_recovery_output, user_recovery_output, user_recovery_input, user_login_input, user_login_output, \
+    user_logout_input, user_logout_output, user_profile_input, user_profile_output, user_get_information_output, \
+    user_get_information_input, upload_space_used_output, upload_space_used_input, feedback_output
 from .. import dbGIS as db
 from ..secrets import FLASK_SECRET_KEY, FLASK_SALT
 from ..models.user import User
@@ -192,7 +192,7 @@ class UserRegistering(Resource):
             msg.add_recipient(email)
             msg.subject = 'Your registration on the HotMaps toolbox'
             msg.body = 'Welcome ' + first_name + ' ' + last_name + ' on the HotMaps toolbox,\n' \
-                                                                   'To finalize your registration on the toolbox, please click on the following link: \n' \
+                       'To finalize your registration on the toolbox, please click on the following link: \n' \
                        + link
 
             mail.send(msg)
@@ -238,6 +238,42 @@ class ActivateUser(Resource):
                 user_to_activate.active = True
                 db.session.commit()
                 output = 'user activated'
+            except Exception as e:
+                raise RequestException(str(e))
+        # output
+        return {
+            "message": output
+        }
+
+
+@ns.route('')
+@api.response(530, 'Request error')
+@api.response(531, 'Missing parameter')
+class DeleteUser(Resource):
+    @api.marshal_with(user_deletion_output)
+    @api.expect(user_deletion_input)
+    @celery.task(name='user deletion')
+    def delete(self):
+        '''
+		The method called to delete a user with a token given by email
+		:return:
+		'''
+        # Entries
+        try:
+            token = api.payload['token']
+        except:
+            raise ParameterException('token')
+
+        # Find mail to activate
+        user = User.verify_auth_token(token)
+        if not user:
+            raise RequestException(str('Can\'t find the user'))
+        else:
+            # activate user
+            try:
+                db.session.delete(user)
+                db.session.commit()
+                output = 'user deleted'
             except Exception as e:
                 raise RequestException(str(e))
         # output
