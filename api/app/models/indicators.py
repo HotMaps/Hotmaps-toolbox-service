@@ -621,9 +621,9 @@ layersData = {
 			'table_type':raster_type,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':True,'indicators':[
-            {'table_column': 'mean', 'unit': u'kWh/(m²*year)','indicator_id':'average','agg_method':'mean_weighted_cell'},
-            {'table_column': 'min', 'unit': u'kWh/(m²*year)','indicator_id':'min','agg_method':'min'},
-            {'table_column': 'max', 'unit': u'kWh/(m²*year)','indicator_id':'max','agg_method':'max'},
+            {'table_column': 'mean', 'unit': u'kWh/(m²*yr)','indicator_id':'average','agg_method':'mean_weighted_cell'},
+            {'table_column': 'min', 'unit': u'kWh/(m²*yr)','indicator_id':'min','agg_method':'min'},
+            {'table_column': 'max', 'unit': u'kWh/(m²*yr)','indicator_id':'max','agg_method':'max'},
             {'table_column': 'sum', 'unit': 'GWh/yr','indicator_id':'total_radiation','factor':0.01,'agg_method':'sum'},
         		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},	
 			]},
