@@ -9,6 +9,8 @@ from app.decorators.serializers import compution_module_class, \
 from app.model import register_calulation_module,getUI,getCMList,commands_in_array, run_command
 
 from ..models.user import User
+from ..models.uploads import Uploads
+
 from app import model
 
 from app import helper
@@ -19,7 +21,8 @@ from flask_restplus import Resource
 from app import celery
 import requests
 
-from app.decorators.exceptions import ValidationError, ComputationalModuleError
+from app.decorators.exceptions import ValidationError, ComputationalModuleError, \
+    UserUnidentifiedException
 
 import os
 import json
@@ -124,6 +127,7 @@ def savefile(filename,url):
                 f.write(chunk)
     return path
 
+@api.response(539, 'User Unidentified')
 @celery.task(name = 'Compute-async')
 def computeTask(data,payload,cm_id):
 
@@ -133,6 +137,11 @@ def computeTask(data,payload,cm_id):
     :param cm_id:
     :return:Rdeturns the calculation of a calculation module
     """
+
+    user = User.verify_auth_token(data['token'])
+    if user is None:
+        raise UserUnidentifiedException
+
     inputs_vector_selection = None
 
     #****************** RETRIVE INPUT DATA ***************************************************'
@@ -184,7 +193,19 @@ def computeTask(data,payload,cm_id):
         print ('time to generate tilexs generateTiles')
         if data_output['result']['raster_layers'] is not None and len(data_output['result']['raster_layers'])>0:
             raster_layers = data_output['result']['raster_layers']
-            generateTiles(raster_layers)
+            for layer in raster_layers:
+                print ('generateTiles')
+                generateTiles(layer)
+                if data['session_name'] != "":
+                    layer['name'] = data['session_name']
+                upload_uuid = str(uuid.uuid4())
+                upload = Uploads(name=layer['name'], url=layer['path'], user_id=user.id, layer=layer['type'],
+                                layer_type=layer['type'], size=0.0, uuid=upload_uuid, is_generated=1)
+                db.session.add(upload)
+                db.session.commit()
+
+                # TODO Modifier CM: output_directory = USER_UPLOAD_FOLDER
+
     except:
         # no raster_layers
         pass
@@ -197,42 +218,38 @@ def computeTask(data,payload,cm_id):
 
     return data_output
 
-def generateTiles(raster_layers):
-    print ('generateTiles')
-    print ('raster_layers',raster_layers)
-    for layers in raster_layers:
-        print ('in the loop')
-        layer_type = layers['type']
-        file_path_input = layers['path']
-        directory_for_tiles = file_path_input.replace('.tif', '')
-        file_path_output = helper.generate_geotif_name(UPLOAD_DIRECTORY)
-        tile_path = directory_for_tiles
-        access_rights = 0o755
-        try:
-            os.mkdir(tile_path, access_rights)
-            print ('tile_path',tile_path)
+def generateTiles(raster_layer):
+    print ('raster_layer',raster_layer)
+    layer_type = raster_layer['type']
+    file_path_input = raster_layer['path']
+    directory_for_tiles = file_path_input.replace('.tif', '')
+    file_path_output = helper.generate_geotif_name(UPLOAD_DIRECTORY)
+    tile_path = directory_for_tiles
+    access_rights = 0o755
+    try:
+        os.mkdir(tile_path, access_rights)
+        print ('tile_path',tile_path)
 
-        except OSError:
-            pass
-            print ("Creation of the directory %s failed" % tile_path)
-        else:
-            pass
+    except OSError:
+        pass
+        print ("Creation of the directory %s failed" % tile_path)
+    else:
+        pass
 
-        if layer_type == 'custom':
-            #convert tif file into geotif file
-            args_gdal = commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE ".format(file_path_input, file_path_output))
-            run_command(args_gdal)
-        else:
-            helper.colorize(layer_type, file_path_input, file_path_output)
+    if layer_type == 'custom':
+        #convert tif file into geotif file
+        args_gdal = commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE ".format(file_path_input, file_path_output))
+        run_command(args_gdal)
+    else:
+        helper.colorize(layer_type, file_path_input, file_path_output)
 
-        args_tiles = commands_in_array("python3 app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-11' {} {} ".format(file_path_output, tile_path))
-        run_command(args_tiles)
+    args_tiles = commands_in_array("python3 app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-11' {} {} ".format(file_path_output, tile_path))
+    run_command(args_tiles)
 
-        directory_for_tiles = directory_for_tiles.replace(UPLOAD_DIRECTORY+'/', '')
-        layers['path'] = directory_for_tiles
-        print ('path', directory_for_tiles)
+    directory_for_tiles = directory_for_tiles.replace(UPLOAD_DIRECTORY+'/', '')
+    raster_layer['path'] = directory_for_tiles
+    print ('path', directory_for_tiles)
 
-    print ('finished generate Tiles')
     return file_path_input, directory_for_tiles
 
 def generate_shape(vector_layers):

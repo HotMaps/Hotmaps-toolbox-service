@@ -282,7 +282,7 @@ def get_raster_from_csv(wkt_point, layer_needed, output_directory):
             if not os.path.abspath(path_to_dataset).startswith(root_path):
                 raise Exception("directory traversal denied")
         else:
-            upload = Uploads.query.get(layer['id'])
+            upload = Uploads.query.filter_by(id=layer['id']).first()
             path_to_dataset = upload.url
 
         # create a file name as output
