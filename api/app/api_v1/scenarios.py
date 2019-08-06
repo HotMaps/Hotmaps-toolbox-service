@@ -54,9 +54,8 @@ def save_session(payload_front, response_cm):
     if user is None:
         raise UserUnidentifiedException("User unidentified")
 
-
     time = datetime.utcnow()
-    session = SavedSessions(name=name_session, name_cm=name_cm, saved_at=time, user_id=user.id)
+    session = SavedSessions(name=name_session, cm_name=name_cm, saved_at=time, user_id=user.id)
     db.session.add(session)
 
     for indicator in indicators:
@@ -78,7 +77,7 @@ def save_session(payload_front, response_cm):
             exception_message = ', '.join(wrong_parameter)
             raise ParameterException(str(exception_message))
 
-        indicator = IndicatorsCM(name=name_indicator, unit=unit, value=value, session_id=session.id)
+        indicator = IndicatorsCM(name=name_indicator, unit=unit, value=value)
         db.session.add(indicator)
 
     db.session.commit()

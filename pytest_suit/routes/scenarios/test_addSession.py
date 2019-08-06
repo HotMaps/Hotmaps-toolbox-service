@@ -3,7 +3,6 @@ from api.app.api_v1.scenarios import save_session
 from unittest import TestCase
 from . import BASE_URL, test_token, test_session_name
 import pytest
-from api.app.decorators.exceptions import ParameterException, UserUnidentifiedException
 
 
 class TestAddSession(TestCase):
