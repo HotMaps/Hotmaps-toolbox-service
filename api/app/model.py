@@ -193,8 +193,9 @@ def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, l
 def getUI(cm_id):
         conn = myCMpool.connect()
         cursor = conn.cursor()
+        print("cm_id = ",cm_id)
         results = cursor.execute('select * from inputs_calculation_module where cm_id = ?',
-                                (cm_id))
+                                (cm_id,))
         conn.commit()
         response = helper.retrieve_list_from_sql_result(results)
 
