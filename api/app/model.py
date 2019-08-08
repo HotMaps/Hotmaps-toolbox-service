@@ -273,8 +273,13 @@ def get_raster_from_csv(wkt_point, layer_needed, output_directory):
     wkt_point_3035 = helper.projection_4326_to_3035(wkt_point)
     filename_csv = helper.write_wkt_csv(helper.generate_csv_name(output_directory),wkt_point_3035)
     for layer in layer_needed:
-        type = layer['layer_type']
-        if layer['id'] == 0:
+        if 'layer_type' in layer:
+            type = layer['layer_type']
+            id = layer['id']
+        else:
+            type = layer['name']
+            id = 0
+        if id == 0:
             dataset_directory = DATASET_DIRECTORY
             directory = layer['workspaceName']
             root_path = dataset_directory + directory + "/data/"
@@ -305,8 +310,13 @@ def clip_raster_from_shapefile(shapefile_path,layer_needed, output_directory):
     inputs_raster_selection = {}
     # retrieve all layer neeeded
     for layer in layer_needed:
-        type = layer['layer_type']
-        if layer['id'] == 0:
+        if 'layer_type' in layer:
+            type = layer['layer_type']
+            id = layer['id']
+        else:
+            type = layer['name']
+            id = 0
+        if id == 0:
             dataset_directory = DATASET_DIRECTORY
             directory = layer['workspaceName']
             root_path = dataset_directory + directory + "/data/"
