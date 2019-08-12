@@ -3,7 +3,7 @@ from app.constants import CRS_USER_GEOMETRY, NUTS_VAlUES, NUTS_LAU_LEVELS, CRS_N
 
 
 def constructWithPartEachLayerHectare(geometry, year, layer, scale_level):
-	print(year)
+
 	if len(layersData[layer]['indicators']) == 0 and scale_level not in layersData[layer]['data_lvl']:
 		return ' '
 	query = ''
@@ -43,7 +43,7 @@ def constructWithPartEachLayerHectare(geometry, year, layer, scale_level):
 		query +=  " FROM "+ layer_table_name
 		query += "  WHERE ST_Intersects(st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + ")," + layersData[layer]['tablename'] + ".rast)) "+agg_summary_stat
 		query += ")"
-	print(query)		
+
 	return query
 
 def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):	
@@ -104,7 +104,7 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 		query += query_from_part 
 		query += query_select
 
-		print('nuts_selection',nuts_selection)
+
 		query_from =" from " + nust_select_name + ", "+layer_table_name
 		query += query_from
 		year_query=''
@@ -129,7 +129,9 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 
 
 def get_indicator_as_query(indic, layer_table_name, layer, scale_level_name, scale_level):
-	agg_method = 'sum'
+
+
+	agg_method = indic['table_column']
 	distinct=''
 	indic_id = 'as '+layer + indic['indicator_id'] + ','
 	query_calcul = layer_table_name+'.' +indic['table_column'] + ')' + indic_id
@@ -145,12 +147,15 @@ def get_indicator_as_query(indic, layer_table_name, layer, scale_level_name, sca
 		'mean_simple':'avg('+query_calcul,
 		'NUTS_result':'sum('+layer_table_name+'.'+indic['table_column']+')/count('+distinct+layer_table_name+'.'+scale_level_name+') '+ indic_id
 	}
-	
+
 	if 'agg_method' in indic:
 		agg_method = indic['agg_method']
 	if 'diss_agg_method' in indic and check_if_agg_or_dis_method(layer, scale_level):
 		agg_method = indic['diss_agg_method']
-	quer = switcher.get(agg_method,switcher['sum'])
+	if indic['table_column'] is 'mean':
+		quer = switcher.get(agg_method,switcher['mean_weighted_cell'])
+	else:
+		quer = switcher.get(agg_method,switcher['sum'])
 
 	return quer
 				
