@@ -529,8 +529,8 @@ layersData = {
             {'table_column': 'sum', 'unit': 'GWh/yr','indicator_id':'total','factor':0.001,'agg_method':'sum'},
 			]
 			},
-	POTENTIAL_SOLARTHERMAL_COLLECTORS_ROOFTOP:{'tablename':POTENTIAL_SOLARTHERMAL_COLLECTORS_ROOFTOP,
-			'from_indicator_name':stat + POTENTIAL_SOLARTHERMAL_COLLECTORS_ROOFTOP,
+	POTENTIAL_SOLARTHERMAL_COLLECTORS_OPEN_FIELD:{'tablename':POTENTIAL_SOLARTHERMAL_COLLECTORS_OPEN_FIELD,
+			'from_indicator_name':stat + POTENTIAL_SOLARTHERMAL_COLLECTORS_OPEN_FIELD,
             'schema_scalelvl': stat_schema,
             'schema_hectare': geo_schema,
             'geo_column': geometry_column,
