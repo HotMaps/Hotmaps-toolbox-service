@@ -10,6 +10,7 @@ from app.model import register_calulation_module,getUI,getCMList,commands_in_arr
 
 from ..models.user import User
 from ..models.uploads import Uploads
+from .. import dbGIS as db
 
 from app import model
 
@@ -26,8 +27,9 @@ from app.decorators.exceptions import ValidationError, ComputationalModuleError,
 
 import os
 import json
+import uuid
 from flask import send_from_directory, send_file
-from app.constants import UPLOAD_DIRECTORY, DATASET_DIRECTORY
+from app.constants import UPLOAD_DIRECTORY, DATASET_DIRECTORY, USER_UPLOAD_FOLDER
 
 from app import CalculationModuleRpcClient
 
@@ -190,21 +192,20 @@ def computeTask(data,payload,cm_id):
     helper.test_display(data_output)
     #****************** WILL GENERATE TILES ***************************************************'.format(cm_id))
     try:
-        print ('time to generate tilexs generateTiles')
+        print ('time to generate tiles generateTiles')
         if data_output['result']['raster_layers'] is not None and len(data_output['result']['raster_layers'])>0:
             raster_layers = data_output['result']['raster_layers']
+            print ('generateTiles')
             for layer in raster_layers:
-                print ('generateTiles')
+                workspace_name = layer_needed[raster_layers.index(layer)]['workspaceName']
+                path = layer['path']
                 generateTiles(layer)
-                if data['session_name'] != "":
-                    layer['name'] = data['session_name']
                 upload_uuid = str(uuid.uuid4())
-                upload = Uploads(name=layer['name'], url=layer['path'], user_id=user.id, layer=layer['type'],
+
+                upload = Uploads(name=layer['name'], url=path, user_id=user.id, layer=workspace_name,
                                 layer_type=layer['type'], size=0.0, uuid=upload_uuid, is_generated=1)
                 db.session.add(upload)
                 db.session.commit()
-
-                # TODO Modifier CM: output_directory = USER_UPLOAD_FOLDER
 
     except:
         # no raster_layers
