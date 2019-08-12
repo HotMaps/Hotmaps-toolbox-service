@@ -36,6 +36,10 @@ COOL_DENSITY_TOT = 'cool_tot_curr_density'
 GRASS_FLOOR_AREA_TOT = 'gfa_tot_curr_density'
 GRASS_FLOOR_AREA_RES = 'gfa_res_curr_density'
 GRASS_FLOOR_AREA_NON_RES = 'gfa_nonres_curr_density'
+SHARE_GFA_CONSTRUCTIONS_1975 = "ghs_built_1975_100_share"
+SHARE_GFA_CONSTRUCTIONS_1990 = "ghs_built_1990_100_share"
+SHARE_GFA_CONSTRUCTIONS_2000 = "ghs_built_2000_100_share"
+SHARE_GFA_CONSTRUCTIONS_2014 = "ghs_built_2014_100_share"
 BUILDING_VOLUMES_RES = 'vol_res_curr_density'
 BUILDING_VOLUMES_TOT = 'vol_tot_curr_density'
 BUILDING_VOLUMES_NON_RES = 'vol_nonres_curr_density'
@@ -51,6 +55,8 @@ MUNICIPAL_SOLID_WASTE = 'potential_municipal_solid_waste'
 WIND_SPEED = 'output_wind_speed'
 WIND_POTENTIAL = 'wind_50m'
 SOLAR_POTENTIAL = 'solar_optimal_total'
+POTENTIAL_SOLARTHERMAL_COLLECTORS_ROOFTOP = "potential_solarthermal_collectors_rooftop"
+POTENTIAL_SOLARTHERMAL_COLLECTORS_OPEN_FIELD = "potential_solarthermal_collectors_open_field"
 #GEOTHERMAL_POTENTIAL_HEAT_COND = 'potential_shallowgeothermal_heat_cond'
 GEOTHERMAL_POTENTIAL_HEAT_COND = 'shallow_geothermal_potential'
 ELECTRICITY_CO2_EMISSION_FACTOR = 'yearly_co2_emission'
@@ -218,6 +224,62 @@ layersData = {
     				'reference_indicator_id_2':'population','reference_tablename_indicator_id_2':POPULATION_TOT, 
                 'unit':u'm²/person', 'indicator_id':GRASS_FLOOR_AREA_NON_RES+'_per_'+POPULATION_TOT,'agg_method':'sum'
 				},
+			]
+			},
+	SHARE_GFA_CONSTRUCTIONS_1975:{'tablename':SHARE_GFA_CONSTRUCTIONS_1975,
+            'schema_scalelvl': stat_schema,
+            'schema_hectare': geo_schema,
+            'geo_column': geometry_column,
+            'crs': '3035',
+			'table_type':raster_type,
+			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
+
+			'from_indicator_name':stat + SHARE_GFA_CONSTRUCTIONS_1975,
+			'data_aggregated':True,'indicators':[
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
+            {'table_column': 'mean', 'unit':  ' ','indicator_id':'density','agg_method':'mean_weighted_cells'},
+			]
+			},
+	SHARE_GFA_CONSTRUCTIONS_1990:{'tablename':SHARE_GFA_CONSTRUCTIONS_1990,
+            'schema_scalelvl': stat_schema,
+            'schema_hectare': geo_schema,
+            'geo_column': geometry_column,
+            'crs': '3035',
+			'table_type':raster_type,
+			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
+
+			'from_indicator_name':stat + SHARE_GFA_CONSTRUCTIONS_1990,
+			'data_aggregated':True,'indicators':[
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
+            {'table_column': 'mean', 'unit':  ' ','indicator_id':'density','agg_method':'mean_weighted_cells'},
+			]
+			},
+	SHARE_GFA_CONSTRUCTIONS_2000:{'tablename':SHARE_GFA_CONSTRUCTIONS_2000,
+            'schema_scalelvl': stat_schema,
+            'schema_hectare': geo_schema,
+            'geo_column': geometry_column,
+            'crs': '3035',
+			'table_type':raster_type,
+			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
+
+			'from_indicator_name':stat + SHARE_GFA_CONSTRUCTIONS_2000,
+			'data_aggregated':True,'indicators':[
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
+            {'table_column': 'mean', 'unit':  ' ','indicator_id':'density','agg_method':'mean_weighted_cells'},
+			]
+			},
+	SHARE_GFA_CONSTRUCTIONS_2014:{'tablename':SHARE_GFA_CONSTRUCTIONS_2014,
+            'schema_scalelvl': stat_schema,
+            'schema_hectare': geo_schema,
+            'geo_column': geometry_column,
+            'crs': '3035',
+			'table_type':raster_type,
+			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
+
+			'from_indicator_name':stat + SHARE_GFA_CONSTRUCTIONS_2014,
+			'data_aggregated':True,'indicators':[
+				{'table_column': 'count', 'unit': 'cells','indicator_id':'count_cell','agg_method':'sum'},
+            {'table_column': 'mean', 'unit':  ' ','indicator_id':'density','agg_method':'mean_weighted_cells'},
 			]
 			},
 	BUILDING_VOLUMES_TOT:{'tablename':BUILDING_VOLUMES_TOT,
@@ -443,11 +505,45 @@ layersData = {
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],	
 			'data_aggregated':True,
 			'indicators':[
-            {'table_column': 'mean', 'unit': u'kWh/(m²*year)','indicator_id':'average','agg_method':'mean_weighted_cell'},
-            {'table_column': 'min', 'unit': u'kWh/(m²*year)','indicator_id':'min','agg_method':'min'},
-            {'table_column': 'max', 'unit': u'kWh/(m²*year)','indicator_id':'max','agg_method':'max'},
+            {'table_column': 'mean', 'unit': u'kWh/(m²*yr)','indicator_id':'average','agg_method':'mean_weighted_cell'},
+            {'table_column': 'min', 'unit': u'kWh/(m²*yr)','indicator_id':'min','agg_method':'min'},
+            {'table_column': 'max', 'unit': u'kWh/(m²*yr)','indicator_id':'max','agg_method':'max'},
         		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},
             {'table_column': 'sum', 'unit': 'GWh/yr','indicator_id':'potential_5_percent','factor':0.0045,'agg_method':'sum'},
+			]
+			},
+	POTENTIAL_SOLARTHERMAL_COLLECTORS_ROOFTOP:{'tablename':POTENTIAL_SOLARTHERMAL_COLLECTORS_ROOFTOP,
+			'from_indicator_name':stat + POTENTIAL_SOLARTHERMAL_COLLECTORS_ROOFTOP,
+            'schema_scalelvl': stat_schema,
+            'schema_hectare': geo_schema,
+            'geo_column': geometry_column,
+            'crs': '3035',
+			'table_type':raster_type,
+			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
+			'data_aggregated':True,
+			'indicators':[
+            {'table_column': 'mean', 'unit': u'MWh/(ha*yr)','indicator_id':'average','agg_method':'mean_weighted_cell'},
+            {'table_column': 'min', 'unit': u'MWh/(ha*yr)','indicator_id':'min','agg_method':'min'},
+            {'table_column': 'max', 'unit': u'MWh/(ha*yr)','indicator_id':'max','agg_method':'max'},
+        		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},
+            {'table_column': 'sum', 'unit': 'GWh/yr','indicator_id':'total','factor':0.001,'agg_method':'sum'},
+			]
+			},
+	POTENTIAL_SOLARTHERMAL_COLLECTORS_ROOFTOP:{'tablename':POTENTIAL_SOLARTHERMAL_COLLECTORS_ROOFTOP,
+			'from_indicator_name':stat + POTENTIAL_SOLARTHERMAL_COLLECTORS_ROOFTOP,
+            'schema_scalelvl': stat_schema,
+            'schema_hectare': geo_schema,
+            'geo_column': geometry_column,
+            'crs': '3035',
+			'table_type':raster_type,
+			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
+			'data_aggregated':True,
+			'indicators':[
+            {'table_column': 'mean', 'unit': u'MWh/(ha*yr)','indicator_id':'average','agg_method':'mean_weighted_cell'},
+            {'table_column': 'min', 'unit': u'MWh/(ha*yr)','indicator_id':'min','agg_method':'min'},
+            {'table_column': 'max', 'unit': u'MWh/(ha*yr)','indicator_id':'max','agg_method':'max'},
+        		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},
+            {'table_column': 'sum', 'unit': 'GWh/yr','indicator_id':'total','factor':0.001,'agg_method':'sum'},
 			]
 			},
 	WIND_POTENTIAL:{'tablename':WIND_POTENTIAL,
@@ -525,9 +621,9 @@ layersData = {
 			'table_type':raster_type,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':True,'indicators':[
-            {'table_column': 'mean', 'unit': u'kWh/(m²*year)','indicator_id':'average','agg_method':'mean_weighted_cell'},
-            {'table_column': 'min', 'unit': u'kWh/(m²*year)','indicator_id':'min','agg_method':'min'},
-            {'table_column': 'max', 'unit': u'kWh/(m²*year)','indicator_id':'max','agg_method':'max'},
+            {'table_column': 'mean', 'unit': u'kWh/(m²*yr)','indicator_id':'average','agg_method':'mean_weighted_cell'},
+            {'table_column': 'min', 'unit': u'kWh/(m²*yr)','indicator_id':'min','agg_method':'min'},
+            {'table_column': 'max', 'unit': u'kWh/(m²*yr)','indicator_id':'max','agg_method':'max'},
             {'table_column': 'sum', 'unit': 'GWh/yr','indicator_id':'total_radiation','factor':0.01,'agg_method':'sum'},
         		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},	
 			]},
