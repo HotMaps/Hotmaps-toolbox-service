@@ -2,8 +2,9 @@ from unittest import TestCase
 
 import requests
 import os
+import subprocess
 
-from . import BASE_URL, test_uuid
+from . import BASE_URL, test_uuid, test_tif_file
 
 url = BASE_URL + "/upload/export/cmLayer"
 
@@ -11,12 +12,12 @@ url = BASE_URL + "/upload/export/cmLayer"
 class TestExportCMLayer(TestCase):
     def test_post(self):
         """
-        this test will pass the upload/export/csv/hectare method
+        this test will pass the upload/export/cmLayer method
         """
-        open('/var/tmp/thisisatest.tif', 'a').close()
+        subprocess.call(['cp', test_tif_file, '/var/tmp'])
 
         payload = {
-            "uuid": 'thisisatest',
+            "uuid": test_uuid,
             "type": "raster",
         }
 
@@ -24,7 +25,7 @@ class TestExportCMLayer(TestCase):
         output = requests.post(url, json=payload)
         assert output.status_code == expected_status
 
-        cmd = 'rm /var/tmp/thisisatest.tif'
+        cmd = 'rm /var/tmp/test.tif'
         os.system(cmd)
 
 
