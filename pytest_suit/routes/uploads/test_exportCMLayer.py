@@ -14,20 +14,16 @@ class TestExportCMLayer(TestCase):
         """
         this test will pass the upload/export/cmLayer method
         """
-        #subprocess.call(['cp', test_tif_file, '/var/tmp'])
-
         payload = {
             "uuid": test_uuid,
             "type": "raster",
         }
 
-        expected_status = 200
-        output = requests.post(url, json=payload)
-        assert output.status_code == expected_status
-
-        #cmd = 'rm /var/tmp/test.tif'
-        #os.system(cmd)
-
+        path = '/var/tmp/' + test_uuid + '.tif'
+        with open(path, 'r') as f:
+            expected_status = 200
+            output = requests.post(url, json=payload)
+            assert output.status_code == expected_status
 
     def test_port_wrong_parameters(self):
         """

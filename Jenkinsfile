@@ -25,7 +25,6 @@ node {
     try {
       // run API tests
       sh '''#!/bin/bash
-        cp /home/jenkins/hotmaps/pytest_suit/routes/test_assets/test.tif /var/tmp/
         export WORKSPACE=`pwd`
         virtualenv testenv -p /usr/bin/python3
         source testenv/bin/activate
