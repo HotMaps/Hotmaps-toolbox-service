@@ -13,19 +13,19 @@ class TestExportCMLayer(TestCase):
         """
         this test will pass the upload/export/csv/hectare method
         """
-        cmd = 'touch /var/tmp/' + test_uuid + '.csv'
+        cmd = 'touch /var/tmp/' + test_uuid + '.tif'
         os.system(cmd)
 
         payload = {
             "uuid": test_uuid,
-            "type": "csv",
+            "type": "raster",
         }
 
         expected_status = 200
         output = requests.post(url, json=payload)
         assert output.status_code == expected_status
 
-        cmd = 'rm /var/tmp/' + test_uuid + '.csv'
+        cmd = 'rm /var/tmp/' + test_uuid + '.tif'
         os.system(cmd)
 
 
@@ -35,7 +35,7 @@ class TestExportCMLayer(TestCase):
         """
         payload = {
             "uuuuuiiiid": test_uuid,
-            "tyefepe": "csv",
+            "tyefepe": "raster",
         }
 
         output = requests.post(url, json=payload)
@@ -50,7 +50,7 @@ class TestExportCMLayer(TestCase):
         """
         payload = {
             "uuid": "fake_uuid",
-            "type": "csv"
+            "type": "raster"
         }
 
         output = requests.post(url, json=payload)
