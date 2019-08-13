@@ -14,7 +14,7 @@ class TestExportCMLayer(TestCase):
         """
         this test will pass the upload/export/cmLayer method
         """
-        subprocess.call(['cp', test_tif_file, '/var/tmp'])
+        subprocess.call(['cp', test_tif_file, '/var/hotmaps/users'])
 
         payload = {
             "uuid": test_uuid,
