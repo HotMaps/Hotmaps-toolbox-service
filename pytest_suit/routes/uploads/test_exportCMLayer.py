@@ -13,7 +13,7 @@ class TestExportCMLayer(TestCase):
         """
         this test will pass the upload/export/csv/hectare method
         """
-        cmd = 'sudo touch /var/tmp/thisisatest.tif'
+        cmd = 'echo \'this is a test\' > /var/tmp/thisisatest.tif'
         if os.system(cmd):
             raise RuntimeError('program failed!')
 
