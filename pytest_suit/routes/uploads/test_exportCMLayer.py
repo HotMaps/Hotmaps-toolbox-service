@@ -13,13 +13,12 @@ class TestExportCMLayer(TestCase):
         """
         this test will pass the upload/export/csv/hectare method
         """
-        cmd = 'touch /var/tmp/' + test_uuid + '.tif && sleep 10'
+        cmd = 'touch /var/tmp/thisisatest.tif'
         if os.system(cmd):
             raise RuntimeError('program failed!')
 
-
         payload = {
-            "uuid": test_uuid,
+            "uuid": 'thisisatest',
             "type": "raster",
         }
 
@@ -27,7 +26,7 @@ class TestExportCMLayer(TestCase):
         output = requests.post(url, json=payload)
         assert output.status_code == expected_status
 
-        cmd = 'rm /var/tmp/' + test_uuid + '.tif'
+        cmd = 'rm /var/tmp/thisisatest.tif'
         os.system(cmd)
 
 
