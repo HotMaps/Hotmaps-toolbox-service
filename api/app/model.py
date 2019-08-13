@@ -193,7 +193,7 @@ def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, l
 def getUI(cm_id):
         conn = myCMpool.connect()
         cursor = conn.cursor()
-        print("cm_id = ",cm_id)
+
         results = cursor.execute('select * from inputs_calculation_module where cm_id = ?',
                                 (cm_id,))
         conn.commit()
@@ -266,7 +266,7 @@ def get_shapefile_from_selection(scalevalue, id_selected_list, ouput_directory, 
 
     else:
         subprocess.call('ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Union(ST_Transform(geom,'+EPSG+')) from public.tbl_lau1_2 where comm_id IN ('+ id_selected_list +')"', shell=True)
-    print('output_shapefile ',output_shapefile)
+
     return output_shapefile
 
 def get_raster_from_csv(wkt_point, layer_needed, output_directory):
@@ -332,7 +332,7 @@ def clip_raster_from_shapefile(shapefile_path,layer_needed, output_directory):
         args = commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(shapefile_path,path_to_dataset,filename_tif))
         run_command(args)
         inputs_raster_selection[type] = filename_tif
-        print("inputs_raster_selection[type]", filename_tif)
+
 
     return inputs_raster_selection
 

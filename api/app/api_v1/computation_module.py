@@ -98,7 +98,7 @@ class getRasterTile(Resource):
          download a file from the main web service
          :return:
              """
-        print ( 'x {} y {} z {}'.format(x,y,z))
+
 
 
         tile_filename = UPLOAD_DIRECTORY +'/'+directory+"/%d/%d/%d.png" % (z,x,y)
@@ -166,7 +166,7 @@ def computeTask(data,payload,cm_id):
         if vectors_needed != None:
             inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, id_list)
         #****************** FINISH RASTER CLIP FOR NUTS  OR LAU ***************************************************
-    print ("nuts_within", nuts_within)
+
     data = generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection,nuts_within)
 
     # send the result to the right CM
@@ -181,7 +181,7 @@ def computeTask(data,payload,cm_id):
     helper.test_display(data_output)
     #****************** WILL GENERATE TILES ***************************************************'.format(cm_id))
     try:
-        print ('time to generate tilexs generateTiles')
+
         if data_output['result']['raster_layers'] is not None and len(data_output['result']['raster_layers'])>0:
             raster_layers = data_output['result']['raster_layers']
             generateTiles(raster_layers)
@@ -198,10 +198,10 @@ def computeTask(data,payload,cm_id):
     return data_output
 
 def generateTiles(raster_layers):
-    print ('generateTiles')
-    print ('raster_layers',raster_layers)
+
+
     for layers in raster_layers:
-        print ('in the loop')
+
         layer_type = layers['type']
         file_path_input = layers['path']
         directory_for_tiles = file_path_input.replace('.tif', '')
@@ -210,7 +210,7 @@ def generateTiles(raster_layers):
         access_rights = 0o755
         try:
             os.mkdir(tile_path, access_rights)
-            print ('tile_path',tile_path)
+
 
         except OSError:
             pass
@@ -230,9 +230,9 @@ def generateTiles(raster_layers):
 
         directory_for_tiles = directory_for_tiles.replace(UPLOAD_DIRECTORY+'/', '')
         layers['path'] = directory_for_tiles
-        print ('path', directory_for_tiles)
 
-    print ('finished generate Tiles')
+
+
     return file_path_input, directory_for_tiles
 
 def generate_shape(vector_layers):
