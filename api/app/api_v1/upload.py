@@ -329,14 +329,14 @@ class ExportCMLayer(Resource):
             exception_message = ', '.join(wrong_parameter)
             raise ParameterException(str(exception_message))
 
-        if type == 'csv':
-            file_type = '.csv'
-            mimetype = 'text/csv'
+        if type == 'vector':
+            path_to_file = UPLOAD_DIRECTORY + '/' + uuid
+            mimetype = 'application/zip'
         else:
             file_type = '.tif'
             mimetype = 'image/TIF'
+            path_to_file = UPLOAD_DIRECTORY + '/' + uuid + file_type
 
-        path_to_file = UPLOAD_DIRECTORY + '/' + uuid + file_type
         if not os.path.exists(path_to_file):
             raise UploadFileNotExistingException(uuid)
 
