@@ -20,7 +20,8 @@ class TestExportCMLayer(TestCase):
         }
 
         path = '/var/tmp/' + test_uuid + '.tif'
-        with open(path, 'r') as f:
+        with open(path, 'a') as f:
+            f.write('test')
             expected_status = 200
             output = requests.post(url, json=payload)
             assert output.status_code == expected_status
