@@ -71,8 +71,11 @@ def generate_tiles(upload_folder, grey_tif, layer_type, upload_uuid, user_curren
         print ("Successfully created the directory %s" % tile_path)
 
     rgb_tif = upload_folder + '/rgba.tif'
-
-    helper.colorize(layer_type, grey_tif, rgb_tif)
+    if layer_type != 'custom':
+        helper.colorize(layer_type, grey_tif, rgb_tif)
+    else:
+        args_gdal = model.commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE ".format(grey_tif, rgb_tif))
+        model.run_command(args_gdal)
 
     try:
         # commands launch to obtain the level of zooms
