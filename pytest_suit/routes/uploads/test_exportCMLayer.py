@@ -13,7 +13,7 @@ class TestExportCMLayer(TestCase):
         """
         this test will pass the upload/export/csv/hectare method
         """
-        cmd = 'touch /var/tmp/thisisatest.tif'
+        cmd = 'sudo touch /var/tmp/thisisatest.tif'
         if os.system(cmd):
             raise RuntimeError('program failed!')
 
@@ -26,7 +26,7 @@ class TestExportCMLayer(TestCase):
         output = requests.post(url, json=payload)
         assert output.status_code == expected_status
 
-        cmd = 'rm /var/tmp/thisisatest.tif'
+        cmd = 'sudo rm /var/tmp/thisisatest.tif'
         os.system(cmd)
 
 
