@@ -14,7 +14,9 @@ class TestExportCMLayer(TestCase):
         this test will pass the upload/export/csv/hectare method
         """
         cmd = 'touch /var/tmp/' + test_uuid + '.tif'
-        os.system(cmd)
+        if os.system(cmd):
+            raise RuntimeError('program failed!')
+
 
         payload = {
             "uuid": test_uuid,
