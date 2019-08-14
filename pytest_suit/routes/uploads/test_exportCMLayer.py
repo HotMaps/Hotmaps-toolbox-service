@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import requests
 
-from . import BASE_URL, test_uuid
+from . import BASE_URL, test_export_cm_layer_uuid
 
 url = BASE_URL + "/upload/export/cmLayer"
 
@@ -14,7 +14,7 @@ class TestExportCMLayer(TestCase):
         """
 
         payload = {
-            "uuid": test_uuid,
+            "uuid": test_export_cm_layer_uuid,
             "type": "raster",
         }
 
@@ -27,7 +27,7 @@ class TestExportCMLayer(TestCase):
         this test will fail because the wrong parameters are given
         """
         payload = {
-            "uuuuuiiiid": test_uuid,
+            "uuuuuiiiid": test_export_cm_layer_uuid,
             "tyefepe": "raster",
         }
 

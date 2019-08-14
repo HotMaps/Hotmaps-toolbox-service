@@ -4,5 +4,4 @@ import uuid
 import os
 
 test_upload_name = 'pytest_upload_csv'
-test_file = [f for f in os.listdir('/var/tmp') if f.endswith('.tif')][0]
-test_uuid = test_file.replace('.tif', '')
+test_export_cm_layer_uuid = '3ef057c3-b65a-448f-9718-d46c33b9ec3b'
