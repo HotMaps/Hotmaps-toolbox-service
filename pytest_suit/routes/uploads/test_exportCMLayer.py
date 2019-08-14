@@ -19,7 +19,7 @@ class TestExportCMLayer(TestCase):
             "type": "raster",
         }
 
-        path = '/var/tmp/' + test_uuid + '.tif'
+        path = '/tmp/' + test_uuid + '.tif'
         with open(path, 'x') as f:
             expected_status = 200
             output = requests.post(url, json=payload)

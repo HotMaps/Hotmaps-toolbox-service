@@ -330,12 +330,12 @@ class ExportCMLayer(Resource):
             raise ParameterException(str(exception_message))
 
         if type == 'vector':
-            path_to_file = UPLOAD_DIRECTORY + '/' + uuid
+            path_to_file = '/tmp/' + uuid
             mimetype = 'application/zip'
         else:
             file_type = '.tif'
             mimetype = 'image/TIF'
-            path_to_file = UPLOAD_DIRECTORY + '/' + uuid + file_type
+            path_to_file = '/tmp/' + uuid + file_type
 
         if not os.path.exists(path_to_file):
             raise UploadFileNotExistingException(uuid)
