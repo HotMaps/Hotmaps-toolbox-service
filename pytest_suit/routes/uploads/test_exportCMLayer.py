@@ -1,10 +1,8 @@
 from unittest import TestCase
 
 import requests
-import os
-import subprocess
 
-from . import BASE_URL, test_uuid, test_tif_file
+from . import BASE_URL, test_uuid
 
 url = BASE_URL + "/upload/export/cmLayer"
 
@@ -14,16 +12,15 @@ class TestExportCMLayer(TestCase):
         """
         this test will pass the upload/export/cmLayer method
         """
+
         payload = {
             "uuid": test_uuid,
             "type": "raster",
         }
 
-        path = '/tmp/' + test_uuid + '.tif'
-        with open(path, 'x') as f:
-            expected_status = 200
-            output = requests.post(url, json=payload)
-            assert output.status_code == expected_status
+        expected_status = 200
+        output = requests.post(url, json=payload)
+        assert output.status_code == expected_status
 
     def test_port_wrong_parameters(self):
         """

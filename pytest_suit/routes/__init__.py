@@ -3,4 +3,3 @@ import os
 dirname = os.path.dirname(__file__)
 
 test_csv_file = os.path.join(dirname, 'test_assets/test.csv')
-test_tif_file = os.path.join(dirname, 'test_assets/test.tif')

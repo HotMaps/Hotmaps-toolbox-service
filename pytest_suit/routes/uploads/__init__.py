@@ -1,6 +1,8 @@
-from .. import BASE_URL, test_csv_file, test_tif_file
+from .. import BASE_URL, test_csv_file
 from ..user import test_token
 import uuid
+import os
 
 test_upload_name = 'pytest_upload_csv'
-test_uuid = str(uuid.uuid4())
+test_file = [f for f in os.listdir('/var/tmp') if f.endswith('.tif')][0]
+test_uuid = test_file.replace('.tif', '')
