@@ -30,7 +30,7 @@ services:
         - cm-net
         - backend
     volumes:
-        - ./pytest_suit/routes/test_assets/tmp:/var/tmp
+        - /var/tmp:/var/tmp
         - ./pytest_suit/routes/test_assets/repositories:/var/hotmaps/repositories
 
   redis:

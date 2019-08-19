@@ -1,4 +1,4 @@
-from .. import BASE_URL, test_csv_file
+from .. import BASE_URL, test_csv_file, test_tif_file
 from ..user import test_token
 import uuid
 import os
