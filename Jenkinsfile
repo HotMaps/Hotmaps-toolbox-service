@@ -5,7 +5,7 @@ node {
     sh 'cp -Rf /home/jenkins/hotmaps/pytest_suit .'
     sh 'cp /home/jenkins/hotmaps/online_status.sh .'
   }
-    
+
   stage('Build') {
     try {
       sh 'docker-compose -f docker-compose-run-api-only.yml up -d --build'
@@ -16,7 +16,7 @@ node {
     }
     catch (error) {
       // stop services
-      sh 'docker-compose down'  
+      sh 'docker-compose down'
       throw exception
     }
   }
@@ -35,13 +35,13 @@ node {
     }
     finally {
       // stop services
-      sh 'docker-compose -f docker-compose-run-api-only.yml down' 
+      sh 'docker-compose -f docker-compose-run-api-only.yml down'
     }
   }
-  
+
   // get commit id
   env.COMMIT_ID = sh(returnStdout: true, script: 'git rev-parse HEAD')
-  
+
   stage('Deploy') {
     if (env.BRANCH_NAME == 'develop') {
       echo "Deploying to DEV platform"

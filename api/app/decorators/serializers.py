@@ -546,6 +546,11 @@ upload_export_csv_hectare_input = api.model('input for the hectare upload export
     "areas": fields.List(fields.Nested(area))
 })
 
+upload_export_cm_layer_input = api.model('input for the upload export cm layer', {
+    'uuid': fields.String(description='uuid of the layer generated'),
+    'type': fields.String(description='type of the file')
+})
+
 upload_download_input = api.model('input for the upload download.', {
     'token': fields.String(description='authentification token'),
     "id": fields.Integer(description='Upload id'),

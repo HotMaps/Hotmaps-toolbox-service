@@ -30,8 +30,8 @@ services:
         - cm-net
         - backend
     volumes:
-        - /home/iig/hotmaps/tmp:/var/tmp
-        - /home/iig/hotmaps/repositories:/var/hotmaps/repositories
+        - /var/tmp:/var/tmp
+        - ./pytest_suit/routes/test_assets/repositories:/var/hotmaps/repositories
 
   redis:
     image: redis
