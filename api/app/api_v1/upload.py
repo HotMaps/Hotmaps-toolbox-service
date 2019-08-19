@@ -6,7 +6,7 @@ from io import BytesIO
 
 import shapely.geometry as shapely_geom
 from app import celery
-from app.constants import USER_UPLOAD_FOLDER, UPLOAD_BASE_NAME
+from app.constants import USER_UPLOAD_FOLDER, UPLOAD_BASE_NAME, UPLOAD_DIRECTORY
 from flask import send_file
 from flask_restplus import Resource
 
@@ -18,7 +18,8 @@ from ..decorators.restplus import UserUnidentifiedException, ParameterException,
 from ..decorators.restplus import api
 from ..decorators.serializers import upload_add_output, upload_list_input, upload_list_output, upload_delete_input, \
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
-    upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input
+    upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input, \
+    upload_export_cm_layer_input
 from ..models.uploads import Uploads, generate_tiles, allowed_file, generate_geojson, calculate_total_space, \
     generate_csv_string
 from ..models.user import User
@@ -300,6 +301,48 @@ class DeleteUploads(Resource):
         return {
             "message": "Upload deleted"
         }
+
+
+@ns.route('/export/cmLayer')
+@api.response(530, 'Request error')
+@api.response(531, 'Missing Parameters')
+@api.response(541, 'Upload File doesn\'t exists')
+class ExportCMLayer(Resource):
+    @api.expect(upload_export_cm_layer_input)
+    @celery.task(name='upload export cm layer')
+    def post(self=None):
+        """
+        The method called to export cm layer
+        :return:
+        """
+        wrong_parameter = []
+        try:
+            uuid = api.payload['uuid']
+        except:
+            wrong_parameter.append('uuid')
+        try:
+            type = api.payload['type']
+        except:
+            wrong_parameter.append('type')
+
+        if len(wrong_parameter) > 0:
+            exception_message = ', '.join(wrong_parameter)
+            raise ParameterException(str(exception_message))
+
+        if type == 'vector':
+            path_to_file = UPLOAD_DIRECTORY + '/' + uuid
+            mimetype = 'application/zip'
+        else:
+            file_type = '.tif'
+            mimetype = 'image/TIF'
+            path_to_file = UPLOAD_DIRECTORY + '/' + uuid + file_type
+
+        if not os.path.exists(path_to_file):
+            raise UploadFileNotExistingException(uuid)
+
+        # send the file to the client
+        return send_file(path_to_file,
+                         mimetype=mimetype)
 
 
 @ns.route('/export/raster/nuts')
