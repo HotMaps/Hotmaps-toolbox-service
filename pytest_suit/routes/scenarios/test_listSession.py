@@ -6,7 +6,7 @@ from . import BASE_URL, test_token, test_session_name
 url = BASE_URL + '/scenarios/list'
 
 
-class TestListSnapshot(TestCase):
+class TestListSession(TestCase):
     def test_post_working(self):
         """
         this test will pass the scenarios/list method

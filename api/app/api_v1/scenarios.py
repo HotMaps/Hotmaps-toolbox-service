@@ -4,13 +4,15 @@ from ..decorators.exceptions import RequestException, ParameterException, UserUn
 from ..decorators.serializers import session_delete_input, session_delete_output, \
     session_list_input, session_list_output, session_group_input
 
+from .. import dbGIS as db
 from ..models.user import User
 from ..models.saved_session import SavedSessions
 from ..models.cm_indicators import IndicatorsCM
 
 from app import celery
 from flask_restplus import Resource
-import datetime
+from flask import request
+from datetime import datetime
 
 nsScenarios = api.namespace('scenarios', description='Operations related to scenarios')
 ns = nsScenarios
@@ -52,11 +54,12 @@ def save_session(payload_front, response_cm):
     # check token
     user = User.verify_auth_token(token)
     if user is None:
-        raise UserUnidentifiedException("User unidentified")
+        raise UserUnidentifiedException
 
     time = datetime.utcnow()
     session = SavedSessions(name=name_session, cm_name=name_cm, saved_at=time, user_id=user.id)
     db.session.add(session)
+    db.session.commit()
 
     for indicator in indicators:
         wrong_parameter = []
@@ -77,7 +80,7 @@ def save_session(payload_front, response_cm):
             exception_message = ', '.join(wrong_parameter)
             raise ParameterException(str(exception_message))
 
-        indicator = IndicatorsCM(name=name_indicator, unit=unit, value=value)
+        indicator = IndicatorsCM(name=name_indicator, unit=unit, value=value, session_id=session.id)
         db.session.add(indicator)
 
     db.session.commit()
@@ -86,6 +89,17 @@ def save_session(payload_front, response_cm):
     return {
         "message": 'session created successfully'
     }
+
+@ns.route('/add')
+@api.response(531, 'Missing parameter')
+@api.response(539, 'User Unidentified')
+class AddSession(Resource):
+    def post(self):
+        payload = request.get_json()
+        front = payload['front']
+        cm = payload['cm']
+        print(front, cm)
+        save_session(front, cm)
 
 
 @ns.route('/list')

@@ -1,8 +1,9 @@
-from api.app.api_v1.scenarios import save_session
+import requests
 
 from unittest import TestCase
 from . import BASE_URL, test_token, test_session_name
-import pytest
+
+url = BASE_URL + '/scenarios/add'
 
 
 class TestAddSession(TestCase):
@@ -11,20 +12,22 @@ class TestAddSession(TestCase):
         this test will pass the scenarios/add method
         """
 
-        payload_front = {
-            "token": test_token,
-            "name_session": test_session_name
-        }
-        response_cm = {
-            "name": "CM - Scale heat and cool density maps",
-            "indicator": [{
-                "name": "Test indicator",
-                "unit": "kWh",
-                "value": "1532.7"
-            }]
+        payload = {
+            "front" : {
+                "token": test_token,
+                "name_session": test_session_name
+            },
+            "cm" : {
+                "name": "CM - Scale heat and cool density maps",
+                "indicator": [{
+                    "name": "Test indicator",
+                    "unit": "kWh",
+                    "value": "1532.7"
+                }]
+            }
         }
 
-        output = save_session(payload_front, response_cm)
+        output = requests.post(url, json=payload)
 
         expected_output = 'session created successfully'
 
@@ -34,37 +37,49 @@ class TestAddSession(TestCase):
         """
         this test will fail because of missing parameters
         """
-        payload_front = {
-            "tokxcen": test_token,
-            "namexcv_session": test_session_name
+
+        payload = {
+            "front" : {
+                "twdeoken": test_token,
+                "name_sesswedion": test_session_name
+            },
+            "cm" : {
+                "name": "CM - Scale heat and cool density maps",
+                "indicator": [{
+                    "name": "Test indicator",
+                    "unit": "kWh",
+                    "value": "1532.7"
+                }]
+            }
         }
-        response_cm = {
-            "nawerme": "CM - Scale heat and cool density maps",
-            "indicafdtor": [{
-                "name": "Test indicator",
-                "unit": "kWh",
-                "value": "1532.7"
-            }]
-        }
-        with pytest.raises(Exception, match="token, name_session, name_cm, indicator"):
-             assert save_session(payload_front, response_cm)
+
+        output = requests.post(url, json=payload)
+
+        expected_output = '531'
+
+        assert output.json()['error']['status'] == expected_status
 
     def test_post_user_unidentified(self):
         """
         this test will fail because the used token is wrong
         """
-        payload_front = {
-            "token": "toto",
-            "name_session": test_session_name
-        }
-        response_cm = {
-            "name": "CM - Scale heat and cool density maps",
-            "indicator": [{
-                "name": "Test indicator",
-                "unit": "kWh",
-                "value": "1532.7"
-            }]
+        payload = {
+            "front" : {
+                "token": "toto",
+                "name_session": test_session_name
+            },
+            "cm" : {
+                "name": "CM - Scale heat and cool density maps",
+                "indicator": [{
+                    "name": "Test indicator",
+                    "unit": "kWh",
+                    "value": "1532.7"
+                }]
+            }
         }
 
-        with pytest.raises(Exception, match="User unidentified"):
-            assert save_session(payload_front, response_cm)
+        output = requests.post(url, json=payload)
+
+        expected_output = '539'
+
+        assert output.json()['error']['status'] == expected_status
