@@ -130,7 +130,7 @@ class ListSession(Resource):
         for session in sessions:
             if session.cm_name not in output:
                 output[session.cm_name] = []
-            output[session.cm_name].append({'id':session.id, 'session_name':session.name, 'saved_at':session.saved_at.strftime('%D - %H:%M:%S')})
+            output[session.cm_name].append({'session_id':session.id, 'session_name':session.name, 'session_datetime':session.saved_at.strftime('%Y-%m-%d %Hh%M')})
 
         return output
 
