@@ -612,10 +612,6 @@ session_model = api.model('session fields', {
     'saved_at': fields.DateTime(description='Time of saving')
 })
 
-session_list_output = api.model('output for session listing', {
-    'name_of_cm': fields.List(fields.Nested(session_model))
-})
-
 session_scenario_input = api.model('input for session scenario', {
     'session_id': fields.Integer(description='session id'),
     'scenario': fields.String(description='name of the scenario'),

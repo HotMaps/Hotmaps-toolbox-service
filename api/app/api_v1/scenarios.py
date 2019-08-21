@@ -2,7 +2,7 @@ from ..decorators.restplus import api
 from ..decorators.exceptions import RequestException, ParameterException, UserUnidentifiedException, \
     SessionNotExistingException
 from ..decorators.serializers import session_delete_input, session_delete_output, \
-    session_list_input, session_list_output, session_group_input
+    session_list_input, session_group_input
 
 from .. import dbGIS as db
 from ..models.user import User
@@ -91,56 +91,46 @@ def save_session(payload_front, response_cm):
     }
 
 @ns.route('/add')
-@api.response(531, 'Missing parameter')
-@api.response(539, 'User Unidentified')
 class AddSession(Resource):
     def post(self):
         payload = request.get_json()
         front = payload['front']
         cm = payload['cm']
-        print(front, cm)
-        save_session(front, cm)
+        return save_session(front, cm)
 
 
 @ns.route('/list')
-@api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class ListSession(Resource):
-    @api.marshal_with(session_list_output)
     @api.expect(session_list_input)
     @celery.task(name='list all sessions saved by a user')
-    def post(self):
+    def post(self=None):
         """
         The method called to list all sessions saved by the connected user
         :return:
         """
         # Entries
-        wrong_parameter = []
         try:
             token = api.payload['token']
         except:
-            wrong_parameter.append('token')
-
-        if len(wrong_parameter) > 0:
-            exception_message = ', '.join(wrong_parameter)
-            raise ParameterException(str(exception_message))
+            raise ParameterException('token')
 
         # check token
         user = User.verify_auth_token(token)
         if user is None:
             raise UserUnidentifiedException
 
-        sessions = SavedSessions.query.filter_by(user_id=user.id).all()
-        #print(sessions)
+        # get the user sessions
 
+        sessions = user.sessions
+
+        # output
         output = {}
         for session in sessions:
-            #print(session)
-            if session['cm_name'] not in output:
-                output[session['cm_name']] = []
-            output[session['cm_name']].append({'id':session['id'], 'session_name':session['session_name'], 'saved_at':session['saved_at']})
-        #print(output)
+            if session.cm_name not in output:
+                output[session.cm_name] = []
+            output[session.cm_name].append({'id':session.id, 'session_name':session.name, 'saved_at':session.saved_at.strftime('%D - %H:%M:%S')})
 
         return output
 
@@ -240,7 +230,6 @@ class DeleteSession(Resource):
             raise UserUnidentifiedException
 
         session = SavedSessions.query.get(id)
-        #print(sessions)
 
         if session is None:
             raise SessionNotExistingException
@@ -248,6 +237,9 @@ class DeleteSession(Resource):
         if session.user_id != user.id:
             raise SessionNotExistingException
 
+        indicators = session.indicators
+        for indicator in indicators:
+            db.session.delete(indicator)
         db.session.delete(session)
         db.session.commit()
 

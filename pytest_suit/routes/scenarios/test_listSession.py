@@ -18,7 +18,7 @@ class TestListSession(TestCase):
         output = requests.post(url, json=payload)
 
         expected_output = test_session_name
-        assert output.json()['CM - Scale heat and cool density maps'][0]['name'] == expected_output
+        assert output.json()['CM - Scale heat and cool density maps'][0]['session_name'] == expected_output
 
     def test_post_missing_parameter(self):
         """

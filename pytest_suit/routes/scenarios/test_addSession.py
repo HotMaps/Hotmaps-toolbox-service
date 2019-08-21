@@ -55,7 +55,7 @@ class TestAddSession(TestCase):
 
         output = requests.post(url, json=payload)
 
-        expected_output = '531'
+        expected_status = '531'
 
         assert output.json()['error']['status'] == expected_status
 
@@ -80,6 +80,6 @@ class TestAddSession(TestCase):
 
         output = requests.post(url, json=payload)
 
-        expected_output = '539'
+        expected_status = '539'
 
         assert output.json()['error']['status'] == expected_status
