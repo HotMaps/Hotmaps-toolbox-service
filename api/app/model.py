@@ -10,9 +10,9 @@ from app.constants import DATASET_DIRECTORY
 from datetime import datetime
 import psycopg2
 import sqlalchemy.pool as pool
-import sqlite3
+# import sqlite3
 from app import celery
-from app.constants import CM_DB_NAME
+# from app.constants import CM_DB_NAME
 from app import helper
 from app import sql_queries
 from .models.uploads import Uploads
@@ -26,227 +26,228 @@ try:
     import osr
 except ImportError:
     from osgeo import osr
-basedir = os.path.abspath(os.path.dirname(__file__))
 
-db_path = os.path.join(basedir, '../data.sqlite')
+# basedir = os.path.abspath(os.path.dirname(__file__))
+#
+# db_path = os.path.join(basedir, '../data.sqlite')
+#
+# DB_NAME = CM_DB_NAME
+#
+# def getConnection_db_CM():
+#     c = sqlite3.connect(DB_NAME)
+#     return c
+#
+#
+# myCMpool = pool.QueuePool(getConnection_db_CM, max_overflow=10, pool_size=15)
+#
+#
+# def addRegisterCalulationModule(data):
+#
+#     cm_name = data['cm_name']
+#     category = data['category']
+#     type_layer_needed = data['type_layer_needed']
+#     authorized_scale = "[]"
+#     try:
+#         authorized_scale = data['authorized_scale']
+#     except:
+#         pass
+#     description_link = ""
+#     try:
+#         description_link = data['description_link']
+#     except:
+#         pass
+#     vectors_needed = "[]"
+#     try:
+#         vectors_needed = data['vectors_needed']
+#     except:
+#         pass
+#     cm_description = data['cm_description']
+#     cm_url = data['cm_url']
+#     cm_Id = data['id']
+#     layers_needed = data['layers_needed']
+#     updatedAt = datetime.utcnow()
+#     createdAt = datetime.utcnow()
+#     conn = myCMpool.connect()
+#     cursor = conn.cursor()
+#     cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt,type_layer_needed,authorized_scale,description_link,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?)", ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ,type_layer_needed,authorized_scale,description_link,vectors_needed))
+#     cursor.close()
 
-DB_NAME = CM_DB_NAME
-
-def getConnection_db_CM():
-    c = sqlite3.connect(DB_NAME)
-    return c
-
-
-myCMpool = pool.QueuePool(getConnection_db_CM, max_overflow=10, pool_size=15)
-
-
-def addRegisterCalulationModule(data):
-
-    cm_name = data['cm_name']
-    category = data['category']
-    type_layer_needed = data['type_layer_needed']
-    authorized_scale = "[]"
-    try:
-        authorized_scale = data['authorized_scale']
-    except:
-        pass
-    description_link = ""
-    try:
-        description_link = data['description_link']
-    except:
-        pass
-    vectors_needed = "[]"
-    try:
-        vectors_needed = data['vectors_needed']
-    except:
-        pass
-    cm_description = data['cm_description']
-    cm_url = data['cm_url']
-    cm_Id = data['id']
-    layers_needed = data['layers_needed']
-    updatedAt = datetime.utcnow()
-    createdAt = datetime.utcnow()
-    conn = myCMpool.connect()
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt,type_layer_needed,authorized_scale,description_link,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?)", ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ,type_layer_needed,authorized_scale,description_link,vectors_needed))
-    cursor.close()
-
-def init_sqlite_caculation_module_database(dbname=DB_NAME):
-    conn = sqlite3.connect(dbname)
-    cursor = conn.cursor()
-    cursor.execute("DROP TABLE IF EXISTS calculation_module")
-    cursor.execute("CREATE TABLE calculation_module (cm_id INTEGER NOT NULL, cm_name VARCHAR(255), "
-                   "cm_description VARCHAR(255),cm_url VARCHAR(255),category VARCHAR(255),layers_needed VARCHAR(255),authorized_scale VARCHAR(255),description_link VARCHAR(255),createdAt REAL(255),updatedAt REAL(255),type_layer_needed REAL(255),vectors_needed REAL(255),"
-                   " PRIMARY KEY(cm_id))")
-    conn.commit()
-    cursor.execute("DROP TABLE IF EXISTS inputs_calculation_module")
-    cursor.execute("CREATE TABLE inputs_calculation_module (input_id INTEGER NOT NULL, input_name VARCHAR(255), "
-                   "input_type VARCHAR(255),input_parameter_name VARCHAR(255),input_value  VARCHAR(255),input_priority INTEGER, input_unit VARCHAR(255),"
-                   "input_min INTEGER,input_max INTEGER,createdAt REAL(255),updatedAt REAL(255),cm_id INTEGER NOT NULL,"
-                   " PRIMARY KEY(input_id),FOREIGN KEY(cm_id) REFERENCES calculation_module(cm_id))")
-    conn.commit()
-    return conn
-
-def register_calulation_module(data):
-    if data is not None:
-        conn = myCMpool.connect()
-        cursor = conn.cursor()
-        cm_name = data['cm_name']
-        category = data['category']
-        type_layer_needed = data['type_layer_needed']
-
-        cm_description = data['cm_description']
-        cm_url = data['cm_url']
-        cm_id = data['cm_id']
-        layers_needed = data['layers_needed']
-        authorized_scale = "[]"
-        try:
-            authorized_scale = data['authorized_scale']
-        except:
-            pass
-
-        description_link = ""
-        try:
-            description_link = data['description_link']
-        except:
-            pass
-        vectors_needed = "[]"
-        try:
-            vectors_needed = data['vectors_needed']
-        except:
-            pass
-
-        updatedAt = datetime.utcnow()
-        createdAt = datetime.utcnow()
-        inputs_calculation_module = data['inputs_calculation_module']
-        try:
-
-            ln = str(layers_needed)
-            tn = str(type_layer_needed)
-            authorized_scale = str(authorized_scale)
-            description_link = str(description_link)
-            vectors_needed = str(vectors_needed)
-            cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt,tn,authorized_scale,description_link,vectors_needed ))
-            conn.commit()
-            for value in inputs_calculation_module:
-                input_name = value['input_name']
-                input_type = value['input_type']
-                input_parameter_name = value['input_parameter_name']
-                input_value = str(value['input_value'])
-                input_priority = 0
-                try:
-                    input_priority = value['input_priority']
-                except:
-                    pass
-                input_unit = value['input_unit']
-                input_min = value['input_min']
-                input_max = value['input_max']
-                cm_id = value['cm_id']
-                conn = myCMpool.connect()
-                cursor = conn.cursor()
-                cursor.execute("INSERT INTO inputs_calculation_module (input_name, input_type, input_parameter_name, input_value,input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt) VALUES (?,?,?,?,?,?,?,?,?,?,?)", (input_name, input_type, input_parameter_name, input_value,input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt))
-
-                conn.commit()
-            conn.close()
-
-        except ValidationError:
-            pass
-        except sqlite3.IntegrityError as e:
-            update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,type_layer_needed,authorized_scale,description_link,vectors_needed,inputs_calculation_module,cursor,conn)
-
-
-def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed ,inputs_calculation_module,cursor,conn):
-    try:
-        ln = str(layers_needed)
-        tn = str(type_layer_needed)
-        auth_s = str(authorized_scale)
-        description_link = str(description_link)
-        vn = str(vectors_needed)
-        cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? ,  type_layer_needed = ?, authorized_scale = ?,description_link = ?, vectors_needed = ?   WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt, tn,auth_s,description_link, vn,cm_id ))
-        conn.commit()
-        cursor.execute("DELETE FROM inputs_calculation_module WHERE cm_id = ? ", (str(cm_id)))
-        conn.commit()
-        for value in inputs_calculation_module:
-            input_name = value['input_name']
-            input_type = value['input_type']
-            input_parameter_name = value['input_parameter_name']
-            input_value = str(value['input_value'])
-            input_priority = 0
-            try:
-                input_priority = value['input_priority']
-            except:
-                pass
-            input_unit = value['input_unit']
-            input_min = value['input_min']
-            input_max = value['input_max']
-            cm_id = value['cm_id']
-
-            cursor.execute("INSERT INTO inputs_calculation_module (input_name, input_type, input_parameter_name, input_value, input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt) VALUES (?,?,?,?,?,?,?,?,?,?,?)", (input_name, input_type, input_parameter_name, input_value,input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt))
-            conn.commit()
-        conn.close()
-
-    except ValidationError:
-        pass
-    except sqlite3.IntegrityError as e:
-        pass
-
-def getUI(cm_id):
-        conn = myCMpool.connect()
-        cursor = conn.cursor()
-
-        results = cursor.execute('select * from inputs_calculation_module where cm_id = ?',
-                                (cm_id,))
-        conn.commit()
-        response = helper.retrieve_list_from_sql_result(results)
-
-        """        valid_condition = assert((cmd_id) in (get_all_cm_ids())()
-        if valid_condition:
-            results = cursor.execute('select * from inputs_calculation_module where cm_id = ?',
-                                (cm_id))
-        else:
-            return False()"""
-        conn.close()
-        return response
-
-def delete_cm(cm_id):
-    delete_cm_with_id(cm_id)
-    delete_cm_ui_with_id(cm_id)
-
-def delete_cm_ui_with_id(cm_id):
-    try:
-        conn = myCMpool.connect()
-        cursor = conn.cursor()
-
-        results = cursor.execute('DELETE FROM inputs_calculation_module WHERE cm_id = ?',
-                                 (cm_id))
-        conn.commit()
-        conn.close()
-        return results
-
-    except ValidationError:
-        pass
-    except sqlite3.IntegrityError as e:
-        pass
-
-def delete_cm_with_id(cm_id):
-    try:
-        conn = myCMpool.connect()
-        cursor = conn.cursor()
-
-        results = cursor.execute('DELETE FROM calculation_module WHERE cm_id = ?',
-                                 (cm_id))
-        conn.commit()
-        conn.close()
-        return results
-
-    except ValidationError:
-        pass
-    except sqlite3.IntegrityError as e:
-        pass
-
-def getCMList():
-    response = helper.retrieve_list_from_sql_result(query_calculation_module_database('select * from calculation_module '))
-    return response
+# def init_sqlite_caculation_module_database(dbname=DB_NAME):
+#     conn = sqlite3.connect(dbname)
+#     cursor = conn.cursor()
+#     cursor.execute("DROP TABLE IF EXISTS calculation_module")
+#     cursor.execute("CREATE TABLE calculation_module (cm_id INTEGER NOT NULL, cm_name VARCHAR(255), "
+#                    "cm_description VARCHAR(255),cm_url VARCHAR(255),category VARCHAR(255),layers_needed VARCHAR(255),authorized_scale VARCHAR(255),description_link VARCHAR(255),createdAt REAL(255),updatedAt REAL(255),type_layer_needed REAL(255),vectors_needed REAL(255),"
+#                    " PRIMARY KEY(cm_id))")
+#     conn.commit()
+#     cursor.execute("DROP TABLE IF EXISTS inputs_calculation_module")
+#     cursor.execute("CREATE TABLE inputs_calculation_module (input_id INTEGER NOT NULL, input_name VARCHAR(255), "
+#                    "input_type VARCHAR(255),input_parameter_name VARCHAR(255),input_value  VARCHAR(255),input_priority INTEGER, input_unit VARCHAR(255),"
+#                    "input_min INTEGER,input_max INTEGER,createdAt REAL(255),updatedAt REAL(255),cm_id INTEGER NOT NULL,"
+#                    " PRIMARY KEY(input_id),FOREIGN KEY(cm_id) REFERENCES calculation_module(cm_id))")
+#     conn.commit()
+#     return conn
+#
+# def register_calulation_module(data):
+#     if data is not None:
+#         # conn = myCMpool.connect()
+#         # cursor = conn.cursor()
+#         cm_name = data['cm_name']
+#         category = data['category']
+#         type_layer_needed = data['type_layer_needed']
+#
+#         cm_description = data['cm_description']
+#         cm_url = data['cm_url']
+#         cm_id = data['cm_id']
+#         layers_needed = data['layers_needed']
+#         authorized_scale = "[]"
+#         try:
+#             authorized_scale = data['authorized_scale']
+#         except:
+#             pass
+#
+#         description_link = ""
+#         try:
+#             description_link = data['description_link']
+#         except:
+#             pass
+#         vectors_needed = "[]"
+#         try:
+#             vectors_needed = data['vectors_needed']
+#         except:
+#             pass
+#
+#         updatedAt = datetime.utcnow()
+#         createdAt = datetime.utcnow()
+#         inputs_calculation_module = data['inputs_calculation_module']
+#         try:
+#
+#             ln = str(layers_needed)
+#             tn = str(type_layer_needed)
+#             authorized_scale = str(authorized_scale)
+#             description_link = str(description_link)
+#             vectors_needed = str(vectors_needed)
+#             # cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt,tn,authorized_scale,description_link,vectors_needed ))
+#             # conn.commit()
+#             for value in inputs_calculation_module:
+#                 input_name = value['input_name']
+#                 input_type = value['input_type']
+#                 input_parameter_name = value['input_parameter_name']
+#                 input_value = str(value['input_value'])
+#                 input_priority = 0
+#                 try:
+#                     input_priority = value['input_priority']
+#                 except:
+#                     pass
+#                 input_unit = value['input_unit']
+#                 input_min = value['input_min']
+#                 input_max = value['input_max']
+#                 cm_id = value['cm_id']
+#                 conn = myCMpool.connect()
+#                 cursor = conn.cursor()
+#                 cursor.execute("INSERT INTO inputs_calculation_module (input_name, input_type, input_parameter_name, input_value,input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt) VALUES (?,?,?,?,?,?,?,?,?,?,?)", (input_name, input_type, input_parameter_name, input_value,input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt))
+#
+#                 conn.commit()
+#             conn.close()
+#
+#         except ValidationError:
+#             pass
+#         except sqlite3.IntegrityError as e:
+#             update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,type_layer_needed,authorized_scale,description_link,vectors_needed,inputs_calculation_module,cursor,conn)
+#
+#
+# def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed ,inputs_calculation_module,cursor,conn):
+#     try:
+#         ln = str(layers_needed)
+#         tn = str(type_layer_needed)
+#         auth_s = str(authorized_scale)
+#         description_link = str(description_link)
+#         vn = str(vectors_needed)
+#         cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? ,  type_layer_needed = ?, authorized_scale = ?,description_link = ?, vectors_needed = ?   WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt, tn,auth_s,description_link, vn,cm_id ))
+#         conn.commit()
+#         cursor.execute("DELETE FROM inputs_calculation_module WHERE cm_id = ? ", (str(cm_id)))
+#         conn.commit()
+#         for value in inputs_calculation_module:
+#             input_name = value['input_name']
+#             input_type = value['input_type']
+#             input_parameter_name = value['input_parameter_name']
+#             input_value = str(value['input_value'])
+#             input_priority = 0
+#             try:
+#                 input_priority = value['input_priority']
+#             except:
+#                 pass
+#             input_unit = value['input_unit']
+#             input_min = value['input_min']
+#             input_max = value['input_max']
+#             cm_id = value['cm_id']
+#
+#             cursor.execute("INSERT INTO inputs_calculation_module (input_name, input_type, input_parameter_name, input_value, input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt) VALUES (?,?,?,?,?,?,?,?,?,?,?)", (input_name, input_type, input_parameter_name, input_value,input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt))
+#             conn.commit()
+#         conn.close()
+#
+#     except ValidationError:
+#         pass
+#     except sqlite3.IntegrityError as e:
+#         pass
+#
+# def getUI(cm_id):
+#         conn = myCMpool.connect()
+#         cursor = conn.cursor()
+#
+#         results = cursor.execute('select * from inputs_calculation_module where cm_id = ?',
+#                                 (cm_id,))
+#         conn.commit()
+#         response = helper.retrieve_list_from_sql_result(results)
+#
+#         """        valid_condition = assert((cmd_id) in (get_all_cm_ids())()
+#         if valid_condition:
+#             results = cursor.execute('select * from inputs_calculation_module where cm_id = ?',
+#                                 (cm_id))
+#         else:
+#             return False()"""
+#         conn.close()
+#         return response
+#
+# def delete_cm(cm_id):
+#     delete_cm_with_id(cm_id)
+#     delete_cm_ui_with_id(cm_id)
+#
+# def delete_cm_ui_with_id(cm_id):
+#     try:
+#         conn = myCMpool.connect()
+#         cursor = conn.cursor()
+#
+#         results = cursor.execute('DELETE FROM inputs_calculation_module WHERE cm_id = ?',
+#                                  (cm_id))
+#         conn.commit()
+#         conn.close()
+#         return results
+#
+#     except ValidationError:
+#         pass
+#     except sqlite3.IntegrityError as e:
+#         pass
+#
+# def delete_cm_with_id(cm_id):
+#     try:
+#         conn = myCMpool.connect()
+#         cursor = conn.cursor()
+#
+#         results = cursor.execute('DELETE FROM calculation_module WHERE cm_id = ?',
+#                                  (cm_id))
+#         conn.commit()
+#         conn.close()
+#         return results
+#
+#     except ValidationError:
+#         pass
+#     except sqlite3.IntegrityError as e:
+#         pass
+#
+# def getCMList():
+#     response = helper.retrieve_list_from_sql_result(query_calculation_module_database('select * from calculation_module '))
+#     return response
 
 @celery.task(name = 'task-getConnection_db_gis')
 def getConnection_db_gis():
@@ -340,7 +341,6 @@ def commands_in_array(com_string):
     return split(com_string)
 
 def run_command(arr):
-
     process = subprocess.Popen(arr, shell=False)
     process.communicate()
 
@@ -378,16 +378,16 @@ def retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, area
         inputs_vectors_selection[vector_table_requested] = result
     return inputs_vectors_selection
 
-def get_vectors_needed(cm_id):
-    conn = myCMpool.connect()
-    cursor = conn.cursor()
-    vectors_needed = cursor.execute('select vectors_needed from calculation_module where cm_id = ?',
-                            (cm_id))
-    conn.commit()
-    vectors_needed = vectors_needed.fetchone()[0]
-    vectors_needed = helper.unicode_array_to_string(vectors_needed)
-    conn.close()
-    return vectors_needed
+# def get_vectors_needed(cm_id):
+#     conn = myCMpool.connect()
+#     cursor = conn.cursor()
+#     vectors_needed = cursor.execute('select vectors_needed from calculation_module where cm_id = ?',
+#                             (cm_id))
+#     conn.commit()
+#     vectors_needed = vectors_needed.fetchone()[0]
+#     vectors_needed = helper.unicode_array_to_string(vectors_needed)
+#     conn.close()
+#     return vectors_needed
 
 
 def query_geographic_database(sql_query):
@@ -406,19 +406,20 @@ def query_geographic_database_first(sql_query):
 def check_table_existe(sql_query):
     return query_geographic_database_first(sql_query)
 
-def query_calculation_module_database(sql_query):
 
-    # get a connection
-    conn = myCMpool.connect()
-    # use it
-    cursor = conn.cursor()
-
-    cursor.execute(sql_query)
-    conn.commit()
-    conn.close()
-
-
-    return cursor
+# def query_calculation_module_database(sql_query):
+#
+#     # get a connection
+#     conn = myCMpool.connect()
+#     # use it
+#     cursor = conn.cursor()
+#
+#     cursor.execute(sql_query)
+#     conn.commit()
+#     conn.close()
+#
+#
+#     return cursor
 
 def query(sql_query,conn):
 
