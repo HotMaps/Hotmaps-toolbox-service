@@ -70,7 +70,7 @@ class ComputationModuleClass(Resource):
         cm_id = input["cm_id"]
         return getUI(cm_id)
 
-@ns.route('/register/', methods=['POST'])
+@ns.route('/register', methods=['POST'])
 class ComputationModuleClass(Resource):
     def post(self):
         """
@@ -81,6 +81,18 @@ class ComputationModuleClass(Resource):
         input = request.get_json()
         register_calulation_module(input)
         return json.dumps(input)
+
+@ns.route('/delete', methods=['DELETE'])
+@api.expect(cm_id_input)
+class ComputationModuleClass(Resource):
+    def delete(self):
+        """
+       Delete a CM from the list of cm in the database
+       :return:
+       """
+        input = request.get_json()
+        cm_id = input["cm_id"]
+        return model.delete_cm(cm_id) #TODO: raise exception depending on the value returned by delete_cm
 
 @ns.route('/files/<string:filename>', methods=['GET'])
 class getRasterfile(Resource):

@@ -83,6 +83,7 @@ log = logging.getLogger(__name__)
 
 # Instantiate extra modules
 dbGIS = SQLAlchemy()
+dbCM = SQLAlchemy()
 mail = Mail()
 login_manager = LoginManager()
 
@@ -119,6 +120,7 @@ def create_app(config_name):
 
     app.register_blueprint(api)
     dbGIS.init_app(app)
+    dbCM.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app, add_context_processor=False)
 
