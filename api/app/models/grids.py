@@ -1,4 +1,4 @@
-from app.models import   dbGIS as db
+from app.models import   db
 from geoalchemy2 import Geometry
 
 

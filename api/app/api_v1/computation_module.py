@@ -6,12 +6,13 @@ from app.decorators.serializers import compution_module_class, \
     input_computation_module, test_communication_cm, \
     compution_module_list, uploadfile, cm_id_input
 
-from app.model import register_calulation_module,getUI,getCMList,commands_in_array, run_command
+from app.model import commands_in_array, run_command
 
 from ..models.user import User
 from app import model
-
+from app import models
 from app import helper
+
 nsCM = api.namespace('cm', description='Operations related to statistisdscs')
 
 ns = nsCM
@@ -56,7 +57,7 @@ class ComputationModuleList(Resource):
         Returns the list of the available calculation module
         :return:
         """
-        return getCMList()
+        return models.getCMList()
 
 @ns.route('/user-interface/', methods=['POST'])
 @api.expect(cm_id_input)
@@ -68,7 +69,7 @@ class ComputationModuleClass(Resource):
        """
         input = request.get_json()
         cm_id = input["cm_id"]
-        return getUI(cm_id)
+        return models.getUI(cm_id)
 
 @ns.route('/register', methods=['POST'])
 class ComputationModuleClass(Resource):
@@ -79,7 +80,7 @@ class ComputationModuleClass(Resource):
        """
         #print ('HTAPI will register cm')
         input = request.get_json()
-        register_calulation_module(input)
+        models.register_calulation_module(input)
         return json.dumps(input)
 
 @ns.route('/delete', methods=['DELETE'])
@@ -87,12 +88,12 @@ class ComputationModuleClass(Resource):
 class ComputationModuleClass(Resource):
     def delete(self):
         """
-       Delete a CM from the list of cm in the database
-       :return:
-       """
+        Delete a CM from the list of cm in the database
+        :return:
+        """
         input = request.get_json()
         cm_id = input["cm_id"]
-        return model.delete_cm(cm_id) #TODO: raise exception depending on the value returned by delete_cm
+        return models.delete_cm(cm_id) #TODO: raise exception depending on the value returned by delete_cm
 
 @ns.route('/files/<string:filename>', methods=['GET'])
 class getRasterfile(Resource):
@@ -110,9 +111,6 @@ class getRasterTile(Resource):
          download a file from the main web service
          :return:
              """
-
-
-
         tile_filename = UPLOAD_DIRECTORY +'/'+directory+"/%d/%d/%d.png" % (z,x,y)
         if not os.path.exists(tile_filename):
             if not os.path.exists(os.path.dirname(tile_filename)):
@@ -123,18 +121,18 @@ class getRasterTile(Resource):
         except:
             return None
 
-def registerCM(input):
-    register_calulation_module(input)
-    return input
-
-def savefile(filename,url):
-    r = requests.get(url, stream=True)
-    if r.status_code == 200:
-        path = os.path.join(UPLOAD_DIRECTORY, filename)
-        with open(path, 'wb') as f:
-            for chunk in r.iter_content(1024):
-                f.write(chunk)
-    return path
+# def registerCM(input):
+#     register_calulation_module(input)
+#     return input
+#
+# def savefile(filename,url):
+#     r = requests.get(url, stream=True)
+#     if r.status_code == 200:
+#         path = os.path.join(UPLOAD_DIRECTORY, filename)
+#         with open(path, 'wb') as f:
+#             for chunk in r.iter_content(1024):
+#                 f.write(chunk)
+#     return path
 
 @celery.task(name = 'Compute-async')
 def computeTask(data,payload,cm_id):
@@ -160,7 +158,6 @@ def computeTask(data,payload,cm_id):
         areas = payload['areas']
         geom =  helper.area_to_geom(areas)
 
-
         nuts_within = model.nuts_within_the_selection(geom)
 
         inputs_raster_selection = model.get_raster_from_csv(geom, layer_needed, UPLOAD_DIRECTORY)
@@ -178,7 +175,6 @@ def computeTask(data,payload,cm_id):
         if vectors_needed != None:
             inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, id_list)
         #****************** FINISH RASTER CLIP FOR NUTS  OR LAU ***************************************************
-
     data = generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection,nuts_within)
 
     # send the result to the right CM
@@ -210,20 +206,16 @@ def computeTask(data,payload,cm_id):
     return data_output
 
 def generateTiles(raster_layers):
-
-
     for layers in raster_layers:
-
         layer_type = layers['type']
         file_path_input = layers['path']
         directory_for_tiles = file_path_input.replace('.tif', '')
         file_path_output = helper.generate_geotif_name(UPLOAD_DIRECTORY)
         tile_path = directory_for_tiles
         access_rights = 0o755
+
         try:
             os.mkdir(tile_path, access_rights)
-
-
         except OSError:
             pass
             print ("Creation of the directory %s failed" % tile_path)
@@ -243,14 +235,14 @@ def generateTiles(raster_layers):
         directory_for_tiles = directory_for_tiles.replace(UPLOAD_DIRECTORY+'/', '')
         layers['path'] = directory_for_tiles
 
-
-
     return file_path_input, directory_for_tiles
+
 
 def generate_shape(vector_layers):
     for layers in vector_layers:
         file_path_input = layers['path']
     return file_path_input, file_path_input
+
 
 def generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection,nuts):
     inputs = data["inputs"]
@@ -268,6 +260,7 @@ def generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_sele
     })
     data = json.dumps(data_output)
     return data
+
 
 @ns.route('/compute-async/', methods=['POST'])
 @api.expect(input_computation_module)
@@ -306,7 +299,6 @@ class ComputationTaskStatus(Resource):
                  'total': task.info.get('total', 1),
                  'status': task.info
              }
-
         else:
         # something went wrong in the background job
              response = {

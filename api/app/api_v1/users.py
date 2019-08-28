@@ -21,7 +21,7 @@ from ..decorators.serializers import user_register_input, user_register_output, 
     user_ask_recovery_output, user_recovery_output, user_recovery_input, user_login_input, user_login_output, \
     user_logout_input, user_logout_output, user_profile_input, user_profile_output, user_get_information_output, \
     user_get_information_input, upload_space_used_output, upload_space_used_input, feedback_output
-from .. import dbGIS as db
+from .. import db
 from ..secrets import FLASK_SECRET_KEY, FLASK_SALT
 from ..models.user import User
 from ..models.role import Role

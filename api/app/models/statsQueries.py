@@ -1,6 +1,6 @@
 import datetime
 from .. import helper
-from app import dbGIS as db
+from app import db
 from app import constants
 from decimal import *
 from app.models.indicators import layersData, ELECRICITY_MIX

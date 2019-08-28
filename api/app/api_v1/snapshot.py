@@ -1,4 +1,4 @@
-from .. import dbGIS as db
+from .. import db
 from ..decorators.restplus import api
 from ..decorators.exceptions import RequestException, ParameterException, UserUnidentifiedException, \
     SnapshotNotExistingException

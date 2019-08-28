@@ -17,7 +17,7 @@ from geojson import Feature, FeatureCollection
 from shapely.ops import transform
 import xml.etree.ElementTree as ET
 
-from .. import constants, dbGIS as db
+from .. import constants, db
 from ..decorators.exceptions import RequestException
 from .. import helper
 

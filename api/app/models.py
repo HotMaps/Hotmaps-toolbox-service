@@ -1,10 +1,14 @@
 from .. import dbCM as db
 
+from datetime import datetime
+from app import helper
+
 class CalculationModules(db.Model):
     '''
     This class will describe the model of a calculation module
     '''
     __tablename__ = 'cm'
+    __bind_key__ = 'db_cm'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
@@ -26,7 +30,8 @@ class CalculationModuleInputs(db.Model):
     This class will describe the model of an input of a calculation module
     '''
     __tablename__ = 'cm_inputs'
-
+    __bind_key__ = 'db_cm'
+    
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
     type = db.Column(db.String(255))
@@ -72,9 +77,9 @@ def register_calulation_module(data):
         createdAt = datetime.utcnow()
         inputs_calculation_module = data['inputs_calculation_module']
 
-        already_exist = CalculationModules.query.get(cm_id)
-        if already_exist:
-            update_calulation_module(already_exist, cm_name, cm_description, cm_category, cm_url, layers_needed, createdAt,
+        already_exists = CalculationModules.query.get(cm_id)
+        if already_exists:
+            update_calulation_module(already_exists, cm_name, cm_description, cm_category, cm_url, layers_needed, createdAt,
                 updatedAt, type_layer_needed, authorized_scale, description_link, vectors_needed, inputs_calculation_module)
         else:
             cm = CalculationModules(id=cm_id, name=cm_name, description=cm_description, url=cm_url, category=cm_category,
@@ -135,14 +140,10 @@ def getCMList():
     return response
 
 # def get_vectors_needed(cm_id):
-#     conn = myCMpool.connect()
-#     cursor = conn.cursor()
-#     vectors_needed = cursor.execute('select vectors_needed from calculation_module where cm_id = ?',
-#                             (cm_id))
-#     conn.commit()
-#     vectors_needed = vectors_needed.fetchone()[0]
-#     vectors_needed = helper.unicode_array_to_string(vectors_needed)
-#     conn.close()
+#     cm = CalculationModules.query.get(cm_id)
+#     vectors = cm.vectors_needed
+#     vectors_needed = vectors_needed.fetchone()[0]  ????????
+#     vectors_needed = helper.unicode_array_to_string(vectors_needed)  ?????????
 #     return vectors_needed
 
 def delete_cm(cm_id):

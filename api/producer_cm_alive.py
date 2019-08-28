@@ -11,7 +11,7 @@ import time
 import logging
 import pika
 
-from app.model import getCMList,delete_cm
+from app.models import getCMList,delete_cm
 from app import constants
 
 
@@ -79,5 +79,3 @@ while True :
             else:
                 LOGGER.info("[HTAPI]  is going to  delete: %s ",str(cm_id))
                 delete_cm(str(cm_id))
-
-

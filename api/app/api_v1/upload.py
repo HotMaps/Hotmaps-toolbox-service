@@ -10,7 +10,7 @@ from app.constants import USER_UPLOAD_FOLDER, UPLOAD_BASE_NAME, UPLOAD_DIRECTORY
 from flask import send_file
 from flask_restplus import Resource
 
-from .. import dbGIS as db
+from .. import db
 from ..decorators.parsers import file_upload
 from ..decorators.restplus import UserUnidentifiedException, ParameterException, RequestException, \
     UserDoesntOwnUploadsException, UploadNotExistingException, \

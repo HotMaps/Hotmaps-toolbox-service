@@ -1,4 +1,4 @@
-from .. import dbGIS as db
+from .. import db
 from flask_security import RoleMixin
 
 class Role(db.Model, RoleMixin):

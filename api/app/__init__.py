@@ -70,8 +70,6 @@ class CalculationModuleRpcClient(object):
 from . import constants
 
 
-dbGIS = SQLAlchemy()
-
 celery = Celery(__name__, backend=constants.CELERY_RESULT_BACKEND,
                 broker=constants.CELERY_BROKER_URL)
 
@@ -82,8 +80,7 @@ log = logging.getLogger(__name__)
 # logging.getLogger('flask_cors').level = logging.DEBUG
 
 # Instantiate extra modules
-dbGIS = SQLAlchemy()
-dbCM = SQLAlchemy()
+db = SQLAlchemy()
 mail = Mail()
 login_manager = LoginManager()
 
@@ -119,7 +116,7 @@ def create_app(config_name):
     api_rest_plus.add_namespace(main_heat_load_profile_namespace)
 
     app.register_blueprint(api)
-    dbGIS.init_app(app)
+    db.init_app(app)
     dbCM.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app, add_context_processor=False)

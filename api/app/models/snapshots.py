@@ -1,4 +1,4 @@
-from .. import dbGIS as db
+from .. import db
 from ..decorators.restplus import UserUnidentifiedException, ParameterException, RequestException
 
 

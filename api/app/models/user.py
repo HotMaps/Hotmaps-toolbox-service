@@ -1,4 +1,4 @@
-from .. import dbGIS as db
+from .. import db
 from flask_security import UserMixin
 from .role import Role
 from itsdangerous import (TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired)
