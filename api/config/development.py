@@ -2,15 +2,14 @@
 import os
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.join(basedir, '../data-dev.sqlite')
+db_path = os.path.abspath('cm_dev.db')
 
 from app import secrets
 DEBUG = True
 FLASK_SECRET_KEY = 'paPTvnNME5NBHHuIOlFqG6zS77vHadbo'
 SQLALCHEMY_DATABASE_URI = secrets.SQLALCHEMY_DATABASE_URI_DEVELOPMENT
 SQLALCHEMY_BINDS = {
-    'cm_db':      os.environ.get('DATABASE_URL') or \
-                  'sqlite:///' + db_path
+    'db_cm': 'sqlite:///' + db_path
 }
 SECRET_KEY = 'paPTvnNME5NBHHuIOlFqG6zS77vHadbo'
 SQLALCHEMY_TRACK_MODIFICATIONS = True

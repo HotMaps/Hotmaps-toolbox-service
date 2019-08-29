@@ -117,7 +117,6 @@ def create_app(config_name):
 
     app.register_blueprint(api)
     db.init_app(app)
-    dbCM.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app, add_context_processor=False)
 

@@ -10,7 +10,7 @@ from app.model import commands_in_array, run_command
 
 from ..models.user import User
 from app import model
-from app import models
+from app import cm_models
 from app import helper
 
 nsCM = api.namespace('cm', description='Operations related to statistisdscs')
@@ -57,7 +57,7 @@ class ComputationModuleList(Resource):
         Returns the list of the available calculation module
         :return:
         """
-        return models.getCMList()
+        return cm_models.getCMList()
 
 @ns.route('/user-interface/', methods=['POST'])
 @api.expect(cm_id_input)
@@ -69,9 +69,9 @@ class ComputationModuleClass(Resource):
        """
         input = request.get_json()
         cm_id = input["cm_id"]
-        return models.getUI(cm_id)
+        return cm_models.getUI(cm_id)
 
-@ns.route('/register', methods=['POST'])
+@ns.route('/register/', methods=['POST'])
 class ComputationModuleClass(Resource):
     def post(self):
         """
@@ -80,7 +80,7 @@ class ComputationModuleClass(Resource):
        """
         #print ('HTAPI will register cm')
         input = request.get_json()
-        models.register_calulation_module(input)
+        cm_models.register_calulation_module(input)
         return json.dumps(input)
 
 @ns.route('/delete', methods=['DELETE'])
@@ -93,7 +93,7 @@ class ComputationModuleClass(Resource):
         """
         input = request.get_json()
         cm_id = input["cm_id"]
-        return models.delete_cm(cm_id) #TODO: raise exception depending on the value returned by delete_cm
+        return cm_models.delete_cm(cm_id) #TODO: raise exception depending on the value returned by delete_cm
 
 @ns.route('/files/<string:filename>', methods=['GET'])
 class getRasterfile(Resource):

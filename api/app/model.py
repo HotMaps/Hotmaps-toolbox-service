@@ -10,9 +10,8 @@ from app.constants import DATASET_DIRECTORY
 from datetime import datetime
 import psycopg2
 import sqlalchemy.pool as pool
-# import sqlite3
+import sqlite3
 from app import celery
-# from app.constants import CM_DB_NAME
 from app import helper
 from app import sql_queries
 from .models.uploads import Uploads
@@ -32,14 +31,17 @@ except ImportError:
 # db_path = os.path.join(basedir, '../data.sqlite')
 #
 # DB_NAME = CM_DB_NAME
-#
-# def getConnection_db_CM():
-#     c = sqlite3.connect(DB_NAME)
-#     return c
-#
-#
-# myCMpool = pool.QueuePool(getConnection_db_CM, max_overflow=10, pool_size=15)
-#
+
+# TODO remove CM_DB_NAME from constants or replace with right db name depending on prod, dev, test
+DB_NAME = 'cm_dev.db'
+
+def getConnection_db_CM():
+    c = sqlite3.connect(DB_NAME)
+    return c
+
+
+myCMpool = pool.QueuePool(getConnection_db_CM, max_overflow=10, pool_size=15)
+
 #
 # def addRegisterCalulationModule(data):
 #
@@ -208,46 +210,46 @@ except ImportError:
 #             return False()"""
 #         conn.close()
 #         return response
-#
-# def delete_cm(cm_id):
-#     delete_cm_with_id(cm_id)
-#     delete_cm_ui_with_id(cm_id)
-#
-# def delete_cm_ui_with_id(cm_id):
-#     try:
-#         conn = myCMpool.connect()
-#         cursor = conn.cursor()
-#
-#         results = cursor.execute('DELETE FROM inputs_calculation_module WHERE cm_id = ?',
-#                                  (cm_id))
-#         conn.commit()
-#         conn.close()
-#         return results
-#
-#     except ValidationError:
-#         pass
-#     except sqlite3.IntegrityError as e:
-#         pass
-#
-# def delete_cm_with_id(cm_id):
-#     try:
-#         conn = myCMpool.connect()
-#         cursor = conn.cursor()
-#
-#         results = cursor.execute('DELETE FROM calculation_module WHERE cm_id = ?',
-#                                  (cm_id))
-#         conn.commit()
-#         conn.close()
-#         return results
-#
-#     except ValidationError:
-#         pass
-#     except sqlite3.IntegrityError as e:
-#         pass
-#
-# def getCMList():
-#     response = helper.retrieve_list_from_sql_result(query_calculation_module_database('select * from calculation_module '))
-#     return response
+
+def delete_cm(cm_id):
+    delete_cm_with_id(cm_id)
+    delete_cm_ui_with_id(cm_id)
+
+def delete_cm_ui_with_id(cm_id):
+    try:
+        conn = myCMpool.connect()
+        cursor = conn.cursor()
+
+        results = cursor.execute('DELETE FROM cm_inputs WHERE cm_id = ?',
+                                 (cm_id))
+        conn.commit()
+        conn.close()
+        return results
+
+    except ValidationError:
+        pass
+    except sqlite3.IntegrityError as e:
+        pass
+
+def delete_cm_with_id(cm_id):
+    try:
+        conn = myCMpool.connect()
+        cursor = conn.cursor()
+
+        results = cursor.execute('DELETE FROM cm WHERE cm_id = ?',
+                                 (cm_id))
+        conn.commit()
+        conn.close()
+        return results
+
+    except ValidationError:
+        pass
+    except sqlite3.IntegrityError as e:
+        pass
+
+def getCMList():
+    response = helper.retrieve_list_from_sql_result(query_calculation_module_database('select * from cm'))
+    return response
 
 @celery.task(name = 'task-getConnection_db_gis')
 def getConnection_db_gis():
@@ -407,19 +409,16 @@ def check_table_existe(sql_query):
     return query_geographic_database_first(sql_query)
 
 
-# def query_calculation_module_database(sql_query):
-#
-#     # get a connection
-#     conn = myCMpool.connect()
-#     # use it
-#     cursor = conn.cursor()
-#
-#     cursor.execute(sql_query)
-#     conn.commit()
-#     conn.close()
-#
-#
-#     return cursor
+def query_calculation_module_database(sql_query):
+    # get a connection
+    conn = myCMpool.connect()
+    # use it
+    cursor = conn.cursor()
+    cursor.execute(sql_query)
+    conn.commit()
+    conn.close()
+    return cursor
+
 
 def query(sql_query,conn):
 
