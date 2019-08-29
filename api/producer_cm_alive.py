@@ -62,11 +62,11 @@ while True :
     start = time. time()
     for value in enumerate(listofCM):
         time.sleep(constants.TIMEOUT_ALIVE_CM)
-        end = time. time()
+        end = time.time()
         print(end - start)
 
         heart_cm = HeartBeatCalculationModuleProducer()
-        cm_id =  value[1]['id']
+        cm_id =  value[1]['cm_id']
         print(" [HTAPI] Requesting cm_id = ",cm_id)
         response = heart_cm.call(constants.RPC_CM_ALIVE + str(cm_id))
         if response is not None:

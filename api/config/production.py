@@ -1,8 +1,9 @@
 DEBUG = False
 import os
+from app import constants
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.join(basedir, '../data.sqlite')
+db_path = os.path.abspath(constants.CM_DB_NAME_PROD) # TODO create the db with the tables
 from app import secrets
 SECRET_KEY = 'top-secret!'
 # Flask settings

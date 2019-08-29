@@ -31,7 +31,10 @@ PORT = PORT_DOCKER
 
 
 #TODO *******************************************************************************
-CM_DB_NAME = "calculation_module.db"
+CM_DB_NAME_DEV = "cm_dev.db"
+CM_DB_NAME_PROD = "cm_prod.db"
+CM_DB_NAME_TEST = "cm_test.db"
+
 # Flask-Restplus settings
 RESTPLUS_SWAGGER_UI_DOC_EXPANSION = 'list'
 RESTPLUS_VALIDATE = True

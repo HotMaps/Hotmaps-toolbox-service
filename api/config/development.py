@@ -1,8 +1,9 @@
 # Flask settings
 import os
+from app import constants
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.abspath('cm_dev.db')
+db_path = os.path.abspath(constants.CM_DB_NAME_DEV)
 
 from app import secrets
 DEBUG = True

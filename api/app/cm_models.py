@@ -1,8 +1,6 @@
 from datetime import datetime
 from app import helper
 from app import db
-from flask import current_app
-from sqlalchemy.inspection import inspect
 
 class CalculationModules(db.Model):
     '''
@@ -46,6 +44,11 @@ class CalculationModuleInputs(db.Model):
     updatedAt = db.Column(db.DateTime())
     cm_id = db.Column(db.Integer, db.ForeignKey('cm.cm_id'))
 
+def clean_cm_db():
+    cms = CalculationModules.query.all()
+    for cm in cms:
+        db.session.delete(cm)
+    db.session.commit()
 
 def register_calulation_module(data):
     if data is not None:
@@ -133,11 +136,18 @@ def update_calulation_module(cm, cm_name, cm_description, cm_category, cm_url, l
     db.session.commit()
 
 def retrieve_list_from_sql_result(results):
+    '''
+    This is the same function as in helper.py but adapted to an object of sqlalchemy
+    '''
     response = []
     for element in results:
         json_element = {}
         for column in element.__table__.columns:
-            json_element[column.name] = str(getattr(element, column.name))
+            value = str(getattr(element, column.name))
+            # convert a string into a list
+            if '[' in value:
+                value = helper.unicode_array_to_string(value)
+            json_element[column.name] = value
         response.append(json_element)
     return response
 
