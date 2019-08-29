@@ -1,32 +1,29 @@
 import requests
 
 from unittest import TestCase
-from . import BASE_URL, test_cm_id
+from . import BASE_URL, signature_cm
 
-url = BASE_URL + '/cm/register'
+url = BASE_URL + '/cm/register/'
 
 
-class TestListCM(TestCase):
+class TestRegisterCM(TestCase):
     def test_post_working(self):
         """
         this test will pass the cm/register
         """
 
-        signature_cm = {}
+        output = requests.post(url, json=signature_cm)
 
-        output = requests.post(url)
-
-        expected_output = []
+        expected_output = "The CM 10 has been registered"
         assert output.json() == expected_output
 
-    def test_post_working_with_cm(self):
+
+    def test_post_missing_parameter(self):
         """
-        this test will pass the cm/list method with no cm in the db
+        this test will does not pass the cm/register because of missing parameters
         """
 
-        signature_cm = {}
+        output = requests.post(url, json={})
 
-        output = requests.post(url)
-
-        expected_output = []
-        assert output.json() == expected_output
+        expected_output = "all parameters are missing"
+        assert output.json()['message'] == expected_output

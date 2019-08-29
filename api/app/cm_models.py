@@ -1,6 +1,8 @@
 from datetime import datetime
 from app import helper
 from app import db
+from .decorators.restplus import api
+from ..decorators.exceptions import ParameterException, CmNotExistingException
 
 class CalculationModules(db.Model):
     '''
@@ -50,8 +52,11 @@ def clean_cm_db():
         db.session.delete(cm)
     db.session.commit()
 
+@api.response(531, 'Missing parameter')
 def register_calulation_module(data):
-    if data is not None:
+    if not data:
+        raise ParameterException("all parameters are missing")
+    else:
         # conn = myCMpool.connect()
         # cursor = conn.cursor()
         cm_id = data['cm_id']
@@ -113,6 +118,8 @@ def register_calulation_module(data):
                 createdAt=createdAt, updatedAt=updatedAt, input_max=input_max, cm_id=id)
             db.session.add(new_input)
         db.session.commit()
+        output = "The CM " + cm_id + " has been registered"
+        return output
 
 
 def update_calulation_module(cm, cm_name, cm_description, cm_category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed, authorized_scale, description_link, vectors_needed, inputs_calculation_module):
@@ -151,8 +158,12 @@ def retrieve_list_from_sql_result(results):
         response.append(json_element)
     return response
 
+@api.response(545, 'CM not existing')
 def getUI(cm_id):
     cm = CalculationModules.query.get(cm_id)
+    if cm is None:
+        raise CmNotExistingException
+
     response = retrieve_list_from_sql_result(cm.inputs)
     return response
 
@@ -168,7 +179,12 @@ def getCMList():
 #     vectors_needed = helper.unicode_array_to_string(vectors_needed)  ?????????
 #     return vectors_needed
 
+@api.response(545, 'CM not existing')
 def delete_cm(cm_id):
     cm = CalculationModules.query.get(cm_id)
+    if cm is None:
+        raise CmNotExistingException
+
     db.session.delete(cm)
     db.session.commit()
+    return "CM deleted"

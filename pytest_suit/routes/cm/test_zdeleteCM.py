@@ -6,25 +6,20 @@ from . import BASE_URL, test_cm_id
 url = BASE_URL + '/cm/delete'
 
 
-class TestListCM(TestCase):
+class TestDeleteCM(TestCase):
     def test_delete_working(self):
         """
-        this test will pass the uploads/remove method
+        this test will pass the cm/delete method
         """
         list_url = BASE_URL + "/cm/list"
 
-        output = requests.post(list_url, json=payload)
+        output = requests.post(list_url)
+        test_id = output.json()[0]["cm_id"]
 
-        # should be the file added in add 'test_addUploads.py'
-        test = output.json()['cm'][0]["id"] #TODO: to verify
-
-        payload = {
-            "id": test
-        }
-
+        payload = { 'cm_id': test_id }
         output = requests.delete(url, json=payload)
 
-        expected_output = 'CM removed' #TODO: to modify
+        expected_output = 'CM removed'
         assert output.json()['message'] == expected_output
 
     def test_delete_missing_parameter(self):
@@ -44,7 +39,7 @@ class TestListCM(TestCase):
 
     def test_delete_upload_not_existing(self):
         """
-        this test will fail because the upload does not exists
+        this test will fail because the cm does not exists
         """
         payload = {
             "id": -5
@@ -52,6 +47,6 @@ class TestListCM(TestCase):
 
         output = requests.delete(url, json=payload)
 
-        expected_status = '546'
+        expected_status = '545'
 
         assert output.json() == expected_status

@@ -107,6 +107,11 @@ class SnapshotNotExistingException(Exception):
     '''
     pass
 
+class CmNotExistingException(Exception):
+    '''
+    Exception raised when trying to reach a non existing cm
+    '''
+    pass
 
 class ValidationError(ValueError):
     pass
@@ -114,7 +119,3 @@ class ValidationError(ValueError):
 
 class ComputationalModuleError(ValueError):
     pass
-
-
-
-

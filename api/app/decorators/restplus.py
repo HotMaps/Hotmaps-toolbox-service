@@ -301,6 +301,24 @@ def handle_user_not_activated(error):
         }
     return response, 544
 
+@api.errorhandler(CmNotExistingException)
+def handle_activation_failure(error):
+    '''
+    decorator called with an error caused when you reach a non existing cm
+    :param error -- the called error:
+    :return:
+    '''
+    message = 'This CM does not exists'
+    response = {
+        "message": message,
+        "error": {
+            "message": message,
+            "status": "545",
+            "statusText": "CM MISSING"
+        }
+    }
+    return response, 545
+
 
 @api.errorhandler
 def default_error_handler(e):
