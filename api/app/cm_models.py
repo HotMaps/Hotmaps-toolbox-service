@@ -2,7 +2,7 @@ from datetime import datetime
 from app import helper
 from app import db
 from .decorators.restplus import api
-from ..decorators.exceptions import ParameterException, CmNotExistingException
+from .decorators.restplus import ParameterException, CmNotExistingException
 
 class CalculationModules(db.Model):
     '''
@@ -47,10 +47,12 @@ class CalculationModuleInputs(db.Model):
     cm_id = db.Column(db.Integer, db.ForeignKey('cm.cm_id'))
 
 def clean_cm_db():
-    cms = CalculationModules.query.all()
-    for cm in cms:
-        db.session.delete(cm)
-    db.session.commit()
+    db.drop_all(bind='db_cm')
+    db.create_all()
+    # cms = CalculationModules.query.all()
+    # for cm in cms:
+    #     db.session.delete(cm)
+    # db.session.commit()
 
 @api.response(531, 'Missing parameter')
 def register_calulation_module(data):

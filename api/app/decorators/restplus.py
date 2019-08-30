@@ -5,7 +5,7 @@ from flask_restplus import Api
 from .. import constants
 from sqlalchemy.orm.exc import NoResultFound
 from ..decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, \
-    ParameterException, RequestException, ActivationException, UserExistingException, \
+    ParameterException, RequestException, ActivationException, UserExistingException, CmNotExistingException, \
     WrongCredentialException, UserUnidentifiedException, UserDoesntOwnUploadsException, NotEnoughSpaceException, \
     UploadNotExistingException, UserNotActivatedException, SnapshotNotExistingException, UploadFileNotExistingException
 
