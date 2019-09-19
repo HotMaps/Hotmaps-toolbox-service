@@ -170,7 +170,15 @@ def generate_csv_string(result):
     str_io.seek(0)
 
     pandas_csv = pd.read_csv(str_io)
-    pandas_csv = pandas_csv.drop(['geometry'], axis=1)
+    # remove column geom/geometry
+    try:
+        pandas_csv = pandas_csv.drop(['geom'], axis=1)
+    except:
+        pass
+    try:
+        pandas_csv = pandas_csv.drop(['geometry'], axis=1)
+    except:
+        pass
 
     result_io = StringIO()
     pandas_csv.to_csv(result_io, index=False)
@@ -339,18 +347,27 @@ def csv_to_geojson(url, layer_type):
                     try:
                         wkt = shapely_wkt.loads(value)
                         geometry = shapely_geom.mapping(wkt)
-                        project = partial(
-                            pyproj.transform,
-                            pyproj.Proj(init='epsg:{0}'.format(srid)),
-                            pyproj.Proj(init='epsg:4326')
-                        )
-                        geom = transform(project, shapely_geom.shape(geometry))
+                        if srid != '4326':
+                            project = partial(
+                                pyproj.transform,
+                                pyproj.Proj(init='epsg:{0}'.format(srid)),
+                                pyproj.Proj(init='epsg:4326')
+                            )
+                            geom = transform(project, shapely_geom.shape(geometry))
+                        else:
+                            geom = geometry
                     except:
                         print('Exception raised: could not retrieve/transform geometry from file.')
                         geom = None
                 else:
                     properties[field] = value
-            style = find_rule(float(row[property_column]), rule_dictionary)
+                    
+            try:
+                if row[property_column] == 'None':
+                    row[property_column] = 0
+                style = find_rule(float(row[property_column]), rule_dictionary)
+            except:
+                style = {}
 
             features.append(Feature(geometry=geom, properties=properties, style=style))
 

@@ -62,7 +62,7 @@ class AddUploads(Resource):
             wrong_parameter.append('layer_type')
         try:
             file_name = args['file'].filename
-        except Exception as e:
+        except:
             wrong_parameter.append('file')
         try:
             layer = args['layer']
@@ -595,9 +595,6 @@ class ExportCsvNuts(Resource):
                     exception_message += ', '
             raise ParameterException(str(exception_message))
 
-        # TODO: get SRID
-        csv_layer_srid = '3035'
-
         # We must determine if it is a nuts or a lau
         dateCol = "year"
         schema2 = "geo"
@@ -617,19 +614,43 @@ class ExportCsvNuts(Resource):
 
             if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
-        print(schema, layer_name, year, layer_type, id_type, ', '.join("'{0}'".format(n) for n in nuts), schema2, dateCol, layer_date, csv_layer_srid)
-        sql = """SELECT ST_ASTEXT(geometry) as geometry_wkt, ST_SRID(geometry) as srid, * FROM {0}.{1} WHERE date = '{2}-01-01'
-                 AND ST_Within({0}.{1}.geometry, st_transform(
+
+        # handle special case of wwtp where geom column has a different name (manual integration)
+        geom_col_name = 'geometry' if layer_name.startswith('wwtp') else 'geom'
+        
+        # check if year exists otherwise get most recent or fallback to default (1970)
+        date_sql = """SELECT date FROM {0}.{1} GROUP BY date ORDER BY date DESC;""".format(schema, layer_name)
+       
+        try: 
+            results = db.engine.execute(date_sql)
+        except:
+            raise RequestException("Failed retrieving year in database")
+        
+        layer_year = year + '-01-01'
+        dates = []
+        for row in results:
+            dates.append(row[0])
+
+        if len(dates) == 0:
+            layer_year = '1970-01-01'
+        elif layer_year not in dates:
+            layer_year = dates[0]
+
+        # build query
+        sql = """SELECT ST_ASTEXT({9}) as geometry_wkt, ST_SRID({9}) as srid, * FROM {0}.{1} WHERE date = '{2}'
+                 AND ST_Within({0}.{1}.{9}, st_transform(
                    (SELECT ST_UNION(geom) FROM {6}.{3} WHERE {4} IN ({5}) AND {7} = '{8}-01-01'),
-                   {9}
-                 ));""".format(schema, layer_name, year, layer_type, id_type, ', '.join("'{0}'".format(n) for n in nuts), schema2, dateCol, layer_date, csv_layer_srid)
-        print(sql)
-        # execute request
+                   ST_SRID({9})
+                 ));""".format(schema, layer_name, layer_year, layer_type, id_type, ', '.join("'{0}'".format(n) for n in nuts), 
+                               schema2, dateCol, layer_date, geom_col_name)
+
+        # execute query
         try:
             result = db.engine.execute(sql)
         except:
             raise RequestException("Problem with your SQL query")
 
+        # build CSV
         csvResult = generate_csv_string(result)
 
         # send the file to the client
