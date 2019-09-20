@@ -7,6 +7,7 @@ from functools import partial
 from io import StringIO
 
 import pandas as pd
+from pandas import DataFrame
 import pyproj
 import requests
 import shapely.geometry as shapely_geom
@@ -111,7 +112,7 @@ def generate_geojson(upload_folder, layer_type, upload_uuid, user_currently_used
         geojson_file_path = upload_folder + '/data.json'
         with open(geojson_file_path, 'w') as geojson_file:
             json.dump(csv_to_geojson(upload_csv, layer_type), geojson_file)
-    except :
+    except:
         generate_state = 10
     else:
         generate_state = 0
@@ -154,36 +155,23 @@ def generate_csv_string(result):
     :param result: the sql result of a csv export
     :return resultIO: the StringIO result formatted appropriately
     '''
-    csv_file = ",".join(result._metadata.keys) + '\r\n'
-    rowcount = 0
-    for row in result:
-        rowcount += 1
-        csv_file += ",".join(map(str, row)) + '\r\n'
-
-    # if the result is empty, we raise an error
-    if rowcount is 0:
-        raise RequestException('There is no result for this selection')
-
-    # write string buffer
-    str_io = StringIO()
-    str_io.write(csv_file)
-    str_io.seek(0)
-
-    pandas_csv = pd.read_csv(str_io)
-    # remove column geom/geometry
+    df = DataFrame(result.fetchall())
+    df.columns = result.keys()
+    
+    # remove geom columns
     try:
-        pandas_csv = pandas_csv.drop(['geom'], axis=1)
+        df = df.drop(['geometry'], axis=1)
     except:
         pass
     try:
-        pandas_csv = pandas_csv.drop(['geometry'], axis=1)
+        df = df.drop(['geom'], axis=1)
     except:
         pass
-
+    
     result_io = StringIO()
-    pandas_csv.to_csv(result_io, index=False)
+    df.to_csv(result_io, index=False)
     result_io.seek(0)
-
+    
     return result_io
 
 
@@ -330,8 +318,9 @@ def csv_to_geojson(url, layer_type):
     output_srid = '4326'
     sld_file = helper.get_style_from_geoserver(layer_type)
     rule_dictionary = generate_rule_dictionary(sld_file)
+    
     # parse file
-    with open(url, 'r') as csvfile:
+    with open(url, 'r', encoding="utf-8-sig") as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',')
         for row in reader:
             geom = None
