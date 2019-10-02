@@ -3,6 +3,7 @@ import requests
 from unittest import TestCase
 from . import BASE_URL, test_token, test_csv_file, test_upload_name
 from ..user.test_profileUser import test_first_name
+from ....api.app.models.uploads import extract_query_string_parameters
 
 url = BASE_URL + '/upload/add'
 
@@ -44,3 +45,13 @@ class TestAddUploads(TestCase):
         expected_status = '539'
 
         assert output.json()['error']['status'] == expected_status
+
+    def test_extract_query_string_parameters(self):
+        """
+        this test will pass if parameters can be retrieved from query string
+        """
+        input = 'http://chart?cht=p&amp;chd=t:${100 * excess_heat_100_200c / excess_heat_total},${100 * excess_heat_200_500c / excess_heat_total},${100 * excess_heat_500c / excess_heat_total}&amp;chf=bg,s,FFFFFF00&amp;chco=FFCC00,FF6600,FF0000'
+        expected_output = {'cht': ['p'], 'chd': ['t:${100 * excess_heat_100_200c / excess_heat_total},${100 * excess_heat_200_500c / excess_heat_total},${100 * excess_heat_500c / excess_heat_total}'], 'chf': ['bg,s,FFFFFF00'], 'chco': ['FFCC00,FF6600,FF0000']}
+        assert extract_query_string_parameters(input) == expected_output
+
+    

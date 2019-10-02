@@ -17,16 +17,19 @@ from app import model
 from geojson import Feature, FeatureCollection
 from shapely.ops import transform
 import xml.etree.ElementTree as ET
+from urllib.parse import urlparse, parse_qs
 
 from .. import constants, dbGIS as db
 from ..decorators.exceptions import RequestException
 from .. import helper
+
 
 ALLOWED_EXTENSIONS = set(['tif', 'csv'])
 GREATER_OR_EQUAL = 'greaterOrEqual'
 GREATER = 'greater'
 LESSER_OR_EQUAL = 'lesserOrEqual'
 LESSER = 'lesser'
+EQUAL = 'equal'
 
 class Uploads(db.Model):
     '''
@@ -185,31 +188,68 @@ def find_property_column(style_sheet, headers):
     # create the xml tree
     try:
         root = ET.fromstring(style_sheet)
-    except Exception as e:
-        raise RequestException(str(style_sheet))
+    except:
+        raise RequestException('Can\'t parse SLD file')
     ns = {
         'se': 'http://www.opengis.net/se',
         'ogc': 'http://www.opengis.net/ogc'
     }
+
+    # read rules
     rules = root.findall(".//se:Rule", ns)
+    # read rules without 'se' prefix if previous did not work
+    if len(rules) == 0:
+        rules = root.findall(".//{http://www.opengis.net/sld}Rule")
+    # raise exception if rules is empty
+    if len(rules) == 0:
+        print("Can't read rules of SLD file.")
+
+    # read filters
     filters = rules[0].findall('./ogc:Filter/ogc:And', ns)
+    if len(filters) == 0:
+        filters = rules[0].findall('ogc:Filter', ns)
+    if len(filters) == 0:
+        print("Can't find any filter in SLD file.")
+
     for filter_element in filters:
 
-        greater = filter_element.find('./ogc:PropertyIsGreaterThanOrEqualTo', ns)
-        if greater is None:
-            greater = filter_element.find('./ogc:PropertyIsGreaterThan', ns)
+        rule = filter_element.find('./ogc:PropertyIsGreaterThanOrEqualTo', ns)
+        if rule is None:
+            rule = filter_element.find('./ogc:PropertyIsGreaterThan', ns)
 
-        if greater is None:
+        if rule is None:
+            rule = filter_element.find('./ogc:PropertyIsEqualTo', ns)
+
+        if rule is None:
+            rule = filter_element.find('./ogc:PropertyIsLessOrEqualTo', ns)
+
+        if rule is None:
+            rule = filter_element.find('./ogc:PropertyIsLessThan', ns)
+
+        if rule is None:
             continue
 
-        property_name = greater.find('./ogc:PropertyName', ns).text
+        property_name = rule.find('./ogc:PropertyName', ns).text
 
         if property_name in headers:
             return property_name
 
-        else:
-            return None
+    return None
 
+def extract_query_string_parameters(url):
+    '''
+    This method will extract all parameters from a url.
+    :param url: the url to extract the parameters from
+    :return: the dictionary of parameters
+    '''
+    params = {}
+    try:
+        qs = urlparse(url).query
+        params = parse_qs(qs)
+    except:
+        pass
+
+    return params
 
 def generate_rule_dictionary(style_sheet):
     '''
@@ -220,21 +260,35 @@ def generate_rule_dictionary(style_sheet):
     # create the xml tree
     try:
         root = ET.fromstring(style_sheet)
-    except Exception as e:
-        raise RequestException(str(style_sheet))
+    except:
+        raise RequestException('Can\'t parse SLD file')
     ns = {
         'se': 'http://www.opengis.net/se',
         'ogc': 'http://www.opengis.net/ogc'
     }
 
-    # get the list of rules
+    # read rules
     rules = root.findall(".//se:Rule", ns)
+    # read rules without 'se' prefix if previous did not work
+    if len(rules) == 0:
+        rules = root.findall(".//{http://www.opengis.net/sld}Rule")
+    # raise exception if rules is empty
+    if len(rules) == 0:
+        print("Can't read rules of SLD file.")
+
+    # get the list of rules
     rules_dictionary = {}
     i = 0
+    
     for rule in rules:
         filters = rule.findall('ogc:Filter/ogc:And', ns)
+        if len(filters) == 0:
+            filters = rule.findall('ogc:Filter', ns)
+        if len(filters) == 0:
+            print("Can't find any filter in SLD file.")
         greater_type = None
         lesser_type = None
+        equal_type = None
 
         for filter_type in filters:
 
@@ -253,18 +307,48 @@ def generate_rule_dictionary(style_sheet):
                 lesser = filter_type.find('ogc:PropertyIsLessThan', ns)
                 if lesser is not None:
                     lesser_type = LESSER
-        greater = float(greater.find('ogc:Literal', ns).text)
-        lesser = float(lesser.find('ogc:Literal', ns).text)
-        mark_name = rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:WellKnownName', ns).text,
-        fill = rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:Fill/se:SvgParameter', ns).text,
-        stroke = rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:Stroke/se:SvgParameter', ns).text,
-        size = rule.find('se:PointSymbolizer/se:Graphic/se:Size', ns).text
+
+            equal = filter_type.find('ogc:PropertyIsEqualTo', ns)
+            if equal is not None:
+                equal_type = EQUAL
+
+        if greater is not None:
+            greater = float(greater.find('ogc:Literal', ns).text)
+        if lesser is not None:
+            lesser = float(lesser.find('ogc:Literal', ns).text)
+        if equal is not None:
+            try:
+                equal = float(equal.find('ogc:Literal', ns).text)
+            except ValueError:
+                equal = equal.find('ogc:Literal', ns).text
+            except TypeError:
+                equal = ''
+
+        # identify symbology
+        graphic = rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:WellKnownName', ns)
+
+        if graphic is not None:
+            mark_name = graphic.text
+            fill = rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:Fill/se:SvgParameter', ns).text
+            stroke = rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:Stroke/se:SvgParameter', ns).text
+            size = rule.find('se:PointSymbolizer/se:Graphic/se:Size', ns).text
+        else:
+            # TODO: handle points as charts if found
+            # otherwise return default style
+
+            # defaults
+            mark_name = 'circle'
+            fill = '#0099ff'
+            stroke = '#ffffff'
+            size = '30'
 
         rules_dictionary[i] = {
             'greater_type': greater_type,
             'lesser_type': lesser_type,
+            'equal_type': equal_type,
             'greater': greater,
             'lesser': lesser,
+            'equal': equal,
             'mark_name': mark_name,
             'fill': fill,
             'stroke': stroke,
@@ -272,6 +356,7 @@ def generate_rule_dictionary(style_sheet):
         }
 
         i += 1
+
     return rules_dictionary
 
 
@@ -296,6 +381,11 @@ def find_rule(literal, rules_dictionary):
         elif rule_info['lesser_type'] == LESSER:
             if not literal < rule_info['lesser']:
                 continue
+
+        if rule_info['equal_type'] == EQUAL:
+            if not literal == rule_info['equal']:
+                continue
+
         style = {
             "name": rule_info['mark_name'],
             "fill": rule_info['fill'],
@@ -304,6 +394,7 @@ def find_rule(literal, rules_dictionary):
         }
         return style
     return "No corresponding style"
+
 
 
 def csv_to_geojson(url, layer_type):
@@ -322,11 +413,13 @@ def csv_to_geojson(url, layer_type):
     # parse file
     with open(url, 'r', encoding="utf-8-sig") as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',')
+        property_column = find_property_column(sld_file, reader.fieldnames)
+
         for row in reader:
             geom = None
             properties = {}
             srid = row['srid']
-            property_column = find_property_column(sld_file, reader.fieldnames)
+            
             # read each column
             for field in reader.fieldnames:
                 value = row[field]
@@ -346,16 +439,23 @@ def csv_to_geojson(url, layer_type):
                         else:
                             geom = geometry
                     except:
-                        print('Exception raised: could not retrieve/transform geometry from file.')
                         geom = None
                 else:
                     properties[field] = value
                     
+            # prevent None value
+            if row[property_column] == 'None':
+                row[property_column] = 0
+
+            # find property value in rules to retrieve style
             try:
-                if row[property_column] == 'None':
-                    row[property_column] = 0
+                # try to parse number
                 style = find_rule(float(row[property_column]), rule_dictionary)
-            except:
+            except ValueError:
+                # if type is not number
+                style = find_rule(row[property_column], rule_dictionary)
+            except TypeError:
+                # if type is not str or number
                 style = {}
 
             features.append(Feature(geometry=geom, properties=properties, style=style))
@@ -366,6 +466,7 @@ def csv_to_geojson(url, layer_type):
             "name": "EPSG:{0}".format(output_srid)
         }
     }
+
     return FeatureCollection(features, crs=crs)
 
 
