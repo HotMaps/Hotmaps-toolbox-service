@@ -409,7 +409,17 @@ def csv_to_geojson(url, layer_type):
     output_srid = '4326'
     sld_file = helper.get_style_from_geoserver(layer_type)
     rule_dictionary = generate_rule_dictionary(sld_file)
-    
+    filtered_columns = [
+        "year",
+		"month",
+		"day",
+		"weekday",
+		"season",
+		"hour_of_day",
+		"hour_of_year",
+		"date"
+    ]
+
     # parse file
     with open(url, 'r', encoding="utf-8-sig") as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',')
@@ -422,6 +432,10 @@ def csv_to_geojson(url, layer_type):
             
             # read each column
             for field in reader.fieldnames:
+                # remove filtered columns
+                if field in filtered_columns:
+                    continue
+
                 value = row[field]
 
                 # get geometry and reproject (transform)
