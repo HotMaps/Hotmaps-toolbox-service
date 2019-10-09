@@ -18,6 +18,7 @@ from geojson import Feature, FeatureCollection
 from shapely.ops import transform
 import xml.etree.ElementTree as ET
 from urllib.parse import urlparse, parse_qs
+import re
 
 from .. import constants, dbGIS as db
 from ..decorators.exceptions import RequestException
@@ -249,7 +250,44 @@ def extract_query_string_parameters(url):
     except:
         pass
 
+
     return params
+
+
+def build_sld_size_formula(etree_size, operator=''):
+    '''
+    This recursive method will build the formula to compute the size of the SLD graphic.
+    :param etree_size: the size XML tree element from SLD
+    :return: the string containing the formula
+    '''
+    prefix = '{http://www.opengis.net/ogc}'
+    _operator = ''
+
+    children = etree_size.getchildren()
+    formula = ''
+    values = []
+    for child in children:
+        tag = child.tag.replace(prefix, '')
+        if tag == 'Literal':
+            values.append(child.text)
+        elif tag == 'PropertyName':
+            values.append(child.text)
+        else:
+            if tag == 'Add':
+                _operator = '+'
+            elif tag == 'Div':
+                _operator = '/'
+            elif tag == 'Mul':
+                _operator = '*'
+            elif tag == 'Sub':
+                _operator = '-'
+            values.append(build_sld_size_formula(child, _operator))
+
+    formula = '(' + operator.join(values) + ')'
+
+
+    return formula
+
 
 def generate_rule_dictionary(style_sheet):
     '''
@@ -266,6 +304,7 @@ def generate_rule_dictionary(style_sheet):
         'se': 'http://www.opengis.net/se',
         'ogc': 'http://www.opengis.net/ogc'
     }
+    ns_xlink = '{http://www.w3.org/1999/xlink}'
 
     # read rules
     rules = root.findall(".//se:Rule", ns)
@@ -326,6 +365,7 @@ def generate_rule_dictionary(style_sheet):
 
         # identify symbology
         graphic = rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:WellKnownName', ns)
+        external_graphic = None
 
         if graphic is not None:
             mark_name = graphic.text
@@ -342,6 +382,52 @@ def generate_rule_dictionary(style_sheet):
             stroke = '#ffffff'
             size = '30'
 
+            # extract graphic
+            xpath = 'se:PointSymbolizer/se:Graphic'.replace('se:', '{http://www.opengis.net/sld}')
+            graphic = rule.find(xpath)
+            if graphic is not None:
+                # extract external graphic
+                xpath = 'se:ExternalGraphic'.replace('se:', '{http://www.opengis.net/sld}')
+                _external_graphic = graphic.find('se:ExternalGraphic'.replace('se:', '{http://www.opengis.net/sld}'))
+                if _external_graphic is not None:
+                    online_resource = _external_graphic.find('se:OnlineResource'.replace('se:', '{http://www.opengis.net/sld}'), ns)
+                    xlink_resource = online_resource.attrib['{0}href'.format(ns_xlink)] if online_resource is not None else ''
+                    chart_params = extract_query_string_parameters(xlink_resource)
+                    chart_formulas = None
+                    # extract chart formula
+                    try:
+                        # chd = chart data (geoserver SLD)
+                        chd = chart_params['chd'][0]
+                        chd_arr = chd.split(':')
+                        if chd_arr[0] == 't':
+                            # get raw formula from chd
+                            chart_formula_raw = chd_arr[1].replace(' ', '')
+                            # find all formulas used to compute chart (get array of formulas)
+                            chart_formulas = re.findall(r'\$\{([^\}]*)\}', chart_formula_raw)
+                        else:
+                            print('chart data type not supported')
+                    except:
+                        print('error while parsing chart data')
+                        pass
+
+                    try:
+                        graphic_format = _external_graphic.find('se:Format'.replace('se:', '{http://www.opengis.net/sld}')).text
+                    except:
+                        graphic_format = ''
+
+                    # extract formula to compute size
+                    _size = rule.find('se:PointSymbolizer/se:Graphic/se:Size'.replace('se:', '{http://www.opengis.net/sld}'))
+                    if len(_size.getchildren()) > 0:
+                        size_formula = build_sld_size_formula(_size)  # retrieve formula from xml tree
+
+                    # join parameters
+                    external_graphic = {
+                        'type': graphic_format,
+                        'params': chart_params,
+                        'formulas': chart_formulas,
+                        'size_formula': size_formula
+                    }
+
         rules_dictionary[i] = {
             'greater_type': greater_type,
             'lesser_type': lesser_type,
@@ -354,6 +440,9 @@ def generate_rule_dictionary(style_sheet):
             'stroke': stroke,
             'size': size
         }
+
+        if external_graphic is not None:
+            rules_dictionary[i]['external_graphic'] = external_graphic
 
         i += 1
 
@@ -386,14 +475,23 @@ def find_rule(literal, rules_dictionary):
             if not literal == rule_info['equal']:
                 continue
 
+        # standard rule
         style = {
             "name": rule_info['mark_name'],
             "fill": rule_info['fill'],
             "stroke": rule_info['stroke'],
             "size": rule_info['size']
         }
+
+        # handle external graphic (charts)
+        if 'external_graphic' in rule_info.keys():
+            style['external_graphic'] = rule_info['external_graphic']
+
+
         return style
-    return "No corresponding style"
+
+
+    return {}
 
 
 
@@ -473,6 +571,75 @@ def csv_to_geojson(url, layer_type):
                 # if type is not str or number
                 style = {}
 
+            # handle external graphic (charts)
+            if 'external_graphic' in style.keys():
+                external_graphic = style['external_graphic'] 
+                eg_params = external_graphic.get('params', {})
+                eg_formulas = external_graphic.get('formulas', {})
+                eg_size_formula = external_graphic.get('size_formula', None)
+
+                # compute data from SLD formulas & build style
+                data = {}
+                chart_options = {}
+                try:
+                    colors = eg_params['chco'][0].split(',')
+                except:
+                    colors = ['845ec2', 'd65db1', 'ff6f91', 'ff9671', 'ffc75f', 'f9f871', '0081cf', '00dbad', '96ee86', '008f7a']
+                i = 0
+                for f in eg_formulas:
+                    # compute data
+                    data_header = 'Data {}'.format(i)
+                    used_headers = []
+                    for h in reader.fieldnames:
+                        if h in f:
+                            f = f.replace(h, row[h])
+                            used_headers.append(h)
+                    try:
+                        result = eval(f)
+                    except:
+                        result = 0.0
+
+                    if len(used_headers) > 0:
+                        data_header = used_headers[0]
+
+                    data[data_header] = result
+
+                    # chart style
+                    chart_options[data_header] = {
+                        'fillColor': '#{}'.format(colors[i]),
+                        'color': '#ffffff'
+                        #'minValue': 0,
+                        #'maxValue': 20,
+                        #'maxHeight': 20,
+                    }
+
+                    i = i + 1
+
+                # chart type
+                # TODO handle other chart types
+                # default chart type = pie
+                chart_type = 'p'
+                try:
+                    chart_type = eg_params['cht'][0]  # cht = chart type
+                except:
+                    pass
+
+                if chart_type == 'p':
+                    chart_type = 'pie'
+
+                style['name'] = 'chart'
+                style['chart_type'] = chart_type
+                style['data'] = data
+                style['chartOptions'] = chart_options
+                style.pop('external_graphic', None)
+
+                # compute size based on formula
+                try:
+                    style['size'] = eval(eg_size_formula.replace(property_column, row[property_column]))
+                except:
+                    # keep default 'size' if computation fails
+                    pass
+
             features.append(Feature(geometry=geom, properties=properties, style=style))
 
     crs = {
@@ -481,6 +648,7 @@ def csv_to_geojson(url, layer_type):
             "name": "EPSG:{0}".format(output_srid)
         }
     }
+
 
     return FeatureCollection(features, crs=crs)
 
