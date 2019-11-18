@@ -15,3 +15,7 @@ venv3
 README.md
 .cache/
 .cache/*
+testenv/
+pytest_reports/
+
+
