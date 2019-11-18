@@ -755,7 +755,7 @@ class ExportCsvHectare(Resource):
         sql = """SELECT ST_ASTEXT({3}) as geometry_wkt, ST_SRID({3}) as srid, * 
                  FROM {0}.{1} WHERE date = '{2}' 
                  AND ST_Within({0}.{1}.{3}, st_transform(st_geomfromtext('{4}', 4258), ST_SRID({3})
-                 );""".format(schema, layer_name, layer_year, geom_col_name, str(multipolygon))
+                 ));""".format(schema, layer_name, layer_year, geom_col_name, str(multipolygon))
 
         # execute query
         try:
