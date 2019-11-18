@@ -714,6 +714,7 @@ class ExportCsvHectare(Resource):
 
         if not str(layers).endswith('_ha'):
             raise RequestException("this is not a correct layer for an hectare selection !")
+
         # format the layer_name to contain only the name
         layer_name = layers[:-3]
         # build request
@@ -729,9 +730,34 @@ class ExportCsvHectare(Resource):
         # convert array of polygon into multipolygon
         multipolygon = shapely_geom.MultiPolygon(polyArray)
 
-        sql = """SELECT ST_ASTEXT(geometry) as geometry_wkt, ST_SRID(geometry) as srid, * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform(st_geomfromtext('{3}', 4258), 3035))""".format(schema, layer_name, year, str(multipolygon))
+        # handle special case of wwtp where geom column has a different name (manual integration)
+        geom_col_name = 'geometry' if layer_name.startswith('wwtp') else 'geom'
+        
+        # check if year exists otherwise get most recent or fallback to default (1970)
+        date_sql = """SELECT date FROM {0}.{1} GROUP BY date ORDER BY date DESC;""".format(schema, layer_name)
+        
+        try: 
+            results = db.engine.execute(date_sql)
+        except:
+            raise RequestException("Failed retrieving year in database")
 
-        # execute request
+        layer_year = year + '-01-01'
+        dates = []
+        for row in results:
+            dates.append(row[0])
+
+        if len(dates) == 0:
+            layer_year = '1970-01-01'
+        elif layer_year not in dates:
+            layer_year = dates[0]
+
+        # build query
+        sql = """SELECT ST_ASTEXT({3}) as geometry_wkt, ST_SRID({3}) as srid, * 
+                 FROM {0}.{1} WHERE date = '{2}' 
+                 AND ST_Within({0}.{1}.{3}, st_transform(st_geomfromtext('{4}', 4258), ST_SRID({3})
+                 );""".format(schema, layer_name, layer_year, geom_col_name, str(multipolygon))
+
+        # execute query
         try:
             result = db.engine.execute(sql)
         except:
