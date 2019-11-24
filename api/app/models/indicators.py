@@ -624,7 +624,6 @@ layersData = {
             {'table_column': 'mean', 'unit': u'kWh/(m²*yr)','indicator_id':'average','agg_method':'mean_weighted_cell'},
             {'table_column': 'min', 'unit': u'kWh/(m²*yr)','indicator_id':'min','agg_method':'min'},
             {'table_column': 'max', 'unit': u'kWh/(m²*yr)','indicator_id':'max','agg_method':'max'},
-            {'table_column': 'sum', 'unit': 'GWh/yr','indicator_id':'total_radiation','factor':0.01,'agg_method':'sum'},
         		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},	
 			]},
 	WIND_SPEED:{'tablename':WIND_SPEED,
