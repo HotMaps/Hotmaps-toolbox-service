@@ -653,7 +653,7 @@ layersData = {
 			'from_indicator_name':stat + ELECTRICITY_CO2_EMISSION_FACTOR,
 			'data_lvl':[nuts0,nuts1,nuts2,nuts3,lau2,hectare_name],
 			'data_aggregated':False,'indicators':[
-				{'table_column': 'value', 'unit': 'kg/MWh','indicator_id':'density','agg_method':'mean_simple','diss_agg_method':'NUTS_result'}
+				{'table_column': 'value', 'unit': 'kg/MWh_el','indicator_id':'density','agg_method':'mean_simple','diss_agg_method':'NUTS_result'}
 			]
 			},
 }
