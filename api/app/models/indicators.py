@@ -509,7 +509,6 @@ layersData = {
             {'table_column': 'min', 'unit': u'kWh/(m²*yr)','indicator_id':'min','agg_method':'min'},
             {'table_column': 'max', 'unit': u'kWh/(m²*yr)','indicator_id':'max','agg_method':'max'},
         		{'table_column': 'count', 'unit': 'cells','indicator_id':'cells','agg_method':'sum'},
-            {'table_column': 'sum', 'unit': 'GWh/yr','indicator_id':'potential_5_percent','factor':0.0045,'agg_method':'sum'},
 			]
 			},
 	POTENTIAL_SOLARTHERMAL_COLLECTORS_ROOFTOP:{'tablename':POTENTIAL_SOLARTHERMAL_COLLECTORS_ROOFTOP,
