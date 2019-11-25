@@ -32,6 +32,6 @@ redis==2.10.6
 SQLAlchemy==1.0.11
 bcrypt
 Flask-Login
-Shapely==1.5.17
+Shapely==1.6.4
 
 # PYthon 3 => Shapely 1.6.4
