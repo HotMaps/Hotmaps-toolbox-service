@@ -145,7 +145,10 @@ def create_app(config_name):
             "http://hotmapsdev.hevs.ch",
             "http://maps.googleapis.com/maps/api/geocode/",
             "http://maps.googleapis.com/maps/api/",
-            "http://maps.googleapis.com/*"
+            "http://maps.googleapis.com/*",
+            "https://hotmaps.eurac.edu",
+            "https://www.hotmaps.eurac.edu",
+            "https://geoserver.hotmaps.eurac.edu"
         }
         }})
     return app
