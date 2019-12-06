@@ -12,17 +12,18 @@
 
 FROM geographica/gdal2:latest
 
-
-
 ENV CELERY_BROKER_URL amqp://admin:mypass@rabbit:5672/
 ENV CELERY_RESULT_BACKEND redis://redis:6379/0
 ENV C_FORCE_ROOT true
+
 MAINTAINER lesly Houndole <lesly.houndole@crem.ch>
 
 
 # setup volume
 RUN mkdir -p /data
 VOLUME /data
+
+RUN mkdir -p /var/hotmaps/users
 
 
 # Build commands
@@ -36,9 +37,18 @@ RUN apt-get update \
     build-essential \
     software-properties-common \
     wget \
+    gdal-bin \
     ca-certificates \
+    curl \
     gcc \
     git \
+    libpq-dev \
+    libgeos-dev \
+    libgdal-dev \
+    python-gdal \
+    make \
+    python-pip \
+    ssh \
     && apt-get autoremove \
     && apt-get clean
 
@@ -47,12 +57,9 @@ RUN apt-get update \
 
 
 
-
-
-
 # Setup app server
 RUN mkdir -p /data
-COPY . /api
+COPY .. /api
 WORKDIR /api
 
 RUN ls
@@ -65,7 +72,11 @@ RUN apt-get update \
     wget
 
 RUN wget https://bootstrap.pypa.io/get-pip.py
-RUN python get-pip.py
+RUN python3 get-pip.py
+
+RUN pip3 install -r requirements/celery/requirements.txt
+RUN pip3 install gunicorn
+
 
 
 
@@ -84,6 +95,6 @@ RUN python get-pip.py
 COPY . /api
 WORKDIR /api
 
-RUN pip install -r requirements/requirements_celery_queue.txt
+RUN pip3 install -r requirements/requirements_celery_queue.txt
 
 ENTRYPOINT celery -A celery_worker.celery worker --loglevel=info

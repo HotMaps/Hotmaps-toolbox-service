@@ -1,9 +1,12 @@
 import datetime
+import os
+import uuid
 
 from flask_mail import Message
 from flask_restplus import Resource
 from flask_security import SQLAlchemySessionUserDatastore
 from itsdangerous import (URLSafeTimedSerializer, BadSignature, SignatureExpired)
+from flask import request, current_app
 from passlib.hash import bcrypt
 
 from app import celery
@@ -14,14 +17,16 @@ from ..decorators.exceptions import ParameterException, RequestException, Activa
     UserNotActivatedException
 from ..decorators.restplus import api
 from ..decorators.serializers import user_register_input, user_register_output, user_activate_input, \
-    user_activate_output, user_ask_recovery_input, user_ask_recovery_output, user_recovery_output, \
-    user_recovery_input, user_login_input, user_login_output, user_logout_input, user_logout_output, \
-    user_profile_input, user_profile_output, user_get_information_output, user_get_information_input, \
-    upload_space_used_output, upload_space_used_input
+    user_activate_output, user_deletion_input, user_deletion_output, user_ask_recovery_input, \
+    user_ask_recovery_output, user_recovery_output, user_recovery_input, user_login_input, user_login_output, \
+    user_logout_input, user_logout_output, user_profile_input, user_profile_output, user_get_information_output, \
+    user_get_information_input, upload_space_used_output, upload_space_used_input, feedback_output
 from .. import dbGIS as db
 from ..secrets import FLASK_SECRET_KEY, FLASK_SALT
 from ..models.user import User
 from ..models.role import Role
+from ..decorators.parsers import file_upload_feedback
+
 
 # Setup Flask-Security
 user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
@@ -187,7 +192,7 @@ class UserRegistering(Resource):
             msg.add_recipient(email)
             msg.subject = 'Your registration on the HotMaps toolbox'
             msg.body = 'Welcome ' + first_name + ' ' + last_name + ' on the HotMaps toolbox,\n' \
-                                                                   'To finalize your registration on the toolbox, please click on the following link: \n' \
+                       'To finalize your registration on the toolbox, please click on the following link: \n' \
                        + link
 
             mail.send(msg)
@@ -233,6 +238,42 @@ class ActivateUser(Resource):
                 user_to_activate.active = True
                 db.session.commit()
                 output = 'user activated'
+            except Exception as e:
+                raise RequestException(str(e))
+        # output
+        return {
+            "message": output
+        }
+
+
+@ns.route('')
+@api.response(530, 'Request error')
+@api.response(531, 'Missing parameter')
+class DeleteUser(Resource):
+    @api.marshal_with(user_deletion_output)
+    @api.expect(user_deletion_input)
+    @celery.task(name='user deletion')
+    def delete(self):
+        '''
+		The method called to delete a user with a token given by email
+		:return:
+		'''
+        # Entries
+        try:
+            token = api.payload['token']
+        except:
+            raise ParameterException('token')
+
+        # Find mail to activate
+        user = User.verify_auth_token(token)
+        if not user:
+            raise RequestException(str('Can\'t find the user'))
+        else:
+            # activate user
+            try:
+                db.session.delete(user)
+                db.session.commit()
+                output = 'user deleted'
             except Exception as e:
                 raise RequestException(str(e))
         # output
@@ -405,6 +446,7 @@ class GetUserInformation(Resource):
 
         # check token
         user = User.verify_auth_token(token)
+        print(token, user)
         if user is None:
             raise UserUnidentifiedException
 
@@ -468,7 +510,7 @@ def generate_confirmation_token(email):
         })
     user = User.query.filter_by(email=email).first()
     user.active_token = token
-    db.session.commit();
+    db.session.commit()
     return token
 
 
@@ -500,3 +542,52 @@ def load_user(user_id):
 	:return:
 	'''
     return User.query.filter_by(id=user_id).first()
+
+
+
+@ns.route('/feedback', methods=['POST'])
+class FeedbackUser(Resource):
+    @api.marshal_with(feedback_output)
+    @api.expect(file_upload_feedback)
+    @celery.task(name='user feedback')
+    def post(self):
+        args = file_upload_feedback.parse_args()
+        name=args['firstname']
+        email=args['email']
+        company=args['company']
+        feedback_type=args['feedback_type']
+        feedback_priority=args['feedback_priority']
+        title=args['title']
+        description=args['description']
+
+        msg = Message()
+        msg.add_recipient(email)
+        msg.add_recipient(constants.MAIL_FEEDBACK)
+        msg.subject = 'Hotmaps feedback - '+title
+        msg.html = "<h3>{}</h3> \
+            <strong>Date :</strong> {} <br /> \
+            <strong>Firstname / Lastname :</strong> {} <br /> \
+            <strong>Company :</strong> {} <br /> \
+            <strong>Feedback type :</strong> {} <br /> \
+            <strong>Feedback priority :</strong> {} <br /> \
+            <strong>Description :</strong><p>{}</p>".format(title, datetime.date.today(), name,company,feedback_type,feedback_priority, description)
+        
+
+        if 'file' in args and args['file'] is not None:
+            file=args['file']
+            file_upload_path = os.path.join(constants.USER_UPLOAD_FOLDER, str(uuid.uuid4())+'_'+file.filename)
+            file.save(file_upload_path)
+            with open(file_upload_path, 'rb') as f:
+                msg.attach(file.filename, "image/*", f.read())
+            os.remove(file_upload_path)
+        app = current_app._get_current_object()
+        try:
+            self.send_async_mail(msg)
+        except Exception as e:
+            raise RequestException(str(e))
+        
+        return { 'message':'Your feedback has been sent successfully. It will be examined and processed as soon as possible' }
+
+    @celery.task(name='send mail feedback')
+    def send_async_mail(msg):
+        mail.send(msg)

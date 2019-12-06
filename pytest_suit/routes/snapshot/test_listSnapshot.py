@@ -1,56 +1,49 @@
 import requests
 
 from unittest import TestCase
-from . import test_token
-from .. import BASE_URL
+from . import BASE_URL, test_token, test_config
+
+url = BASE_URL + '/snapshot/list'
 
 
-class TestGetUserInformation(TestCase):
+class TestListSnapshot(TestCase):
     def test_post_working(self):
         """
-        this test will pass the user/information method
+        this test will pass the snapshot/list method
         """
-        url = BASE_URL + "/users/information"
-
         payload = {
             "token": test_token
         }
 
         output = requests.post(url, json=payload)
 
-        expected_output = 'hotmapstest@gmail.com'
+        expected_output = test_config
+        assert output.json()['snapshots'][0]['config'] == expected_output
 
-        assert output.json()['email'] == expected_output
-
-    def test_post_missing_parameters(self):
+    def test_post_missing_parameter(self):
         """
         this test will fail because of missing parameters
         """
-        url = BASE_URL + "/users/information"
-
         payload = {
-            "tokentoto": test_token
+            "tokfadsfasden": test_token,
         }
 
         output = requests.post(url, json=payload)
 
-        expected_status= '531'
+        expected_status = '531'
 
         assert output.json()['error']['status'] == expected_status
 
     def test_post_user_unidentified(self):
         """
-        this test will fail because of wrong user token
+        this test will fail because the used token is wrong
         """
-        url = BASE_URL + "/users/information"
-
         payload = {
-            "token": "mybeautifultoken"
+            "token": 'toto',
         }
 
         output = requests.post(url, json=payload)
 
-        expected_status= '539'
+        expected_status = '539'
 
         assert output.json()['error']['status'] == expected_status
-

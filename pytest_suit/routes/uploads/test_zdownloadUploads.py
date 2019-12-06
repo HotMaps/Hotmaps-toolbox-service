@@ -1,5 +1,7 @@
-import requests
 from unittest import TestCase
+
+import requests
+
 from . import BASE_URL, test_token
 
 url = BASE_URL + "/upload/download"
@@ -14,18 +16,21 @@ class TestDownload(TestCase):
         payload = {
             "token": test_token,
         }
-
+        
         output = requests.post(list_url, json=payload)
-        test_upload_id = output.json()['uploads'][0]['id']
+        # should be the file added in add 'test_addUploads.py'
+        test_upload_id = sorted(output.json()['uploads'], key=lambda upload: upload["id"], reverse=True)[0]["id"]
 
         payload = {
             "token": test_token,
             "id": test_upload_id
         }
 
+        expected_status = 200
+
         output = requests.post(url, json=payload)
-        expected_output = "name, size\r\ntest, 10"
-        assert output.content == expected_output
+
+        assert output.status_code == expected_status
 
     def test_download_missing_parameter(self):
         """

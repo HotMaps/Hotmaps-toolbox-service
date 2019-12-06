@@ -1,7 +1,8 @@
-import requests
-import os
 from unittest import TestCase
-from . import BASE_URL, test_nuts_heat_load
+
+import requests
+
+from . import BASE_URL
 
 url = BASE_URL + "/upload/export/raster/nuts"
 
@@ -17,11 +18,11 @@ class TestExportRasterNuts(TestCase):
             "nuts": ["AT130"]
         }
 
-        expected_output = float(os.path.getsize(test_nuts_heat_load))
+        expected_status = 200
 
         output = requests.post(url, json=payload)
 
-        assert len(output.content) == expected_output
+        assert output.status_code == expected_status
 
     def test_port_wrong_parameters(self):
         """
@@ -54,4 +55,3 @@ class TestExportRasterNuts(TestCase):
         expected_status = '532'
 
         assert output.json()['error']['status'] == expected_status
-

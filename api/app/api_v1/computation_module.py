@@ -8,7 +8,7 @@ from app.decorators.serializers import compution_module_class, \
 
 from app.model import register_calulation_module,getUI,getCMList,commands_in_array, run_command
 
-
+from ..models.user import User
 from app import model
 
 from app import helper
@@ -20,18 +20,17 @@ from app import celery
 import requests
 
 from app.decorators.exceptions import ValidationError, ComputationalModuleError
+
 import os
 import json
-from flask import send_from_directory
-
+from flask import send_from_directory, send_file
+from app.constants import UPLOAD_DIRECTORY, DATASET_DIRECTORY
 
 from app import CalculationModuleRpcClient
 
 
 
 #TODO Add url to find  right computation module
-UPLOAD_DIRECTORY = '/var/tmp'
-DATASET_DIRECTORY = '/var/hotmaps/repositories/'
 
 try:
     args = commands_in_array("chmod +x app/helper/gdal2tiles-multiprocess.py")
@@ -99,12 +98,16 @@ class getRasterTile(Resource):
          download a file from the main web service
          :return:
              """
+
+
+
         tile_filename = UPLOAD_DIRECTORY +'/'+directory+"/%d/%d/%d.png" % (z,x,y)
         if not os.path.exists(tile_filename):
             if not os.path.exists(os.path.dirname(tile_filename)):
                 os.makedirs(os.path.dirname(tile_filename))
         try:
-            return Response(open(tile_filename).read(), mimetype='image/png')
+            return send_file(tile_filename, mimetype='image/png')
+            #return Response(open(tile_filename).read())
         except:
             return None
 
@@ -139,35 +142,46 @@ def computeTask(data,payload,cm_id):
     vectors_needed = payload['vectors_needed']
     #retriving scale level 3 possiblity hectare,nuts, lau
     scalevalue = data['scalevalue']
+    nuts_within = None
     if scalevalue == 'hectare':
         #****************** BEGIN RASTER CLIP FOR HECTAR ***************************************************
         areas = payload['areas']
         geom =  helper.area_to_geom(areas)
-        inputs_raster_selection = model.get_raster_from_csv(DATASET_DIRECTORY ,geom,layer_needed, type_layer_needed, UPLOAD_DIRECTORY)
+
+
+        nuts_within = model.nuts_within_the_selection(geom)
+
+        inputs_raster_selection = model.get_raster_from_csv(geom, layer_needed, UPLOAD_DIRECTORY)
         inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, geom)
+        #nut2_nuts3_area =
         #print ('inputs_raster_selection',inputs_raster_selection)
         #****************** FINISH RASTER CLIP FOR HECTAR ***************************************************'
     else:
         #****************** BEGIN RASTER CLIP FOR NUTS OR LAU ***************************************************'
         id_list = payload['nuts']
+
+        nuts_within = model.nuts2_within_the_selection_nuts_lau(scalevalue,id_list)
         shapefile_path = model.get_shapefile_from_selection(scalevalue,id_list,UPLOAD_DIRECTORY)
-        inputs_raster_selection = model.clip_raster_from_shapefile(DATASET_DIRECTORY ,shapefile_path,layer_needed, type_layer_needed, UPLOAD_DIRECTORY)
+        inputs_raster_selection = model.clip_raster_from_shapefile(shapefile_path, layer_needed, UPLOAD_DIRECTORY)
         if vectors_needed != None:
             inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, id_list)
         #****************** FINISH RASTER CLIP FOR NUTS  OR LAU ***************************************************
-    data = generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection)
 
+    data = generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection,nuts_within)
 
     # send the result to the right CM
     #****************** WILL SEND PAYLOAD TO CM WITH ID {} ***************************************************'.format(cm_id))
     calculation_module_rpc = CalculationModuleRpcClient()
     response = calculation_module_rpc.call(cm_id,data.encode('utf-8'))
-    #'****************** RETRIVED RESULT FROM CM WITH ID {} ***************************************************'.format(cm_id))
+    response = response.decode("utf-8")
+
     data_output = json.loads(response)
+    #'****************** RETRIVED RESULT FROM CM WITH ID {} ***************************************************'.format(cm_id))
+
     helper.test_display(data_output)
     #****************** WILL GENERATE TILES ***************************************************'.format(cm_id))
     try:
-        print ('time to generate tilexs generateTiles')
+
         if data_output['result']['raster_layers'] is not None and len(data_output['result']['raster_layers'])>0:
             raster_layers = data_output['result']['raster_layers']
             generateTiles(raster_layers)
@@ -175,49 +189,50 @@ def computeTask(data,payload,cm_id):
         # no raster_layers
         pass
     try:
-
         if data_output['result']['vector_layers'] is not None and len(data_output['result']['vector_layers'])>0:
             vector_layers = data_output['result']['vector_layers']
     except:
         # no vector_layers
         pass
 
-    print ('data_output',json.dumps(data_output))
     return data_output
 
 def generateTiles(raster_layers):
-    print ('generateTiles')
-    print ('raster_layers',raster_layers)
+
+
     for layers in raster_layers:
-        print ('in the loop')
+
+        layer_type = layers['type']
         file_path_input = layers['path']
         directory_for_tiles = file_path_input.replace('.tif', '')
-        intermediate_raster = helper.generate_geotif_name(UPLOAD_DIRECTORY)
+        file_path_output = helper.generate_geotif_name(UPLOAD_DIRECTORY)
         tile_path = directory_for_tiles
         access_rights = 0o755
         try:
             os.mkdir(tile_path, access_rights)
-            print ('tile_path',tile_path)
+
 
         except OSError:
             pass
             print ("Creation of the directory %s failed" % tile_path)
         else:
             pass
-        #import sys
-        #sys.append('app/helper/')
-        args_gdal = commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE ".format(file_path_input, intermediate_raster))
-        args_pyth = commands_in_array("python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {}".format(intermediate_raster, tile_path))
-        run_command(args_gdal)
-        run_command(args_pyth)
-        #com_string = "gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE && python app/helper/gdal2tiles.py -d -p 'mercator' -w 'leaflet' -r 'near' -z 4-11 {} {} ".format(file_path_input,intermediate_raster,intermediate_raster,tile_path)
-        #os.system(com_string)
-        #os.system(com_string)
+
+        if layer_type == 'custom':
+            #convert tif file into geotif file
+            args_gdal = commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE ".format(file_path_input, file_path_output))
+            run_command(args_gdal)
+        else:
+            helper.colorize(layer_type, file_path_input, file_path_output)
+
+        args_tiles = commands_in_array("python3 app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-11' {} {} ".format(file_path_output, tile_path))
+        run_command(args_tiles)
+
         directory_for_tiles = directory_for_tiles.replace(UPLOAD_DIRECTORY+'/', '')
         layers['path'] = directory_for_tiles
-        print ('path', directory_for_tiles)
 
-    print ('finished generate Tiles')
+
+
     return file_path_input, directory_for_tiles
 
 def generate_shape(vector_layers):
@@ -225,7 +240,7 @@ def generate_shape(vector_layers):
         file_path_input = layers['path']
     return file_path_input, file_path_input
 
-def generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection):
+def generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection,nuts):
     inputs = data["inputs"]
     inputs_parameter_selection = {}
     data_output = {}
@@ -234,6 +249,7 @@ def generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_sele
          parameters['input_parameter_name']: parameters['input_value']
         })
     data_output.update({
+        'nuts':nuts,
         'inputs_parameter_selection':inputs_parameter_selection,
         'inputs_raster_selection':inputs_raster_selection,
         'inputs_vector_selection':inputs_vector_selection
@@ -293,4 +309,3 @@ class ComputationTaskStatus(Resource):
 class DeleteTask(Resource):
     def delete(self,task_id):
         return revoke(task_id, terminate=True)
-

@@ -1,29 +1,33 @@
-import StringIO
 import os
 import shutil
-import shapely.geometry as shapely_geom
 import uuid
-from flask_restplus import Resource
 from binascii import unhexlify
-from flask import send_file
+from io import BytesIO
+
+import shapely.geometry as shapely_geom
 from app import celery
-from ..decorators.restplus import api
+from app.constants import USER_UPLOAD_FOLDER, UPLOAD_BASE_NAME, UPLOAD_DIRECTORY
+from flask import send_file
+from flask_restplus import Resource
+
+from .. import dbGIS as db
+from ..decorators.parsers import file_upload
 from ..decorators.restplus import UserUnidentifiedException, ParameterException, RequestException, \
     UserDoesntOwnUploadsException, UploadNotExistingException, \
-    HugeRequestException, NotEnoughPointsException
-from ..decorators.serializers import upload_add_output, upload_list_input, upload_list_output,upload_delete_input, \
+    HugeRequestException, NotEnoughPointsException, UploadFileNotExistingException
+from ..decorators.restplus import api
+from ..decorators.serializers import upload_add_output, upload_list_input, upload_list_output, upload_delete_input, \
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
-    upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input
-from .. import dbGIS as db
-from ..models.uploads import Uploads, generate_tiles, allowed_file, check_map_size, calculate_total_space
+    upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input, \
+    upload_export_cm_layer_input
+from ..models.uploads import Uploads, generate_tiles, allowed_file, generate_geojson, calculate_total_space, \
+    generate_csv_string
 from ..models.user import User
-from ..decorators.parsers import file_upload
 
 nsUpload = api.namespace('upload', description='Operations related to file upload')
 ns = nsUpload
 NUTS_YEAR = "2013"
 LAU_YEAR = NUTS_YEAR
-USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
 
 
 @ns.route('/add')
@@ -53,8 +57,12 @@ class AddUploads(Resource):
         except:
             wrong_parameter.append('name')
         try:
+            layer_type = args['layer_type']
+        except:
+            wrong_parameter.append('layer_type')
+        try:
             file_name = args['file'].filename
-        except Exception as e:
+        except:
             wrong_parameter.append('file')
         try:
             layer = args['layer']
@@ -92,12 +100,12 @@ class AddUploads(Resource):
         user_currently_used_space = calculate_total_space(user.uploads)
 
         if file_name.endswith('.tif'):
-            url = upload_folder + '/grey.tif'
+            url = upload_folder + '/' + UPLOAD_BASE_NAME
         else:
             url = upload_folder + '/data.csv'
 
-        upload = Uploads(name=name, url=url, layer=layer, size=0.0, user_id=user.id, uuid=upload_uuid,
-                         is_generated=1)
+        upload = Uploads(name=name, url=url, layer=layer, layer_type=layer_type, size=0.0, user_id=user.id,
+                         uuid=upload_uuid, is_generated=1)
         db.session.add(upload)
         db.session.commit()
 
@@ -106,9 +114,9 @@ class AddUploads(Resource):
         # save the file on the file_system
         args['file'].save(url)
         if file_name.endswith('.tif'):
-            generate_tiles.delay(upload_folder, url, layer, upload_uuid, user_currently_used_space)
+            generate_tiles.delay(upload_folder, url, layer_type, upload_uuid, user_currently_used_space)
         else:
-            check_map_size(upload_folder, user_currently_used_space, upload_uuid)
+            generate_geojson.delay(upload_folder, layer_type, upload_uuid, user_currently_used_space)
 
         # output
         output = 'file ' + name + ' added for the user ' + user.first_name
@@ -144,7 +152,7 @@ class TilesUploads(Resource):
             raise UserDoesntOwnUploadsException
 
         folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
-
+        print(folder_url)
         tile_filename = folder_url+"/tiles/%d/%d/%d.png" % (z, x, y)
 
         if not os.path.exists(tile_filename):
@@ -152,6 +160,43 @@ class TilesUploads(Resource):
         # send the file to the client
         return send_file(tile_filename,
                          mimetype='image/png')
+
+
+@ns.route('/csv/<string:token>/<string:upload_id>')
+@api.response(530, 'Request error')
+@api.response(531, 'Missing parameter')
+@api.response(539, 'User Unidentified')
+@api.response(543, 'Uploads doesn\'t exists')
+class ReadCsv(Resource):
+    def get(self, token, upload_id):
+        """
+        The method called to get the csv of an upload
+        :return:
+        """
+
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise UserUnidentifiedException
+
+        # find upload to display
+        upload = Uploads.query.filter_by(id=upload_id).first()
+        if upload is None:
+            raise UploadNotExistingException
+
+        # check if the user can display the upload
+        if upload.user_id != user.id:
+            raise UserDoesntOwnUploadsException
+
+        folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
+
+        geoJSON = folder_url+"/data.json"
+
+        if not os.path.exists(geoJSON):
+            raise RequestException("No csv Existing")
+        # send the file to the client
+        return send_file(geoJSON,
+                         mimetype='application/json')
 
 
 @ns.route('/list')
@@ -173,24 +218,29 @@ class ListUploads(Resource):
         except:
             raise ParameterException('token')
 
-        # check token
-        user = User.verify_auth_token(token)
-        if user is None:
-            raise UserUnidentifiedException
-
-        # get the user uploads
-        uploads = user.uploads
+        uploads = self.get_uploads(token)
 
         # output
         return {
             "uploads": uploads
         }
 
+    @staticmethod
+    def get_uploads(token=None):
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise UserUnidentifiedException
+
+        # get the user uploads
+        return user.uploads
+
 
 @ns.route('/delete')
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
+@api.response(541, 'Upload File doesn\'t exists')
 @api.response(543, 'Uploads doesn\'t exists')
 class DeleteUploads(Resource):
     @api.marshal_with(upload_delete_output)
@@ -211,6 +261,7 @@ class DeleteUploads(Resource):
             token = api.payload['token']
         except:
             wrong_parameter.append('token')
+
         # raise exception if parameters are false
         if len(wrong_parameter) > 0:
             exception_message = ''
@@ -235,17 +286,63 @@ class DeleteUploads(Resource):
 
         folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload_to_delete.uuid)
 
+        if os.path.exists(folder_url):
+            # delete the file
+            shutil.rmtree(folder_url)
+        # Force DB deletion
+        elif not ("force" in api.payload and api.payload["force"]):
+            raise UploadFileNotExistingException("blah")
+
         # delete the upload
         db.session.delete(upload_to_delete)
         db.session.commit()
-
-        # delete the file
-        shutil.rmtree(folder_url)
 
         # output
         return {
             "message": "Upload deleted"
         }
+
+
+@ns.route('/export/cmLayer')
+@api.response(530, 'Request error')
+@api.response(531, 'Missing Parameters')
+@api.response(541, 'Upload File doesn\'t exists')
+class ExportCMLayer(Resource):
+    @api.expect(upload_export_cm_layer_input)
+    @celery.task(name='upload export cm layer')
+    def post(self=None):
+        """
+        The method called to export cm layer
+        :return:
+        """
+        wrong_parameter = []
+        try:
+            uuid = api.payload['uuid']
+        except:
+            wrong_parameter.append('uuid')
+        try:
+            type = api.payload['type']
+        except:
+            wrong_parameter.append('type')
+
+        if len(wrong_parameter) > 0:
+            exception_message = ', '.join(wrong_parameter)
+            raise ParameterException(str(exception_message))
+
+        if type == 'vector':
+            path_to_file = UPLOAD_DIRECTORY + '/' + uuid
+            mimetype = 'application/zip'
+        else:
+            file_type = '.tif'
+            mimetype = 'image/TIF'
+            path_to_file = UPLOAD_DIRECTORY + '/' + uuid + file_type
+
+        if not os.path.exists(path_to_file):
+            raise UploadFileNotExistingException(uuid)
+
+        # send the file to the client
+        return send_file(path_to_file,
+                         mimetype=mimetype)
 
 
 @ns.route('/export/raster/nuts')
@@ -340,15 +437,16 @@ class ExportRasterNuts(Resource):
             raise RequestException("There is no result for this selection")
 
         # decode hex_file
+
         hex_file_decoded = unhexlify(hex_file)
 
         # write string buffer
-        str_io = StringIO.StringIO()
-        str_io.write(hex_file_decoded)
-        str_io.seek(0)
+        bt_io = BytesIO()
+        bt_io.write(hex_file_decoded)
+        bt_io.seek(0)
 
         # send the file to the client
-        return send_file(str_io,
+        return send_file(bt_io,
                          mimetype='image/TIF',
                          attachment_filename="hotmaps.tif",
                          as_attachment=True)
@@ -441,15 +539,17 @@ class ExportRasterHectare(Resource):
             raise RequestException('There is no result for this selection')
 
         # decode hex_file
+
         hex_file_decoded = unhexlify(hex_file)
 
         # write string buffer
-        str_io = StringIO.StringIO()
-        str_io.write(hex_file_decoded)
-        str_io.seek(0)
+        #str_io = StringIO.StringIO() patch py3
+        bt_io = BytesIO()
+        bt_io.write(hex_file_decoded)
+        bt_io.seek(0)
 
         # send the file to the client
-        return send_file(str_io,
+        return send_file(bt_io,
                          mimetype='image/TIF',
                          attachment_filename="hotmaps.tif",
                          as_attachment=True)
@@ -505,53 +605,56 @@ class ExportCsvNuts(Resource):
             layer_date = LAU_YEAR
             dateCol = "date"
             schema2 = "public"
+
         else:
             layer_type = 'nuts'
             layer_name = str(layers)[: -6]
             id_type = 'nuts_id'
             layer_date = NUTS_YEAR
+
             if not str(layers).endswith('nuts3'):
                 raise HugeRequestException
 
-        sql = """SELECT * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform((SELECT ST_UNION(geom) from {6}.{3} where {4} = '{5}'""".format(schema, layer_name, year, layer_type, id_type, nuts[0], schema2)
+        # handle special case of wwtp where geom column has a different name (manual integration)
+        geom_col_name = 'geometry' if layer_name.startswith('wwtp') else 'geom'
+        
+        # check if year exists otherwise get most recent or fallback to default (1970)
+        date_sql = """SELECT date FROM {0}.{1} GROUP BY date ORDER BY date DESC;""".format(schema, layer_name)
+       
+        try: 
+            results = db.engine.execute(date_sql)
+        except:
+            raise RequestException("Failed retrieving year in database")
+        
+        layer_year = year + '-01-01'
+        dates = []
+        for row in results:
+            dates.append(row[0])
 
-        # we add the rest of the lau id
-        for nut in nuts[1:]:
-            sql += " OR " + id_type + " = '" + nut + "'"
+        if len(dates) == 0:
+            layer_year = '1970-01-01'
+        elif layer_year not in dates:
+            layer_year = dates[0]
 
-        sql += " AND {0} = '{1}-01-01'), 3035))".format(dateCol, layer_date)
+        # build query
+        sql = """SELECT ST_ASTEXT({9}) as geometry_wkt, ST_SRID({9}) as srid, * FROM {0}.{1} WHERE date = '{2}'
+                 AND ST_Within({0}.{1}.{9}, st_transform(
+                   (SELECT ST_UNION(geom) FROM {6}.{3} WHERE {4} IN ({5}) AND {7} = '{8}-01-01'),
+                   ST_SRID({9})
+                 ));""".format(schema, layer_name, layer_year, layer_type, id_type, ', '.join("'{0}'".format(n) for n in nuts), 
+                               schema2, dateCol, layer_date, geom_col_name)
 
-        # execute request
+        # execute query
         try:
             result = db.engine.execute(sql)
         except:
             raise RequestException("Problem with your SQL query")
 
-        # write csv_file
-        number_of_columns = len(result._metadata.keys)
-        csv_file = ''
-        for header in result._metadata.keys[:-1]:
-            csv_file += header + ', '
-
-        csv_file += result._metadata.keys[number_of_columns - 1] + '\r\n'
-        rowcount = 0
-        for row in result:
-            rowcount += 1
-            for attribute in row[:-1]:
-                    csv_file += str(attribute) + ', '
-            csv_file += str(row[number_of_columns - 1]) + '\r\n'
-
-        # if the result is empty, we raise an error
-        if rowcount is 0:
-            raise RequestException('There is no result for this selection')
-
-        # write string buffer
-        str_io = StringIO.StringIO()
-        str_io.write(csv_file)
-        str_io.seek(0)
+        # build CSV
+        csvResult = generate_csv_string(result)
 
         # send the file to the client
-        return send_file(str_io,
+        return send_file(csvResult,
                          mimetype='text/csv',
                          attachment_filename="hotmaps.csv",
                          as_attachment=True)
@@ -611,6 +714,7 @@ class ExportCsvHectare(Resource):
 
         if not str(layers).endswith('_ha'):
             raise RequestException("this is not a correct layer for an hectare selection !")
+
         # format the layer_name to contain only the name
         layer_name = layers[:-3]
         # build request
@@ -626,38 +730,43 @@ class ExportCsvHectare(Resource):
         # convert array of polygon into multipolygon
         multipolygon = shapely_geom.MultiPolygon(polyArray)
 
-        sql = """SELECT * FROM {0}.{1} WHERE date = '{2}-01-01' AND ST_Within({0}.{1}.geometry, st_transform(st_geomfromtext('{3}', 4258), 3035))""".format(schema, layer_name, year, str(multipolygon))
+        # handle special case of wwtp where geom column has a different name (manual integration)
+        geom_col_name = 'geometry' if layer_name.startswith('wwtp') else 'geom'
+        
+        # check if year exists otherwise get most recent or fallback to default (1970)
+        date_sql = """SELECT date FROM {0}.{1} GROUP BY date ORDER BY date DESC;""".format(schema, layer_name)
+        
+        try: 
+            results = db.engine.execute(date_sql)
+        except:
+            raise RequestException("Failed retrieving year in database")
 
-        # execute request
+        layer_year = year + '-01-01'
+        dates = []
+        for row in results:
+            dates.append(row[0])
+
+        if len(dates) == 0:
+            layer_year = '1970-01-01'
+        elif layer_year not in dates:
+            layer_year = dates[0]
+
+        # build query
+        sql = """SELECT ST_ASTEXT({3}) as geometry_wkt, ST_SRID({3}) as srid, * 
+                 FROM {0}.{1} WHERE date = '{2}' 
+                 AND ST_Within({0}.{1}.{3}, st_transform(st_geomfromtext('{4}', 4258), ST_SRID({3})
+                 ));""".format(schema, layer_name, layer_year, geom_col_name, str(multipolygon))
+
+        # execute query
         try:
             result = db.engine.execute(sql)
         except:
             raise RequestException("Problem with your SQL query")
 
-        # write csv_file
-        number_of_columns = len(result._metadata.keys)
-        csv_file = ''
-        for header in result._metadata.keys[:-1]:
-            csv_file += header + ', '
-        rowcount = 0
-        csv_file += result._metadata.keys[number_of_columns - 1] + '\r\n'
-        for row in result:
-            rowcount += 1
-            for attribute in row[:-1]:
-                    csv_file += str(attribute) + ', '
-            csv_file += str(row[number_of_columns - 1]) + '\r\n'
-
-        # if the result is empty, we raise an error
-        if rowcount is 0:
-            raise RequestException('There is no result for this selection')
-
-        # write string buffer>
-        str_io = StringIO.StringIO()
-        str_io.write(csv_file)
-        str_io.seek(0)
+        csvResult = generate_csv_string(result)
 
         # send the file to the client
-        return send_file(str_io,
+        return send_file(csvResult,
                          mimetype='text/csv',
                          attachment_filename="hotmaps.csv",
                          as_attachment=True)
@@ -668,6 +777,7 @@ class ExportCsvHectare(Resource):
 @api.response(531, 'Missing Parameters')
 @api.response(539, 'User Unidentified')
 @api.response(540, 'User doesn\'t own the upload')
+@api.response(541, 'Upload File doesn\'t exists')
 @api.response(543, 'Uploads doesn\'t exists')
 class Download(Resource):
     @api.expect(upload_download_input)
@@ -712,14 +822,16 @@ class Download(Resource):
 
         url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
 
-        if os.path.exists(url + '/grey.tif'):
-            url += '/grey.tif'
+        if os.path.exists(url + '/' + UPLOAD_BASE_NAME):
+            url += '/'+UPLOAD_BASE_NAME
             extension = '.tif'
             mimetype = 'image/TIFF'
         elif os.path.exists(url + '/data.csv'):
             url += '/data.csv'
-            extension= '.csv'
+            extension = '.csv'
             mimetype = 'text/csv'
+        else:
+            raise UploadFileNotExistingException
 
         # send the file to the client
         return send_file(url,

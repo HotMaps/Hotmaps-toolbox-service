@@ -31,7 +31,8 @@ class User(db.Model, UserMixin):
     confirmed_at = db.Column(db.DateTime())
     active_token = db.Column(db.String(255))
     roles = db.relationship('Role', secondary='user.roles_users', backref=db.backref('user_id', lazy='dynamic'))
-    uploads = db.relationship('Uploads')
+    uploads = db.relationship('Uploads', cascade="delete")
+    snapshots = db.relationship('Snapshots', cascade="delete")
 
     @classmethod
     def get_by_email(cls, email):
@@ -57,7 +58,7 @@ class User(db.Model, UserMixin):
             })
         self.active_token = token
         db.session.commit();
-        return token
+        return str(token, 'utf8')
 
     @staticmethod
     def verify_auth_token(token):
@@ -74,6 +75,7 @@ class User(db.Model, UserMixin):
         except BadSignature:
             return None  # invalid token
         user = User.query.filter_by(id=data['id']).first()
+
         if user.active_token != token:
             return None  # the user has been logout
         return user

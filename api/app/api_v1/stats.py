@@ -1,29 +1,37 @@
 from app import celery
 import logging
 import re
+import os.path
+import pandas as pd
+import numpy as np
+from osgeo import gdal
 
 from flask_restplus import Resource
 from app.decorators.serializers import  stats_layers_hectares_output,\
 	stats_layers_nuts_input, stats_layers_nuts_output,\
-	stats_layers_hectares_input, stats_list_nuts_input, stats_list_label_dataset
+	stats_layers_hectares_input, stats_list_nuts_input, stats_list_label_dataset,stats_layer_personnal_layer_input
 from app.decorators.restplus import api
 from app.decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, ParameterException, RequestException
+from ..models.user import User
 
 from app.models.statsQueries import ElectricityMix
 from app.models.statsQueries import LayersStats
-
+from app.api_v1.upload import Uploads
 
 from app.models.indicators import layersData
 import shapely.geometry as shapely_geom
 
 from app import constants
 
-from app.models import generalData
+from app.models import generalData, indicators
+from app.models.indicators import HEATDEMAND_FACTOR
 from app.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator, createAllLayers,\
-	getTypeScale, adapt_layers_list, adapt_nuts_list, removeScaleLayers, layers_filter, getTypeScale
+	getTypeScale, adapt_layers_list, adapt_nuts_list, removeScaleLayers, layers_filter, getTypeScale, get_result_formatted, generate_geotif_name, area_to_geom, \
+	write_wkt_csv, generate_csv_name,projection_4326_to_3035
 import app
 import json
 from app.model import check_table_existe
+from app import model
 
 
 
@@ -173,7 +181,7 @@ class StatsLayersNutsInArea(Resource):
 		:return:
 		"""
 		# Entries
-		wrong_parameter = [];
+		wrong_parameter = []
 		try:
 			nuts = api.payload['nuts']
 		except:
@@ -194,8 +202,127 @@ class StatsLayersNutsInArea(Resource):
 
 		# Remove scale for each layer
 
+@ns.route('/personnal-layers')
+class StatsPersonalLayers(Resource):
+	@api.marshal_with(stats_layers_nuts_output)
+	@api.expect(stats_layer_personnal_layer_input)
+	def post(self):
+		noDataLayer=[]
+		result=[]
+		#nuts_within = model.nuts2_within_the_selection_nuts_lau('nuts',api.payload['nuts'])
+		#print(nuts_within)
+		areas = api.payload['areas']
+		
+		if api.payload['scale_level'] == 'hectare':
+			areas = area_to_geom(api.payload['areas'])
+			cutline_input = write_wkt_csv(generate_csv_name(constants.UPLOAD_DIRECTORY),projection_4326_to_3035(areas))
+		else:
+			cutline_input = model.get_shapefile_from_selection(api.payload['scale_level'], areas, constants.UPLOAD_DIRECTORY)
+		for pay in api.payload['layers']:
+			values=[]
+			data_file_name=""
+			token = pay['user_token']
+			layer_id = pay['id']
+			layer_type = pay['layer_id']
+			layer_name = pay['layer_name']
+			user = User.verify_auth_token(token)
+			upload = Uploads.query.filter_by(id=layer_id).first()
+			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)+ '/'
+			if layer_name.endswith('.tif'):
+				upload_url += constants.UPLOAD_BASE_NAME
+				filename_tif = generate_geotif_name(constants.UPLOAD_DIRECTORY)
+				#print(filename_tif)
+				args = model.commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(cutline_input,upload_url,filename_tif))
+				model.run_command(args)
+				if os.path.isfile(filename_tif):
+					ds = gdal.Open(filename_tif)
+					arr = ds.GetRasterBand(1).ReadAsArray()
+					df = pd.DataFrame(arr)
+				else:
+					noDataLayer.append(layer_name)
+					continue
+				values = self.set_indicators_in_array(df, layer_type)
+			elif layer_name.endswith('.csv'):
+				upload_url += "data.csv"
+				output_csv = generate_csv_name(constants.UPLOAD_DIRECTORY)
+				cmd_cutline = "ogr2ogr -f 'CSV' -clipsrc {} {} {} -oo GEOM_POSSIBLE_NAMES=geometry_wkt -oo KEEP_GEOM_COLUMNS=NO".format(cutline_input,output_csv, upload_url)
+				args = model.commands_in_array(cmd_cutline)
+				model.run_command(args)
+				if os.path.isfile(output_csv):
+					df = pd.read_csv(output_csv)
+					for ind in indicators.layersData[layer_type]['indicators']:
+						try:
+							values.append(get_result_formatted(layer_type+"_"+ind['table_column'], str(df[ind['table_column']].sum()), ind['unit']))
+						except:
+							noDataLayer.append(layer_name)
+							continue
+				else:
+					noDataLayer.append(layer_name)
+					continue
+			else:
+				noDataLayer.append(layer_name)
+				continue
+			
+			
 
+			result.append({
+				'name':layer_name,
+				'values':values
+			})
+		
+		return {
+				"layers": result,
+				"no_data_layers": noDataLayer,
+				"no_table_layers": noDataLayer
+			}
+		
+	@staticmethod
+	def set_indicators_in_array(df, layer_name):
+		values=[]
+		# Set result in variables
+		df=df[df!=0]
+		counted_cells = df.count().sum()
+		sum_tif = 0
+		min_tif = 0
+		max_tif = 0
+		density_tif = 0
+		if counted_cells != 0:
+			sum_tif = df.sum().sum()
+			min_tif = df.min().min()
+			max_tif = df.max().max()
+			density_tif = sum_tif/counted_cells
+		#print(max_tif,counted_cells,min_tif,max_tif)
+		# Assign indicator to results
+		values.append(get_indicators_from_result('sum', layer_name, sum_tif))
+		values.append(get_indicators_from_result('count', layer_name, counted_cells))
+		values.append(get_indicators_from_result('min', layer_name, min_tif))
+		values.append(get_indicators_from_result('max', layer_name, max_tif))
+		values.append(get_indicators_from_result('mean', layer_name, density_tif))
+		return values
+def get_indicators_from_result(id,layer,result):
+	filtered_indicators = list(filter(lambda x: 'table_column' in x and x['table_column'] == id, indicators.layersData[layer]['indicators']))
+	unit = layer + '_unit_' + id
+	value = result
+	name = layer + '_' + id
+	if len(filtered_indicators)>=1:
+		name = layer + '_' + filtered_indicators[0]['indicator_id']
+		if 'unit' in filtered_indicators[0]: unit = filtered_indicators[0]['unit']
+		if 'factor' in filtered_indicators[0]: value = result*filtered_indicators[0]['factor']
+	return get_result_formatted(name,str(value),unit)
+	
 
+def get_unit(id, layer):
+	filtered_indicators = list(filter(lambda x: 'table_column' in x and x['table_column'] == id,indicators.layersData[layer]['indicators']))
+	try:
+		return list(filter(lambda x: 'table_column' in x and x['table_column'] == id,indicators.layersData[layer]['indicators']))[0]['unit']
+	except IndexError:
+		return layer + '_unit_' + id
+def get_businness_id(id, layer):
+	filtered_indicators = list(filter(lambda x: 'table_column' in x and x['table_column'] == id,indicators.layersData[layer]['indicators']))
+	try:
+		return layer + '_' + filtered_indicators[0]['indicator_id']
+	except IndexError:
+		return layer + '_' + id
 
 @celery.task(name = 'energy_mix_nuts_lau')
 def processGenerationMix(nuts):
@@ -204,4 +331,3 @@ def processGenerationMix(nuts):
 	res = ElectricityMix.getEnergyMixNutsLau(adapt_nuts_list(nuts))
 
 	return res
-

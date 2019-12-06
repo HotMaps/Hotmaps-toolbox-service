@@ -1,0 +1,48 @@
+version: '3.2'
+
+services:
+  rabbit:
+      hostname: rabbit
+      image: rabbitmq:latest
+      environment:
+          - RABBITMQ_DEFAULT_USER=admin
+          - RABBITMQ_DEFAULT_PASS=mypass
+      ports:
+          - "5672:5672"
+      networks:
+          - cm-net
+  api:
+    build:
+      context: ./api
+      dockerfile: dockerfiles/api/Dockerfile
+    ports:
+          - "5000:80"
+    expose:
+          - 80
+    restart: always
+    links:
+         - rabbit
+         - redis
+    depends_on:
+      - redis
+      - rabbit
+    networks:
+        - cm-net
+        - backend
+    volumes:
+        - /var/tmp:/var/tmp
+        - ./pytest_suit/routes/test_assets/repositories:/var/hotmaps/repositories
+
+  redis:
+    image: redis
+    networks:
+          - cm-net
+
+volumes:
+  static-content:
+
+networks:
+  backend:
+    driver: bridge
+  cm-net:
+    driver: bridge

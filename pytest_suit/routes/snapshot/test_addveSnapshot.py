@@ -1,39 +1,34 @@
 import requests
 
 from unittest import TestCase
-from . import test_token
-from .. import BASE_URL
+from . import BASE_URL, test_token, test_config
 
-test_last_name = 'toto'
-test_first_name = 'tata'
+url = BASE_URL + '/snapshot/add'
 
-class TestProfileUser(TestCase):
+
+class TestAddSnapshot(TestCase):
     def test_post_working(self):
         """
-        this test will pass the user/information method
+        this test will pass the snapshot/add method
         """
-        url = BASE_URL + "/users/profile/update"
-
         payload = {
             "token": test_token,
-            "last_name": test_last_name,
-            "first_name": test_first_name
+            "config": test_config
         }
 
         output = requests.post(url, json=payload)
 
-        expected_output = 'User ' + test_last_name + ' ' + test_first_name + ' updated'
+        expected_output = 'snapshot created successfully'
 
         assert output.json()['message'] == expected_output
 
-    def test_post_missing_parameters(self):
+    def test_post_missing_parameter(self):
         """
         this test will fail because of missing parameters
         """
-        url = BASE_URL + "/users/profile/update"
-
         payload = {
-            "tokentoto": test_token
+            "tokfadsfasden": test_token,
+            "config": test_config
         }
 
         output = requests.post(url, json=payload)
@@ -44,14 +39,11 @@ class TestProfileUser(TestCase):
 
     def test_post_user_unidentified(self):
         """
-        this test will fail because of wrong user token
+        this test will fail because the used token is wrong
         """
-        url = BASE_URL + "/users/profile/update"
-
         payload = {
-            "token": "mybeautifultoken",
-            "last_name": test_last_name,
-            "first_name": test_first_name
+            "token": 'toto',
+            "config": test_config
         }
 
         output = requests.post(url, json=payload)
@@ -59,4 +51,3 @@ class TestProfileUser(TestCase):
         expected_status = '539'
 
         assert output.json()['error']['status'] == expected_status
-

@@ -1,3 +1,4 @@
+
 # Flask settings
 #FLASK_SERVER_NAME = '0.0.0.0:80'
 FLASK_SERVER_NAME = '0.0.0.0:5556'
@@ -108,3 +109,10 @@ LAU_TABLE= 'tbl_lau1_2'
 
 NUTS_LAU_LEVELS = {nuts0:0,nuts1:1,nuts2:2,nuts3:3,lau2:4,hectare_name:5}
 scale_level_loadprofile_aggreagtion = [nuts3,lau2]
+
+MAIL_FEEDBACK = 'albain.dufils@crem.ch'
+USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
+
+UPLOAD_BASE_NAME = 'grey.tif'
+UPLOAD_DIRECTORY = '/var/tmp'
+DATASET_DIRECTORY = '/var/hotmaps/repositories/'

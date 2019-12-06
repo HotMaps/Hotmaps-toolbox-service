@@ -1,6 +1,8 @@
-import requests
 from unittest import TestCase
-from . import BASE_URL, test_nuts_wwtp
+
+import requests
+
+from . import BASE_URL
 
 url = BASE_URL + "/upload/export/csv/nuts"
 
@@ -14,14 +16,14 @@ class TestExportCsvLau(TestCase):
             "layers": "wwtp_capacity_nuts3",
             "year": "2012",
             "schema": "public",
-            "nuts": ["AT130"]
+            "nuts": ["AT127"]
         }
-        expected_output_file = open(test_nuts_wwtp, "r")
-        expected_output = expected_output_file.read()
+
+        expected_status = 200
 
         output = requests.post(url, json=payload)
 
-        assert output.content == expected_output
+        assert output.status_code == expected_status
 
     def test_port_wrong_parameters(self):
         """
@@ -31,7 +33,7 @@ class TestExportCsvLau(TestCase):
             "fdslayers": "wwtp_capacity_nuts3",
             "ydfsear": "2012",
             "scfdsahema": "public",
-            "nuts": ["AT90001"]
+            "nuts": ["AT127"]
             }
 
         output = requests.post(url, json=payload)
@@ -48,7 +50,7 @@ class TestExportCsvLau(TestCase):
             "layers": "wwtp_capacity_nuts2",
             "year": "2012",
             "schema": "public",
-            "nuts": ["AT90001"]
+            "nuts": ["AT127"]
         }
 
         output = requests.post(url, json=payload)

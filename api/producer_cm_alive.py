@@ -5,12 +5,12 @@
 
 
 #!/usr/bin/env python
-import pika
+
 import uuid
 import time
 import logging
 import pika
-import json
+
 from app.model import getCMList,delete_cm
 from app import constants
 
@@ -66,15 +66,15 @@ while True :
         for value in enumerate(listofCM):
             time.sleep(constants.TIMEOUT_ALIVE_CM)
             end = time. time()
-            #print(end - start)
+            print(end - start)
 
 
             heart_cm = HeartBeatCalculationModuleProducer()
             cm_id =  value[1]['cm_id']
-            #print(" [HTAPI] Requesting cm_id = ",cm_id)
+            print(" [HTAPI] Requesting cm_id = ",cm_id)
             response = heart_cm.call(constants.RPC_CM_ALIVE + str(cm_id))
             if response is not None:
-                #print("[HTAPI]  is connected to the Calculation module with id: %s ", str(cm_id))
+                print("[HTAPI]  is connected to the Calculation module with id: %s ", str(cm_id))
                 LOGGER.info("[HTAPI]  is connected to the Calculation module with id: %s ", str(cm_id))
             else:
                 LOGGER.info("[HTAPI]  is going to  delete: %s ",str(cm_id))

@@ -1,0 +1,185 @@
+--- gdal2tiles.py	2011-11-24 16:20:02.340068830 +0100
++++ gdal2tiles.py	2011-12-12 00:43:27.741546858 +0100
+@@ -56,11 +56,17 @@
+ 	# 'antialias' resampling is not available
+ 	pass
+ 
++import multiprocessing
++import tempfile
++from optparse import OptionParser, OptionGroup
++
+ __version__ = "$Id: gdal2tiles.py 19288 2010-04-02 18:36:17Z rouault $"
+ 
+ resampling_list = ('average','near','bilinear','cubic','cubicspline','lanczos','antialias')
+ profile_list = ('mercator','geodetic','raster') #,'zoomify')
+ webviewer_list = ('all','google','openlayers','none')
++cpu_count = multiprocessing.cpu_count()
++queue = multiprocessing.Queue()
+ 
+ # =============================================================================
+ # =============================================================================
+@@ -98,8 +104,6 @@
+ Class is available under the open-source GDAL license (www.gdal.org).
+ """
+ 
+-import math
+-
+ MAXZOOMLEVEL = 32
+ 
+ class GlobalMercator(object):
+@@ -627,6 +631,11 @@
+ 		# KML generation
+ 		self.kml = self.options.kml
+ 
++		# parallel processing
++		if self.options.processes:
++			global cpu_count
++			cpu_count = self.options.processes
++
+ 		# Output the results
+ 
+ 		if self.options.verbose:
+@@ -640,7 +649,6 @@
+ 	def optparse_init(self):
+ 		"""Prepare the option parser for input (argv)"""
+ 		
+-		from optparse import OptionParser, OptionGroup
+ 		usage = "Usage: %prog [options] input_file(s) [output]"
+ 		p = OptionParser(usage, version="%prog "+ __version__)
+ 		p.add_option("-p", "--profile", dest='profile', type='choice', choices=profile_list,
+@@ -655,6 +663,8 @@
+ 						  help="Resume mode. Generate only missing files.")
+ 		p.add_option('-a', '--srcnodata', dest="srcnodata", metavar="NODATA",
+ 			  			  help="NODATA transparency value to assign to the input data")
++		p.add_option('--processes', dest='processes', type='int',
++						help='Number of concurrent processes (defaults to the number of cores in the system)')
+ 		p.add_option("-v", "--verbose",
+ 						  action="store_true", dest="verbose",
+ 						  help="Print status messages to stdout")
+@@ -699,7 +709,10 @@
+ 	def open_input(self):
+ 		"""Initialization of the input raster, reprojection if necessary"""
+ 		
++		gdal.UseExceptions()
+ 		gdal.AllRegister()
++		if not self.options.verbose:
++			gdal.PushErrorHandler('CPLQuietErrorHandler')
+ 
+ 		# Initialize necessary GDAL drivers
+ 		
+@@ -816,8 +829,7 @@
+ 
+ 					# Correction of AutoCreateWarpedVRT for NODATA values
+ 					if self.in_nodata != []:
+-						import tempfile
+-						tempfilename = tempfile.mktemp('-gdal2tiles.vrt')
++						fd, tempfilename = tempfile.mkstemp('-gdal2tiles.vrt')
+ 						self.out_ds.GetDriver().CreateCopy(tempfilename, self.out_ds)
+ 						# open as a text file
+ 						s = open(tempfilename).read()
+@@ -851,8 +863,7 @@
+ 					# Correction of AutoCreateWarpedVRT for Mono (1 band) and RGB (3 bands) files without NODATA:
+ 					# equivalent of gdalwarp -dstalpha
+ 					if self.in_nodata == [] and self.out_ds.RasterCount in [1,3]:
+-						import tempfile
+-						tempfilename = tempfile.mktemp('-gdal2tiles.vrt')
++						fd, tempfilename = tempfile.mkstemp('-gdal2tiles.vrt')
+ 						self.out_ds.GetDriver().CreateCopy(tempfilename, self.out_ds)
+ 						# open as a text file
+ 						s = open(tempfilename).read()
+@@ -1139,11 +1150,9 @@
+ 					f.close()
+ 		
+ 	# -------------------------------------------------------------------------
+-	def generate_base_tiles(self):
++	def generate_base_tiles(self, cpu):
+ 		"""Generation of the base tiles (the lowest in the pyramid) directly from the input raster"""
+ 		
+-		print("Generating Base Tiles:")
+-		
+ 		if self.options.verbose:
+ 			#mx, my = self.out_gt[0], self.out_gt[3] # OriginX, OriginY
+ 			#px, py = self.mercator.MetersToPixels( mx, my, self.tmaxz)
+@@ -1183,6 +1192,8 @@
+ 				if self.stopped:
+ 					break
+ 				ti += 1
++				if (ti - 1) % cpu_count != cpu:
++					continue
+ 				tilefilename = os.path.join(self.output, str(tz), str(tx), "%s.%s" % (ty, self.tileext))
+ 				if self.options.verbose:
+ 					print(ti,'/',tcount, tilefilename) #, "( TileMapService: z / x / y )"
+@@ -1191,7 +1202,7 @@
+ 					if self.options.verbose:
+ 						print("Tile generation skiped because of --resume")
+ 					else:
+-						self.progressbar( ti / float(tcount) )
++						queue.put(tcount)
+ 					continue
+ 
+ 				# Create directories for the tile
+@@ -1296,7 +1307,7 @@
+ 						f.close()
+ 					
+ 				if not self.options.verbose:
+-					self.progressbar( ti / float(tcount) )
++					queue.put(tcount)
+ 		
+ 	# -------------------------------------------------------------------------
+ 	def generate_overview_tiles(self):
+@@ -2234,8 +2245,53 @@
+ # =============================================================================
+ # =============================================================================
+ 
++def worker_metadata(argv):
++	gdal2tiles = GDAL2Tiles( argv[1:] )
++	gdal2tiles.open_input()
++	gdal2tiles.generate_metadata()
++
++def worker_base_tiles(argv, cpu):
++	gdal2tiles = GDAL2Tiles( argv[1:] )
++	gdal2tiles.open_input()
++	gdal2tiles.generate_base_tiles(cpu)
++
++def worker_overview_tiles(argv):
++	gdal2tiles = GDAL2Tiles( argv[1:] )
++	gdal2tiles.open_input()
++	gdal2tiles.generate_overview_tiles()
++
+ if __name__=='__main__':
+ 	argv = gdal.GeneralCmdLineProcessor( sys.argv )
+ 	if argv:
+-		gdal2tiles = GDAL2Tiles( argv[1:] )
+-		gdal2tiles.process()
++		tmp = GDAL2Tiles( argv[1:] ) # handle --help
++		del tmp
++
++		p = multiprocessing.Process(target=worker_metadata, args=[argv])
++		p.start()
++		p.join()
++
++		pool = multiprocessing.Pool()
++		processed_tiles = 0
++		print("Generating Base Tiles:")
++		for cpu in range(cpu_count):
++			pool.apply_async(worker_base_tiles, [argv, cpu])
++		pool.close()
++		while len(multiprocessing.active_children()) != 0:
++			try:
++				total = queue.get(timeout=1)
++				processed_tiles += 1
++				gdal.TermProgress_nocb(processed_tiles / float(total))
++				sys.stdout.flush()
++			except:
++				pass
++		pool.join()
++
++		p = multiprocessing.Process(target=worker_overview_tiles, args=[argv])
++		p.start()
++		p.join()
++
++
++
++#############
++# vim:noet
++#############

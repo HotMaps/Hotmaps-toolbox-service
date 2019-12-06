@@ -37,9 +37,18 @@ RUN apt-get update \
     build-essential \
     software-properties-common \
     wget \
+    gdal-bin \
     ca-certificates \
+    curl \
     gcc \
     git \
+    libpq-dev \
+    libgeos-dev \
+    libgdal-dev \
+    python-gdal \
+    make \
+    python-pip \
+    ssh \
     && apt-get autoremove \
     && apt-get clean
 
@@ -48,12 +57,9 @@ RUN apt-get update \
 
 
 
-
-
-
 # Setup app server
 RUN mkdir -p /data
-COPY . /api
+COPY .. /api
 WORKDIR /api
 
 RUN ls
@@ -66,14 +72,12 @@ RUN apt-get update \
     wget
 
 RUN wget https://bootstrap.pypa.io/get-pip.py
-RUN python get-pip.py
+RUN python3 get-pip.py
+
+RUN pip3 install gunicorn
 
 
-RUN pip install -r requirements/requirements.txt
-RUN pip install gunicorn
-
-
-
+RUN pip3 install -r requirements/flower/requirements.txt
 # Install required python modules
 
 
@@ -81,17 +85,11 @@ RUN pip install gunicorn
 
 
 
-EXPOSE 80
-
-# Start server
-
-RUN apt-get update && apt-get install -y supervisor
-RUN mkdir -p /var/log/supervisor
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# CMD ["gunicorn", "--config", "gunicorn-config.py", "--log-config", "app/logging.conf", "run:application"]
-
-# Start processes
-CMD ["/usr/bin/supervisord"]
+EXPOSE 5000
 
 
+
+
+
+
+ENTRYPOINT celery -A celery_worker.celery worker --loglevel=info

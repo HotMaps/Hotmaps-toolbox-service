@@ -17,11 +17,13 @@ class TestDeleteUploads(TestCase):
         }
 
         output = requests.post(list_url, json=payload)
-        test_upload_id = output.json()['uploads'][0]['id']
+        # should be the file added in add 'test_addUploads.py'
+        test_upload_id = sorted(output.json()['uploads'], key=lambda upload: upload["id"], reverse=True)[0]["id"]
 
         payload = {
             "id": test_upload_id,
             "token": test_token,
+            # "force": True # When the file doesn't exist
         }
 
         output = requests.delete(url, json=payload)

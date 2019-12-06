@@ -3,18 +3,23 @@
   <component name="dataSourceStorageLocal">
     <data-source name="data-dev" uuid="39281f3a-382e-419d-b8dd-2795efe70cf7">
       <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="SQLITE" exact-version="0.0" />
+      <schema-mapping />
     </data-source>
     <data-source name="data-dev [2]" uuid="ce53e083-4034-4f3c-b456-df22c58fbb67">
       <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="SQLITE" exact-version="0.0" />
+      <schema-mapping />
     </data-source>
     <data-source name="data" uuid="b9b6e958-0076-4815-8880-e2053dff7a9f">
       <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="SQLITE" exact-version="0.0" />
+      <schema-mapping />
     </data-source>
     <data-source name="" uuid="cf826763-5ce8-4756-8f83-da8b54d2959a">
       <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="SQLITE" exact-version="0.0" />
+      <schema-mapping />
     </data-source>
     <data-source name="calculation_module" uuid="db2cef96-8593-4006-a283-6c9ff5231b42">
       <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="SQLITE" exact-version="0.0" />
+      <schema-mapping />
     </data-source>
   </component>
 </project>

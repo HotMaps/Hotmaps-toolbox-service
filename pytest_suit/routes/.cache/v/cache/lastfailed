@@ -1,0 +1,13 @@
+{
+  "uploads/test_addUploads.py": true,
+  "uploads/test_exportCsvHectare.py": true,
+  "uploads/test_exportCsvLau.py": true,
+  "uploads/test_exportCsvNuts.py": true,
+  "uploads/test_exportRasterHectare.py": true,
+  "uploads/test_exportRasterLau.py": true,
+  "uploads/test_exportRasterNuts.py": true,
+  "uploads/test_listUploads.py": true,
+  "uploads/test_spaceUsedUploads.py": true,
+  "uploads/test_zdownloadUploads.py": true,
+  "uploads/test_zzdeleteUploads.py": true
+}

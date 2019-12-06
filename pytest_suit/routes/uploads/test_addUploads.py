@@ -13,7 +13,7 @@ class TestAddUploads(TestCase):
         this test will pass the uploads/add method
         """
         files = {'file': open(test_csv_file, 'rb')}
-        values = {'token': test_token, 'name': test_upload_name}
+        values = {'token': test_token, 'name': test_upload_name, 'layer_type': "heat"}
 
         output = requests.post(url, files=files, data=values)
 
@@ -25,7 +25,7 @@ class TestAddUploads(TestCase):
         this test will fail because of missing parameters
         """
         files = {'file': open(test_csv_file, 'rb')}
-        values = {'dstoken': test_token, 'sdafname': test_upload_name}
+        values = {'dstoken': test_token, 'sdafname': test_upload_name, 'layer_type': "heat"}
 
         output = requests.post(url, files=files, data=values)
 
@@ -37,10 +37,12 @@ class TestAddUploads(TestCase):
         this test will fail because the used token is wrong
         """
         files = {'file': open(test_csv_file, 'rb')}
-        values = {'token': 'invalidtoken', 'name': test_upload_name}
+        values = {'token': 'invalidtoken', 'name': test_upload_name, 'layer_type': "heat"}
 
         output = requests.post(url, files=files, data=values)
 
         expected_status = '539'
 
         assert output.json()['error']['status'] == expected_status
+
+    

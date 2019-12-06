@@ -211,6 +211,18 @@ stats_layers_hectares_output = api.model('Stats for selected layers, year and ar
     'no_table_layers': fields.List(fields.String(description='Layer'))
 })
 
+stats_layer_personnal_layer = api.model('personnal layer', {
+    'id': fields.Integer(description='Upload id'),
+    'user_token': fields.String(description='User token'),
+    'layer_id': fields.String(description='Default layer that user upload from'),
+    'layer_name': fields.String(description='Upload name')
+})
+stats_layer_personnal_layer_input = api.model('Input for stats on personnal layer', {
+    'layers': fields.List(fields.Nested(stats_layer_personnal_layer)),
+    'nuts': fields.List(fields.String(descriptions='List of NUTS')),
+    'scale_level': fields.String(description='Scale level')
+})
+
 stats_layers_area_nuts_input = api.model('Input for statistics on layers, area and year', {
     'layers': fields.List(fields.String(description='Layer')),
     'nuts_level': fields.String(description='Nuts level'),
@@ -294,6 +306,7 @@ load_profile_aggregation_curve = api.model('Input for load profile duration curv
     'year': fields.Integer(description='Year'),
     'nuts': fields.List(fields.String(descriptions='List of NUTS'))
 })
+
 load_profile_aggregation_curve_output = api.model('Output for load profile duration curve', {
     'points': fields.List(fields.Nested(point_curve))
 })
@@ -322,7 +335,6 @@ stats_layers_nuts_output = api.model('Stats for selected layers, year and area',
     'layers': fields.List(fields.Nested(stats_layer_aggregation)),
     'no_data_layers': fields.List(fields.String(description='Layer')),
     'no_table_layers': fields.List(fields.String(description='Layer'))
-    #'load_profile_month': fields.Nested(load_profile_aggregation_year),
 })
 
 data = api.model('data', {
@@ -402,6 +414,14 @@ user_activate_output = api.model('output for user activation', {
     'message': fields.String(description='message'),
 })
 
+user_deletion_input = api.model('input for user deletion', {
+    'token': fields.String(description='token'),
+})
+
+user_deletion_output = api.model('output for user deletion', {
+    'message': fields.String(description='message'),
+})
+
 user_ask_recovery_input = api.model('input for user password recovery request', {
     'email': fields.String(description='email'),
 })
@@ -428,7 +448,9 @@ user_login_output = api.model('output for user login', {
     'message': fields.String(description='message'),
     'token': fields.String(description='authentification token'),
 })
-
+feedback_output = api.model('output for user feedback', {
+    'message': fields.String(description='message')
+})
 user_logout_input = api.model('input for the user logout', {
     'token': fields.String(description='authentification token'),
 })
@@ -471,6 +493,7 @@ upload_model = api.model('all upload fields', {
     'name': fields.String(description='Upload name'),
     'size': fields.Float(description='size'),
     'layer': fields.String(description='layer'),
+    'layer_type': fields.String(description='layer type'),
     'is_generated': fields.Integer(description='Stat of the tiles generation')
 })
 
@@ -492,8 +515,9 @@ upload_space_used_output = api.model('output for uploads space used function', {
 })
 
 upload_delete_input = api.model('input for uploads deleting', {
-    'token': fields.String(description='authentification token'),
+    "token": fields.String(description='authentification token'),
     "id": fields.Integer(description='Upload id'),
+    "force": fields.Boolean(False, description='force deletion')
 })
 
 upload_delete_output = api.model('output for uploads deleting', {
@@ -520,6 +544,11 @@ upload_export_csv_hectare_input = api.model('input for the hectare upload export
     "year": fields.String(description='year'),
     "schema": fields.String(description='schema'),
     "areas": fields.List(fields.Nested(area))
+})
+
+upload_export_cm_layer_input = api.model('input for the upload export cm layer', {
+    'uuid': fields.String(description='uuid of the layer generated'),
+    'type': fields.String(description='type of the file')
 })
 
 upload_download_input = api.model('input for the upload download.', {
