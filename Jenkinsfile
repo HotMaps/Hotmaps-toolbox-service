@@ -53,7 +53,8 @@ node {
       echo "Deploying to PROD platform"
       commitId = sh(returnStdout: true, script: 'git rev-parse HEAD')
       sshagent(['sshhotmapsdev']) {
-      sh 'ssh -o StrictHostKeyChecking=no -l iig hotmaps.hevs.ch "/var/hotmaps/deploy_backend.sh \$COMMIT_ID"'
+        sh 'ssh -o StrictHostKeyChecking=no -l iig hotmaps.hevs.ch "/var/hotmaps/deploy_backend.sh \$COMMIT_ID"'
+      }
     } else {
       echo "${env.BRANCH_NAME}: not deploying"
     }
