@@ -51,7 +51,9 @@ node {
       }
     } else if (env.BRANCH_NAME == 'master') {
       echo "Deploying to PROD platform"
-      echo "Deployment to PROD is currently disabled"
+      commitId = sh(returnStdout: true, script: 'git rev-parse HEAD')
+      sshagent(['sshhotmapsdev']) {
+      sh 'ssh -o StrictHostKeyChecking=no -l iig hotmaps.hevs.ch "/var/hotmaps/deploy_backend.sh \$COMMIT_ID"'
     } else {
       echo "${env.BRANCH_NAME}: not deploying"
     }
