@@ -180,6 +180,11 @@ def computeTask(data,payload,cm_id):
 
     helper.test_display(data_output)
     #****************** WILL GENERATE TILES ***************************************************'.format(cm_id))
+    print('result',data_output['result']['indicator'] )
+
+    for indicator in data_output['result']['indicator'] :
+        indicator['value'] = str(indicator['value'])
+
     try:
 
         if data_output['result']['raster_layers'] is not None and len(data_output['result']['raster_layers'])>0:
