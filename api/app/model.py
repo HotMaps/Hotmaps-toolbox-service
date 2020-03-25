@@ -340,9 +340,13 @@ def commands_in_array(com_string):
     return split(com_string)
 
 def run_command(arr):
-
-    process = subprocess.Popen(arr, shell=False)
-    process.communicate()
+    process = subprocess.Popen(
+        arr, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    if process.wait():
+        print(f"Not able to execute: {arr}\n returncode: {process.returncode}")
+        stdout, stderr = process.communicate()
+        print(f"stdout:\n{stdout}\nstderr:\n{stderr}")
 
 def nuts2_within_the_selection_nuts_lau(scalevalue, nuts):
     toCRS = 4258
