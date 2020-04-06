@@ -1,5 +1,5 @@
 psycopg2-binary==2.8.2
-python3-pika==0.9.14
+python3-pika
 pika==0.10.0
 aniso8601==1.2.1
 click==6.7
@@ -15,13 +15,13 @@ geojson==1.3.5
 itsdangerous==0.24
 Jinja2==2.9.6
 jsonschema==2.6.0
-lxml==3.8.0
+lxml
 MarkupSafe==1.0
 munch==2.1.1
 numpy==1.16.2
-pandas==0.20.2
+pandas
 passlib
-python-dateutil==2.6.0
+python-dateutil
 pytz==2017.2
 pyproj==2.1.3
 six==1.10.0
@@ -32,6 +32,6 @@ redis==2.10.6
 SQLAlchemy==1.0.11
 bcrypt
 Flask-Login
-Shapely==1.6.4
+Shapely
 
 # PYthon 3 => Shapely 1.6.4
