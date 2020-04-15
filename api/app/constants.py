@@ -116,3 +116,4 @@ USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
 UPLOAD_BASE_NAME = 'grey.tif'
 UPLOAD_DIRECTORY = '/var/tmp'
 DATASET_DIRECTORY = '/var/hotmaps/repositories/'
+SCHEMA_CM = "stat"

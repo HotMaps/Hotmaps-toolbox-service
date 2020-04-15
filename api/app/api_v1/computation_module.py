@@ -175,6 +175,7 @@ def computeTask(data,payload,cm_id):
     response = calculation_module_rpc.call(cm_id,data.encode('utf-8'))
     response = response.decode("utf-8")
 
+
     data_output = json.loads(response)
     #'****************** RETRIVED RESULT FROM CM WITH ID {} ***************************************************'.format(cm_id))
 

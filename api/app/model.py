@@ -6,7 +6,7 @@ except ImportError:
     from pipes import quote
 import subprocess
 from app.secrets import user_db,host_db,password_db,port_db,database_db
-from app.constants import DATASET_DIRECTORY
+from app.constants import DATASET_DIRECTORY,SCHEMA_CM
 from datetime import datetime
 import psycopg2
 import sqlalchemy.pool as pool
@@ -50,6 +50,8 @@ def addRegisterCalulationModule(data):
     """
 
     cm_name = data['cm_name']
+
+    wiki_url = data['wiki_url']
     category = data['category']
     type_layer_needed = data['type_layer_needed']
     authorized_scale = "[]"
@@ -80,7 +82,7 @@ def addRegisterCalulationModule(data):
     createdAt = datetime.utcnow()
     conn = myCMpool.connect()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt,type_layer_needed,authorized_scale,description_link,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ,type_layer_needed,authorized_scale,description_link,vectors_needed,type_vectors_needed))
+    cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt,type_layer_needed,authorized_scale,description_link,vectors_needed,wiki_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ,type_layer_needed,authorized_scale,description_link,vectors_needed,type_vectors_needed,wiki_url))
     cursor.close()
 
 def init_sqlite_caculation_module_database(dbname=DB_NAME):
@@ -92,7 +94,7 @@ def init_sqlite_caculation_module_database(dbname=DB_NAME):
     conn = sqlite3.connect(dbname)
     cursor = conn.cursor()
     cursor.execute("DROP TABLE IF EXISTS calculation_module")
-    cursor.execute("CREATE TABLE calculation_module (cm_id INTEGER NOT NULL, cm_name VARCHAR(255), "
+    cursor.execute("CREATE TABLE calculation_module (cm_id INTEGER NOT NULL, cm_name VARCHAR(255), wiki_url VARCHAR(255),"
                    "cm_description VARCHAR(255),cm_url VARCHAR(255),category VARCHAR(255),layers_needed VARCHAR(255),authorized_scale VARCHAR(255),description_link VARCHAR(255),createdAt REAL(255),updatedAt REAL(255),type_layer_needed REAL(255),vectors_needed REAL(255),type_vectors_needed REAL(255),"
                    " PRIMARY KEY(cm_id))")
     conn.commit()
@@ -109,6 +111,7 @@ def register_calulation_module(data):
         conn = myCMpool.connect()
         cursor = conn.cursor()
         cm_name = data['cm_name']
+        wiki_url = data['wiki_url']
         category = data['category']
         type_layer_needed = data['type_layer_needed']
 
@@ -150,7 +153,7 @@ def register_calulation_module(data):
             description_link = str(description_link)
             vectors_needed = str(vectors_needed)
             type_vectors_needed = str(type_vectors_needed)
-            cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed,type_vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt,tn,authorized_scale,description_link,vectors_needed,type_vectors_needed ))
+            cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed,type_vectors_needed,wiki_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt,tn,authorized_scale,description_link,vectors_needed,type_vectors_needed,wiki_url ))
             conn.commit()
             for value in inputs_calculation_module:
                 input_name = value['input_name']
@@ -176,10 +179,10 @@ def register_calulation_module(data):
         except ValidationError:
             pass
         except sqlite3.IntegrityError as e:
-            update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,type_layer_needed,authorized_scale,description_link,vectors_needed,inputs_calculation_module,cursor,conn,type_vectors_needed)
+            update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,type_layer_needed,authorized_scale,description_link,vectors_needed,inputs_calculation_module,cursor,conn,type_vectors_needed,wiki_url)
 
 
-def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed ,inputs_calculation_module,cursor,conn,type_vectors_needed):
+def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed ,inputs_calculation_module,cursor,conn,type_vectors_needed,wiki_url):
     try:
         ln = str(layers_needed)
         tn = str(type_layer_needed)
@@ -189,7 +192,7 @@ def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, l
 
         type_vectors_needed = str(type_vectors_needed)
 
-        cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? ,  type_layer_needed = ?, authorized_scale = ?,description_link = ?, vectors_needed = ?, type_vectors_needed=?  WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt, tn,auth_s,description_link, vn,type_vectors_needed, cm_id ))
+        cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? ,  type_layer_needed = ?, authorized_scale = ?,description_link = ?, vectors_needed = ?, type_vectors_needed=?, wiki_url=? WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt, tn,auth_s,description_link, vn,type_vectors_needed, wiki_url, cm_id ))
         conn.commit()
         cursor.execute("DELETE FROM inputs_calculation_module WHERE cm_id = ? ", (str(cm_id)))
         conn.commit()
@@ -397,13 +400,40 @@ def retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, area
     :return:
     """
     inputs_vectors_selection = {}
+    table_string = ""
+    where_string = ""
+    print("vectors_needed ",vectors_needed)
+    cpt = 0
+    for vector_table_requested in vectors_needed:
+        table_string = SCHEMA_CM + "." + vector_table_requested +"," +table_string
+        if cpt == 0:
+            where_string = vector_table_requested + ".fk_nuts_gid = subAreas.gid"
+        else:
+            where_string = where_string + " AND " + vector_table_requested + ".fk_nuts_gid = subAreas.gid"
+        cpt = cpt + 1
+    print("table_string ",table_string)
+    print("where_string ",where_string)
 
     for vector_table_requested in vectors_needed:
-        toCRS = 4258
-        sql_query = sql_queries.vector_query(scalevalue,vector_table_requested, area_selected,toCRS)
-        result = query_geographic_database(sql_query)
-        result = helper.retrieve_list_from_sql_result(result)
-        inputs_vectors_selection[vector_table_requested] = result
+        print("vector_table_requested",vector_table_requested)
+
+
+    select_string = '.*,'.join(vectors_needed) + ".*"
+    print("select_string",select_string)
+
+    toCRS = 4258
+    sql_query = sql_queries.vector_query(scalevalue,table_string, area_selected,toCRS,where_string,select_string)
+    result = query_geographic_database(sql_query)
+
+
+
+
+
+    result = helper.retrieve_list_from_sql_result_test(result,vectors_needed)
+    inputs_vectors_selection = result
+
+    print('inputs_vectors_selection ',inputs_vectors_selection)
+
     return inputs_vectors_selection
 
 def get_vectors_needed(cm_id):
@@ -413,6 +443,7 @@ def get_vectors_needed(cm_id):
                             (cm_id))
     conn.commit()
     vectors_needed = vectors_needed.fetchone()[0]
+
     vectors_needed = helper.unicode_array_to_string(vectors_needed)
     conn.close()
     return vectors_needed

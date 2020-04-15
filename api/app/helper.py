@@ -322,7 +322,8 @@ def zipdir(path, ziph):
 def retrieve_list_from_sql_result(results):
     response = []
     for value in results:
-        ##print ('value', value)
+        print ('value', value)
+        print ('results.description', results.description)
         ze_value = {}
         i = 0
         for key in results.description:
@@ -330,15 +331,42 @@ def retrieve_list_from_sql_result(results):
             if isinstance(unicode_string_to_string(value[i]), str):
                 val = unicode_string_to_string(value[i])
                 if val.find('[') == 0: # and value.find(']')==
-                    #print ('value ', val)
+                    print ('value ', val)
                     ze_value[key[0]]= unicode_array_to_string(value[i])
             elif isinstance(value[i], str):
                 val = value[i]
                 if val.find('[') == 0: # and value.find(']')==
-                    #print ('value ', val)
+                    print ('value ', val)
                     ze_value[key[0]]= unicode_array_to_string(value[i])
             i = i + 1
         response.append(ze_value)
+    return response
+
+def retrieve_list_from_sql_result_test(results,vectors_needed):
+    response = {}
+    for key in vectors_needed:
+        response[key] = {}
+    cpt = -1
+    values_raw = []
+    for value in results:
+        values_raw.extend(value)
+    keys = []
+    values = []
+    for val in values_raw:
+        val_string = str(val)
+        values.append(val_string)
+
+    for key in results.description:
+        keys.append(key.name)
+
+    if len(values)== len(keys):
+
+        for i in range(len(values)):
+            if keys[i] == 'id' :
+                cpt = cpt + 1
+            print(vectors_needed[cpt])
+            response[vectors_needed[cpt]].update({ keys[i] : values[i]})
+
     return response
 
 def force_decode(string, codecs=['utf8', 'cp1252']):

@@ -88,6 +88,8 @@ class LayersStats:
 			sql_from = sql_from[:-1]
 			sql_query = sql_with + sql_select + sql_from + ';'
 
+			print("sql_query_ Albain ",sql_query)
+
 
 			# Run the query
 			query_geographic_database_first = model.query_geographic_database_first(sql_query)
