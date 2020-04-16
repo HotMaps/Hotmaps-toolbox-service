@@ -49,7 +49,13 @@ def addRegisterCalulationModule(data):
 
     cm_name = data['cm_name']
 
-    wiki_url = data['wiki_url']
+
+
+    wiki_url = ""
+    try:
+        wiki_url = data['wiki_url']
+    except:
+        pass
     category = data['category']
     type_layer_needed = data['type_layer_needed']
     authorized_scale = "[]"
@@ -109,7 +115,13 @@ def register_calulation_module(data):
         conn = myCMpool.connect()
         cursor = conn.cursor()
         cm_name = data['cm_name']
-        wiki_url = data['wiki_url']
+
+
+        wiki_url = ""
+        try:
+            wiki_url = data['wiki_url']
+        except:
+            pass
         category = data['category']
         type_layer_needed = data['type_layer_needed']
 
