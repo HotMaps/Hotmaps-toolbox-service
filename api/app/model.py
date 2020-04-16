@@ -49,7 +49,7 @@ def addRegisterCalulationModule(data):
 
     cm_name = data['cm_name']
 
-    wiki_url = data['wiki_url']
+
     category = data['category']
     type_layer_needed = data['type_layer_needed']
     authorized_scale = "[]"
@@ -68,10 +68,7 @@ def addRegisterCalulationModule(data):
     except:
         pass
 
-    try:
-        type_vectors_needed = data['type_vectors_needed']
-    except:
-        pass
+
     cm_description = data['cm_description']
     cm_url = data['cm_url']
     cm_Id = data['id']
@@ -80,7 +77,7 @@ def addRegisterCalulationModule(data):
     createdAt = datetime.utcnow()
     conn = myCMpool.connect()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt,type_layer_needed,authorized_scale,description_link,vectors_needed,wiki_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ,type_layer_needed,authorized_scale,description_link,vectors_needed,type_vectors_needed,wiki_url))
+    cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt,type_layer_needed,authorized_scale,description_link,vectors_needed) VALUES (?,?,?,?,?,?,?,?,?,?,?,)", ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ,type_layer_needed,authorized_scale,description_link,vectors_needed))
     cursor.close()
 
 def init_sqlite_caculation_module_database(dbname=DB_NAME):
@@ -92,8 +89,8 @@ def init_sqlite_caculation_module_database(dbname=DB_NAME):
     conn = sqlite3.connect(dbname)
     cursor = conn.cursor()
     cursor.execute("DROP TABLE IF EXISTS calculation_module")
-    cursor.execute("CREATE TABLE calculation_module (cm_id INTEGER NOT NULL, cm_name VARCHAR(255), wiki_url VARCHAR(255),"
-                   "cm_description VARCHAR(255),cm_url VARCHAR(255),category VARCHAR(255),layers_needed VARCHAR(255),authorized_scale VARCHAR(255),description_link VARCHAR(255),createdAt REAL(255),updatedAt REAL(255),type_layer_needed REAL(255),vectors_needed REAL(255),type_vectors_needed REAL(255),"
+    cursor.execute("CREATE TABLE calculation_module (cm_id INTEGER NOT NULL, cm_name VARCHAR(255),"
+                   "cm_description VARCHAR(255),cm_url VARCHAR(255),category VARCHAR(255),layers_needed VARCHAR(255),authorized_scale VARCHAR(255),description_link VARCHAR(255),createdAt REAL(255),updatedAt REAL(255),type_layer_needed REAL(255),vectors_needed REAL(255),"
                    " PRIMARY KEY(cm_id))")
     conn.commit()
     cursor.execute("DROP TABLE IF EXISTS inputs_calculation_module")
@@ -109,7 +106,7 @@ def register_calulation_module(data):
         conn = myCMpool.connect()
         cursor = conn.cursor()
         cm_name = data['cm_name']
-        wiki_url = data['wiki_url']
+
         category = data['category']
         type_layer_needed = data['type_layer_needed']
 
@@ -134,11 +131,6 @@ def register_calulation_module(data):
         except:
             pass
 
-        type_vectors_needed = "[]"
-        try:
-            type_vectors_needed = data['type_vectors_needed']
-        except:
-            pass
 
         updatedAt = datetime.utcnow()
         createdAt = datetime.utcnow()
@@ -150,8 +142,8 @@ def register_calulation_module(data):
             authorized_scale = str(authorized_scale)
             description_link = str(description_link)
             vectors_needed = str(vectors_needed)
-            type_vectors_needed = str(type_vectors_needed)
-            cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed,type_vectors_needed,wiki_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt,tn,authorized_scale,description_link,vectors_needed,type_vectors_needed,wiki_url ))
+
+            cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed,) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt,tn,authorized_scale,description_link,vectors_needed ))
             conn.commit()
             for value in inputs_calculation_module:
                 input_name = value['input_name']
@@ -177,10 +169,10 @@ def register_calulation_module(data):
         except ValidationError:
             pass
         except sqlite3.IntegrityError as e:
-            update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,type_layer_needed,authorized_scale,description_link,vectors_needed,inputs_calculation_module,cursor,conn,type_vectors_needed,wiki_url)
+            update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt,type_layer_needed,authorized_scale,description_link,vectors_needed,inputs_calculation_module,cursor,conn)
 
 
-def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed ,inputs_calculation_module,cursor,conn,type_vectors_needed,wiki_url):
+def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed ,inputs_calculation_module,cursor,conn):
     try:
         ln = str(layers_needed)
         tn = str(type_layer_needed)
@@ -188,9 +180,8 @@ def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, l
         description_link = str(description_link)
         vn = str(vectors_needed)
 
-        type_vectors_needed = str(type_vectors_needed)
 
-        cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? ,  type_layer_needed = ?, authorized_scale = ?,description_link = ?, vectors_needed = ?, type_vectors_needed=?, wiki_url=? WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt, tn,auth_s,description_link, vn,type_vectors_needed, wiki_url, cm_id ))
+        cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? ,  type_layer_needed = ?, authorized_scale = ?,description_link = ?, vectors_needed = ?, WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt, tn,auth_s,description_link, vn, cm_id ))
         conn.commit()
         cursor.execute("DELETE FROM inputs_calculation_module WHERE cm_id = ? ", (str(cm_id)))
         conn.commit()
