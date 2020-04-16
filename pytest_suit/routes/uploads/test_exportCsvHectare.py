@@ -58,10 +58,10 @@ class TestExportCsvHectare(TestCase):
 
         assert output.status_code == expected_status
 
-    """  def test_post_industrial_database_emissions(self):
-      
+    def test_post_industrial_database_emissions(self):
+        """
         this test will pass the upload/export/csv/hectare method
-       
+        """
         payload = {
             "layers": "industrial_database_emissions_ha",
             "year": "1970",
@@ -76,17 +76,17 @@ class TestExportCsvHectare(TestCase):
                 ]
             }]
         }
-    
-        expected_status = 200
-    
-        output = requests.post(url, json=payload)
-    
-        assert output.status_code == expected_status"""
 
-    """def test_post_industrial_database_subsector(self):
- 
+        expected_status = 200
+
+        output = requests.post(url, json=payload)
+
+        assert output.status_code == expected_status
+
+    def test_post_industrial_database_subsector(self):
+        """
         this test will pass the upload/export/csv/hectare method
-     
+        """
         payload = {
             "layers": "industrial_database_subsector_ha",
             "year": "1970",
@@ -106,32 +106,32 @@ class TestExportCsvHectare(TestCase):
 
         output = requests.post(url, json=payload)
 
-        assert output.status_code == expected_status """
+        assert output.status_code == expected_status
 
-    """    def test_post_industrial_database_excess_heat(self):
-         
-            this test will pass the upload/export/csv/hectare method
-          
-            payload = {
-                "layers": "industrial_database_excess_heat_ha",
-                "year": "1970",
-                "schema": "public",
-                "areas": [{
-                    "points":
-                    [
-                        {"lat":48.75075629617738,"lng":2.0764160156250004},
-                        {"lat":49.005447494058096,"lng":2.0764160156250004},
-                        {"lat":49.005447494058096,"lng":2.5048828125000004},
-                        {"lat":48.75075629617738,"lng":2.5048828125000004}
-                    ]
-                }]
-            }
-    
-            expected_status = 200
-    
-            output = requests.post(url, json=payload)
-    
-            assert output.status_code == expected_status """
+    def test_post_industrial_database_excess_heat(self):
+        """
+        this test will pass the upload/export/csv/hectare method
+        """
+        payload = {
+            "layers": "industrial_database_excess_heat_ha",
+            "year": "1970",
+            "schema": "public",
+            "areas": [{
+                "points":
+                [
+                    {"lat":48.75075629617738,"lng":2.0764160156250004},
+                    {"lat":49.005447494058096,"lng":2.0764160156250004},
+                    {"lat":49.005447494058096,"lng":2.5048828125000004},
+                    {"lat":48.75075629617738,"lng":2.5048828125000004}
+                ]
+            }]
+        }
+
+        expected_status = 200
+
+        output = requests.post(url, json=payload)
+
+        assert output.status_code == expected_status
 
     def test_port_wrong_parameters(self):
         """
