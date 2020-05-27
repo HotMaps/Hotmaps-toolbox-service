@@ -12,7 +12,7 @@ node {
       // let some time for the server (API) to start
       sleep 10
       // run script that checks if the API is reachable
-      sh './online_status.sh'
+      //sh './online_status.sh'
     }
     catch (error) {
       // stop services
