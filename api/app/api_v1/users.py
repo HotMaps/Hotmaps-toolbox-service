@@ -562,7 +562,6 @@ class FeedbackUser(Resource):
 
         msg = Message()
         msg.add_recipient(email)
-        msg.add_recipient(constants.MAIL_FEEDBACK)
         msg.subject = 'Hotmaps feedback - '+title
         msg.html = "<h3>{}</h3> \
             <strong>Date :</strong> {} <br /> \
