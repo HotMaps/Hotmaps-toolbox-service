@@ -16,7 +16,7 @@ node {
     }
     catch (error) {
       // stop services
-      sh 'docker-compose down'
+      sh 'docker-compose -f docker-compose-run-api-only.yml down'
       throw exception
     }
   }

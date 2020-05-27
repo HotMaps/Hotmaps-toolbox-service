@@ -173,7 +173,7 @@ def generate_csv_string(result):
         pass
     
     result_io = StringIO()
-    df.to_csv(result_io, index=False)
+    df.to_csv(result_io, index=False, quoting=csv.QUOTE_NONNUMERIC)
     result_io.seek(0)
     
     return result_io

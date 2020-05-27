@@ -613,13 +613,18 @@ class ExportCsvNuts(Resource):
             layer_date = NUTS_YEAR
 
             if not str(layers).endswith('nuts3'):
-                raise HugeRequestException
+                # allow co2 emission factors layer
+                if 'yearly_co2_emission_factors_view' in str(layers):
+                    layer_name = 'yearly_co2_emission_factors_view'
+                else:
+                    raise HugeRequestException
+
 
         # handle special case of wwtp where geom column has a different name (manual integration)
         geom_col_name = 'geometry' if layer_name.startswith('wwtp') else 'geom'
         
-        # check if year exists otherwise get most recent or fallback to default (1970)
-        date_sql = """SELECT date FROM {0}.{1} GROUP BY date ORDER BY date DESC;""".format(schema, layer_name)
+        # check if year exists otherwise get most recent or fallback to default (1970) # timestamp to year if necessary: SELECT TO_CHAR(timestamp :: DATE, 'yyyy')
+        date_sql = """SELECT timestamp FROM {0}.{1} GROUP BY timestamp ORDER BY timestamp DESC;""".format(schema, layer_name)
        
         try: 
             results = db.engine.execute(date_sql)
@@ -637,18 +642,31 @@ class ExportCsvNuts(Resource):
             layer_year = dates[0]
 
         # build query
-        sql = """SELECT ST_ASTEXT({9}) as geometry_wkt, ST_SRID({9}) as srid, * FROM {0}.{1} WHERE date = '{2}'
+        sql = """SELECT ST_ASTEXT({9}) as geometry_wkt, ST_SRID({9}) as srid, * FROM {0}.{1} WHERE timestamp = '{2}'
                  AND ST_Within({0}.{1}.{9}, st_transform(
                    (SELECT ST_UNION(geom) FROM {6}.{3} WHERE {4} IN ({5}) AND {7} = '{8}-01-01'),
                    ST_SRID({9})
-                 ));""".format(schema, layer_name, layer_year, layer_type, id_type, ', '.join("'{0}'".format(n) for n in nuts), 
-                               schema2, dateCol, layer_date, geom_col_name)
-
+                 ));""".format(
+                     schema,        # 0
+                     layer_name,    # 1 
+                     layer_year,    # 2
+                     layer_type,    # 3
+                     id_type,       # 4
+                     ', '.join("'{0}'".format(n) for n in nuts), # 5
+                    schema2,        # 6
+                    dateCol,        # 7
+                    layer_date,     # 8
+                    geom_col_name   # 9
+                )
+        
         # execute query
         try:
             result = db.engine.execute(sql)
         except:
             raise RequestException("Problem with your SQL query")
+
+        if not result.returns_rows or result.rowcount < 1:
+            raise RequestException("There is no data for this selection")
 
         # build CSV
         csvResult = generate_csv_string(result)
@@ -734,7 +752,7 @@ class ExportCsvHectare(Resource):
         geom_col_name = 'geometry' if layer_name.startswith('wwtp') else 'geom'
         
         # check if year exists otherwise get most recent or fallback to default (1970)
-        date_sql = """SELECT date FROM {0}.{1} GROUP BY date ORDER BY date DESC;""".format(schema, layer_name)
+        date_sql = """SELECT timestamp FROM {0}.{1} GROUP BY timestamp ORDER BY timestamp DESC;""".format(schema, layer_name)
         
         try: 
             results = db.engine.execute(date_sql)
@@ -753,7 +771,7 @@ class ExportCsvHectare(Resource):
 
         # build query
         sql = """SELECT ST_ASTEXT({3}) as geometry_wkt, ST_SRID({3}) as srid, * 
-                 FROM {0}.{1} WHERE date = '{2}' 
+                 FROM {0}.{1} WHERE timestamp = '{2}' 
                  AND ST_Within({0}.{1}.{3}, st_transform(st_geomfromtext('{4}', 4258), ST_SRID({3})
                  ));""".format(schema, layer_name, layer_year, geom_col_name, str(multipolygon))
 
