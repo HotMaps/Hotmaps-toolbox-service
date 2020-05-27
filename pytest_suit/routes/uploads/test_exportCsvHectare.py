@@ -64,7 +64,7 @@ class TestExportCsvHectare(TestCase):
         """
         payload = {
             "layers": "industrial_database_emissions_ha",
-            "year": "1970",
+            "year": "2014",
             "schema": "public",
             "areas": [{
                 "points":
@@ -89,7 +89,7 @@ class TestExportCsvHectare(TestCase):
         """
         payload = {
             "layers": "industrial_database_subsector_ha",
-            "year": "1970",
+            "year": "2014",
             "schema": "public",
             "areas": [{
                 "points":
@@ -114,7 +114,7 @@ class TestExportCsvHectare(TestCase):
         """
         payload = {
             "layers": "industrial_database_excess_heat_ha",
-            "year": "1970",
+            "year": "2014",
             "schema": "public",
             "areas": [{
                 "points":
