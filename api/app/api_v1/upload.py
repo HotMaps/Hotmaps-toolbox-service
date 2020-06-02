@@ -607,17 +607,18 @@ class ExportCsvNuts(Resource):
             schema2 = "public"
 
         else:
+            scale = str(layers)[-5:]
             layer_type = 'nuts'
             layer_name = str(layers)[: -6]
             id_type = 'nuts_id'
             layer_date = NUTS_YEAR
 
-            if not str(layers).endswith('nuts3'):
+            if scale not in ['nuts3', 'nuts2', 'nuts1', 'nuts0']:
                 # allow co2 emission factors layer
                 if 'yearly_co2_emission_factors_view' in str(layers):
                     layer_name = 'yearly_co2_emission_factors_view'
                 else:
-                    raise HugeRequestException
+                    raise HugeRequestException(message=scale)
 
 
         # handle special case of wwtp where geom column has a different name (manual integration)
