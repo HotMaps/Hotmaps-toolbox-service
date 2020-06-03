@@ -256,7 +256,7 @@ class Consumer(object):
             headers = {'Content-Type':  'application/json'}
             ip = socket.gethostbyname(socket.gethostname())
 
-            base_url = 'http://'+ str(ip) +':'+str(constants.PORT)+'/api/cm/register/'
+            base_url = 'http://'+ str(ip) +':'+str(constants.API_PORT)+'/api/cm/register/'
             LOGGER.info('base_url is %s', base_url)
             LOGGER.info('body is %s', body)
             LOGGER.info('type  of body is %s', type(body))

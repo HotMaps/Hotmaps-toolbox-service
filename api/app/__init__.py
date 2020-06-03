@@ -1,5 +1,5 @@
 
-from flask import Flask,g
+from flask import Flask, g
 import logging.config
 import sys
 import os

@@ -5,8 +5,7 @@ try:
 except ImportError:
     from pipes import quote
 import subprocess
-from app.secrets import user_db,host_db,password_db,port_db,database_db
-from app.constants import DATASET_DIRECTORY
+from app.constants import DATASET_DIRECTORY, USER_DB,HOST_DB,PASSWORD_DB,PORT_DB,DATABASE_DB
 from datetime import datetime
 import psycopg2
 import sqlalchemy.pool as pool
@@ -295,7 +294,7 @@ def getConnection_db_gis():
     return c
 
 def get_connection_string():
-    con = "host=" + host_db + " user=" + user_db + " dbname=" + database_db + " port=" + port_db + " password=" + password_db + ""
+    con = "host=" + HOST_DB + " user=" + USER_DB + " dbname=" + DATABASE_DB + " port=" + PORT_DB + " password=" + PASSWORD_DB + ""
     return con
 
 def get_shapefile_from_selection(scalevalue, id_selected_list, ouput_directory, EPSG=str(3035)):
