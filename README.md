@@ -29,9 +29,11 @@ The `docker-compose.yml` file should be place on the root directory of your proj
 
 You can also run the toolbox without reverse proxy, wiki and geoserver using the `docker-compose-local.yml`.
 
-`.env` files should be place at the root of each repository (if necessary).
+`.env` config. files should be place at the root of each repository (if necessary) to set the configuration of each service.
 
 ##### Project structure
+
+**
 
 - root /
   - toolbox-service /
@@ -51,6 +53,7 @@ You can also run the toolbox without reverse proxy, wiki and geoserver using the
     - CM2 /
   - docker-compose.yml
   - docker-compose-local.yml
+  - nginx.tmpl (config. file for dockergen service)
 
 
 #### Run
