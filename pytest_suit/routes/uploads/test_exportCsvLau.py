@@ -42,19 +42,20 @@ class TestExportCsvLau(TestCase):
 
         assert output.json()['error']['status'] == expected_status
 
-    def test_post_huge_request(self):
-        """
-        this test will pass the upload/export/csv/hectare method
-        """
-        payload = {
-            "layers": "wwtp_capacity_lau1",
-            "year": "2012",
-            "schema": "public",
-            "nuts": ["AT30639"]
-        }
+    # This no longer applies (LAU1 is not used anymore and CSV can be exported up to NUTS2 level)
+    # def test_post_huge_request(self):
+    #     """
+    #     this test will pass the upload/export/csv/hectare method
+    #     """
+    #     payload = {
+    #         "layers": "wwtp_capacity_lau1",
+    #         "year": "2012",
+    #         "schema": "public",
+    #         "nuts": ["AT30639"]
+    #     }
 
-        output = requests.post(url, json=payload)
+    #     output = requests.post(url, json=payload)
 
-        expected_status = '532'
+    #     expected_status = '532'
 
-        assert output.json()['error']['status'] == expected_status
+    #     assert output.json()['error']['status'] == expected_status
