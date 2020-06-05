@@ -42,19 +42,20 @@ class TestExportCsvLau(TestCase):
 
         assert output.json()['error']['status'] == expected_status
 
-    def test_post_huge_request(self):
-        """
-        this test will fail because the given layer is not correct
-        """
-        payload = {
-            "layers": "wwtp_capacity_nuts2",
-            "year": "2012",
-            "schema": "public",
-            "nuts": ["AT127"]
-        }
+    # This no longer applies (CSV can be exported up to NUTS2 level and even NUTS0 in some cases)
+    # def test_post_huge_request(self):
+    #     """
+    #     this test will fail because the given layer is not correct
+    #     """
+    #     payload = {
+    #         "layers": "wwtp_capacity_nuts0",
+    #         "year": "2012",
+    #         "schema": "public",
+    #         "nuts": ["FR"]
+    #     }
 
-        output = requests.post(url, json=payload)
+    #     output = requests.post(url, json=payload)
 
-        expected_status = '532'
+    #     expected_status = '532'
 
-        assert output.json()['error']['status'] == expected_status
+    #     assert output.json()['error']['status'] == expected_status
