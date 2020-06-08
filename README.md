@@ -14,12 +14,12 @@ The Hotmaps toolbox is built around several services:
 All these services are built around Docker.
 A docker-compose.yml file allows to configure and run the whole project in one place. Only the database is run separatly.
 
-### Build, configure and run:
-#### Build
+## Build, configure and run:
+### Build
 Dockerfiles are available to build the project manually. 
 A docker-compose.yml file is available to build all the services.
 
-#### Configure
+### Configure
 
 First configure all the services in docker-compose.yml.
 Make sure the volume bindings, build and environment paths fits your project on your host machine.
@@ -31,7 +31,7 @@ You can also run the toolbox without reverse proxy, wiki and geoserver using the
 
 `.env` config. files should be place at the root of each repository (if necessary) to set the configuration of each service.
 
-##### Project structure
+#### Project structure
 
 **
 
@@ -56,7 +56,7 @@ You can also run the toolbox without reverse proxy, wiki and geoserver using the
   - nginx.tmpl (config. file for dockergen service)
 
 
-#### Run
+### Run
 
 First, run the database, either using Docker or using an external service. The database should have 4 schemas:
 - geo
@@ -71,3 +71,16 @@ To populate the database, refer to the official Hotmaps [Wiki](https://wiki.hotm
 Run the project using docker-compose:
 `docker-compose up -d --build`
 
+## Release
+
+To release the project to a server, use the file `docker-compose.yml`.
+This file is using a reverse proxy (nginx) automatically 
+Your server should have: 
+- 4 subdomains 'wiki', 'geoserver', 'api' and 'www'
+    - edit `docker-compose.yml`: replace all VIRTUAL_HOST, VIRTUAL_PORT and LETSENCRYPT_HOST + LETSENCRYPT_EMAIL to match your own configuration
+- min ports to open: 80/443 
+- 1 postgis database setup somewhere
+- 1 geoserver setup somewhere (or use the one in the docker-compose)
+    - edit `web.xml` to match your own domain (`web.xml` is the one shared in the `docker-compose.yml`, especially the CORS)
+- 1 gurobi v8 license for some calculation modules
+- nginx.tmpl configured for the server url
