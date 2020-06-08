@@ -545,6 +545,18 @@ upload_export_csv_hectare_input = api.model('input for the hectare upload export
     "schema": fields.String(description='schema'),
     "areas": fields.List(fields.Nested(area))
 })
+upload_export_cut_nuts_input = api.model('input for the nuts export a cutted shape to csv', {
+    "layers": fields.String(description='layer'),
+    "year": fields.String(description='year'),
+    "schema": fields.String(description='schema'),
+    "nuts": fields.List(fields.String())
+})
+upload_export_cut_hectare_input = api.model('input for the hectare upload export a cutted shape to csv', {
+    "layers": fields.String(description='layer'),
+    "year": fields.String(description='year'),
+    "schema": fields.String(description='schema'),
+    "areas": fields.List(fields.Nested(area))
+})
 
 upload_export_cm_layer_input = api.model('input for the upload export cm layer', {
     'uuid': fields.String(description='uuid of the layer generated'),
