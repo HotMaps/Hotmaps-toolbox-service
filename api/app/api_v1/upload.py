@@ -20,8 +20,8 @@ from ..decorators.serializers import upload_add_output, upload_list_input, uploa
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
     upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input, \
     upload_export_cm_layer_input, upload_export_cut_hectare_input, upload_export_cut_nuts_input
-from ..helper.filesystem import FileSystem
-from ..models.uploads import Uploads, generate_tiles, allowed_file, generate_geojson, calculate_total_space
+from ..models.uploads import Uploads, generate_tiles, allowed_file, generate_geojson, calculate_total_space, \
+    generate_csv_string
 from ..models.user import User
 
 nsUpload = api.namespace('upload', description='Operations related to file upload')
@@ -708,7 +708,7 @@ class ExportCutNuts(Resource):
         csvResult = get_csv_from_nuts(layers=layers, nuts=nuts, schema=schema, year=year)
 
         # save the file in the filesystem
-        return FileSystem.save_temp_file(csvResult)
+        return save_file_csv_random_name(csvResult)
 
 
 @ns.route('/export/cut/hectare')
@@ -754,7 +754,7 @@ class ExportCutHectare(Resource):
         csvResult = get_csv_from_nuts(layers=layers, nuts=nuts, schema=schema, year=year)
 
         # return the path of the file we want to save
-        return FileSystem.save_file(content=csvResult)
+        return save_file_csv_random_name(content=csvResult)
 
 
 @ns.route('/download')
@@ -828,11 +828,11 @@ class Download(Resource):
 def get_csv_from_nuts(layers, nuts, schema, year):
     """
     This method will generate a CSV from a nuts or list of nuts
-    :param layers:
-    :param nuts:
-    :param schema:
-    :param year:
-    :return:
+    :param layers: the layer selected
+    :param nuts: the selection
+    :param schema: the schema of the layer in the DB
+    :param year: the year of the data
+    :return:the csv containing the results
     """
     # We must determine if it is a nuts or a lau
     dateCol = "year"
@@ -900,11 +900,18 @@ def get_csv_from_nuts(layers, nuts, schema, year):
     if not result.returns_rows or result.rowcount < 1:
         raise RequestException("There is no data for this selection")
     # build CSV
-    csvResult = generate_csv_string(result)
-    return csvResult
+    return generate_csv_string(result)
 
 
 def get_csv_from_hectare(areas, layers, schema, year):
+    """
+    this method will generate a csv from hectare selection
+    :param areas:  the selection
+    :param layers: the layer selected
+    :param schema: the schema of the layer in the db
+    :param year: the year of the data
+    :return: the csv containing the results
+    """
     if not str(layers).endswith('_ha'):
         raise RequestException("this is not a correct layer for an hectare selection !")
     # format the layer_name to contain only the name
@@ -947,5 +954,19 @@ def get_csv_from_hectare(areas, layers, schema, year):
         result = db.engine.execute(sql)
     except:
         raise RequestException("Problem with your SQL query")
-    csvResult = generate_csv_string(result)
-    return csvResult
+
+    return generate_csv_string(result)
+
+
+def save_file_csv_random_name(content: str):
+    """
+    Save a file into a temp folder with a random name
+    :param content: the content of the file you want to write
+    :return random_name: the name randomly generated
+    """
+    random_name = uuid.uuid4().hex
+    path = UPLOAD_DIRECTORY + '/' + content + '.csv'
+    f = open(path, 'w')
+    f.write(content)
+    f.close()
+    return random_name
