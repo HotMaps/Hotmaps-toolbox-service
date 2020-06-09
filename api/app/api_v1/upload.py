@@ -19,7 +19,7 @@ from ..decorators.restplus import api
 from ..decorators.serializers import upload_add_output, upload_list_input, upload_list_output, upload_delete_input, \
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
     upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input, \
-    upload_export_cm_layer_input, upload_export_cut_hectare_input, upload_export_cut_nuts_input
+    upload_export_cm_layer_input
 from ..models.uploads import Uploads, generate_tiles, allowed_file, generate_geojson, calculate_total_space, \
     generate_csv_string
 from ..models.user import User
@@ -594,11 +594,10 @@ class ExportCsvNuts(Resource):
                 if i != len(wrong_parameter) - 1:
                     exception_message += ', '
             raise ParameterException(str(exception_message))
-
-        csvResult = get_csv_from_nuts(layers=layers, nuts=nuts, schema=schema, year=year)
+        csv_result = get_csv_from_nuts(layers=layers, nuts=nuts, schema=schema, year=year)
 
         # send the file to the client
-        return send_file(csvResult,
+        return send_file(csv_result,
                          mimetype='text/csv',
                          attachment_filename="hotmaps.csv",
                          as_attachment=True)
@@ -656,105 +655,13 @@ class ExportCsvHectare(Resource):
                     exception_message += ', '
             raise ParameterException(str(exception_message))
 
-        csvResult = get_csv_from_hectare(areas=areas, layers=layers, schema=schema, year=year)
+        csv_result = get_csv_from_hectare(areas=areas, layers=layers, schema=schema, year=year)
 
         # send the file to the client
-        return send_file(csvResult,
+        return send_file(csv_result,
                          mimetype='text/csv',
                          attachment_filename="hotmaps.csv",
                          as_attachment=True)
-
-
-@ns.route('/export/cut/nuts')
-@api.response(530, 'Request error')
-@api.response(531, 'Missing Parameters')
-@api.response(532, 'Request too big')
-class ExportCutNuts(Resource):
-    @api.expect(upload_export_cut_nuts_input)
-    @celery.task(name='upload export cut nuts')
-    def post(self=None):
-        """
-        The method called to cut a given list of nuts into a csv
-        :return:
-        """
-        # Entries
-        wrong_parameter = []
-        try:
-            year = api.payload['year']
-        except:
-            wrong_parameter.append('year')
-        try:
-            layers = api.payload['layers']
-        except:
-            wrong_parameter.append('layers')
-        try:
-            nuts = api.payload['nuts']
-        except:
-            wrong_parameter.append('nuts')
-        try:
-            schema = api.payload['schema']
-        except:
-            schema = 'geo'
-
-        # raise exception if parameters are false
-        if len(wrong_parameter) > 0:
-            exception_message = ''
-            for i in range(len(wrong_parameter)):
-                exception_message += wrong_parameter[i]
-                if i != len(wrong_parameter) - 1:
-                    exception_message += ', '
-            raise ParameterException(str(exception_message))
-
-        csvResult = get_csv_from_nuts(layers=layers, nuts=nuts, schema=schema, year=year)
-
-        # save the file in the filesystem
-        return save_file_csv_random_name(csvResult)
-
-
-@ns.route('/export/cut/hectare')
-@api.response(530, 'Request error')
-@api.response(531, 'Missing Parameters')
-@api.response(532, 'Request too big')
-class ExportCutHectare(Resource):
-    @api.expect(upload_export_cut_hectare_input)
-    @celery.task(name='upload export cut hectare')
-    def post(self=None):
-        """
-        The method called to export a given list of nuts into a csv
-        :return:
-        """
-        # Entries
-        wrong_parameter = []
-        try:
-            year = api.payload['year']
-        except:
-            wrong_parameter.append('year')
-        try:
-            layers = api.payload['layers']
-        except:
-            wrong_parameter.append('layers')
-        try:
-            nuts = api.payload['nuts']
-        except:
-            wrong_parameter.append('nuts')
-        try:
-            schema = api.payload['schema']
-        except:
-            schema = 'geo'
-
-        # raise exception if parameters are false
-        if len(wrong_parameter) > 0:
-            exception_message = ''
-            for i in range(len(wrong_parameter)):
-                exception_message += wrong_parameter[i]
-                if i != len(wrong_parameter) - 1:
-                    exception_message += ', '
-            raise ParameterException(str(exception_message))
-
-        csvResult = get_csv_from_nuts(layers=layers, nuts=nuts, schema=schema, year=year)
-
-        # return the path of the file we want to save
-        return save_file_csv_random_name(content=csvResult)
 
 
 @ns.route('/download')
@@ -860,7 +767,8 @@ def get_csv_from_nuts(layers, nuts, schema, year):
                 raise HugeRequestException(message=scale)
     # handle special case of wwtp where geom column has a different name (manual integration)
     geom_col_name = 'geometry' if layer_name.startswith('wwtp') else 'geom'
-    # check if year exists otherwise get most recent or fallback to default (1970) # timestamp to year if necessary: SELECT TO_CHAR(timestamp :: DATE, 'yyyy')
+    # check if year exists otherwise get most recent or fallback to default (1970)
+    # timestamp to year if necessary: SELECT TO_CHAR(timestamp :: DATE, 'yyyy')
     date_sql = """SELECT timestamp FROM {0}.{1} GROUP BY timestamp ORDER BY timestamp DESC;""".format(schema,
                                                                                                       layer_name)
     try:
@@ -958,15 +866,3 @@ def get_csv_from_hectare(areas, layers, schema, year):
     return generate_csv_string(result)
 
 
-def save_file_csv_random_name(content: str):
-    """
-    Save a file into a temp folder with a random name
-    :param content: the content of the file you want to write
-    :return random_name: the name randomly generated
-    """
-    random_name = uuid.uuid4().hex
-    path = UPLOAD_DIRECTORY + '/' + content + '.csv'
-    f = open(path, 'w')
-    f.write(content)
-    f.close()
-    return random_name
