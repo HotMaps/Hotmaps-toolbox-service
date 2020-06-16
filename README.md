@@ -27,13 +27,13 @@ If `.env` files are mentionned in the `docker-compose.yml`, update their content
 
 The `docker-compose.yml` file should be place on the root directory of your project (where all you repositories are cloned).
 
-You can also run the toolbox without reverse proxy, wiki and geoserver using the `docker-compose-local.yml`.
+You can also run the toolbox without reverse proxy, wiki and geoserver using the `docker-compose-local.yml` (and place it also at the root of your project).
 
 `.env` config. files should be place at the root of each repository (if necessary) to set the configuration of each service.
 
+
 #### Project structure
 
-**
 
 - root /
   - toolbox-service /
@@ -55,6 +55,19 @@ You can also run the toolbox without reverse proxy, wiki and geoserver using the
   - docker-compose-local.yml
   - nginx.tmpl (config. file for dockergen service)
 
+**Notes**
+
+Wiki:
+- the wiki image is pulled by the docker-compose
+    - image and doc: [hotmaps/gollum](https://hub.docker.com/r/hotmaps/gollum)
+- pull the wiki repository (the content of the wiki) to the root of your project according to structure
+    - repository: [Official Hotmaps wiki](https://github.com/HotMaps/wiki/)
+    - you can of cours configure your own repository for the content
+- you should provide a valid ssh key to your wiki in order to push the modifications to the remote
+    - config. in docker-compose.yml/wiki/volumes/.ssh
+- `.env`: 
+    - there is an .env.example in the wiki content [repository](https://github.com/HotMaps/wiki/)
+    - you can find all options and environment variables available in the readme of the docker image on [hotmaps/gollum](https://hub.docker.com/r/hotmaps/gollum)
 
 ### Run
 
