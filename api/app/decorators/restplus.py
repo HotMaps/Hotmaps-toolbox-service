@@ -7,7 +7,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from ..decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, \
     ParameterException, RequestException, ActivationException, UserExistingException, \
     WrongCredentialException, UserUnidentifiedException, UserDoesntOwnUploadsException, NotEnoughSpaceException, \
-    UploadNotExistingException, UserNotActivatedException, SnapshotNotExistingException, UploadFileNotExistingException
+    UploadNotExistingException, UserNotActivatedException, SnapshotNotExistingException, \
+    UploadFileNotExistingException, TimeOutException
 
 log = logging.getLogger(__name__)
 
@@ -302,6 +303,24 @@ def handle_user_not_activated(error):
     return response, 544
 
 
+def handle_timeout_reached():
+    '''
+    decorator called with an error caused when the timeout is reached
+    :param error -- the called error:
+    :return:
+    '''
+    message = 'The function has unfortunately reached a timeout'
+    response = {
+        "message": message,
+        "error": {
+            "message": message,
+            "status": "545",
+            "statusText": "TIMEOUT REACHED"
+            }
+        }
+    return response, 545
+
+
 @api.errorhandler
 def default_error_handler(e):
     message = 'An unhandled exception occurred.'
@@ -315,3 +334,4 @@ def default_error_handler(e):
 def database_not_found_error_handler(e):
     log.warning(traceback.format_exc())
     return {'message': 'A models result was required but none was found.'}, 404
+
