@@ -332,7 +332,9 @@ stats_list_nuts_input = api.model('Input  list of nuts ', {
 })
 
 stats_layers_nuts_output = api.model('Stats for selected layers, year and area', {
-    'path': fields.String(description='path')
+    'layers': fields.List(fields.Nested(stats_layer_aggregation)),
+    'no_data_layers': fields.List(fields.String(description='Layer')),
+    'no_table_layers': fields.List(fields.String(description='Layer'))
 })
 
 data = api.model('data', {

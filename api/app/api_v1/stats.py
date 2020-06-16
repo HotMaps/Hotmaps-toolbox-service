@@ -32,7 +32,6 @@ import app
 import json
 from app.model import check_table_existe
 from app import model
-from app.bll.csv_file import ExportCut
 
 
 
@@ -208,90 +207,72 @@ class StatsPersonalLayers(Resource):
 	@api.marshal_with(stats_layers_nuts_output)
 	@api.expect(stats_layer_personnal_layer_input)
 	def post(self):
+		noDataLayer=[]
+		result=[]
+		#nuts_within = model.nuts2_within_the_selection_nuts_lau('nuts',api.payload['nuts'])
+		#print(nuts_within)
 		areas = api.payload['areas']
-		scale_level = api.payload['scale_level']
 
+		if api.payload['scale_level'] == 'hectare':
+			areas = area_to_geom(api.payload['areas'])
+			cutline_input = write_wkt_csv(generate_csv_name(constants.UPLOAD_DIRECTORY),projection_4326_to_3035(areas))
+		else:
+			cutline_input = model.get_shapefile_from_selection(api.payload['scale_level'], areas, constants.UPLOAD_DIRECTORY)
 		for pay in api.payload['layers']:
+			values=[]
+			data_file_name=""
 			token = pay['user_token']
 			layer_id = pay['id']
+			layer_type = pay['layer_id']
+			layer_name = pay['layer_name']
 			user = User.verify_auth_token(token)
 			upload = Uploads.query.filter_by(id=layer_id).first()
-			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid) + '/'
+			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)+ '/'
+			if layer_name.endswith('.tif'):
+				upload_url += constants.UPLOAD_BASE_NAME
+				filename_tif = generate_geotif_name(constants.UPLOAD_DIRECTORY)
+				#print(filename_tif)
+				args = model.commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(cutline_input,upload_url,filename_tif))
+				model.run_command(args)
+				if os.path.isfile(filename_tif):
+					ds = gdal.Open(filename_tif)
+					arr = ds.GetRasterBand(1).ReadAsArray()
+					df = pd.DataFrame(arr)
+				else:
+					noDataLayer.append(layer_name)
+					continue
+				values = self.set_indicators_in_array(df, layer_type)
+			elif layer_name.endswith('.csv'):
+				cmd_cutline, output_csv = prepare_clip_personal_layer(cutline_input, upload_url)
+				args = model.commands_in_array(cmd_cutline)
+				model.run_command(args)
+				if os.path.isfile(output_csv):
+					df = pd.read_csv(output_csv)
+					for ind in indicators.layersData[layer_type]['indicators']:
+						try:
+							values.append(get_result_formatted(layer_type+"_"+ind['table_column'], str(df[ind['table_column']].sum()), ind['unit']))
+						except:
+							noDataLayer.append(layer_name)
+							continue
+				else:
+					noDataLayer.append(layer_name)
+					continue
+			else:
+				noDataLayer.append(layer_name)
+				continue
 
-			return ExportCut.cut_personal_layer(scale_level=scale_level, upload_url=upload_url, areas=areas)
 
-# # ORIGINAL, KEEP AS IS
-# @ns.route('/personnal-layers')
-# class StatsPersonalLayers(Resource):
-# 	@api.marshal_with(stats_layers_nuts_output)
-# 	@api.expect(stats_layer_personnal_layer_input)
-# 	def post(self):
-# 		noDataLayer=[]
-# 		result=[]
-# 		#nuts_within = model.nuts2_within_the_selection_nuts_lau('nuts',api.payload['nuts'])
-# 		#print(nuts_within)
-# 		areas = api.payload['areas']
-#
-# 		if api.payload['scale_level'] == 'hectare':
-# 			areas = area_to_geom(api.payload['areas'])
-# 			cutline_input = write_wkt_csv(generate_csv_name(constants.UPLOAD_DIRECTORY),projection_4326_to_3035(areas))
-# 		else:
-# 			cutline_input = model.get_shapefile_from_selection(api.payload['scale_level'], areas, constants.UPLOAD_DIRECTORY)
-# 		for pay in api.payload['layers']:
-# 			values=[]
-# 			data_file_name=""
-# 			token = pay['user_token']
-# 			layer_id = pay['id']
-# 			layer_type = pay['layer_id']
-# 			layer_name = pay['layer_name']
-# 			user = User.verify_auth_token(token)
-# 			upload = Uploads.query.filter_by(id=layer_id).first()
-# 			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)+ '/'
-# 			if layer_name.endswith('.tif'):
-# 				upload_url += constants.UPLOAD_BASE_NAME
-# 				filename_tif = generate_geotif_name(constants.UPLOAD_DIRECTORY)
-# 				#print(filename_tif)
-# 				args = model.commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(cutline_input,upload_url,filename_tif))
-# 				model.run_command(args)
-# 				if os.path.isfile(filename_tif):
-# 					ds = gdal.Open(filename_tif)
-# 					arr = ds.GetRasterBand(1).ReadAsArray()
-# 					df = pd.DataFrame(arr)
-# 				else:
-# 					noDataLayer.append(layer_name)
-# 					continue
-# 				values = self.set_indicators_in_array(df, layer_type)
-# 			elif layer_name.endswith('.csv'):
-# 				cmd_cutline, output_csv = prepare_clip_personal_layer(cutline_input, upload_url)
-# 				args = model.commands_in_array(cmd_cutline)
-# 				model.run_command(args)
-# 				if os.path.isfile(output_csv):
-# 					df = pd.read_csv(output_csv)
-# 					for ind in indicators.layersData[layer_type]['indicators']:
-# 						try:
-# 							values.append(get_result_formatted(layer_type+"_"+ind['table_column'], str(df[ind['table_column']].sum()), ind['unit']))
-# 						except:
-# 							noDataLayer.append(layer_name)
-# 							continue
-# 				else:
-# 					noDataLayer.append(layer_name)
-# 					continue
-# 			else:
-# 				noDataLayer.append(layer_name)
-# 				continue
-#
-#
-#
-# 			result.append({
-# 				'name':layer_name,
-# 				'values':values
-# 			})
-#
-# 		return {
-# 				"layers": result,
-# 				"no_data_layers": noDataLayer,
-# 				"no_table_layers": noDataLayer
-# 			}
+
+			result.append({
+				'name':layer_name,
+				'values':values
+			})
+
+		return {
+				"layers": result,
+				"no_data_layers": noDataLayer,
+				"no_table_layers": noDataLayer
+			}
 
 	@staticmethod
 	def set_indicators_in_array(df, layer_name):

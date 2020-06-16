@@ -3,6 +3,7 @@ import uuid
 from io import StringIO
 
 from ..api_v1.upload import get_csv_from_nuts, get_csv_from_hectare
+from ..api_v1.stats import prepare_clip_personal_layer
 from ..constants import UPLOAD_DIRECTORY
 from .. import model
 from ..helper import write_wkt_csv, area_to_geom, generate_csv_name, projection_4326_to_3035
@@ -37,7 +38,7 @@ class ExportCut:
         else:
             cutline_input = model.get_shapefile_from_selection(scale_level, areas, UPLOAD_DIRECTORY)
 
-        cmd_cutline, output_csv = ExportCut.temp_prepare_clip_personal_layer(cutline_input, upload_url)
+        cmd_cutline, output_csv = prepare_clip_personal_layer(cutline_input, upload_url)
         args = model.commands_in_array(cmd_cutline)
         model.run_command(args)
         if not os.path.isfile(output_csv):
@@ -47,20 +48,6 @@ class ExportCut:
         return {
             "path": output_csv
         }
-
-    @staticmethod
-    def temp_prepare_clip_personal_layer(cutline_input, upload_url):
-        """
-        Helper method to clip a personal layer
-        :param cutline_input:
-        :param upload_url: the url of the upload
-        :return: a tuple containing the command to use later ant the output csv path
-        """
-        upload_url += "data.csv"
-        output_csv = generate_csv_name(UPLOAD_DIRECTORY)
-        cmd_cutline = "ogr2ogr -f 'CSV' -clipsrc {} {} {} -oo GEOM_POSSIBLE_NAMES=geometry_wkt -oo KEEP_GEOM_COLUMNS=NO".format(
-            cutline_input, output_csv, upload_url)
-        return cmd_cutline, output_csv
 
     @staticmethod
     def cut_hectares(areas: list, layers: str, schema: str, year: str):
