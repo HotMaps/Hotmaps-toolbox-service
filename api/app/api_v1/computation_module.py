@@ -27,7 +27,6 @@ from flask import send_from_directory, send_file
 from app.constants import UPLOAD_DIRECTORY, DATASET_DIRECTORY
 
 from app import CalculationModuleRpcClient
-from ..decorators.timeout import return_on_timeout
 
 
 
@@ -51,7 +50,6 @@ if not os.path.exists(DATASET_DIRECTORY):
 
 @ns.route('/list')
 class ComputationModuleList(Resource):
-    @return_on_timeout()
     #@api.marshal_with(stats_layers_nuts_output)
     def post(self):
         """
@@ -63,7 +61,6 @@ class ComputationModuleList(Resource):
 @ns.route('/user-interface/', methods=['POST'])
 @api.expect(cm_id_input)
 class ComputationModuleClass(Resource):
-    @return_on_timeout()
     def post(self):
         """
        Returns the user interface of a specifique calculation module
@@ -75,7 +72,6 @@ class ComputationModuleClass(Resource):
 
 @ns.route('/register/', methods=['POST'])
 class ComputationModuleClass(Resource):
-    @return_on_timeout()
     def post(self):
         """
        Register a calculation module
@@ -88,7 +84,6 @@ class ComputationModuleClass(Resource):
 
 @ns.route('/files/<string:filename>', methods=['GET'])
 class getRasterfile(Resource):
-    @return_on_timeout()
     def get(self,filename):
         """
          dowload a file from the main web service
@@ -98,7 +93,6 @@ class getRasterfile(Resource):
 
 @ns.route('/tiles/<string:directory>/<int:z>/<int:x>/<int:y>/', methods=['GET'])
 class getRasterTile(Resource):
-    @return_on_timeout()
     def get(self,directory,z,x,y):
         """
          download a file from the main web service
@@ -273,7 +267,6 @@ def generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_sele
 @ns.route('/compute-async/', methods=['POST'])
 @api.expect(input_computation_module)
 class ComputationModuleClass(Resource):
-    @return_on_timeout()
     def post(self):
         """
          retrieve a request from the from end
@@ -290,7 +283,6 @@ class ComputationModuleClass(Resource):
 
 @ns.route('/status/<string:task_id>', methods=['GET'])
 class ComputationTaskStatus(Resource):
-    @return_on_timeout()
     def get(self,task_id):
         response = None
         task = computeTask.AsyncResult(task_id)
@@ -322,6 +314,5 @@ class ComputationTaskStatus(Resource):
 
 @ns.route('/delete/<string:task_id>', methods=['DELETE'])
 class DeleteTask(Resource):
-    @return_on_timeout()
     def delete(self,task_id):
         return revoke(task_id, terminate=True)
