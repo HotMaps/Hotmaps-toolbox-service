@@ -32,7 +32,7 @@ import app
 import json
 from app.model import check_table_existe
 from app import model
-from ..decorators.timeout import return_on_timeout
+from ..decorators.timeout import return_on_timeout_endpoint
 
 
 
@@ -48,7 +48,7 @@ ns = nsStats
 @api.response(530, 'Request Error')
 @api.response(531, 'Missing parameter.')
 class StatsLayersNutsInArea(Resource):
-	@return_on_timeout()
+	@return_on_timeout_endpoint()
 	@api.marshal_with(stats_layers_nuts_output)
 	@api.expect(stats_layers_nuts_input)
 	def post(self):
@@ -104,7 +104,7 @@ class StatsLayersNutsInArea(Resource):
 @api.response(533, 'SQL error.')
 #@api.response(534, 'Not enough points error.')
 class StatsLayersHectareMulti(Resource):
-	@return_on_timeout()
+	@return_on_timeout_endpoint()
 	@api.marshal_with(stats_layers_hectares_output)
 	@api.expect(stats_layers_hectares_input)
 	def post(self):
@@ -176,7 +176,7 @@ class StatsLayersHectareMulti(Resource):
 @api.response(530, 'Request error.')
 @api.response(531, 'Missing parameter.')
 class StatsLayersNutsInArea(Resource):
-	@return_on_timeout()
+	@return_on_timeout_endpoint()
 	@api.marshal_with(stats_list_label_dataset)
 	@api.expect(stats_list_nuts_input)
 	def post(self):
@@ -208,7 +208,7 @@ class StatsLayersNutsInArea(Resource):
 
 @ns.route('/personnal-layers')
 class StatsPersonalLayers(Resource):
-	@return_on_timeout()
+	@return_on_timeout_endpoint()
 	@api.marshal_with(stats_layers_nuts_output)
 	@api.expect(stats_layer_personnal_layer_input)
 	def post(self):

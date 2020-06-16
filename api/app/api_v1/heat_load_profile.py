@@ -8,7 +8,7 @@ from app.decorators.restplus import api
 from app.decorators.exceptions import IntersectionException, HugeRequestException, ParameterException, RequestException
 from app.models.heatloadQueries import HeatLoadProfile
 from .. import helper
-from ..decorators.timeout import return_on_timeout
+from ..decorators.timeout import return_on_timeout_endpoint
 
 
 
@@ -39,7 +39,7 @@ class HeatLoadProfileResource(Resource):
 @api.response(530, 'Request error.')
 @api.response(531, 'Missing parameter.')
 class HeatLoadProfileAggregation(HeatLoadProfileResource):
-    @return_on_timeout()
+    @return_on_timeout_endpoint()
     @api.marshal_with(load_profile_aggregation_curve_output)
     @api.expect(load_profile_aggregation_curve)
     def post(self):
@@ -96,7 +96,7 @@ def durationCurveNutsLau(year, nuts):
 @api.response(531, 'Missing parameter.')
 @api.response(533, 'SQL error.')
 class HeatLoadProfileAggregation(HeatLoadProfileResource):
-    @return_on_timeout()
+    @return_on_timeout_endpoint()
     @api.marshal_with(load_profile_aggregation_curve_output)
     @api.expect(load_profile_aggregation_curve_hectares)
     def post(self):
@@ -195,7 +195,7 @@ def durationCurveHectare(areas,year):
 @api.response(531, 'Missing parameter.')
 @api.response(533, 'SQL error.')
 class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
-    @return_on_timeout()
+    @return_on_timeout_endpoint()
     # @api.marshal_with(load_profile_aggregation_hectares_output)
     @api.expect(load_profile_aggregation_hectares)
     def post(self):
@@ -276,7 +276,7 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
 @api.response(531, 'Missing parameter.')
 @api.response(533, 'SQL error.')
 class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
-    @return_on_timeout()
+    @return_on_timeout_endpoint()
     # @api.marshal_with(load_profile_aggregation_hectares_output)
     @api.expect(load_profile_aggregation_day_input) #TODO Nuts level asked but not used in the app
     def post(self):

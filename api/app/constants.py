@@ -22,7 +22,7 @@ PORT_LOCAL = 5000
 PORT_DOCKER = 80
 
 # The default timeout for API function in seconds
-DEFAULT_TIMEOUT = 3600  # 1 hour
+DEFAULT_TIMEOUT = 1  # 1 hour
 
 CM_REGISTER_Q = 'rpc_queue_CM_register'
 
