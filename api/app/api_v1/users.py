@@ -41,13 +41,23 @@ ns = nsUsers
 class AskingPasswordRecovery(Resource):
     @api.marshal_with(user_ask_recovery_output)
     @api.expect(user_ask_recovery_input)
-    @celery.task(name='ask for password recovery')
+    @celery.task(name='ask for password recovery', soft=2, hard=4, reply=True)
     def post(self):
         """
 		Method to ask for a Password recovery
 		:return:
 		"""
         # Entries
+        import time
+        try:
+            time.sleep(5)
+            return {
+                "message": "failure"
+            }
+        except:
+            return{
+                "message": "success"
+            }
         try:
             email = api.payload['email']
         except:
