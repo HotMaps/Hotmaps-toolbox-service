@@ -25,7 +25,7 @@ def return_on_timeout(timeout_value: int = DEFAULT_TIMEOUT):
             try:
                 signal.signal(signal.SIGALRM, handler)
                 signal.alarm(timeout_value)
-                f(*args, **kwargs)
+                return f(*args, **kwargs)
             except TimeOutException:
                 return handle_timeout_reached()
 
