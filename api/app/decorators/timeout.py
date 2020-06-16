@@ -1,6 +1,7 @@
 from .exceptions import TimeOutException
 from .restplus import handle_timeout_reached
 import signal
+from ..constants import DEFAULT_TIMEOUT
 
 
 def handler(signum, frame):
@@ -13,10 +14,10 @@ def handler(signum, frame):
     raise TimeOutException("end of time")
 
 
-def return_on_timeout(timeout_value):
+def return_on_timeout(timeout_value: int = DEFAULT_TIMEOUT):
     """
     A decorator to handle the return when a timeout occurs
-    :param timeout_value:the timeout before leaving the function in seconds
+    :param timeout_value:the timeout before leaving the function in seconds, default corresponding to the config file
     :return:
     """
     def decorate(f):
