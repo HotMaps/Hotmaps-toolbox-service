@@ -6,7 +6,7 @@ from io import BytesIO
 
 import shapely.geometry as shapely_geom
 from app import celery
-from app.constants import USER_UPLOAD_FOLDER, UPLOAD_BASE_NAME, UPLOAD_DIRECTORY
+from app.constants import USER_UPLOAD_FOLDER, UPLOAD_BASE_NAME, UPLOAD_DIRECTORY, NUTS_YEAR, LAU_YEAR
 from flask import send_file
 from flask_restplus import Resource
 
@@ -20,14 +20,12 @@ from ..decorators.serializers import upload_add_output, upload_list_input, uploa
     upload_delete_output, upload_export_csv_nuts_input, upload_export_csv_hectare_input, \
     upload_export_raster_nuts_input, upload_export_raster_hectare_input, upload_download_input, \
     upload_export_cm_layer_input
-from ..models.uploads import Uploads, generate_tiles, allowed_file, generate_geojson, calculate_total_space, \
-    generate_csv_string
+from ..model import get_csv_from_nuts, get_csv_from_hectare
+from ..models.uploads import Uploads, generate_tiles, allowed_file, generate_geojson, calculate_total_space
 from ..models.user import User
 
 nsUpload = api.namespace('upload', description='Operations related to file upload')
 ns = nsUpload
-NUTS_YEAR = "2013"
-LAU_YEAR = NUTS_YEAR
 
 
 @ns.route('/add')
@@ -730,139 +728,5 @@ class Download(Resource):
                          mimetype=mimetype,
                          attachment_filename=upload.name + extension,
                          as_attachment=True)
-
-
-def get_csv_from_nuts(layers, nuts, schema, year):
-    """
-    This method will generate a CSV from a nuts or list of nuts
-    :param layers: the layer selected
-    :param nuts: the selection
-    :param schema: the schema of the layer in the DB
-    :param year: the year of the data
-    :return:the csv containing the results
-    """
-    # We must determine if it is a nuts or a lau
-    dateCol = "year"
-    schema2 = "geo"
-    if str(layers).endswith('lau2'):
-        layer_type = 'lau'
-        layer_name = layers[: -5]
-        id_type = 'comm_id'
-        layer_date = LAU_YEAR
-        dateCol = "date"
-        schema2 = "public"
-
-    else:
-        scale = str(layers)[-5:]
-        layer_type = 'nuts'
-        layer_name = str(layers)[: -6]
-        id_type = 'nuts_id'
-        layer_date = NUTS_YEAR
-
-        if scale not in ['nuts3', 'nuts2', 'nuts1', 'nuts0']:
-            # allow co2 emission factors layer
-            if 'yearly_co2_emission_factors_view' in str(layers):
-                layer_name = 'yearly_co2_emission_factors_view'
-            else:
-                raise HugeRequestException(message=scale)
-    # handle special case of wwtp where geom column has a different name (manual integration)
-    geom_col_name = 'geometry' if layer_name.startswith('wwtp') else 'geom'
-    # check if year exists otherwise get most recent or fallback to default (1970)
-    # timestamp to year if necessary: SELECT TO_CHAR(timestamp :: DATE, 'yyyy')
-    date_sql = """SELECT timestamp FROM {0}.{1} GROUP BY timestamp ORDER BY timestamp DESC;""".format(schema,
-                                                                                                      layer_name)
-    try:
-        results = db.engine.execute(date_sql)
-    except:
-        raise RequestException("Failed retrieving year in database")
-    layer_year = year + '-01-01'
-    dates = []
-    for row in results:
-        dates.append(row[0])
-    if len(dates) == 0:
-        layer_year = '1970-01-01'
-    elif layer_year not in dates:
-        layer_year = dates[0]
-    # build query
-    sql = """SELECT ST_ASTEXT({9}) as geometry_wkt, ST_SRID({9}) as srid, * FROM {0}.{1} WHERE timestamp = '{2}'
-             AND ST_Within({0}.{1}.{9}, st_transform(
-               (SELECT ST_UNION(geom) FROM {6}.{3} WHERE {4} IN ({5}) AND {7} = '{8}-01-01'),
-               ST_SRID({9})
-             ));""".format(
-        schema,  # 0
-        layer_name,  # 1
-        layer_year,  # 2
-        layer_type,  # 3
-        id_type,  # 4
-        ', '.join("'{0}'".format(n) for n in nuts),  # 5
-        schema2,  # 6
-        dateCol,  # 7
-        layer_date,  # 8
-        geom_col_name  # 9
-    )
-    # execute query
-    try:
-        result = db.engine.execute(sql)
-    except:
-        raise RequestException("Problem with your SQL query")
-    if not result.returns_rows or result.rowcount < 1:
-        raise RequestException("There is no data for this selection")
-    # build CSV
-    return generate_csv_string(result)
-
-
-def get_csv_from_hectare(areas, layers, schema, year):
-    """
-    this method will generate a csv from hectare selection
-    :param areas:  the selection
-    :param layers: the layer selected
-    :param schema: the schema of the layer in the db
-    :param year: the year of the data
-    :return: the csv containing the results
-    """
-    if not str(layers).endswith('_ha'):
-        raise RequestException("this is not a correct layer for an hectare selection !")
-    # format the layer_name to contain only the name
-    layer_name = layers[:-3]
-    # build request
-    polyArray = []
-    # convert to polygon format for each polygon and store them in polyArray
-    try:
-        for polygon in areas:
-            po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
-            polyArray.append(po)
-    except:
-        raise NotEnoughPointsException
-    # convert array of polygon into multipolygon
-    multipolygon = shapely_geom.MultiPolygon(polyArray)
-    # handle special case of wwtp where geom column has a different name (manual integration)
-    geom_col_name = 'geometry' if layer_name.startswith('wwtp') else 'geom'
-    # check if year exists otherwise get most recent or fallback to default (1970)
-    date_sql = """SELECT timestamp FROM {0}.{1} GROUP BY timestamp ORDER BY timestamp DESC;""".format(schema,
-                                                                                                      layer_name)
-    try:
-        results = db.engine.execute(date_sql)
-    except:
-        raise RequestException("Failed retrieving year in database")
-    layer_year = year + '-01-01'
-    dates = []
-    for row in results:
-        dates.append(row[0])
-    if len(dates) == 0:
-        layer_year = '1970-01-01'
-    elif layer_year not in dates:
-        layer_year = dates[0]
-    # build query
-    sql = """SELECT ST_ASTEXT({3}) as geometry_wkt, ST_SRID({3}) as srid, * 
-             FROM {0}.{1} WHERE timestamp = '{2}' 
-             AND ST_Within({0}.{1}.{3}, st_transform(st_geomfromtext('{4}', 4258), ST_SRID({3})
-             ));""".format(schema, layer_name, layer_year, geom_col_name, str(multipolygon))
-    # execute query
-    try:
-        result = db.engine.execute(sql)
-    except:
-        raise RequestException("Problem with your SQL query")
-
-    return generate_csv_string(result)
 
 

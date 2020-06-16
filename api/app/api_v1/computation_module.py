@@ -6,7 +6,8 @@ from app.decorators.serializers import compution_module_class, \
     input_computation_module, test_communication_cm, \
     compution_module_list, uploadfile, cm_id_input
 
-from app.model import register_calulation_module,getUI,getCMList,commands_in_array, run_command
+from app.model import register_calulation_module,getUI,getCMList
+from ..helper import commands_in_array, run_command
 
 from ..models.user import User
 from app import model
@@ -21,6 +22,7 @@ import requests
 
 from app.decorators.exceptions import ValidationError, ComputationalModuleError
 
+
 import os
 import json
 from flask import send_from_directory, send_file
@@ -31,12 +33,12 @@ from app import CalculationModuleRpcClient
 
 
 #TODO Add url to find  right computation module
-
-try:
-    args = commands_in_array("chmod +x app/helper/gdal2tiles-multiprocess.py")
-    run_command(args)
-except WindowsError:
-    pass
+args = commands_in_array("chmod +x app/helper/gdal2tiles-multiprocess.py")
+run_command(args)
+# try:
+#
+# except WindowsError:
+#     pass
 #os.system(com_string)
 
 if not os.path.exists(UPLOAD_DIRECTORY):

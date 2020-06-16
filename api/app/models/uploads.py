@@ -12,6 +12,8 @@ import pyproj
 import requests
 import shapely.geometry as shapely_geom
 import shapely.wkt as shapely_wkt
+
+import app.helper
 from app import celery
 from app import model
 from geojson import Feature, FeatureCollection
@@ -79,13 +81,13 @@ def generate_tiles(upload_folder, grey_tif, layer_type, upload_uuid, user_curren
     if layer_type != 'custom':
         helper.colorize(layer_type, grey_tif, rgb_tif)
     else:
-        args_gdal = model.commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE ".format(grey_tif, rgb_tif))
-        model.run_command(args_gdal)
+        args_gdal = app.helper.commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE ".format(grey_tif, rgb_tif))
+        app.helper.run_command(args_gdal)
 
     try:
         # commands launch to obtain the level of zooms
-        args_tiles = model.commands_in_array("python3 app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-11' {} {} ".format(rgb_tif, tile_path))
-        model.run_command(args_tiles)
+        args_tiles = app.helper.commands_in_array("python3 app/helper/gdal2tiles.py -p 'mercator' -s 'EPSG:3035' -w 'leaflet' -r 'average' -z '4-11' {} {} ".format(rgb_tif, tile_path))
+        app.helper.run_command(args_tiles)
 
     except :
         generate_state = 10

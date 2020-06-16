@@ -1,3 +1,4 @@
+import app.helper
 from app import celery
 import logging
 import re
@@ -30,7 +31,7 @@ from app.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicat
 	write_wkt_csv, generate_csv_name,projection_4326_to_3035
 import app
 import json
-from app.model import check_table_existe
+from app.model import check_table_existe, prepare_clip_personal_layer
 from app import model
 
 
@@ -232,8 +233,8 @@ class StatsPersonalLayers(Resource):
 				upload_url += constants.UPLOAD_BASE_NAME
 				filename_tif = generate_geotif_name(constants.UPLOAD_DIRECTORY)
 				#print(filename_tif)
-				args = model.commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(cutline_input,upload_url,filename_tif))
-				model.run_command(args)
+				args = app.helper.commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(cutline_input, upload_url, filename_tif))
+				app.helper.run_command(args)
 				if os.path.isfile(filename_tif):
 					ds = gdal.Open(filename_tif)
 					arr = ds.GetRasterBand(1).ReadAsArray()
@@ -244,8 +245,8 @@ class StatsPersonalLayers(Resource):
 				values = self.set_indicators_in_array(df, layer_type)
 			elif layer_name.endswith('.csv'):
 				cmd_cutline, output_csv = prepare_clip_personal_layer(cutline_input, upload_url)
-				args = model.commands_in_array(cmd_cutline)
-				model.run_command(args)
+				args = app.helper.commands_in_array(cmd_cutline)
+				app.helper.run_command(args)
 				if os.path.isfile(output_csv):
 					df = pd.read_csv(output_csv)
 					for ind in indicators.layersData[layer_type]['indicators']:
@@ -297,20 +298,6 @@ class StatsPersonalLayers(Resource):
 		values.append(get_indicators_from_result('max', layer_name, max_tif))
 		values.append(get_indicators_from_result('mean', layer_name, density_tif))
 		return values
-
-
-def prepare_clip_personal_layer(cutline_input, upload_url):
-	"""
-	Helper method to clip a personal layer
-	:param cutline_input:
-	:param upload_url: the url of the upload
-	:return: a tuple containing the command to use later ant the output csv path
-	"""
-	upload_url += "data.csv"
-	output_csv = generate_csv_name(constants.UPLOAD_DIRECTORY)
-	cmd_cutline = "ogr2ogr -f 'CSV' -clipsrc {} {} {} -oo GEOM_POSSIBLE_NAMES=geometry_wkt -oo KEEP_GEOM_COLUMNS=NO".format(
-		cutline_input, output_csv, upload_url)
-	return cmd_cutline, output_csv
 
 
 def get_indicators_from_result(id,layer,result):
