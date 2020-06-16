@@ -23,6 +23,7 @@ from ..decorators.serializers import upload_add_output, upload_list_input, uploa
 from ..models.uploads import Uploads, generate_tiles, allowed_file, generate_geojson, calculate_total_space, \
     generate_csv_string
 from ..models.user import User
+from ..decorators.timeout import return_on_timeout
 
 nsUpload = api.namespace('upload', description='Operations related to file upload')
 ns = nsUpload
@@ -36,6 +37,7 @@ LAU_YEAR = NUTS_YEAR
 @api.response(539, 'User Unidentified')
 @api.response(542, 'Not Enough Space')
 class AddUploads(Resource):
+    @return_on_timeout()
     @api.marshal_with(upload_add_output)
     @api.expect(file_upload)
     @celery.task(name='upload add')
@@ -131,6 +133,7 @@ class AddUploads(Resource):
 @api.response(539, 'User Unidentified')
 @api.response(543, 'Uploads doesn\'t exists')
 class TilesUploads(Resource):
+    @return_on_timeout()
     def get(self, token, upload_id, z, x, y):
         """
         The method called to get the tiles of an upload
@@ -168,6 +171,7 @@ class TilesUploads(Resource):
 @api.response(539, 'User Unidentified')
 @api.response(543, 'Uploads doesn\'t exists')
 class ReadCsv(Resource):
+    @return_on_timeout()
     def get(self, token, upload_id):
         """
         The method called to get the csv of an upload
@@ -204,6 +208,7 @@ class ReadCsv(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class ListUploads(Resource):
+    @return_on_timeout()
     @api.marshal_with(upload_list_output)
     @api.expect(upload_list_input)
     @celery.task(name='upload listing')
@@ -243,6 +248,7 @@ class ListUploads(Resource):
 @api.response(541, 'Upload File doesn\'t exists')
 @api.response(543, 'Uploads doesn\'t exists')
 class DeleteUploads(Resource):
+    @return_on_timeout()
     @api.marshal_with(upload_delete_output)
     @api.expect(upload_delete_input)
     @celery.task(name='upload deletion')
@@ -308,6 +314,7 @@ class DeleteUploads(Resource):
 @api.response(531, 'Missing Parameters')
 @api.response(541, 'Upload File doesn\'t exists')
 class ExportCMLayer(Resource):
+    @return_on_timeout()
     @api.expect(upload_export_cm_layer_input)
     @celery.task(name='upload export cm layer')
     def post(self=None):
@@ -350,6 +357,7 @@ class ExportCMLayer(Resource):
 @api.response(531, 'Missing Parameters')
 @api.response(532, 'Request too big')
 class ExportRasterNuts(Resource):
+    @return_on_timeout()
     @api.expect(upload_export_raster_nuts_input)
     @celery.task(name='upload export raster nuts')
     def post(self=None):
@@ -457,6 +465,7 @@ class ExportRasterNuts(Resource):
 @api.response(531, 'Missing Parameters')
 @api.response(532, 'Request too big')
 class ExportRasterHectare(Resource):
+    @return_on_timeout()
     @api.expect(upload_export_raster_hectare_input)
     @celery.task(name='upload export raster hectare')
     def post(self=None):
@@ -560,6 +569,7 @@ class ExportRasterHectare(Resource):
 @api.response(531, 'Missing Parameters')
 @api.response(532, 'Request too big')
 class ExportCsvNuts(Resource):
+    @return_on_timeout()
     @api.expect(upload_export_csv_nuts_input)
     @celery.task(name='upload export csv nuts')
     def post(self=None):
@@ -683,6 +693,7 @@ class ExportCsvNuts(Resource):
 @api.response(531, 'Missing Parameters')
 @api.response(532, 'Request too big')
 class ExportCsvHectare(Resource):
+    @return_on_timeout()
     @api.expect(upload_export_csv_hectare_input)
     @celery.task(name='upload export csv hectare')
     def post(self=None):
@@ -798,6 +809,7 @@ class ExportCsvHectare(Resource):
 @api.response(541, 'Upload File doesn\'t exists')
 @api.response(543, 'Uploads doesn\'t exists')
 class Download(Resource):
+    @return_on_timeout()
     @api.expect(upload_download_input)
     @celery.task(name='upload download')
     def post(self=None):

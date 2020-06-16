@@ -26,6 +26,7 @@ from ..secrets import FLASK_SECRET_KEY, FLASK_SALT
 from ..models.user import User
 from ..models.role import Role
 from ..decorators.parsers import file_upload_feedback
+from ..decorators.timeout import return_on_timeout
 
 
 # Setup Flask-Security
@@ -39,6 +40,7 @@ ns = nsUsers
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 class AskingPasswordRecovery(Resource):
+    @return_on_timeout()
     @api.marshal_with(user_ask_recovery_output)
     @api.expect(user_ask_recovery_input)
     @celery.task(name='ask for password recovery')
@@ -83,6 +85,7 @@ class AskingPasswordRecovery(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(536, 'Activation failed')
 class RecoverPassword(Resource):
+    @return_on_timeout()
     @api.marshal_with(user_recovery_output)
     @api.expect(user_recovery_input)
     @celery.task(name='method for recover of password')
@@ -137,6 +140,7 @@ class RecoverPassword(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(535, 'User already exists')
 class UserRegistering(Resource):
+    @return_on_timeout()
     @api.marshal_with(user_register_output)
     @api.expect(user_register_input)
     @celery.task(name='user registration')
@@ -213,6 +217,7 @@ class UserRegistering(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(536, 'Activation failure')
 class ActivateUser(Resource):
+    @return_on_timeout()
     @api.marshal_with(user_activate_output)
     @api.expect(user_activate_input)
     @celery.task(name='user activation')
@@ -250,6 +255,7 @@ class ActivateUser(Resource):
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 class DeleteUser(Resource):
+    @return_on_timeout()
     @api.marshal_with(user_deletion_output)
     @api.expect(user_deletion_input)
     @celery.task(name='user deletion')
@@ -288,6 +294,7 @@ class DeleteUser(Resource):
 @api.response(537, 'User not existing')
 @api.response(538, 'Wrong Password')
 class LoginUser(Resource):
+    @return_on_timeout()
     @api.marshal_with(user_login_output)
     @api.expect(user_login_input)
     @celery.task(name='user login')
@@ -342,6 +349,7 @@ class LoginUser(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class LogoutUser(Resource):
+    @return_on_timeout()
     @api.marshal_with(user_logout_output)
     @api.expect(user_logout_input)
     @celery.task(name='user logout')
@@ -375,6 +383,7 @@ class LogoutUser(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class ProfileUser(Resource):
+    @return_on_timeout()
     @api.marshal_with(user_profile_output)
     @api.expect(user_profile_input)
     @celery.task(name='user profile update')
@@ -430,6 +439,7 @@ class ProfileUser(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class GetUserInformation(Resource):
+    @return_on_timeout()
     @api.marshal_with(user_get_information_output)
     @api.expect(user_get_information_input)
     @celery.task(name='get user informations')
@@ -468,6 +478,7 @@ class GetUserInformation(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class SpaceUsedUploads(Resource):
+    @return_on_timeout()
     @api.marshal_with(upload_space_used_output)
     @api.expect(upload_space_used_input)
     @celery.task(name='get user space used')
