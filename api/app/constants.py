@@ -1,40 +1,26 @@
+import os
+
+# General 
+API_URL = os.environ.get('API_URL')
+API_PORT = os.environ.get('API_PORT')
+
+CLIENT_URL = os.environ.get('CLIENT_URL')
+
+# Database
+HOST_DB = os.environ.get('DB_HOST')
+PORT_DB = os.environ.get('DB_PORT')
+USER_DB = os.environ.get('DB_USER')
+PASSWORD_DB = os.environ.get('DB_PASSWORD')
+DATABASE_DB = os.environ.get('DB_DATABASE')
 
 # Flask settings
-#FLASK_SERVER_NAME = '0.0.0.0:80'
-FLASK_SERVER_NAME = '0.0.0.0:5556'
+FLASK_SERVER_NAME = os.environ.get('FLASK_SERVER_NAME')
 FLASK_DEBUG = False  # Do not use debug mode in production
+FLASK_SECRET_KEY = os.environ.get('FLASK_SECRET_KEY')
+FLASK_SALT = os.environ.get('FLASK_SALT')
 CELERY_BROKER_URL_DOCKER= 'amqp://admin:mypass@rabbit:5672/'
 CELERY_BROKER_URL_LOCAL  = 'amqp://localhost/'
 
-CELERY_ALWAYS_EAGER = False
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-CLIENT_URL_PROD = 'https://www.hotmaps.hevs.ch'
-CLIENT_URL_DEV = 'https://www.hotmapsdev.hevs.ch'
-CLIENT_URL_LOCAL = 'http://localhost:4200'
-
-
-RPC_Q = 'rpc_queue_CM_compute'
-TIMEOUT_ALIVE_CM = 60
-TIMEOUT_START_CM = 1
-TIMEOUT_DELETE_CM= 15
-RPC_CM_ALIVE= 'rpc_queue_CM_ALIVE'
-PORT_LOCAL = 5000
-PORT_DOCKER = 80
-
-# The default timeout for API function in seconds
-DEFAULT_TIMEOUT = 3600  # 1 hour
-
-CM_REGISTER_Q = 'rpc_queue_CM_register'
-
-#TODO ********************setup this URL depending on which version you are running***************************
-
-CELERY_BROKER_URL = CELERY_BROKER_URL_DOCKER
-CLIENT_URL = CLIENT_URL_DEV
-PORT = PORT_DOCKER
-
-
-#TODO *******************************************************************************
-CM_DB_NAME = "calculation_module.db"
 # Flask-Restplus settings
 RESTPLUS_SWAGGER_UI_DOC_EXPANSION = 'list'
 RESTPLUS_VALIDATE = True
@@ -44,16 +30,44 @@ RESTPLUS_JSON = {
     'separators': (',', ':')
 }
 
+# Celery
+CELERY_ALWAYS_EAGER = False
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
+CELERYD_SOFT_TIME_LIMIT = os.environ.get('CELERYD_SOFT_TIME_LIMIT')
+
+RPC_Q = 'rpc_queue_CM_compute'
+TIMEOUT_ALIVE_CM = 60
+TIMEOUT_START_CM = 1
+TIMEOUT_DELETE_CM= 15
+RPC_CM_ALIVE= 'rpc_queue_CM_ALIVE'
+
+# The default timeout for API function in seconds
+DEFAULT_TIMEOUT = 3600  # 1 hour
+
+CM_REGISTER_Q = 'rpc_queue_CM_register'
+
+CM_DB_NAME = "calculation_module.db"
+
 # disc space available for every users (in MegaOctet)
 USER_DISC_SPACE_AVAILABLE = 500
 
-# # list of characters forbidden in user name (to protect the file system)
-# FORBIDDEN_NAME_CHARACTERS = {
-#     '\\', '/', ':', '*', '\"', '<', '>', '|'
-# }
+# Mail
+MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+MAIL_DEFAULT_SENDER = MAIL_USERNAME
+MAIL_SERVER = os.environ.get('MAIL_SERVER')
+MAIL_PORT = os.environ.get('MAIL_PORT')
 
+# Geoserver
+GEOSERVER_API_URL = os.environ.get('GEOSERVER_API_URL')
+GEOSERVER_USER = os.environ.get('GEOSERVER_USER')
+GEOSERVER_PASSWORD = os.environ.get('GEOSERVER_PASSWORD')
+
+# Cors
 CORS_HEADER_API_KEY = 'av7e7d78f93e2af'
-CORS_ORIGIN = 'http://hotmaps.hevs.ch'
+CORS_ORIGIN = API_URL + ':' + API_PORT
 CORS_CREDENTIALS = False
 """CORS_HEADERS = (
     CORS_HEADER_API_KEY,
@@ -87,6 +101,7 @@ CRS = 3035
 CRS_USER_GEOMETRY = '4326'
 CRS_NUTS = '4258'
 CRS_LAU = '4326'
+
 # Duration curve constants used in heat.load.profile.py
 HOURS_PER_YEAR = 8760
 LIMIT_VALUES_PER_NUTS = 4000
@@ -113,7 +128,7 @@ LAU_TABLE= 'tbl_lau1_2'
 NUTS_LAU_LEVELS = {nuts0:0,nuts1:1,nuts2:2,nuts3:3,lau2:4,hectare_name:5}
 scale_level_loadprofile_aggreagtion = [nuts3,lau2]
 
-USER_UPLOAD_FOLDER = '/var/hotmaps/users/'
+USER_UPLOAD_FOLDER = os.environ.get('USER_UPLOAD_FOLDER')
 
 UPLOAD_BASE_NAME = 'grey.tif'
 UPLOAD_DIRECTORY = '/var/tmp'

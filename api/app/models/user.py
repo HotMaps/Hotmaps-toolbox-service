@@ -3,7 +3,7 @@ from flask_security import UserMixin
 from .role import Role
 from itsdangerous import (TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired)
 import sys
-from ..secrets import FLASK_SECRET_KEY
+from ..constants import FLASK_SECRET_KEY
 import datetime
 
 

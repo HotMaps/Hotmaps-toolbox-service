@@ -358,6 +358,6 @@ def createQueryDataDCHectares(year, geometry):
 				"inner join totalLoadprofile on statLoadProfilBySubarea.load_profile_nutsid = totalLoadprofile.load_profile_nutsid " +\
 				"group by hour_of_year " +\
 				"order by normalizedCalutation DESC;"
-	print(sql_query)
+
 	return sql_query
 

@@ -22,7 +22,6 @@ from ..decorators.serializers import user_register_input, user_register_output, 
     user_logout_input, user_logout_output, user_profile_input, user_profile_output, user_get_information_output, \
     user_get_information_input, upload_space_used_output, upload_space_used_input, feedback_output
 from .. import dbGIS as db
-from ..secrets import FLASK_SECRET_KEY, FLASK_SALT
 from ..models.user import User
 from ..models.role import Role
 from ..decorators.parsers import file_upload_feedback
@@ -114,7 +113,7 @@ class RecoverPassword(Resource):
             raise ParameterException(exception_message + '')
 
         # password_encryption
-        password = bcrypt.using(salt=FLASK_SALT).hash(str(unencrypted_password))
+        password = bcrypt.using(salt=constants.FLASK_SALT).hash(str(unencrypted_password))
 
         # verify mail address
         mail_to_reset = confirm_token(token)
@@ -177,7 +176,7 @@ class UserRegistering(Resource):
             raise ParameterException(exception_message + '')
         # password_encryption
         try:
-            password = bcrypt.using(salt=FLASK_SALT).hash(str(unencrypted_password))
+            password = bcrypt.using(salt=constants.FLASK_SALT).hash(str(unencrypted_password))
         except Exception as e:
             raise RequestException(str(e))
         # we check if the email has already been used
@@ -327,7 +326,7 @@ class LoginUser(Resource):
         if connecting_user is None:
             raise WrongCredentialException
         # check password
-        if not bcrypt.using(salt=FLASK_SALT).verify(password, connecting_user.password):
+        if not bcrypt.using(salt=constants.FLASK_SALT).verify(password, connecting_user.password):
             raise WrongCredentialException
 
         if connecting_user.active is False:
@@ -456,7 +455,7 @@ class GetUserInformation(Resource):
 
         # check token
         user = User.verify_auth_token(token)
-        print(token, user)
+
         if user is None:
             raise UserUnidentifiedException
 
@@ -513,7 +512,7 @@ def generate_confirmation_token(email):
 	this method will generate a confirmation token
 	:return: the confirmation token
 	"""
-    s = URLSafeTimedSerializer(FLASK_SECRET_KEY, salt=FLASK_SALT)
+    s = URLSafeTimedSerializer(constants.FLASK_SECRET_KEY, salt=constants.FLASK_SALT)
     token = s.dumps(
         {
             'email': email,
@@ -532,7 +531,7 @@ def confirm_token(token, expiration=3600):
 	:param expiration:
 	:return:
 	'''
-    s = URLSafeTimedSerializer(FLASK_SECRET_KEY, salt=FLASK_SALT)
+    s = URLSafeTimedSerializer(constants.FLASK_SECRET_KEY, salt=constants.FLASK_SALT)
     try:
         data = s.loads(token)
     except SignatureExpired:

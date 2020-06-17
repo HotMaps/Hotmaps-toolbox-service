@@ -214,8 +214,6 @@ class StatsPersonalLayers(Resource):
 	def post(self):
 		noDataLayer=[]
 		result=[]
-		#nuts_within = model.nuts2_within_the_selection_nuts_lau('nuts',api.payload['nuts'])
-		#print(nuts_within)
 		areas = api.payload['areas']
 		
 		if api.payload['scale_level'] == 'hectare':

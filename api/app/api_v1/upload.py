@@ -155,7 +155,7 @@ class TilesUploads(Resource):
             raise UserDoesntOwnUploadsException
 
         folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
-        print(folder_url)
+
         tile_filename = folder_url+"/tiles/%d/%d/%d.png" % (z, x, y)
 
         if not os.path.exists(tile_filename):

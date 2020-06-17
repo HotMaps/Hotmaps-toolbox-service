@@ -8,7 +8,6 @@ import ast
 from osgeo import ogr
 from osgeo import osr
 from . import constants
-from . import secrets
 from . import model
 import requests
 from .decorators.exceptions import RequestException
@@ -61,13 +60,13 @@ def get_style_from_geoserver(layer_type):
     :param layer_type: the layer type to select
     :return xml: the sld style file
     '''
-    url = secrets.GEOSERVER_API_URL + 'styles/' + layer_type + '.sld'
+    url = constants.GEOSERVER_API_URL + 'styles/' + layer_type + '.sld'
     result = requests.get(url)
     xml = result.content
     # This piece of code is temporary, this should be removed when the workspaces on geoserver are unified
     if b'No such style' in xml:
         # As some layer are inside workspaces, we need to specify the workspace in order to find the correct style
-        url = secrets.GEOSERVER_API_URL + 'workspaces/hotmaps/styles/' + layer_type + '.sld'
+        url = constants.GEOSERVER_API_URL + 'workspaces/hotmaps/styles/' + layer_type + '.sld'
         result = requests.get(url)
         xml = result.content
     return xml
@@ -209,7 +208,6 @@ def getGenerationMixColor(value):
     }
     return switcher.get(value, "#D8BFD8")
 
-    raise Exception(msg)
 
 def get_result_formatted(name='not_defined', value=0, unit='unit'):
     return {

@@ -2,166 +2,99 @@
 
 ![Build Status](https://vlheasilab.hevs.ch/buildStatus/icon?job=Hotmaps-toolbox-service%2Fdevelop)
 
-This Docker image offers a GIS Flask + uWSGI + Nginx setup to run a webservice in Python 3.6.
-It is based on Ubuntu 16.04.
+The Hotmaps toolbox is built around several services:
+- frontend (Angular, typescript)
+- backend (Flask, python)
+- database (Postgresql + PostGIS)
+- map server (Geoserver)
+- calculation modules (Flask, python)
+- reverse proxy (Nginx)
+- wiki (Gollum)
 
-### Software installed:
-#### Basic software
+All these services are built around Docker.
+A docker-compose.yml file allows to configure and run the whole project in one place. Only the database is run separatly.
 
+## Build, configure and run:
+### Build
+Dockerfiles are available to build the project manually. 
+A docker-compose.yml file is available to build all the services.
 
-* Python >= 3.5
-* Flask 0.12
-* Flask-RESTful 0.3.5
-* Flask-Login 0.4.0
-* Flask-Bcrypt 0.5
-* Geoalchemy2
-#### Services
-* nginx
-* uWSGI
-* supervisor
+### Configure
 
-### Build and run:
-#### Build
-To build this image from Dockerfile run this command in your Docker or Docker Toolbox shell:
+First configure all the services in docker-compose.yml.
+Make sure the volume bindings, build and environment paths fits your project on your host machine.
+If `.env` files are mentionned in the `docker-compose.yml`, update their content to match your own configuration (crendentials, urls, ...). 
 
-`docker build -t hotmaps/toolbox .`
+The `docker-compose.yml` file should be place on the root directory of your project (where all you repositories are cloned).
 
-### Setup celery
+You can also run the toolbox without reverse proxy, wiki and geoserver using the `docker-compose-local.yml` (and place it also at the root of your project).
 
-start celery:
-`celery -A celery_worker.celery worker --loglevel=info`
-
-
-
-### Setup flower
-celery -A celery_worker.celery flower --port=5555
-### Setup rabbitMq
-by default rabbitmq server will run on the port 5672
-#### Setup rabbitMq server on the OS
-
-start a rabbitmq server installed in the system :
-`sudo service rabbitmq-server start`
-
-check the status of the server :
-`sudo rabbitmqctl status`
-
-#### Install redis on the OS
-Add the repository, update your APT cache and install redis
-
-` wget -q -O - http://www.dotdeb.org/dotdeb.gpg | sudo apt-key add - `
-
-`sudo apt-get update`
-
-`sudo apt-get install redis-server`
-
-#### Setup redis
-by default redis server will run on the port 6379
-#### Setup redis server on the OS
-
-start a redis server installed in the system :
-`sudo service redis-server start`
-
-check the status of the server :
-`sudo service redis-server status`
-
-#### Run
-
-**Important:** Before running make sure you have a directory containing some code. This directory will be linked to the volume of the container. Here is the most basic file that needs to be in that directory*:
-
-**wsgi.py**
-
-    # -*- coding: utf-8 -*-
-
-    from flask import Flask
+`.env` config. files should be place at the root of each repository (if necessary) to set the configuration of each service.
 
 
-    application = Flask(__name__)
-
-    @application.route('/', methods=['GET'])
-    def index():
-    return 'Hello World!'
-
-    def test():
-    application.run(debug=True)
-
-    if __name__ == '__main__':
-    test()
+#### Project structure
 
 
-You can edit this file afterward and replace it with your own code.
+- root /
+  - toolbox-service /
+    - [code]
+    - .env (config. file)
+  - toolbox-client /
+    - [code]
+    - .env (config. file)
+  - wiki /
+    - [code]
+    - .env (config. file)
+  - geoserver /
+    - web.xml (config. file)
+  - nginx / 
+  - calculation_modules /
+    - CM1 /
+    - CM2 /
+  - docker-compose.yml
+  - docker-compose-local.yml
+  - nginx.tmpl (config. file for dockergen service)
 
-To create a container use this command*:
+**Notes**
 
-`docker run -d -v "`*absolute/path/to/your/code*`:/data" -p 8181:80 -it hotmaps/res-potential`
+Wiki:
+- the wiki image is pulled by the docker-compose
+    - image and doc: [hotmaps/gollum](https://hub.docker.com/r/hotmaps/gollum)
+- pull the wiki repository (the content of the wiki) to the root of your project according to structure
+    - repository: [Official Hotmaps wiki](https://github.com/HotMaps/wiki/)
+    - you can of cours configure your own repository for the content
+- you should provide a valid ssh key to your wiki in order to push the modifications to the remote
+    - config. in docker-compose.yml/wiki/volumes/.ssh
+- `.env`: 
+    - there is an .env.example in the wiki content [repository](https://github.com/HotMaps/wiki/)
+    - you can find all options and environment variables available in the readme of the docker image on [hotmaps/gollum](https://hub.docker.com/r/hotmaps/gollum)
 
-On Windows the absolute path to your code directory should be in the format */c/My-first-dir/my-second-dir/my-code-dir*
+### Run
 
-**Note that you can pull the image directly from the repository with this same command but make sure you have a "data" directory (linked to the volume -v) containing some working code (see example above).*
+First, run the database, either using Docker or using an external service. The database should have 4 schemas:
+- geo
+- public
+- stat
+- users
 
-After successfuly running this command, open your web browser and go to `{ip-of-your-docker-host}:8181`
+To populate the database, refer to the official Hotmaps [Wiki](https://wiki.hotmaps.eu/en/Developers#dataset-integration).
 
-If you don't know the IP address of your docker machine type `docker-machine ip` in your terminal.
+*If you hosted geoserver differently, make sure it's accessible.*
 
-### How to add your own application
+Run the project using docker-compose:
+`docker-compose up -d --build`
 
-To place your own code, go to the directory linked with your volume that your previously created (cf. Build) and replace the *wsgi.py* content with your own code. Note that this file is your entry point to the site.
+## Release
 
-Note that if you build this image from scratch, uWSGI chdirs to root path of the shared volume "data" so in uwsgi.ini you will need to make sure the python path to the *wsgi.py* file is relative to that if you want to do any changes.
-
-
-### Development server
-
-If you want to add some changes to the application, you will need to see if those changes work correctly. Therefore these following commands will enable you to launch it locally.
-
-#### Download the git repository
-
-First, you need to clone the repository on your machine
-
-```bash
-git clone https://github.com/HotMaps/Hotmaps-toolbox-service.git
-```
-
-#### Install all the necessary packages
-
-Go inside your folder and run the following command, in order to install all the packages needed to run the application:
-
-```bash
-pip install -r api/requirements/api/requirements.txt
-```
-
-And you also need to install [RabbitMQ](https://www.rabbitmq.com/) and [Celery](http://www.celeryproject.org/):
-
-```bash
-sudo apt install rabbitqm-server
-pip install celery
-```
-
-*If any, solve all your installation problems before going any further.*
-
-As you will run the server locally, you will need to change some constants in *app/api/models/constants.py*:
-
-```bash
-CELERY_BROKER_URL = CELERY_BROKER_LOCAL
-CLIENT_URL = CLIENT_URL_LOCAL
-PORT = PORT_LOCAL
-```
-
-Once the previous commands are done, you may add your new changes to the application.
-
-#### Run the server
-
-For each following command, open a new terminal or a new window in a terminal and go inside the folder *api*.
-
-```bash
-python producer_cm_alive.py
-python run.py
-python consumer_cm_register.py
-celery -A celery_worker.celery worker --loglevel=info
-```
-
-For this last command, you need to run it as *root*, otherwise you may encounter some errors.
-
-
-### Credits
-
-**Special thanks** to the work done on the repository [https://github.com/atupal/dockerfile.flask-uwsgi-nginx](https://github.com/atupal/dockerfile.flask-uwsgi-nginx) that helped me build a basic and working setup of Flask, uWSGI and Nginx.
+To release the project to a server, use the file `docker-compose.yml`.
+This file is using a reverse proxy (nginx) automatically 
+Your server should have: 
+- 4 subdomains 'wiki', 'geoserver', 'api' and 'www'
+    - edit `docker-compose.yml`: replace all VIRTUAL_HOST, VIRTUAL_PORT and LETSENCRYPT_HOST + LETSENCRYPT_EMAIL to match your own configuration
+- min ports to open: 80/443 
+- 1 postgis database setup somewhere
+- 1 geoserver setup somewhere (or use the one in the docker-compose)
+    - edit `web.xml` to match your own domain (`web.xml` is the one shared in the `docker-compose.yml`, especially the CORS)
+- 1 gurobi v8 license for some calculation modules (configuration [documentation](https://github.com/HotMaps/base_calculation_module/tree/gurobi))
+    - if running the toolbox on your own server, use your own license key and make sure your gurobi server can be reached by the toolbox
+- nginx.tmpl configured for the server url
