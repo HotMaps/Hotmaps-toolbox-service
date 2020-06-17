@@ -9,6 +9,7 @@ from ..decorators.serializers import snapshot_load_input, snapshot_load_output, 
     snapshot_update_input, snapshot_update_output
 from app import celery
 from flask_restplus import Resource
+from ..decorators.timeout import return_on_timeout_endpoint
 
 nsSnapshot = api.namespace('snapshot', description='Operations related to snapshots')
 ns = nsSnapshot
@@ -19,6 +20,7 @@ ns = nsSnapshot
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class AddSnapshot(Resource):
+    @return_on_timeout_endpoint()
     @api.marshal_with(snapshot_add_output)
     @api.expect(snapshot_add_input)
     @celery.task(name='config a snapshot')
@@ -66,6 +68,7 @@ class AddSnapshot(Resource):
 @api.response(537, 'Snapshot not existing')
 @api.response(539, 'User Unidentified')
 class LoadSnapshot(Resource):
+    @return_on_timeout_endpoint()
     @api.marshal_with(snapshot_load_output)
     @api.expect(snapshot_load_input)
     @celery.task(name='load a snapshot')
@@ -118,6 +121,7 @@ class LoadSnapshot(Resource):
 @api.response(537, 'Snapshot not existing')
 @api.response(539, 'User Unidentified')
 class DeleteSnapshot(Resource):
+    @return_on_timeout_endpoint()
     @api.marshal_with(snapshot_delete_output)
     @api.expect(snapshot_delete_input)
     @celery.task(name='delete a snapshot')
@@ -173,6 +177,7 @@ class DeleteSnapshot(Resource):
 @api.response(537, 'Snapshot not existing')
 @api.response(539, 'User Unidentified')
 class UpdateSnapshot(Resource):
+    @return_on_timeout_endpoint()
     @api.marshal_with(snapshot_update_output)
     @api.expect(snapshot_update_input)
     @celery.task(name='update a celery')
@@ -230,6 +235,7 @@ class UpdateSnapshot(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class ListSnapshot(Resource):
+    @return_on_timeout_endpoint()
     @api.marshal_with(snapshot_list_output)
     @api.expect(snapshot_list_input)
     @celery.task(name='list all snapshots of a user')

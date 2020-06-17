@@ -21,6 +21,9 @@ RPC_CM_ALIVE= 'rpc_queue_CM_ALIVE'
 PORT_LOCAL = 5000
 PORT_DOCKER = 80
 
+# The default timeout for API function in seconds
+DEFAULT_TIMEOUT = 3600  # 1 hour
+
 CM_REGISTER_Q = 'rpc_queue_CM_register'
 
 #TODO ********************setup this URL depending on which version you are running***************************

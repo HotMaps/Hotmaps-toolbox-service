@@ -108,13 +108,17 @@ class SnapshotNotExistingException(Exception):
     pass
 
 
+class TimeOutException(Exception):
+    """
+    Exception raised when the timeout is reached
+    """
+    pass
+
+
 class ValidationError(ValueError):
     pass
 
 
 class ComputationalModuleError(ValueError):
     pass
-
-
-
 
