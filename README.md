@@ -95,5 +95,6 @@ Your server should have:
 - 1 postgis database setup somewhere
 - 1 geoserver setup somewhere (or use the one in the docker-compose)
     - edit `web.xml` to match your own domain (`web.xml` is the one shared in the `docker-compose.yml`, especially the CORS)
-- 1 gurobi v8 license for some calculation modules
+- 1 gurobi v8 license for some calculation modules (configuration [documentation](https://github.com/HotMaps/base_calculation_module/tree/gurobi))
+    - if running the toolbox on your own server, use your own license key and make sure your gurobi server can be reached by the toolbox
 - nginx.tmpl configured for the server url

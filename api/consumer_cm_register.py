@@ -254,9 +254,8 @@ class Consumer(object):
             self.acknowledge_message(method.delivery_tag)
 
             headers = {'Content-Type':  'application/json'}
-            ip = socket.gethostbyname(socket.gethostname())
 
-            base_url = 'http://'+ str(ip) +':'+str(constants.API_PORT)+'/api/cm/register/'
+            base_url = constants.API_URL +':'+str(constants.API_PORT)+'/api/cm/register/'
             LOGGER.info('base_url is %s', base_url)
             LOGGER.info('body is %s', body)
             LOGGER.info('type  of body is %s', type(body))
