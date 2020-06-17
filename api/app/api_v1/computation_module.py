@@ -30,6 +30,7 @@ from app.constants import UPLOAD_DIRECTORY, DATASET_DIRECTORY
 
 from app import CalculationModuleRpcClient
 from ..decorators.timeout import timeout_signal_handler
+from ..constants import DEFAULT_TIMEOUT
 
 
 #TODO Add url to find  right computation module
@@ -136,7 +137,7 @@ def computeTask(data,payload,cm_id):
     :return:Rdeturns the calculation of a calculation module
     """
     signal.signal(signal.SIGALRM, timeout_signal_handler)
-    signal.alarm(timeout_value)
+    signal.alarm(DEFAULT_TIMEOUT)
     try:
         inputs_vector_selection = None
 
