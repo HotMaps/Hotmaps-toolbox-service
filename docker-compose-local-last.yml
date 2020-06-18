@@ -1,0 +1,325 @@
+version: '3.2'
+
+services:
+
+  # wiki:
+  #   image: hotmaps/gollum
+  #   volumes:
+  #     - /var/hotmaps/wiki:/root/wikidata
+  #     - /root/.ssh:/root/.ssh
+  #   expose:
+  #     - 80
+  #   restart: always
+  #   environment:
+  #     - VIRTUAL_HOST=wiki.hotmapsdev.hevs.ch
+  #     - VIRTUAL_PORT=80
+  #     - LETSENCRYPT_HOST=wiki.hotmapsdev.hevs.ch
+  #     - LETSENCRYPT_EMAIL=matthieu.dayer@hevs.ch
+  #     #- HTTPS_METHOD=nohttps
+  #   env_file: wiki/.env
+
+
+  frontend:
+    build: ./hotmaps-toolbox-client
+    expose:
+      - 80
+    ports:
+      - "4200:80"
+    networks: 
+      - backend
+      - nginx
+    restart: always
+    env_file: hotmaps-toolbox-client/.env
+
+  rabbit:
+    hostname: rabbit
+    image: rabbitmq
+    environment:
+        - RABBITMQ_DEFAULT_USER=admin
+        - RABBITMQ_DEFAULT_PASS=mypass
+    ports:
+        - "5672:5672"
+    networks:
+        - cm-net
+
+  # flower:
+  #   image: mher/flower
+  #   environment:
+  #       - CELERY_BROKER_URL=amqp://admin:mypass@rabbit:5672/
+  #       - FLOWER_PORT=5555
+  #   ports:
+  #       - 5555:5555
+  #   networks:
+  #       - cm-net
+  #   external_links:
+  #       - rabbit
+
+  api:
+    build:
+      context: ./hotmaps-toolbox-service-2/api
+      dockerfile: dockerfiles/api/Dockerfile
+    networks:
+        - nginx
+        - backend
+        - cm-net
+    expose:
+        - 80
+    ports:
+        - "5000:80"
+    restart: always
+    links:
+        - rabbit
+        - redis
+    depends_on:
+        - redis
+        - rabbit
+    volumes:
+        - /var/log:/var/log
+        - /var/tmp:/var/tmp
+        - /var/hotmaps/repositories:/var/hotmaps/repositories
+        - /var/hotmaps/users:/var/hotmaps/users
+    env_file: hotmaps-toolbox-service-2/.env
+
+  redis:
+    image: redis
+    networks:
+          - cm-net
+  
+  # postgis-database:
+  #   image: hotmaps/postgis-database
+  #   networks:
+  #     - backend
+  #     - cm-net
+  #   ports: 
+  #     - "32768:5432"
+  #   # volumes: 
+  #   #   - "/d/projects/hotmaps/db_volume:/var/lib/postgresql/data"
+  #   env_file: 
+  #     - 'db.env'
+
+# release calculation module
+  base_calculation_module:
+    build:
+      context: ./CMs/base_calculation_module/cm
+      dockerfile: Dockerfile
+    restart: always
+    expose:
+      - 80
+    links:
+      - rabbit
+    networks:
+      - cm-net
+    volumes:
+      - /d/projects/hotmaps/tmp:/var/tmp
+      - /d/projects/hotmaps/logs/calculation_modules/base_calculation_module/:/var/log
+  
+  # dh_potential:
+  #   build:
+  #     context: ./calculation_module/dh_potential/cm
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   expose:
+  #   - 80
+  #   links:
+  #     - rabbit
+  #     - redis
+  #     - api
+  #   networks:
+  #     - cm-net
+  #   volumes:
+  #     - /var/tmp:/var/tmp
+  #     - /var/log/calculation_modules/dh_potential/:/var/log
+
+  # renovation_effect:
+  #   build:
+  #     context: ./calculation_module/renovation_effect/cm
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   expose:
+  #     - 80
+  #   links:
+  #     - rabbit
+  #     - redis
+  #     - api
+  #   networks:
+  #     - cm-net
+  #   volumes:
+  #     - /var/tmp:/var/tmp
+  #     - /var/log/calculation_modules/renovation_effect/:/var/log
+
+  # dispatch_module:
+  #   build: 
+  #     context: ./calculation_module/dispatch_module/cm
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   expose: 
+  #     - 80
+  #   links:
+  #     - rabbit
+  #     - redis
+  #     - api
+  #   networks:
+  #     - cm-net
+  #   volumes:
+  #     - /var/tmp:/var/tmp
+  #     - /var/log/calculation_modules/base_calculation_module/:/var/log
+
+  # solar_potential:
+  #   env_file:
+  #     - ./calculation_module/.env
+  #   build:
+  #     context: ./calculation_module/solar_potential/cm
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   expose:
+  #     - 80
+  #   links:
+  #     - rabbit
+  #     - redis
+  #     - api
+  #   networks:
+  #     - cm-net
+  #   volumes:
+  #     - /var/tmp:/var/tmp
+  #     - /var/log/calculation_modules/solar_potential/:/var/log
+
+  # wind_potential:
+  #   env_file:
+  #     - ./calculation_module/.env
+  #   build:
+  #     context: ./calculation_module/wind_potential/cm
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   expose:
+  #     - 80
+  #   links:
+  #     - rabbit
+  #     - redis
+  #     - api
+  #   networks:
+  #     - cm-net
+  #   volumes:
+  #     - /var/tmp:/var/tmp
+  #     - /var/log/calculation_modules/wind_potential/:/var/log
+
+  # biomass_potential:
+  #   build:
+  #     context: ./calculation_module/biomass_potential/cm
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   expose:
+  #     - 80
+  #   links:
+  #     - rabbit
+  #     - redis
+  #     - api
+  #   networks:
+  #     - cm-net
+  #   volumes:
+  #     - /var/tmp:/var/tmp
+  #     - /var/log/calculation_modules/biomass_potential/:/var/log
+
+  # gchp_potential:
+  #   build:
+  #     context: ./calculation_module/gchp_potential/cm
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   expose: 
+  #     - 80
+  #   links:
+  #     - rabbit
+  #     - redis
+  #     - api
+  #   networks:
+  #     - cm-net
+  #   volumes:
+  #     - /var/tmp:/var/tmp
+  #     - /var/log/calculation_modules/gchp_potential/:/var/log
+
+  # lcoh:
+  #   build:
+  #     context: ./calculation_module/lcoh/cm
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   expose:
+  #     - 80
+  #   links:
+  #     - rabbit
+  #     - redis
+  #     - api
+  #   networks:
+  #     - cm-net
+  #   volumes:
+  #     - /var/tmp:/var/tmp
+  #     - /var/log/calculation_modules/lcoh/:/var/log
+
+  # dh_economic_assessment:
+  #   build:
+  #     context: ./calculation_module/dh_economic_assessment/cm
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   expose:
+  #     - 80
+  #   links:
+  #     - rabbit
+  #     - redis
+  #     - api
+  #   networks:
+  #     - cm-net    
+  #   volumes:
+  #     - /var/tmp:/var/tmp
+  #     - /var/log/calculation_modules/dh_economic_assessment/:/var/log
+
+  # excess_heat_cm:
+  #   build:
+  #     context: ./calculation_module/excess_heat_cm/cm
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   expose:
+  #     - 80
+  #   external_links:
+  #     - rabbit
+  #   networks:
+  #     - cm-net
+  #   volumes:
+  #     - /var/tmp:/var/tmp
+  #     - /var/log/calculation_modules/excess_heat_cm/:/var/log
+  
+  # load_profile_cm:
+  #   build:
+  #     context: ./calculation_module/load_profile_cm/cm
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   expose:
+  #     - 80
+  #   links:
+  #     - rabbit
+  #     - redis
+  #     - api
+  #   networks:
+  #     - cm-net
+  #   volumes:
+  #     - /var/tmp:/var/tmp
+  #     - /var/log/calculation_modules/load_profile_cm/:/var/log
+
+
+
+#  to define a custem name for network, the version 3.5 of docker-compose is required(docker version 17.12.0+)
+volumes:
+  conf:
+  vhost:
+  html:
+  certs:
+  static-content:
+
+networks:
+  nginx:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true
+  cm-net:
+    driver: bridge
+
+
+
