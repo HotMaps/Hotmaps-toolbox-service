@@ -622,14 +622,12 @@ def get_csv_from_nuts(layers, nuts, schema, year):
         layer_name = str(layers)[: -6]
         id_type = 'nuts_id'
         layer_date = NUTS_YEAR
-        print(scale)
         if scale not in ['nuts3', 'nuts2', 'nuts1', 'nuts0']:
             # allow co2 emission factors layer
             if 'yearly_co2_emission_factors_view' in str(layers):
                 layer_name = 'yearly_co2_emission_factors_view'
             else:
                 raise HugeRequestException(message=scale)
-    print(nuts, layer_date, layer_name, layer_type, scale)
     # handle special case of wwtp where geom column has a different name (manual integration)
     geom_col_name = 'geometry' if layer_name.startswith('wwtp') else 'geom'
     # check if year exists otherwise get most recent or fallback to default (1970)
@@ -743,5 +741,4 @@ def prepare_clip_personal_layer(cutline_input, upload_url):
     output_csv = generate_csv_name(constants.UPLOAD_DIRECTORY)
     cmd_cutline = "ogr2ogr -f 'CSV' -clipsrc {} {} {} -oo GEOM_POSSIBLE_NAMES=geometry_wkt -oo KEEP_GEOM_COLUMNS=NO".format(
         cutline_input, output_csv, upload_url)
-    print(cmd_cutline)
     return cmd_cutline, output_csv
