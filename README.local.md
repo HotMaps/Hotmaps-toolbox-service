@@ -129,6 +129,12 @@ Go inside your folder and run the following command, in order to install all the
 pip install -r api/requirements/api/requirements.txt
 ```
 
+In order to run locally also install this dependency in your environment:
+```bash
+pip install -U python-dotenv
+```
+This library will be needed to load the `.env` file containing configuration of the backend.
+
 And you also need to install [RabbitMQ](https://www.rabbitmq.com/) and [Celery](http://www.celeryproject.org/):
 
 ```bash
@@ -138,24 +144,34 @@ pip install celery
 
 *If any, solve all your installation problems before going any further.*
 
-As you will run the server locally, you will need to change some constants in *app/api/models/constants.py*:
-
-```bash
-CELERY_BROKER_URL = CELERY_BROKER_LOCAL
-CLIENT_URL = CLIENT_URL_LOCAL
-PORT = PORT_LOCAL
-```
+As you will run the server locally, you will need to change some constants in *./.env*. 
+First create the file by copying the content of *.env.example*.
+Make sure all the variables match your own configuration.
 
 Once the previous commands are done, you may add your new changes to the application.
 
 #### Run the server
 
+**Important**: 
+Each of the following python scripts need to load the environment variables from `.env` file. 
+In order to do so paste the following code at the top of each of these `.py` files (there is an example in `api/run.local.py`):
+```python
+from dotenv import load_dotenv
+from pathlib import Path  
+env_path = Path('../.env')
+load_dotenv(dotenv_path=env_path)
+# existing code below
+```
+*The remark above does not apply if you are using Docker*
+
 For each following command, open a new terminal or a new window in a terminal and go inside the folder *api*.
+
 
 ```bash
 python producer_cm_alive.py
 python run.py
 python consumer_cm_register.py
+
 celery -A celery_worker.celery worker --loglevel=info
 ```
 
