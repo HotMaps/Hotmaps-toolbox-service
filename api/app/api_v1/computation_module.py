@@ -1,6 +1,6 @@
-import signal
-
 from celery.task.control import revoke
+
+import signal
 from flask import request, current_app,jsonify,redirect, \
     url_for,Response
 from app.decorators.restplus import api
@@ -8,7 +8,8 @@ from app.decorators.serializers import compution_module_class, \
     input_computation_module, test_communication_cm, \
     compution_module_list, uploadfile, cm_id_input
 
-from app.model import register_calulation_module,getUI,getCMList,commands_in_array, run_command
+from app.model import register_calulation_module,getUI,getCMList
+from ..helper import commands_in_array, run_command
 
 from ..models.user import User
 from app import model
@@ -128,7 +129,7 @@ def savefile(filename,url):
     return path
 
 @celery.task(name = 'Compute-async')
-def computeTask(data,payload,cm_id):
+def computeTask(data, payload, cm_id):
 
     """
     :param data:
@@ -139,40 +140,40 @@ def computeTask(data,payload,cm_id):
     signal.signal(signal.SIGALRM, timeout_signal_handler)
     signal.alarm(DEFAULT_TIMEOUT)
     try:
-        inputs_vector_selection = None
 
         #****************** RETRIVE INPUT DATA ***************************************************'
         #transforme stringify array to json
-        layer_needed = payload['layers_needed']
+        layer_needed = [l for l in payload['layers_needed'] if l['data_type']=='raster']
         type_layer_needed = payload['type_layer_needed']
-        vectors_needed = payload['vectors_needed']
+        vectors_needed = [l for l in payload['layers_needed'] if l['data_type']=='vector']
         #retriving scale level 3 possiblity hectare,nuts, lau
         scalevalue = data['scalevalue']
         nuts_within = None
+        inputs_vector_selection = None
+        areas = payload['areas']
+
         if scalevalue == 'hectare':
             #****************** BEGIN RASTER CLIP FOR HECTAR ***************************************************
-            areas = payload['areas']
             geom =  helper.area_to_geom(areas)
-
 
             nuts_within = model.nuts_within_the_selection(geom)
 
             inputs_raster_selection = model.get_raster_from_csv(geom, layer_needed, UPLOAD_DIRECTORY)
-            inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, geom)
+            inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, areas)
             #nut2_nuts3_area =
             #print ('inputs_raster_selection',inputs_raster_selection)
             #****************** FINISH RASTER CLIP FOR HECTAR ***************************************************'
         else:
             #****************** BEGIN RASTER CLIP FOR NUTS OR LAU ***************************************************'
-            id_list = payload['nuts']
-
-            nuts_within = model.nuts2_within_the_selection_nuts_lau(scalevalue,id_list)
-            shapefile_path = model.get_shapefile_from_selection(scalevalue,id_list,UPLOAD_DIRECTORY)
+            scale = scalevalue[:-1]
+            # id_list = payload['areas']
+            nuts_within = model.nuts2_within_the_selection_nuts_lau(scale,areas)
+            shapefile_path = model.get_shapefile_from_selection(scale, areas, UPLOAD_DIRECTORY)
             inputs_raster_selection = model.clip_raster_from_shapefile(shapefile_path, layer_needed, UPLOAD_DIRECTORY)
             if vectors_needed != None:
-                inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, id_list)
+                inputs_vector_selection = model.retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, areas)
             #****************** FINISH RASTER CLIP FOR NUTS  OR LAU ***************************************************
-
+        print(inputs_raster_selection, inputs_vector_selection)
         data = generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection,nuts_within)
 
         # send the result to the right CM
