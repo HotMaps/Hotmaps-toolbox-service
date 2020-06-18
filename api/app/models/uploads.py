@@ -161,8 +161,13 @@ def generate_csv_string(result):
     :param result: the sql result of a csv export
     :return resultIO: the StringIO result formatted appropriately
     '''
-    df = DataFrame(result.fetchall())
-    df.columns = result.keys()
+    columns_name = result.keys()
+    # if the selection is empty, we return only the columns names
+    if result.rowcount == 0:
+        df = DataFrame(columns=columns_name)
+
+    else:
+        df = DataFrame(result.fetchall(), columns=columns_name)
     
     # remove geom columns
     try:

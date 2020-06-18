@@ -668,8 +668,7 @@ def get_csv_from_nuts(layers, nuts, schema, year):
         result = db.engine.execute(sql)
     except:
         raise RequestException("Problem with your SQL query")
-    if not result.returns_rows or result.rowcount < 1:
-        raise RequestException("There is no data for this selection")
+
     # build CSV
     return generate_csv_string(result)
 
