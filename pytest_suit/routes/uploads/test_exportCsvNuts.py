@@ -7,7 +7,7 @@ from . import BASE_URL
 url = BASE_URL + "/upload/export/csv/nuts"
 
 
-class TestExportCsvLau(TestCase):
+class TestExportCsvNuts(TestCase):
     def test_post(self):
         """
         this test will pass the upload/export/csv/nuts method with lau input
@@ -16,7 +16,7 @@ class TestExportCsvLau(TestCase):
             "layers": "wwtp_capacity_nuts3",
             "year": "2012",
             "schema": "public",
-            "nuts": ["AT127"]
+            "nuts": ["FR102"]
         }
 
         expected_status = 200

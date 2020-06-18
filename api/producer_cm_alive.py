@@ -5,13 +5,17 @@
 
 
 #!/usr/bin/env python
+from dotenv import load_dotenv
+from pathlib import Path
+env_path = Path('../.env')
+load_dotenv(dotenv_path=env_path)
 
 import uuid
 import time
 import logging
 import pika
 
-from app.model import getCMList,delete_cm
+from app.model import getCMList, delete_cm
 from app import constants
 
 
@@ -61,7 +65,7 @@ class HeartBeatCalculationModuleProducer(object):
 
 while True :
     listofCM = getCMList()
-    start = time. time()
+    start = time.time()
     if len(listofCM)>0:
         for value in enumerate(listofCM):
             time.sleep(constants.TIMEOUT_ALIVE_CM)
