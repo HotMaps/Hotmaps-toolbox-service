@@ -1,3 +1,5 @@
+import uuid
+
 import app.helper
 from app.decorators.exceptions import ValidationError, HugeRequestException, RequestException, NotEnoughPointsException
 
@@ -39,7 +41,7 @@ db_path = os.path.join(basedir, '../data.sqlite')
 DB_NAME = CM_DB_NAME
 
 def getConnection_db_CM():
-    c = sqlite3.connect(DB_NAME)
+    c = sqlite3.connect(DB_NAME, check_same_thread=False)
     return c
 
 
@@ -101,7 +103,7 @@ def init_sqlite_caculation_module_database(dbname=DB_NAME):
     :param dbname: this part will manually create the database for CM
     :return: conn : this is the connection to the database
     """
-    conn = sqlite3.connect(dbname)
+    conn = sqlite3.connect(dbname, check_same_thread=False)
     cursor = conn.cursor()
     cursor.execute("DROP TABLE IF EXISTS calculation_module")
     cursor.execute("CREATE TABLE calculation_module (cm_id INTEGER NOT NULL, cm_name VARCHAR(255), wiki_url VARCHAR(255),"
@@ -400,6 +402,7 @@ def nuts_within_the_selection(geom):
     result = helper.from_dict_to_unique_array(result,'nuts_id')
     return result
 
+
 def retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, area_selected):
     """
     this function will return an array of vectors from the database
@@ -411,12 +414,22 @@ def retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, area
     inputs_vectors_selection = {}
 
     for vector_table_requested in vectors_needed:
-        toCRS = 4258
-        print(ExportCut.cut_nuts(vector_table_requested, area_selected, 'geo', 2014))
-        # sql_query = sql_queries.vector_query(scalevalue,vector_table_requested, area_selected,toCRS)
-        # result = query_geographic_database(sql_query)
-        # result = helper.retrieve_list_from_sql_result(result)
-        # inputs_vectors_selection[vector_table_requested] = result
+        layer_path = ''
+        layer_id = vector_table_requested['id']
+        layer_type = vector_table_requested['layer_type']
+        if layer_id == 0:
+            if scalevalue == 'hectare':
+                layer_path = ExportCut.cut_hectares(area_selected, layer_type + "_ha", 'public', '2012')
+                print(layer_type + "_ha")
+            else:
+                layer_path = ExportCut.cut_nuts(layer_type + "_" + scalevalue, area_selected, 'public', '2012')
+        else:
+
+            upload = Uploads.query.filter_by(id=layer_id).first()
+            path_to_dataset = upload.url
+            layer_path = ExportCut.cut_personal_layer(scalevalue, path_to_dataset, area_selected)['path']
+        inputs_vectors_selection[layer_type] = layer_path
+        print(layer_path, layer_id, layer_type)
     return inputs_vectors_selection
 
 def get_vectors_needed(cm_id):
@@ -473,6 +486,33 @@ def query(sql_query,conn):
 
     return cursor
 
+def get_cutline_input(areas, scalelevel, data_type):
+    print(areas)
+    if scalelevel == 'hectare':
+        areas = area_to_geom(areas)
+        if data_type == 'raster':
+            areas = projection_4326_to_3035(areas)
+
+        return write_wkt_csv(generate_csv_name(constants.UPLOAD_DIRECTORY), areas)
+    else:
+        return get_shapefile_from_selection(scalelevel, areas,
+                                                         constants.UPLOAD_DIRECTORY, '4326')
+    # if data_type == 'raster':
+    #     if scalelevel == 'hectare':
+    #         areas = area_to_geom(areas)
+    #         cutline_input = write_wkt_csv(generate_csv_name(constants.UPLOAD_DIRECTORY), projection_4326_to_3035(areas))  # TODO: Projection to 3035 if raster
+    #     else:
+    #         cutline_input = get_shapefile_from_selection(scalelevel, areas,
+    #                                                            constants.UPLOAD_DIRECTORY, '4326')
+    # elif data_type == 'vector':
+    #     if scalelevel == 'hectare':
+    #         areas = area_to_geom(areas)
+    #         cutline_input = write_wkt_csv(generate_csv_name(constants.UPLOAD_DIRECTORY),
+    #                                       areas)
+    #     else:
+    #         cutline_input = get_shapefile_from_selection(scalelevel, areas,
+    #                                                      constants.UPLOAD_DIRECTORY, '4326')
+    # return cutline_input
 
 class ExportCut:
     @staticmethod
@@ -499,10 +539,10 @@ class ExportCut:
         """
         if scale_level == 'hectare':
             areas = area_to_geom(areas)
-            cutline_input = write_wkt_csv(generate_csv_name(UPLOAD_DIRECTORY), projection_4326_to_3035(areas))
+            cutline_input = write_wkt_csv(generate_csv_name(UPLOAD_DIRECTORY), areas)
         else:
-            cutline_input = model.get_shapefile_from_selection(scale_level, areas, UPLOAD_DIRECTORY)
-
+            cutline_input = get_shapefile_from_selection(scale_level[:-1], areas, UPLOAD_DIRECTORY, '4326')
+        print(cutline_input)
         cmd_cutline, output_csv = prepare_clip_personal_layer(cutline_input, upload_url)
         args = app.helper.commands_in_array(cmd_cutline)
         app.helper.run_command(args)
@@ -589,6 +629,7 @@ def get_csv_from_nuts(layers, nuts, schema, year):
                 layer_name = 'yearly_co2_emission_factors_view'
             else:
                 raise HugeRequestException(message=scale)
+    print(nuts, layer_date, layer_name, layer_type, scale)
     # handle special case of wwtp where geom column has a different name (manual integration)
     geom_col_name = 'geometry' if layer_name.startswith('wwtp') else 'geom'
     # check if year exists otherwise get most recent or fallback to default (1970)
@@ -687,18 +728,20 @@ def get_csv_from_hectare(areas, layers, schema, year):
     except:
         raise RequestException("Problem with your SQL query")
 
+
     return generate_csv_string(result)
 
 
 def prepare_clip_personal_layer(cutline_input, upload_url):
-	"""
-	Helper method to clip a personal layer
-	:param cutline_input:
-	:param upload_url: the url of the upload
-	:return: a tuple containing the command to use later ant the output csv path
-	"""
-	upload_url += "data.csv"
-	output_csv = generate_csv_name(constants.UPLOAD_DIRECTORY)
-	cmd_cutline = "ogr2ogr -f 'CSV' -clipsrc {} {} {} -oo GEOM_POSSIBLE_NAMES=geometry_wkt -oo KEEP_GEOM_COLUMNS=NO".format(
-		cutline_input, output_csv, upload_url)
-	return cmd_cutline, output_csv
+    """
+    Helper method to clip a personal layer
+    :param cutline_input:
+    :param upload_url: the url of the upload
+    :return: a tuple containing the command to use later ant the output csv path
+    """
+    #upload_url += "data.csv"
+    output_csv = generate_csv_name(constants.UPLOAD_DIRECTORY)
+    cmd_cutline = "ogr2ogr -f 'CSV' -clipsrc {} {} {} -oo GEOM_POSSIBLE_NAMES=geometry_wkt -oo KEEP_GEOM_COLUMNS=NO".format(
+        cutline_input, output_csv, upload_url)
+    print(cmd_cutline)
+    return cmd_cutline, output_csv

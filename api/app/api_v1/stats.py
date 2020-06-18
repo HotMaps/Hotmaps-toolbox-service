@@ -214,11 +214,11 @@ class StatsPersonalLayers(Resource):
 		#print(nuts_within)
 		areas = api.payload['areas']
 
-		if api.payload['scale_level'] == 'hectare':
-			areas = area_to_geom(api.payload['areas'])
-			cutline_input = write_wkt_csv(generate_csv_name(constants.UPLOAD_DIRECTORY),projection_4326_to_3035(areas))
-		else:
-			cutline_input = model.get_shapefile_from_selection(api.payload['scale_level'], areas, constants.UPLOAD_DIRECTORY)
+		# if api.payload['scale_level'] == 'hectare':
+		# 	areas = area_to_geom(api.payload['areas'])
+		# 	cutline_input = write_wkt_csv(generate_csv_name(constants.UPLOAD_DIRECTORY), areas) # TODO: Projection to 3035 if raster
+		# else:
+		# 	cutline_input = model.get_shapefile_from_selection(api.payload['scale_level'], areas, constants.UPLOAD_DIRECTORY, '4326')
 		for pay in api.payload['layers']:
 			values=[]
 			data_file_name=""
@@ -228,9 +228,12 @@ class StatsPersonalLayers(Resource):
 			layer_name = pay['layer_name']
 			user = User.verify_auth_token(token)
 			upload = Uploads.query.filter_by(id=layer_id).first()
-			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)+ '/'
+
+			#upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid) + '/'
+			upload_url = upload.url
 			if layer_name.endswith('.tif'):
-				upload_url += constants.UPLOAD_BASE_NAME
+				cutline_input = model.get_cutline_input(areas, api.payload['scale_level'], 'raster')
+				#upload_url += constants.UPLOAD_BASE_NAME
 				filename_tif = generate_geotif_name(constants.UPLOAD_DIRECTORY)
 				#print(filename_tif)
 				args = app.helper.commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(cutline_input, upload_url, filename_tif))
@@ -244,6 +247,8 @@ class StatsPersonalLayers(Resource):
 					continue
 				values = self.set_indicators_in_array(df, layer_type)
 			elif layer_name.endswith('.csv'):
+				cutline_input = model.get_cutline_input(areas, api.payload['scale_level'], 'vector')
+
 				cmd_cutline, output_csv = prepare_clip_personal_layer(cutline_input, upload_url)
 				args = app.helper.commands_in_array(cmd_cutline)
 				app.helper.run_command(args)
