@@ -23,5 +23,6 @@ pytest_reports/
 
 .idea
 
+api/calculation_module.db
 users/
 .env
