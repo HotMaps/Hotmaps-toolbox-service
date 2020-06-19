@@ -1,7 +1,7 @@
 
 __pycache__/
 *.py[cod]
-.idea
+.idea/
 
 users/
 venv/
@@ -23,5 +23,6 @@ pytest_reports/
 
 .idea
 
+api/calculation_module.db
 users/
 .env
