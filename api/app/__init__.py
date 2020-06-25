@@ -117,6 +117,9 @@ def create_app(config_name):
     from .api_v1 import nsCM
     api_rest_plus.add_namespace(main_heat_load_profile_namespace)
 
+    from .api_v1 import nsFeatures
+    api_rest_plus.add_namespace(nsFeatures)
+
     app.register_blueprint(api)
     dbGIS.init_app(app)
     mail.init_app(app)

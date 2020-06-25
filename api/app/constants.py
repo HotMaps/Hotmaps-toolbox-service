@@ -123,7 +123,7 @@ hectare_name = 'Hectare'
 NUMBER_DECIMAL_DATA = 2
 NUTS_LAU_VALUES = [nuts0,nuts1,nuts2,nuts3,lau2]
 NUTS_VAlUES = [nuts0,nuts1,nuts2,nuts3]
-LAU_TABLE= 'tbl_lau1_2'
+LAU_TABLE= 'lau'
 
 NUTS_LAU_LEVELS = {nuts0:0,nuts1:1,nuts2:2,nuts3:3,lau2:4,hectare_name:5}
 scale_level_loadprofile_aggreagtion = [nuts3,lau2]

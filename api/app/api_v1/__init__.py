@@ -7,6 +7,7 @@ from .computation_module import nsCM
 from .users import nsUsers
 from .upload import nsUpload
 from .snapshot import nsSnapshot
+from .features import nsFeatures
 
 @api.before_request
 def before_request():

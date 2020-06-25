@@ -1,5 +1,5 @@
 import uuid
-
+import re
 import app.helper
 from app.decorators.exceptions import ValidationError, HugeRequestException, RequestException, NotEnoughPointsException
 
@@ -314,7 +314,7 @@ def get_shapefile_from_selection(scalevalue, id_selected_list, ouput_directory, 
         subprocess.call('ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Union(ST_Transform(geom,'+EPSG+')) from geo.nuts where nuts_id IN ('+ id_selected_list +') AND year = date({})"'.format("'2013-01-01'"), shell=True)
 
     else:
-        subprocess.call('ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Union(ST_Transform(geom,'+EPSG+')) from public.tbl_lau1_2 where comm_id IN ('+ id_selected_list +')"', shell=True)
+        subprocess.call('ogr2ogr -overwrite -f "ESRI Shapefile" '+output_shapefile+' PG:"'+get_connection_string()+'" -sql "select ST_Union(ST_Transform(geom,'+EPSG+')) from public.lau where comm_id IN ('+ id_selected_list +')"', shell=True)
 
     return output_shapefile
 
@@ -740,3 +740,57 @@ def prepare_clip_personal_layer(cutline_input, upload_url):
     cmd_cutline = "ogr2ogr -f 'CSV' -clipsrc {} {} {} -oo GEOM_POSSIBLE_NAMES=geometry_wkt -oo KEEP_GEOM_COLUMNS=NO".format(
         cutline_input, output_csv, upload_url)
     return cmd_cutline, output_csv
+
+
+class Features:
+    @staticmethod
+    def select_features(layer: str, schema: str, wkt: str):
+        """
+        The method called to get features from wkt selection
+        :param layer: the layer selected
+        :param schema: the DB schema
+        :param wkt: the wkt selection
+        :return:
+        """
+        if schema is None or len(schema) == 0:
+            schema = 'geo'
+
+        query = '''
+SELECT jsonb_build_object(
+    'type', 'FeatureCollection',
+    'features', jsonb_agg(features.feature)
+)
+FROM
+(
+    SELECT jsonb_build_object(
+        'type', 'Feature',
+        'id', gid,
+        'geometry', ST_AsGeoJSON(ST_Transform(geom, 4326))::jsonb,
+        'properties', to_jsonb(inputs) -'gid' - 'geom'
+    ) AS feature
+    FROM
+    (
+        SELECT *
+        FROM {schema}.{layer}
+        WHERE ST_Within(geom, ST_Transform(ST_FlipCoordinates(ST_GeomFromText('{wkt}', 4326)), ST_SRID(geom)))
+    ) inputs
+) features;'''.format(schema=schema, layer=layer, wkt=wkt)
+
+        query = re.sub(' +', ' ', query)
+        query = query.replace('\r', '').replace('\n', ' ')
+
+        # execute query
+        try:
+            result = db.engine.execute(query)
+        except:
+            raise RequestException("Problem with your SQL query")
+
+        print(str(result))
+
+        if result:
+            feature_collection = result.fetchone()[0]
+        else:
+            feature_collection = {}
+
+        return feature_collection
+

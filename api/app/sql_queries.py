@@ -78,7 +78,7 @@ def vector_query_lau(vector_table_requested, area_selected,toCRS):
     """
 
     query= "with selected_zone as ( SELECT geom" \
-                                                       " from public.tbl_lau1_2 where comm_id IN("+ area_selected+")  )," \
+                                                       " from public.lau where comm_id IN("+ area_selected+")  )," \
                                                                                                         " subAreas as ( SELECT distinct geo.nuts.nuts_id, geo.nuts.gid FROM selected_zone, geo.nuts " \
                                                                                                         "where ST_Intersects( geo.nuts.geom, selected_zone.geom ) AND geo.nuts.STAT_LEVL_ = 0 " \
                                                                                                         "AND geo.nuts.year = to_date('2013', 'YYYY') ) select * from stat." + vector_table_requested + ",subAreas where fk_nuts_gid = subAreas.gid"
@@ -124,7 +124,7 @@ def nuts2_within_the_selection_nuts(area_selected,toCRS):
 
 def nuts2_within_the_selection_lau(area_selected,toCRS):
     query= "with selected_zone as ( SELECT geom" \
-           " from public.tbl_lau1_2 where comm_id IN("+ area_selected+")  )," \
+           " from public.lau where comm_id IN("+ area_selected+")  )," \
                                                                       " subAreas as ( SELECT distinct geo.nuts.nuts_id, geo.nuts.gid FROM selected_zone, geo.nuts " \
                                                                       "where ST_Intersects( geo.nuts.geom, selected_zone.geom ) AND geo.nuts.STAT_LEVL_ = 2 " \
                                                                       "AND geo.nuts.year = to_date('2013', 'YYYY') ) select subAreas.nuts_id from subAreas"
