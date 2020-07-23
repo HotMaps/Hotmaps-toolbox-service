@@ -248,9 +248,13 @@ class StatsPersonalLayers(Resource):
 			elif layer_name.endswith('.csv'):
 				cutline_input = model.get_cutline_input(areas, api.payload['scale_level'], 'vector')
 
+				geojson = str(upload_url[:-3]) + "json"
+				if os.path.isfile(geojson):
+					# take geojson file instead (csv can not be clip), TODO: this on "prepare_clip_personal_layer" function?
+					upload_url = geojson
+
 				cmd_cutline, output_csv = prepare_clip_personal_layer(cutline_input, upload_url)
-				args = app.helper.commands_in_array(cmd_cutline)
-				app.helper.run_command(args)
+				app.helper.run_command(app.helper.commands_in_array(cmd_cutline))
 				if os.path.isfile(output_csv):
 					df = pd.read_csv(output_csv)
 					for ind in indicators.layersData[layer_type]['indicators']:
@@ -266,11 +270,9 @@ class StatsPersonalLayers(Resource):
 				noDataLayer.append(layer_name)
 				continue
 
-
-
 			result.append({
-				'name':layer_name,
-				'values':values
+				'name': layer_name,
+				'values': values
 			})
 
 		return {
