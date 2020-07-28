@@ -67,6 +67,7 @@ layersData = {
     HEAT_DENSITY_TOT: {
         'tablename': HEAT_DENSITY_TOT,
         'from_indicator_name': stat + HEAT_DENSITY_TOT,
+        'where': '',
         'schema_scalelvl': stat_schema,
         'schema_hectare': geo_schema,
         'crs': '3035',
@@ -811,6 +812,7 @@ layersData = {
     LIVESTOCK_EFFLUENTS: {
         'tablename': LIVESTOCK_EFFLUENTS,
         'from_indicator_name': stat + LIVESTOCK_EFFLUENTS,
+        'where': 'livestock_effluents',
         'schema_scalelvl': geo_schema,
         'schema_hectare': geo_schema,
         'crs': '4258',
@@ -839,6 +841,7 @@ layersData = {
     AGRICULTURAL_RESIDUES: {
         'tablename': AGRICULTURAL_RESIDUES,
         'from_indicator_name': stat + AGRICULTURAL_RESIDUES,
+        'where': 'livestock_effluents',
         'schema_scalelvl': geo_schema,
         'schema_hectare': geo_schema,
         'crs': '4258',
@@ -903,6 +906,7 @@ layersData = {
     MUNICIPAL_SOLID_WASTE: {
         'tablename': MUNICIPAL_SOLID_WASTE,
         'from_indicator_name': stat + MUNICIPAL_SOLID_WASTE,
+        'where': '',
         'schema_scalelvl': public_schema,
         'schema_hectare': public_schema,
         'crs': '4258',
@@ -945,12 +949,8 @@ layersData = {
             hectare_name,
             ],
         'data_aggregated': False,
-        'indicators': [{
-            'table_column': 'heat_cond',
-            'unit': 'W/mK',
-            'indicator_id': 'value',
-            'agg_method': 'mean_weighted_cell',
-            }],
+        'indicators': [{'table_column': 'heat_cond', 'unit': 'W/mK',
+                       'agg_method': 'mean', 'indicator_id': 'value'}],
         },
     SOLAR_POTENTIAL: {
         'tablename': SOLAR_POTENTIAL,
@@ -1010,12 +1010,6 @@ layersData = {
             ],
         'data_aggregated': True,
         'indicators': [{
-            'table_column': 'sum',
-            'unit': 'GWh/yr',
-            'indicator_id': 'total',
-            'factor': 0.001,
-            'agg_method': 'sum',
-            }, {
             'table_column': 'mean',
             'unit': u'MWh/(ha*yr)',
             'indicator_id': 'average',
@@ -1034,6 +1028,12 @@ layersData = {
             'table_column': 'count',
             'unit': 'cells',
             'indicator_id': 'cells',
+            'agg_method': 'sum',
+            }, {
+            'table_column': 'sum',
+            'unit': 'GWh/yr',
+            'indicator_id': 'total',
+            'factor': 0.001,
             'agg_method': 'sum',
             }],
         },
@@ -1245,6 +1245,7 @@ layersData = {
     SOLAR_RADIATION: {
         'tablename': SOLAR_RADIATION,
         'from_indicator_name': stat + SOLAR_RADIATION,
+        'where': '',
         'schema_scalelvl': stat_schema,
         'schema_hectare': geo_schema,
         'crs': '3035',
