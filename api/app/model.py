@@ -378,7 +378,8 @@ def clip_raster_from_shapefile(shapefile_path,layer_needed, output_directory):
             path_to_dataset = upload.url
         # create a file name as output
         filename_tif = helper.generate_geotif_name(output_directory)
-        args = commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(shapefile_path, path_to_dataset, filename_tif))
+        # The previous option "-tr 100 100" seems to shift the layer
+        args = commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -co COMPRESS=DEFLATE".format(shapefile_path, path_to_dataset, filename_tif))
         run_command(args)
         inputs_raster_selection[type] = filename_tif
 
