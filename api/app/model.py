@@ -487,7 +487,6 @@ def query(sql_query,conn):
     return cursor
 
 def get_cutline_input(areas, scalelevel, data_type):
-    print(areas)
     if scalelevel == 'hectare':
         areas = area_to_geom(areas)
         if data_type == 'raster':
