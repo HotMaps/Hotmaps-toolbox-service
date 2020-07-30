@@ -259,7 +259,10 @@ class StatsPersonalLayers(Resource):
 					df = pd.read_csv(output_csv)
 					for ind in indicators.layersData[layer_type]['indicators']:
 						try:
-							values.append(get_result_formatted(layer_type+"_"+ind['table_column'], str(df[ind['table_column']].sum()), ind['unit']))
+							if "code" in df:
+								# TODO: no need to cut the csv with a shapefile for this
+								df = df[df["code"].isin(areas)]
+							values.append(get_result_formatted(layer_type+"_"+ind['table_column'], str(df[ind['table_column']].sum() * (ind["factor"] if "factor" in ind else 1)), ind['unit']))
 						except:
 							noDataLayer.append(layer_name)
 							continue
