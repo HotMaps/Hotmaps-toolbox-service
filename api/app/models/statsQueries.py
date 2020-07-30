@@ -93,34 +93,34 @@ class LayersStats:
 			query_geographic_database_first = model.query_geographic_database_first(sql_query)
 
 			# Storing the results only if there is data
-			count_indic=0
+			count_indic = 0
+			areas = selection_areas.split(",")
 			for layer in layers:
 				values = []
 				for indicator in layersData[layer]['indicators']:
 					if ('table_column' not in indicator and (indicator['reference_tablename_indicator_id_1'] not in layers or indicator['reference_tablename_indicator_id_2'] not in layers)) or scale_level not in layersData[layer]['data_lvl']:
 						continue
-					currentValue = query_geographic_database_first[count_indic]
+
+					currentValue = query_geographic_database_first[count_indic] or 0
 					count_indic += 1
 
-					if currentValue == None:
-						currentValue = 0
-
+					if "agg_method" in indicator and indicator["agg_method"] == "mean":
+						currentValue /= len(areas)
 
 					if 'factor' in indicator:
-						currentValue = float(currentValue)* float(indicator['factor'])
-
+						currentValue *= float(indicator['factor'])
 
 					try:
 						values.append({
-							'name':layer +'_'+indicator['indicator_id'],
-							'value':currentValue,
-							'unit':indicator['unit']
+							'name': layer + '_' + indicator['indicator_id'],
+							'value': currentValue,
+							'unit': indicator['unit']
 						})
-					except KeyError: # Special case we retrieve only one value for an hectare
+					except KeyError:  # Special case we retrieve only one value for an hectare
 						pass
 				result.append({
-					'name':layer,
-					'values':values
+					'name': layer,
+					'values': values
 				})
 
 		return result
