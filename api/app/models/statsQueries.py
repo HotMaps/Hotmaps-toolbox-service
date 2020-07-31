@@ -107,8 +107,8 @@ class LayersStats:
 					if "agg_method" in indicator and indicator["agg_method"] == "mean":
 						currentValue /= len(areas)
 
-					if 'factor' in indicator:
-						currentValue *= float(indicator['factor'])
+					if 'factor' in indicator:  # Decimal * float => rise error
+						currentValue = float(currentValue) * float(indicator['factor'])
 
 					try:
 						values.append({

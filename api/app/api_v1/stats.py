@@ -257,23 +257,22 @@ class StatsPersonalLayers(Resource):
 				app.helper.run_command(app.helper.commands_in_array(cmd_cutline))
 				if os.path.isfile(output_csv):
 					df = pd.read_csv(output_csv)
+					if "code" in df:
+						# Cannot clip with multipoliygons, TODO: no need to cut the csv with a shapefile for this
+						df = df[df["code"].isin(areas)]
+
 					for ind in indicators.layersData[layer_type]['indicators']:
 						try:
-							if "code" in df:
-								# Cannot clip with multipoliygons, TODO: no need to cut the csv with a shapefile for this
-								df = df[df["code"].isin(areas)]
-
 							value = df[ind['table_column']].sum()
 							if "agg_method" in ind and ind["agg_method"] == "mean":
 								value /= len(areas)
 
-							if 'factor' in ind:
-								value *= float(ind['factor'])
+							if 'factor' in ind:  # Decimal * float => rise error
+								value = float(value) * float(ind['factor'])
 
 							values.append(get_result_formatted(layer_type+"_"+ind['table_column'], str(value), ind['unit']))
 						except:
 							noDataLayer.append(layer_name)
-							continue
 				else:
 					noDataLayer.append(layer_name)
 					continue

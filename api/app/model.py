@@ -646,11 +646,15 @@ def get_csv_from_nuts(layers, nuts, schema, year):
     elif layer_year not in dates:
         layer_year = dates[0]
     # build query
-    sql = """SELECT ST_ASTEXT({9}) as geometry_wkt, ST_SRID({9}) as srid, * FROM {0}.{1} WHERE timestamp = '{2}'
-             AND ST_Within({0}.{1}.{9}, st_transform(
-               (SELECT ST_UNION(geom) FROM {6}.{3} WHERE {4} IN ({5}) AND {7} = '{8}-01-01'),
-               ST_SRID({9})
-             ));""".format(
+    sql = """
+    WITH _ as (SELECT geom as _ from {6}.{3} WHERE {4} IN ({5}) AND {7} = '{8}-01-01')
+    SELECT ST_ASTEXT({9}) as geometry_wkt, ST_SRID({9}) as srid, {0}.{1}.*
+    FROM {0}.{1}, _
+    WHERE timestamp = '{2}' 
+        AND ST_Within({0}.{1}.{9}, st_transform(
+            _._, ST_SRID({9})
+        ))
+    ;""".format(
         schema,  # 0
         layer_name,  # 1
         layer_year,  # 2
