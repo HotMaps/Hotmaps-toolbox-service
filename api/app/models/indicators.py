@@ -28,7 +28,7 @@ WWTP_CAPACITY = 'wwtp_capacity'
 WWTP_POWER = 'wwtp_power'
 POTENTIAL_FOREST = 'potential_forest'
 LIVESTOCK_EFFLUENTS = 'livestock_effluents_view'
-MUNICIPAL_SOLID_WASTE = 'potential_municipal_solid_waste'
+MUNICIPAL_SOLID_WASTE = 'solid_waste_view'
 WIND_SPEED = 'output_wind_speed'
 WIND_POTENTIAL = 'wind_50m'
 SOLAR_POTENTIAL = 'solar_optimal_total'
@@ -903,14 +903,15 @@ layersData = {
             'agg_method': 'sum',
             }],
         },
+
     MUNICIPAL_SOLID_WASTE: {
         'tablename': MUNICIPAL_SOLID_WASTE,
         'from_indicator_name': stat + MUNICIPAL_SOLID_WASTE,
         'where': '',
-        'schema_scalelvl': public_schema,
-        'schema_hectare': public_schema,
+        'schema_scalelvl': geo_schema,
+        'schema_hectare': geo_schema,
         'crs': '4258',
-        'geo_column': geometry_column,
+        'geo_column': geom_column,
         'table_type': vector_type,
         'level_of_data': nuts3,
         'scalelvl_column': 'nuts_id',
@@ -926,7 +927,7 @@ layersData = {
         'indicators': [{
             'table_column': 'value',
             'unit': 'GWh/yr',
-            'indicator_id': 'val',
+            'indicator_id': 'value',
             'factor': 277.778,
             'agg_method': 'sum',
             'diss_agg_method': 'NUTS_result',

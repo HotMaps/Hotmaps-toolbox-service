@@ -21,7 +21,7 @@ from app.api_v1.upload import Uploads
 from app.models.indicators import layersData
 import shapely.geometry as shapely_geom
 
-from app import constants
+from .. import constants
 
 from app.models import generalData, indicators
 from app.models.indicators import HEATDEMAND_FACTOR
@@ -257,7 +257,7 @@ class StatsPersonalLayers(Resource):
 				app.helper.run_command(app.helper.commands_in_array(cmd_cutline))
 				if os.path.isfile(output_csv):
 					df = pd.read_csv(output_csv)
-					if "code" in df:
+					if api.payload['scale_level'] != constants.hectare_name.lower() and "code" in df:
 						# Cannot clip with multipoliygons, TODO: no need to cut the csv with a shapefile for this
 						df = df[df["code"].isin(areas)]
 
