@@ -32,9 +32,12 @@ services:
     volumes:
         - /var/tmp:/var/tmp
         - ./pytest_suit/routes/test_assets/repositories:/var/hotmaps/repositories
+    env_file: ./.env
 
   redis:
     image: redis
+    ports: 
+      - "6379:6379"
     networks:
           - cm-net
 

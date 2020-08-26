@@ -1,5 +1,5 @@
 
-from flask import Flask,g
+from flask import Flask, g
 import logging.config
 import sys
 import os
@@ -122,33 +122,17 @@ def create_app(config_name):
     mail.init_app(app)
     login_manager.init_app(app, add_context_processor=False)
 
+    geoserver_cors = os.environ.get('GEOSERVER_URL')
+    www_cors = os.environ.get('CLIENT_URL')
+
     CORS(app, resources={
         r"/api/*": {"origins": {
-            "http://hotmaps.hevs.ch",
-            "http://www.hotmaps.hevs.ch",
-            "http://geoserver.hotmaps.hevs.ch",
-            "http://www.hotmapsdev.hevs.ch",
-            "http://geoserver.hotmapsdev.hevs.ch",
-            "http://hotmaps.hevs.ch:8080",
-            "http://hotmaps.hevs.ch:9006",
-            "http://www.hotmapsdev.hevs.ch",
-            "https://www.hotmapsdev.hevs.ch",
-            "https://www.hotmaps.hevs.ch",
-            "http://www.hotmaps.hevs.ch",
-            "http://172.17.0.5/"
-            "http://172.17.0.6/"
+            geoserver_cors,
+            www_cors,
             "http://maps.googleapis.com/"
-            "http://hotmaps.hevs.ch:9006",
-            "http://lesly-hotmaps:4200",
-            "http://albain-hotmaps:4200",
-            "http://dany-hotmaps:4200",
-            "http://hotmapsdev.hevs.ch",
             "http://maps.googleapis.com/maps/api/geocode/",
             "http://maps.googleapis.com/maps/api/",
             "http://maps.googleapis.com/*",
-            "https://hotmaps.eurac.edu",
-            "https://www.hotmaps.eurac.edu",
-            "https://geoserver.hotmaps.eurac.edu"
         }
         }})
     return app

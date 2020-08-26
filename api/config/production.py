@@ -1,19 +1,40 @@
-# Flask settings
-import os
+import os, sys, importlib.util
+
+constants_path = os.path.join(os.path.dirname(__file__), "..", "app", "constants.py")
+constants_spec = importlib.util.spec_from_file_location('constants', constants_path)
+constants = importlib.util.module_from_spec(constants_spec)
+constants_spec.loader.exec_module(constants)
+
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.join(basedir, '../data-dev.sqlite')
+db_path = os.path.join(basedir, '../data.sqlite')
 
-from app import secrets
-
+# Flask settings
 DEBUG = False
-FLASK_SECRET_KEY = 'paPTvnNME5NBHHuIOlFqG6zS77vHadbo'
-SQLALCHEMY_DATABASE_URI = secrets.SQLALCHEMY_DATABASE_URI_PRODUCTION
+FLASK_SECRET_KEY = constants.FLASK_SECRET_KEY
+FLASK_SALT = constants.FLASK_SALT
+
+# Database
+user = constants.USER_DB
+password = constants.PASSWORD_DB
+host = constants.HOST_DB
+port = constants.PORT_DB
+database = constants.DATABASE_DB
+
+SQLALCHEMY_DATABASE_URI = 'postgresql://{user}:{password}@{host}:{port}/{db}'.format(
+    user=user,
+    password=password,
+    host=host,
+    port=port,
+    db=database
+)
+
 SQLALCHEMY_BINDS = {
     'cm_db':      os.environ.get('DATABASE_URL') or \
                   'sqlite:///' + db_path
 }
-SECRET_KEY = 'paPTvnNME5NBHHuIOlFqG6zS77vHadbo'
+
+SECRET_KEY = FLASK_SECRET_KEY
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 SWAGGER_UI_DOC_EXPANSION = 'list'
 RESTPLUS_VALIDATE = True
@@ -22,19 +43,19 @@ ERROR_404_HELP = False
 RESTPLUS_JSON = {
     'separators': (',', ':')
 }
-CELERY_BROKER_URL = 'amqp://admin:mypass@rabbit:5672/'
-										 
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-UPLOAD_FOLDER = 'uploaded_file'
 
-user = secrets.prod_user
-host = secrets.prod_host
-password = secrets.prod_password
-port = secrets.prod_port
-database = secrets.prod_database
+CELERY_BROKER_URL = constants.CELERY_BROKER_URL
+CELERY_RESULT_BACKEND = constants.CELERY_RESULT_BACKEND
+USER_UPLOAD_FOLDER = constants.USER_UPLOAD_FOLDER
 
-MAIL_USERNAME = secrets.MAIL_USERNAME
-MAIL_PASSWORD = secrets.MAIL_PASSWORD
-MAIL_DEFAULT_SENDER = secrets.MAIL_USERNAME
-MAIL_SERVER = secrets.MAIL_SERVER
-MAIL_PORT = secrets.MAIL_PORT
+# Geoserver
+GEOSERVER_API_URL = constants.GEOSERVER_API_URL
+GEOSERVER_USER = constants.GEOSERVER_USER
+GEOSERVER_PASSWORD = constants.GEOSERVER_PASSWORD
+
+# Mail
+MAIL_USERNAME = constants.MAIL_USERNAME
+MAIL_PASSWORD = constants.MAIL_PASSWORD
+MAIL_DEFAULT_SENDER = constants.MAIL_DEFAULT_SENDER
+MAIL_SERVER = constants.MAIL_SERVER
+MAIL_PORT = constants.MAIL_PORT

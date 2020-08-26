@@ -21,7 +21,7 @@ from app.api_v1.upload import Uploads
 from app.models.indicators import layersData
 import shapely.geometry as shapely_geom
 
-from app import constants
+from .. import constants
 
 from app.models import generalData, indicators
 from app.models.indicators import HEATDEMAND_FACTOR
@@ -30,8 +30,9 @@ from app.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicat
 	write_wkt_csv, generate_csv_name,projection_4326_to_3035
 import app
 import json
-from app.model import check_table_existe
+from app.model import check_table_existe, prepare_clip_personal_layer
 from app import model
+from ..decorators.timeout import return_on_timeout_endpoint
 
 
 
@@ -47,6 +48,7 @@ ns = nsStats
 @api.response(530, 'Request Error')
 @api.response(531, 'Missing parameter.')
 class StatsLayersNutsInArea(Resource):
+	@return_on_timeout_endpoint()
 	@api.marshal_with(stats_layers_nuts_output)
 	@api.expect(stats_layers_nuts_input)
 	def post(self):
@@ -102,6 +104,7 @@ class StatsLayersNutsInArea(Resource):
 @api.response(533, 'SQL error.')
 #@api.response(534, 'Not enough points error.')
 class StatsLayersHectareMulti(Resource):
+	@return_on_timeout_endpoint()
 	@api.marshal_with(stats_layers_hectares_output)
 	@api.expect(stats_layers_hectares_input)
 	def post(self):
@@ -173,6 +176,7 @@ class StatsLayersHectareMulti(Resource):
 @api.response(530, 'Request error.')
 @api.response(531, 'Missing parameter.')
 class StatsLayersNutsInArea(Resource):
+	@return_on_timeout_endpoint()
 	@api.marshal_with(stats_list_label_dataset)
 	@api.expect(stats_list_nuts_input)
 	def post(self):
@@ -204,20 +208,19 @@ class StatsLayersNutsInArea(Resource):
 
 @ns.route('/personnal-layers')
 class StatsPersonalLayers(Resource):
+	@return_on_timeout_endpoint()
 	@api.marshal_with(stats_layers_nuts_output)
 	@api.expect(stats_layer_personnal_layer_input)
 	def post(self):
 		noDataLayer=[]
 		result=[]
-		#nuts_within = model.nuts2_within_the_selection_nuts_lau('nuts',api.payload['nuts'])
-		#print(nuts_within)
 		areas = api.payload['areas']
-		
-		if api.payload['scale_level'] == 'hectare':
-			areas = area_to_geom(api.payload['areas'])
-			cutline_input = write_wkt_csv(generate_csv_name(constants.UPLOAD_DIRECTORY),projection_4326_to_3035(areas))
-		else:
-			cutline_input = model.get_shapefile_from_selection(api.payload['scale_level'], areas, constants.UPLOAD_DIRECTORY)
+
+		# if api.payload['scale_level'] == 'hectare':
+		# 	areas = area_to_geom(api.payload['areas'])
+		# 	cutline_input = write_wkt_csv(generate_csv_name(constants.UPLOAD_DIRECTORY), areas) # TODO: Projection to 3035 if raster
+		# else:
+		# 	cutline_input = model.get_shapefile_from_selection(api.payload['scale_level'], areas, constants.UPLOAD_DIRECTORY, '4326')
 		for pay in api.payload['layers']:
 			values=[]
 			data_file_name=""
@@ -227,13 +230,13 @@ class StatsPersonalLayers(Resource):
 			layer_name = pay['layer_name']
 			user = User.verify_auth_token(token)
 			upload = Uploads.query.filter_by(id=layer_id).first()
-			upload_url = constants.USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)+ '/'
+
+			upload_url = upload.url
 			if layer_name.endswith('.tif'):
-				upload_url += constants.UPLOAD_BASE_NAME
+				cutline_input = model.get_cutline_input(areas, api.payload['scale_level'], 'raster')
 				filename_tif = generate_geotif_name(constants.UPLOAD_DIRECTORY)
-				#print(filename_tif)
-				args = model.commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(cutline_input,upload_url,filename_tif))
-				model.run_command(args)
+				args = app.helper.commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(cutline_input, upload_url, filename_tif))
+				app.helper.run_command(args)
 				if os.path.isfile(filename_tif):
 					ds = gdal.Open(filename_tif)
 					arr = ds.GetRasterBand(1).ReadAsArray()
@@ -243,39 +246,51 @@ class StatsPersonalLayers(Resource):
 					continue
 				values = self.set_indicators_in_array(df, layer_type)
 			elif layer_name.endswith('.csv'):
-				upload_url += "data.csv"
-				output_csv = generate_csv_name(constants.UPLOAD_DIRECTORY)
-				cmd_cutline = "ogr2ogr -f 'CSV' -clipsrc {} {} {} -oo GEOM_POSSIBLE_NAMES=geometry_wkt -oo KEEP_GEOM_COLUMNS=NO".format(cutline_input,output_csv, upload_url)
-				args = model.commands_in_array(cmd_cutline)
-				model.run_command(args)
+				cutline_input = model.get_cutline_input(areas, api.payload['scale_level'], 'vector')
+
+				geojson = str(upload_url[:-3]) + "json"
+				if os.path.isfile(geojson):
+					# take geojson file instead (csv can not be clip), TODO: this on "prepare_clip_personal_layer" function?
+					upload_url = geojson
+
+				cmd_cutline, output_csv = prepare_clip_personal_layer(cutline_input, upload_url)
+				app.helper.run_command(app.helper.commands_in_array(cmd_cutline))
 				if os.path.isfile(output_csv):
 					df = pd.read_csv(output_csv)
+					if api.payload['scale_level'] != constants.hectare_name.lower() and "code" in df:
+						# Cannot clip with multipoliygons, TODO: no need to cut the csv with a shapefile for this
+						df = df[df["code"].isin(areas)]
+
 					for ind in indicators.layersData[layer_type]['indicators']:
 						try:
-							values.append(get_result_formatted(layer_type+"_"+ind['table_column'], str(df[ind['table_column']].sum()), ind['unit']))
+							value = df[ind['table_column']].sum()
+							if "agg_method" in ind and ind["agg_method"] == "mean":
+								value /= len(areas)
+
+							if 'factor' in ind:  # Decimal * float => rise error
+								value = float(value) * float(ind['factor'])
+
+							values.append(get_result_formatted(layer_type+"_"+ind['table_column'], str(value), ind['unit']))
 						except:
 							noDataLayer.append(layer_name)
-							continue
 				else:
 					noDataLayer.append(layer_name)
 					continue
 			else:
 				noDataLayer.append(layer_name)
 				continue
-			
-			
 
 			result.append({
-				'name':layer_name,
-				'values':values
+				'name': layer_name,
+				'values': values
 			})
-		
+
 		return {
 				"layers": result,
 				"no_data_layers": noDataLayer,
 				"no_table_layers": noDataLayer
 			}
-		
+
 	@staticmethod
 	def set_indicators_in_array(df, layer_name):
 		values=[]
@@ -299,6 +314,8 @@ class StatsPersonalLayers(Resource):
 		values.append(get_indicators_from_result('max', layer_name, max_tif))
 		values.append(get_indicators_from_result('mean', layer_name, density_tif))
 		return values
+
+
 def get_indicators_from_result(id,layer,result):
 	filtered_indicators = list(filter(lambda x: 'table_column' in x and x['table_column'] == id, indicators.layersData[layer]['indicators']))
 	unit = layer + '_unit_' + id

@@ -1,6 +1,7 @@
 from app.constants import LAU_TABLE
 from app import celery
-
+from shlex import split
+import subprocess
 import json
 import uuid
 import shapely.geometry as shapely_geom
@@ -8,13 +9,13 @@ import ast
 from osgeo import ogr
 from osgeo import osr
 from . import constants
-from . import secrets
-from . import model
 import requests
 from .decorators.exceptions import RequestException
 import xml.etree.ElementTree as ET
 import csv
 import os
+
+from .models.indicators import MUNICIPAL_SOLID_WASTE
 
 class ColorMap:
     '''
@@ -46,8 +47,8 @@ def colorize(layer_type, grey_tif, rgb_tif):
 
     grey2rgb_path = create_grey2rgb_txt(color_map_objects, uuid_temp)
 
-    args_rgba = model.commands_in_array("gdaldem color-relief {} {} -alpha {} -co COMPRESS=LZW".format(grey_tif, grey2rgb_path, rgb_tif))
-    model.run_command(args_rgba)
+    args_rgba = commands_in_array("gdaldem color-relief {} {} -alpha {} -co COMPRESS=LZW".format(grey_tif, grey2rgb_path, rgb_tif))
+    run_command(args_rgba)
 
     # we delete all temp files
     for fname in os.listdir('/tmp'):
@@ -61,13 +62,17 @@ def get_style_from_geoserver(layer_type):
     :param layer_type: the layer type to select
     :return xml: the sld style file
     '''
-    url = secrets.GEOSERVER_API_URL + 'styles/' + layer_type + '.sld'
+    # TODO: change name on geoserver?
+    if layer_type == MUNICIPAL_SOLID_WASTE:
+        layer_type = "potential_municipal_solid_waste"
+
+    url = constants.GEOSERVER_API_URL + 'styles/' + layer_type + '.sld'
     result = requests.get(url)
     xml = result.content
     # This piece of code is temporary, this should be removed when the workspaces on geoserver are unified
     if b'No such style' in xml:
         # As some layer are inside workspaces, we need to specify the workspace in order to find the correct style
-        url = secrets.GEOSERVER_API_URL + 'workspaces/hotmaps/styles/' + layer_type + '.sld'
+        url = constants.GEOSERVER_API_URL + 'workspaces/hotmaps/styles/' + layer_type + '.sld'
         result = requests.get(url)
         xml = result.content
     return xml
@@ -209,7 +214,6 @@ def getGenerationMixColor(value):
     }
     return switcher.get(value, "#D8BFD8")
 
-    raise Exception(msg)
 
 def get_result_formatted(name='not_defined', value=0, unit='unit'):
     return {
@@ -296,6 +300,7 @@ def write_wkt_csv(output_file,content):
         writer.writeheader()
         writer.writerow({'id': '1', 'WKT': content})
     return output_file
+
 def projection_4326_to_3035(wkt):
     # use the database to transform the geometry from 3857 to 4326
     source = osr.SpatialReference()
@@ -507,3 +512,17 @@ def get_nuts_query_selection(nuts, scale_level_table, scale_id):
                 and st_within(st_centroid(tbl2.geom),nuts.geom)
                 and nuts.stat_levl_ = 2
                 group by nuts.nuts_id, tbl2."""+scale_id+"""),"""
+
+
+def commands_in_array(com_string):
+    return split(com_string)
+
+
+def run_command(arr):
+    process = subprocess.Popen(
+        arr, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    if process.wait():
+        print(f"Not able to execute: {arr}\n returncode: {process.returncode}")
+        stdout, stderr = process.communicate()
+        print(f"stdout:\n{stdout}\nstderr:\n{stderr}")

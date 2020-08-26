@@ -16,7 +16,7 @@ itsdangerous==0.24
 Jinja2==2.9.6
 jsonschema==2.6.0
 lxml==3.8.0
-MarkupSafe==1.0
+MarkupSafe==1.1.1
 munch==2.1.1
 numpy==1.16.2
 pandas==0.20.2
@@ -33,5 +33,5 @@ SQLAlchemy==1.0.11
 bcrypt
 Flask-Login
 Shapely==1.6.4
-
+email_validator
 # PYthon 3 => Shapely 1.6.4

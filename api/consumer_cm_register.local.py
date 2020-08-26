@@ -1,9 +1,16 @@
+from dotenv import load_dotenv
+from pathlib import Path  
+env_path = Path('../.env')
+load_dotenv(dotenv_path=env_path)
+
 import logging
 import pika
 from app import constants
 from run import application
 import socket
 import requests
+
+
 LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
               '-35s %(lineno) -5d: %(message)s')
 LOGGER = logging.getLogger(__name__)
@@ -365,6 +372,7 @@ class Consumer(object):
 
 def main():
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+    print(constants.CELERY_BROKER_URL)
     consumer = Consumer(constants.CELERY_BROKER_URL)
     try:
         consumer.run()

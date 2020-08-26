@@ -1,8 +1,11 @@
 
 __pycache__/
 *.py[cod]
-.idea
+.idea/
+
+users/
 venv/
+env/
 tests/.pytest_cache
 app/app/secrets\.py
 api/app/secrets.py
@@ -19,3 +22,7 @@ pytest_reports/
 
 
 .idea
+
+api/calculation_module.db
+users/
+.env

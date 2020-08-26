@@ -3,7 +3,7 @@ from flask_security import UserMixin
 from .role import Role
 from itsdangerous import (TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired)
 import sys
-from ..secrets import FLASK_SECRET_KEY
+from ..constants import FLASK_SECRET_KEY
 import datetime
 
 
@@ -44,9 +44,9 @@ class User(db.Model, UserMixin):
         '''
         return db.session.query(User).filter(User.email == email).first()
 
-    def generate_auth_token(self, expiration=6000):
+    def generate_auth_token(self, expiration=43200):
         '''
-        Method called for generating an authentification token for the user that will last for 6000 seconds
+        Method called for generating an authentification token for the user that will last for 43200 seconds (=12h)
         :param expiration:
         :return: the serialized token
         '''

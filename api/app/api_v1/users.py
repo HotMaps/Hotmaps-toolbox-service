@@ -22,10 +22,10 @@ from ..decorators.serializers import user_register_input, user_register_output, 
     user_logout_input, user_logout_output, user_profile_input, user_profile_output, user_get_information_output, \
     user_get_information_input, upload_space_used_output, upload_space_used_input, feedback_output
 from .. import dbGIS as db
-from ..secrets import FLASK_SECRET_KEY, FLASK_SALT
 from ..models.user import User
 from ..models.role import Role
 from ..decorators.parsers import file_upload_feedback
+from ..decorators.timeout import return_on_timeout_endpoint
 
 
 # Setup Flask-Security
@@ -39,6 +39,7 @@ ns = nsUsers
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 class AskingPasswordRecovery(Resource):
+    @return_on_timeout_endpoint()
     @api.marshal_with(user_ask_recovery_output)
     @api.expect(user_ask_recovery_input)
     @celery.task(name='ask for password recovery')
@@ -83,6 +84,7 @@ class AskingPasswordRecovery(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(536, 'Activation failed')
 class RecoverPassword(Resource):
+    @return_on_timeout_endpoint()
     @api.marshal_with(user_recovery_output)
     @api.expect(user_recovery_input)
     @celery.task(name='method for recover of password')
@@ -111,7 +113,7 @@ class RecoverPassword(Resource):
             raise ParameterException(exception_message + '')
 
         # password_encryption
-        password = bcrypt.using(salt=FLASK_SALT).hash(str(unencrypted_password))
+        password = bcrypt.using(salt=constants.FLASK_SALT).hash(str(unencrypted_password))
 
         # verify mail address
         mail_to_reset = confirm_token(token)
@@ -137,6 +139,7 @@ class RecoverPassword(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(535, 'User already exists')
 class UserRegistering(Resource):
+    @return_on_timeout_endpoint()
     @api.marshal_with(user_register_output)
     @api.expect(user_register_input)
     @celery.task(name='user registration')
@@ -173,7 +176,7 @@ class UserRegistering(Resource):
             raise ParameterException(exception_message + '')
         # password_encryption
         try:
-            password = bcrypt.using(salt=FLASK_SALT).hash(str(unencrypted_password))
+            password = bcrypt.using(salt=constants.FLASK_SALT).hash(str(unencrypted_password))
         except Exception as e:
             raise RequestException(str(e))
         # we check if the email has already been used
@@ -213,6 +216,7 @@ class UserRegistering(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(536, 'Activation failure')
 class ActivateUser(Resource):
+    @return_on_timeout_endpoint()
     @api.marshal_with(user_activate_output)
     @api.expect(user_activate_input)
     @celery.task(name='user activation')
@@ -250,6 +254,7 @@ class ActivateUser(Resource):
 @api.response(530, 'Request error')
 @api.response(531, 'Missing parameter')
 class DeleteUser(Resource):
+    @return_on_timeout_endpoint()
     @api.marshal_with(user_deletion_output)
     @api.expect(user_deletion_input)
     @celery.task(name='user deletion')
@@ -288,6 +293,7 @@ class DeleteUser(Resource):
 @api.response(537, 'User not existing')
 @api.response(538, 'Wrong Password')
 class LoginUser(Resource):
+    @return_on_timeout_endpoint()
     @api.marshal_with(user_login_output)
     @api.expect(user_login_input)
     @celery.task(name='user login')
@@ -320,7 +326,7 @@ class LoginUser(Resource):
         if connecting_user is None:
             raise WrongCredentialException
         # check password
-        if not bcrypt.using(salt=FLASK_SALT).verify(password, connecting_user.password):
+        if not bcrypt.using(salt=constants.FLASK_SALT).verify(password, connecting_user.password):
             raise WrongCredentialException
 
         if connecting_user.active is False:
@@ -342,6 +348,7 @@ class LoginUser(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class LogoutUser(Resource):
+    @return_on_timeout_endpoint()
     @api.marshal_with(user_logout_output)
     @api.expect(user_logout_input)
     @celery.task(name='user logout')
@@ -375,6 +382,7 @@ class LogoutUser(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class ProfileUser(Resource):
+    @return_on_timeout_endpoint()
     @api.marshal_with(user_profile_output)
     @api.expect(user_profile_input)
     @celery.task(name='user profile update')
@@ -430,6 +438,7 @@ class ProfileUser(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class GetUserInformation(Resource):
+    @return_on_timeout_endpoint()
     @api.marshal_with(user_get_information_output)
     @api.expect(user_get_information_input)
     @celery.task(name='get user informations')
@@ -446,7 +455,7 @@ class GetUserInformation(Resource):
 
         # check token
         user = User.verify_auth_token(token)
-        print(token, user)
+
         if user is None:
             raise UserUnidentifiedException
 
@@ -468,6 +477,7 @@ class GetUserInformation(Resource):
 @api.response(531, 'Missing parameter')
 @api.response(539, 'User Unidentified')
 class SpaceUsedUploads(Resource):
+    @return_on_timeout_endpoint()
     @api.marshal_with(upload_space_used_output)
     @api.expect(upload_space_used_input)
     @celery.task(name='get user space used')
@@ -502,7 +512,7 @@ def generate_confirmation_token(email):
 	this method will generate a confirmation token
 	:return: the confirmation token
 	"""
-    s = URLSafeTimedSerializer(FLASK_SECRET_KEY, salt=FLASK_SALT)
+    s = URLSafeTimedSerializer(constants.FLASK_SECRET_KEY, salt=constants.FLASK_SALT)
     token = s.dumps(
         {
             'email': email,
@@ -521,7 +531,7 @@ def confirm_token(token, expiration=3600):
 	:param expiration:
 	:return:
 	'''
-    s = URLSafeTimedSerializer(FLASK_SECRET_KEY, salt=FLASK_SALT)
+    s = URLSafeTimedSerializer(constants.FLASK_SECRET_KEY, salt=constants.FLASK_SALT)
     try:
         data = s.loads(token)
     except SignatureExpired:
@@ -562,7 +572,6 @@ class FeedbackUser(Resource):
 
         msg = Message()
         msg.add_recipient(email)
-        msg.add_recipient(constants.MAIL_FEEDBACK)
         msg.subject = 'Hotmaps feedback - '+title
         msg.html = "<h3>{}</h3> \
             <strong>Date :</strong> {} <br /> \

@@ -10,7 +10,7 @@ url = BASE_URL + "/upload/export/raster/hectare"
 class TestExportRasterHectare(TestCase):
     def test_post(self):
         """
-        this test will pass the upload/export/csv/hectare method
+        this test will pass the upload/export/raster/hectare method
         """
         payload = {
             "layers": "heat_tot_curr_density_ha",
