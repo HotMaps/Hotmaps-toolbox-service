@@ -1,8 +1,9 @@
-import requests
-
 import unittest
 from unittest import TestCase
-from . import BASE_URL, test_token, test_config
+
+import requests
+
+from . import BASE_URL, test_config, test_token
 
 url = BASE_URL + '/snapshot/list'
 

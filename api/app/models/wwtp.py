@@ -21,4 +21,3 @@ class WwtpModel(db.Model):
         str_date = self.date.strftime("%Y-%m-%d")
         return "<Wwtp(gid= '%d', date='%s', capacity='%d', power='%d', unit='%s', geom='%s')>" % (
             self.gid, str_date, self.capacity, self.power, self.unit, self.geom)
-

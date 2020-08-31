@@ -1,6 +1,7 @@
 import functools
 import hashlib
-from flask import request, make_response, jsonify
+
+from flask import jsonify, make_response, request
 
 
 def cache_control(*directives):

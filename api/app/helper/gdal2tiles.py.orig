@@ -37,20 +37,19 @@
 #  DEALINGS IN THE SOFTWARE.
 # ******************************************************************************
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import math
-from multiprocessing import Pipe, Pool, Process, Manager
 import os
-import tempfile
-import threading
 import shutil
 import sys
+import tempfile
+import threading
+from multiprocessing import Manager, Pipe, Pool, Process
 from uuid import uuid4
 from xml.etree import ElementTree
 
-from osgeo import gdal
-from osgeo import osr
+from osgeo import gdal, osr
 
 try:
     from PIL import Image

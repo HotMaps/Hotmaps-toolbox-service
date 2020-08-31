@@ -1,7 +1,8 @@
+from unittest import TestCase
+
 import requests
 
-from unittest import TestCase
-from . import test_token, BASE_URL
+from . import BASE_URL, test_token
 
 url = BASE_URL + "/upload/delete"
 
@@ -75,4 +76,3 @@ class TestDeleteUploads(TestCase):
         expected_status = '543'
 
         assert output.json()['error']['status'] == expected_status
-

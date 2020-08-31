@@ -1,6 +1,9 @@
+from decimal import *
+
 from app import dbGIS as db
 from geoalchemy2 import Raster
-from decimal import *
+
+
 """
     Population Density layer as ha
 """
@@ -92,4 +95,3 @@ class PopulationDensityNutsModel(db.Model):
     def __repr__(self):
         str_date = self.date.strftime("%Y-%m-%d")
         return "<PopDensity(nuts_id='%s', date='%s', value='%d', nuts='%s')>" % (self.nuts_id, str_date, self.value, str(self.nuts))
-

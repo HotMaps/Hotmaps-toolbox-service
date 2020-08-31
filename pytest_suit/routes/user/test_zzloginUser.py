@@ -1,5 +1,7 @@
-import requests
 from unittest import TestCase
+
+import requests
+
 from .. import BASE_URL
 
 

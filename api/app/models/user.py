@@ -1,10 +1,13 @@
-from .. import dbGIS as db
-from flask_security import UserMixin
-from .role import Role
-from itsdangerous import (TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired)
-import sys
-from ..constants import FLASK_SECRET_KEY
 import datetime
+import sys
+
+from flask_security import UserMixin
+from itsdangerous import (BadSignature, SignatureExpired,
+                          TimedJSONWebSignatureSerializer)
+
+from .. import dbGIS as db
+from ..constants import FLASK_SECRET_KEY
+from .role import Role
 
 
 class User(db.Model, UserMixin):

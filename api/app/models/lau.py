@@ -2,9 +2,9 @@ import datetime
 
 from app import dbGIS as db
 from geoalchemy2 import Geometry
-from sqlalchemy import func
-from geojson import FeatureCollection, Feature
 from geoalchemy2.shape import to_shape
+from geojson import Feature, FeatureCollection
+from sqlalchemy import func
 
 
 class Lau(db.Model):
@@ -27,5 +27,3 @@ class Lau(db.Model):
     def __repr__(self):
         return "<Lau(comm_id='%s', level='%s')>" % (
             self.comm_id, self.stat_levl_)
-
- 

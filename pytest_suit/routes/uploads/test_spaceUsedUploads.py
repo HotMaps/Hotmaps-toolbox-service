@@ -1,6 +1,7 @@
+from unittest import TestCase
+
 import requests
 
-from unittest import TestCase
 from . import BASE_URL, test_token
 
 url = BASE_URL + "/users/space_used"

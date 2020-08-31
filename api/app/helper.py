@@ -1,21 +1,22 @@
-from app.constants import LAU_TABLE
-from app import celery
-from shlex import split
-import subprocess
-import json
-import uuid
-import shapely.geometry as shapely_geom
 import ast
-from osgeo import ogr
-from osgeo import osr
-from . import constants
-import requests
-from .decorators.exceptions import RequestException
-import xml.etree.ElementTree as ET
 import csv
+import json
 import os
+import subprocess
+import uuid
+import xml.etree.ElementTree as ET
+from shlex import split
 
+import requests
+import shapely.geometry as shapely_geom
+from app import celery
+from app.constants import LAU_TABLE
+from osgeo import ogr, osr
+
+from . import constants
+from .decorators.exceptions import RequestException
 from .models.indicators import MUNICIPAL_SOLID_WASTE
+
 
 class ColorMap:
     '''
@@ -360,137 +361,137 @@ def from_dict_to_unique_array(results,key):
     return response
 
 def sampling_data(listValues):
-	# Get number of values
-	numberOfValues = len(listValues)
+    # Get number of values
+    numberOfValues = len(listValues)
 
-	# Create the points for the curve with the X and Y axis
-	listPoints = []
-	for n, l in enumerate(listValues):
-		listPoints.append({
-			'X':n+1,
-			'Y':listValues[n]
-		})
+    # Create the points for the curve with the X and Y axis
+    listPoints = []
+    for n, l in enumerate(listValues):
+        listPoints.append({
+            'X':n+1,
+            'Y':listValues[n]
+        })
 
-	# Sampling of the values
-	cut1 = int(numberOfValues*constants.POINTS_FIRST_GROUP_PERCENTAGE)
-	cut2 = int(cut1+(numberOfValues*constants.POINTS_SECOND_GROUP_PERCENTAGE))
-	cut3 = int(cut2+(numberOfValues*constants.POINTS_THIRD_GROUP_PERCENTAGE))
+    # Sampling of the values
+    cut1 = int(numberOfValues*constants.POINTS_FIRST_GROUP_PERCENTAGE)
+    cut2 = int(cut1+(numberOfValues*constants.POINTS_SECOND_GROUP_PERCENTAGE))
+    cut3 = int(cut2+(numberOfValues*constants.POINTS_THIRD_GROUP_PERCENTAGE))
 
-	firstGroup = listPoints[0:cut1:constants.POINTS_FIRST_GROUP_STEP]
-	secondGroup = listPoints[cut1:cut2:constants.POINTS_SECOND_GROUP_STEP]
-	thirdGroup = listPoints[cut2:cut3:constants.POINTS_THIRD_GROUP_STEP]
-	fourthGroup = listPoints[cut3:numberOfValues:constants.POINTS_FOURTH_GROUP_STEP]
+    firstGroup = listPoints[0:cut1:constants.POINTS_FIRST_GROUP_STEP]
+    secondGroup = listPoints[cut1:cut2:constants.POINTS_SECOND_GROUP_STEP]
+    thirdGroup = listPoints[cut2:cut3:constants.POINTS_THIRD_GROUP_STEP]
+    fourthGroup = listPoints[cut3:numberOfValues:constants.POINTS_FOURTH_GROUP_STEP]
 
-	# Get min and max values needed for the sampling list
-	maxValue = min(listPoints)
-	minValue = max(listPoints)
+    # Get min and max values needed for the sampling list
+    maxValue = min(listPoints)
+    minValue = max(listPoints)
 
-	# Concatenate the groups to a new list of points (sampling list)
-	finalListPoints = firstGroup+secondGroup+thirdGroup+fourthGroup
+    # Concatenate the groups to a new list of points (sampling list)
+    finalListPoints = firstGroup+secondGroup+thirdGroup+fourthGroup
 
-	# Add max value at the beginning if the list doesn't contain it
-	if maxValue not in finalListPoints:
-		finalListPoints.insert(0, maxValue)
+    # Add max value at the beginning if the list doesn't contain it
+    if maxValue not in finalListPoints:
+        finalListPoints.insert(0, maxValue)
 
-	# Add min value at the end if the list doesn't contain it
-	if minValue not in finalListPoints:
-		finalListPoints.append(minValue)
+    # Add min value at the end if the list doesn't contain it
+    if minValue not in finalListPoints:
+        finalListPoints.append(minValue)
 
-	return finalListPoints
+    return finalListPoints
 def nuts_array_to_string(nuts):
     nuts_transformed = ''.join("'"+str(nu)+"'," for nu in nuts)[:-1]
     return nuts_transformed
 
 def transform_nuts_list(nuts):
-		# Store nuts in new custom list
-		nutsPayload = []
-		for n in nuts:
-			n = n[:4]
-			if n not in nutsPayload:
-				nutsPayload.append(str(n))
+        # Store nuts in new custom list
+        nutsPayload = []
+        for n in nuts:
+            n = n[:4]
+            if n not in nutsPayload:
+                nutsPayload.append(str(n))
 
-		# Adapt format of list for the query
-		nutsListQuery = str(nutsPayload)
-		nutsListQuery = nutsListQuery[1:] # Remove the left hook
-		nutsListQuery = nutsListQuery[:-1] # Remove the right hook
+        # Adapt format of list for the query
+        nutsListQuery = str(nutsPayload)
+        nutsListQuery = nutsListQuery[1:] # Remove the left hook
+        nutsListQuery = nutsListQuery[:-1] # Remove the right hook
 
-		return nutsListQuery
+        return nutsListQuery
 
 
 def createAllLayers(layers):
-	allLayers = []
-	for l in layers:
-		allLayers.append(l)
-		allLayers.append(l+'_ha')
-		allLayers.append(l+'_nuts3')
-		allLayers.append(l+'_nuts2')
-		allLayers.append(l+'_nuts1')
-		allLayers.append(l+'_nuts0')
-		allLayers.append(l+'_lau2')
+    allLayers = []
+    for l in layers:
+        allLayers.append(l)
+        allLayers.append(l+'_ha')
+        allLayers.append(l+'_nuts3')
+        allLayers.append(l+'_nuts2')
+        allLayers.append(l+'_nuts1')
+        allLayers.append(l+'_nuts0')
+        allLayers.append(l+'_lau2')
 
-	return allLayers
+    return allLayers
 
 def getTypeScale(layers):
-	if layers:
-		if layers[0].endswith('lau2'):
-			return 'lau'
-		else:
-			return 'nuts'
-	else:
-		return ''
+    if layers:
+        if layers[0].endswith('lau2'):
+            return 'lau'
+        else:
+            return 'nuts'
+    else:
+        return ''
 
 def areas_to_geom(areas):
     polygon_array=[]
     for polygon in areas:
         po = shapely_geom.Polygon([[p['lng'], p['lat']] for p in polygon['points']])
         polygon_array.append(po)
-	# convert array of polygon into multipolygon
+    # convert array of polygon into multipolygon
     mp = shapely_geom.MultiPolygon(polygon_array)
     return mp.wkt
 
 def adapt_layers_list(layersPayload, type, allLayers):
-	layers = []
-	if type == 'lau':
-		for layer in layersPayload:
-			if layer in allLayers:
-				layer = layer[:-5] # Remove the type for each layer
-				layers.append(layer)
-	elif type == 'ha':
-		for layer in layersPayload:
-			if layer in allLayers:
-				layer = layer[:-3] # Remove the type for each layer
-				layers.append(layer)
-	else:
-		for layer in layersPayload:
-			if layer in allLayers:
-				layer = layer[:-6] # Remove the type for each layer
-				layers.append(layer)
+    layers = []
+    if type == 'lau':
+        for layer in layersPayload:
+            if layer in allLayers:
+                layer = layer[:-5] # Remove the type for each layer
+                layers.append(layer)
+    elif type == 'ha':
+        for layer in layersPayload:
+            if layer in allLayers:
+                layer = layer[:-3] # Remove the type for each layer
+                layers.append(layer)
+    else:
+        for layer in layersPayload:
+            if layer in allLayers:
+                layer = layer[:-6] # Remove the type for each layer
+                layers.append(layer)
 
-	return layers
+    return layers
 def removeScaleLayers(layersList, type):
-	layers = []
-	if type == 'lau':
-		for layer in layersList:
-			layer = layer[:-5] # Remove the type for each layer
-			layers.append(layer)
-	elif type == 'ha':
-		for layer in layersList:
-			layer = layer[:-3] # Remove the type for each layer
-			layers.append(layer)
-	else:
-		for layer in layersList:
-			layer = layer[:-6] # Remove the type for each layer
-			layers.append(layer)
+    layers = []
+    if type == 'lau':
+        for layer in layersList:
+            layer = layer[:-5] # Remove the type for each layer
+            layers.append(layer)
+    elif type == 'ha':
+        for layer in layersList:
+            layer = layer[:-3] # Remove the type for each layer
+            layers.append(layer)
+    else:
+        for layer in layersList:
+            layer = layer[:-6] # Remove the type for each layer
+            layers.append(layer)
 
-	return layers
+    return layers
 
 def layers_filter(layersPayload, list):
-	layers = []
-	for l in layersPayload:
-		if l not in list:
-			layers.append(l)
+    layers = []
+    for l in layersPayload:
+        if l not in list:
+            layers.append(l)
 
-	return layers
+    return layers
 def get_nuts_query_selection(nuts, scale_level_table, scale_id):
 
     if scale_level_table == 'nuts':

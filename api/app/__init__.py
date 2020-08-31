@@ -1,17 +1,21 @@
 
-from flask import Flask, g
 import logging.config
-import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
-import pika
+import sys
 import uuid
-from celery import Celery
+
+import pika
 from app.decorators.restplus import api as api_rest_plus
+from celery import Celery
+from flask import Flask, g
+from flask_cors import CORS
 from flask_login import LoginManager
 from flask_mail import Mail
+from flask_sqlalchemy import SQLAlchemy
+
+from . import constants
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 """__________________________________producer for COMPUTE_______________________________________________________"""
 
@@ -67,7 +71,6 @@ class CalculationModuleRpcClient(object):
 
 
 
-from . import constants
 
 
 dbGIS = SQLAlchemy()

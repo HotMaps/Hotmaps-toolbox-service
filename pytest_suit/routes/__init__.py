@@ -1,5 +1,7 @@
-from .. import BASE_URL
 import os
+
+from .. import BASE_URL
+
 dirname = os.path.dirname(__file__)
 
 test_csv_file = os.path.join(dirname, 'test_assets/test.csv')

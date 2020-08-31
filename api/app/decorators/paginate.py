@@ -1,5 +1,6 @@
 import functools
-from flask import url_for, request
+
+from flask import request, url_for
 
 
 def paginate(collection, max_per_page=25):

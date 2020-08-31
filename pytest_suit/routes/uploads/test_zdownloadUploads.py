@@ -76,4 +76,3 @@ class TestDownload(TestCase):
         expected_status = '543'
 
         assert output.json()['error']['status'] == expected_status
-

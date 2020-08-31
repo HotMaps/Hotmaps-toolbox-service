@@ -1,8 +1,9 @@
+from unittest import TestCase
+
 import requests
 
-from unittest import TestCase
-from . import test_token
 from .. import BASE_URL
+from . import test_token
 
 test_last_name = 'toto'
 test_first_name = 'tata'
@@ -59,4 +60,3 @@ class TestProfileUser(TestCase):
         expected_status = '539'
 
         assert output.json()['error']['status'] == expected_status
-

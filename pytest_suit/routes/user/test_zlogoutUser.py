@@ -1,7 +1,9 @@
-import requests
 from unittest import TestCase
-from . import test_token
+
+import requests
+
 from .. import BASE_URL
+from . import test_token
 
 
 # the z in the name is to run this test last to logout (but before the 2nd login that will change the valid token

@@ -1,31 +1,30 @@
 import csv
 import json
 import os
+import re
 import shutil
 import uuid
+import xml.etree.ElementTree as ET
 from functools import partial
 from io import StringIO
+from urllib.parse import parse_qs, urlparse
 
 import pandas as pd
 from pandas import DataFrame
+
+import app.helper
 import pyproj
 import requests
 import shapely.geometry as shapely_geom
 import shapely.wkt as shapely_wkt
-
-import app.helper
-from app import celery
-from app import model
+from app import celery, model
 from geojson import Feature, FeatureCollection
 from shapely.ops import transform
-import xml.etree.ElementTree as ET
-from urllib.parse import urlparse, parse_qs
-import re
 
-from .. import constants, dbGIS as db
-from ..decorators.exceptions import RequestException
+from .. import constants
+from .. import dbGIS as db
 from .. import helper
-
+from ..decorators.exceptions import RequestException
 
 ALLOWED_EXTENSIONS = set(['tif', 'csv'])
 GREATER_OR_EQUAL = 'greaterOrEqual'
@@ -516,13 +515,13 @@ def csv_to_geojson(url, layer_type):
     rule_dictionary = generate_rule_dictionary(sld_file)
     filtered_columns = [
         "year",
-		"month",
-		"day",
-		"weekday",
-		"season",
-		"hour_of_day",
-		"hour_of_year",
-		"date"
+        "month",
+        "day",
+        "weekday",
+        "season",
+        "hour_of_day",
+        "hour_of_year",
+        "date"
     ]
 
     # parse file

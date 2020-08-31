@@ -9,4 +9,3 @@ if __name__ == '__main__':
     with application.app_context():
         init_sqlite_caculation_module_database()
     application.run(host='0.0.0.0', threaded=True)
-

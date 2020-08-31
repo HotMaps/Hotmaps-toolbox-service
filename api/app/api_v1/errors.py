@@ -1,5 +1,6 @@
+from app.decorators.exceptions import ComputationalModuleError, ValidationError
 from flask import jsonify
-from app.decorators.exceptions import ValidationError, ComputationalModuleError
+
 from . import api
 
 
