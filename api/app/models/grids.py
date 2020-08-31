@@ -1,4 +1,4 @@
-from app.models import   dbGIS as db
+from app.models import dbGIS as db
 from geoalchemy2 import Geometry
 
 
@@ -21,4 +21,3 @@ class Grid1Km(db.Model):
     def __repr__(self):
         return "<Grid1km(gid= '%d', id='%d', xmin='%d', xmax='%d',ymin='%d',ymax='%d',)>" % (
             self.gid, self.id, self.xmin, self.xmax, self.ymin, self.ymax)
-

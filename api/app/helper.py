@@ -1,21 +1,22 @@
-from app.constants import LAU_TABLE
-from app import celery
-from shlex import split
-import subprocess
-import json
-import uuid
-import shapely.geometry as shapely_geom
 import ast
-from osgeo import ogr
-from osgeo import osr
-from . import constants
-import requests
-from .decorators.exceptions import RequestException
-import xml.etree.ElementTree as ET
 import csv
+import json
 import os
+import subprocess
+import uuid
+import xml.etree.ElementTree as ET
+from shlex import split
 
+import requests
+import shapely.geometry as shapely_geom
+from app import celery
+from app.constants import LAU_TABLE
+from osgeo import ogr, osr
+
+from . import constants
+from .decorators.exceptions import RequestException
 from .models.indicators import MUNICIPAL_SOLID_WASTE
+
 
 class ColorMap:
     '''

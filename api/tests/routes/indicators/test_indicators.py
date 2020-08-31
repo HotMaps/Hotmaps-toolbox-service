@@ -6,8 +6,8 @@ from app.model import query_geographic_database
 from app.models.indicators import layersData
 from app.sql_queries import get_exists_table_query
 
-from .payloads import nuts3_stat
 from ..test_client import TestClient
+from .payloads import nuts3_stat
 
 
 class TestIndicators(unittest.TestCase):

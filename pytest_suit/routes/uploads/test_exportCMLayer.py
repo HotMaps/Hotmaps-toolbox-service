@@ -1,9 +1,9 @@
+import os
 from unittest import TestCase
 
 import requests
 
 from . import BASE_URL, test_export_cm_layer_uuid, test_tif_file
-import os
 
 url = BASE_URL + "/upload/export/cmLayer"
 

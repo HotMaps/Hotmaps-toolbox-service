@@ -2,31 +2,45 @@ import datetime
 import os
 import uuid
 
+from app import celery
+from flask import current_app, request
 from flask_mail import Message
 from flask_restplus import Resource
 from flask_security import SQLAlchemySessionUserDatastore
-from itsdangerous import (URLSafeTimedSerializer, BadSignature, SignatureExpired)
-from flask import request, current_app
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from passlib.hash import bcrypt
 
-from app import celery
-from .upload import calculate_total_space
-from .. import constants, mail, login_manager
-from ..decorators.exceptions import ParameterException, RequestException, ActivationException, \
-    UserExistingException, WrongCredentialException, UserUnidentifiedException, \
-    UserNotActivatedException
-from ..decorators.restplus import api
-from ..decorators.serializers import user_register_input, user_register_output, user_activate_input, \
-    user_activate_output, user_deletion_input, user_deletion_output, user_ask_recovery_input, \
-    user_ask_recovery_output, user_recovery_output, user_recovery_input, user_login_input, user_login_output, \
-    user_logout_input, user_logout_output, user_profile_input, user_profile_output, user_get_information_output, \
-    user_get_information_input, upload_space_used_output, upload_space_used_input, feedback_output
+from .. import constants
 from .. import dbGIS as db
-from ..models.user import User
-from ..models.role import Role
+from .. import login_manager, mail
+from ..decorators.exceptions import (ActivationException, ParameterException,
+                                     RequestException, UserExistingException,
+                                     UserNotActivatedException,
+                                     UserUnidentifiedException,
+                                     WrongCredentialException)
 from ..decorators.parsers import file_upload_feedback
+from ..decorators.restplus import api
+from ..decorators.serializers import (feedback_output, upload_space_used_input,
+                                      upload_space_used_output,
+                                      user_activate_input,
+                                      user_activate_output,
+                                      user_ask_recovery_input,
+                                      user_ask_recovery_output,
+                                      user_deletion_input,
+                                      user_deletion_output,
+                                      user_get_information_input,
+                                      user_get_information_output,
+                                      user_login_input, user_login_output,
+                                      user_logout_input, user_logout_output,
+                                      user_profile_input, user_profile_output,
+                                      user_recovery_input,
+                                      user_recovery_output,
+                                      user_register_input,
+                                      user_register_output)
 from ..decorators.timeout import return_on_timeout_endpoint
-
+from ..models.role import Role
+from ..models.user import User
+from .upload import calculate_total_space
 
 # Setup Flask-Security
 user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)

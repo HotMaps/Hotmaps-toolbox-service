@@ -2,14 +2,13 @@
 #!/usr/bin/env python
 
 
-import uuid
-import time
 import logging
+import time
+import uuid
+
 import pika
-
-from app.model import getCMList, delete_cm
 from app import constants
-
+from app.model import delete_cm, getCMList
 
 LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
               '-35s %(lineno) -5d: %(message)s')
@@ -75,5 +74,3 @@ while True :
             else:
                 LOGGER.info("[HTAPI]  is going to  delete: %s ",str(cm_id))
                 delete_cm(str(cm_id))
-
-

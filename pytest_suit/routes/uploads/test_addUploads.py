@@ -1,8 +1,9 @@
+from unittest import TestCase
+
 import requests
 
-from unittest import TestCase
-from . import BASE_URL, test_token, test_csv_file, test_upload_name
 from ..user.test_profileUser import test_first_name
+from . import BASE_URL, test_csv_file, test_token, test_upload_name
 
 url = BASE_URL + '/upload/add'
 
@@ -44,5 +45,3 @@ class TestAddUploads(TestCase):
         expected_status = '539'
 
         assert output.json()['error']['status'] == expected_status
-
-    

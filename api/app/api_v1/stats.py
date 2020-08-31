@@ -1,41 +1,43 @@
-from app import celery
+import json
 import logging
-import re
 import os.path
+import re
+
 import pandas as pd
+
+import app
 import numpy as np
+import shapely.geometry as shapely_geom
+from app import celery, model
+from app.api_v1.upload import Uploads
+from app.decorators.exceptions import (HugeRequestException,
+                                       IntersectionException,
+                                       NotEnoughPointsException,
+                                       ParameterException, RequestException)
+from app.decorators.restplus import api
+from app.decorators.serializers import (stats_layer_personnal_layer_input,
+                                        stats_layers_hectares_input,
+                                        stats_layers_hectares_output,
+                                        stats_layers_nuts_input,
+                                        stats_layers_nuts_output,
+                                        stats_list_label_dataset,
+                                        stats_list_nuts_input)
+from app.helper import (adapt_layers_list, adapt_nuts_list, area_to_geom,
+                        createAllLayers, find_key_in_dict, generate_csv_name,
+                        generate_geotif_name, get_result_formatted,
+                        getTypeScale, getValuesFromName, layers_filter,
+                        projection_4326_to_3035, removeScaleLayers,
+                        retrieveCrossIndicator, write_wkt_csv)
+from app.model import check_table_existe, prepare_clip_personal_layer
+from app.models import generalData, indicators
+from app.models.indicators import HEATDEMAND_FACTOR, layersData
+from app.models.statsQueries import ElectricityMix, LayersStats
+from flask_restplus import Resource
 from osgeo import gdal
 
-from flask_restplus import Resource
-from app.decorators.serializers import  stats_layers_hectares_output,\
-	stats_layers_nuts_input, stats_layers_nuts_output,\
-	stats_layers_hectares_input, stats_list_nuts_input, stats_list_label_dataset,stats_layer_personnal_layer_input
-from app.decorators.restplus import api
-from app.decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, ParameterException, RequestException
-from ..models.user import User
-
-from app.models.statsQueries import ElectricityMix
-from app.models.statsQueries import LayersStats
-from app.api_v1.upload import Uploads
-
-from app.models.indicators import layersData
-import shapely.geometry as shapely_geom
-
 from .. import constants
-
-from app.models import generalData, indicators
-from app.models.indicators import HEATDEMAND_FACTOR
-from app.helper import find_key_in_dict, getValuesFromName, retrieveCrossIndicator, createAllLayers,\
-	getTypeScale, adapt_layers_list, adapt_nuts_list, removeScaleLayers, layers_filter, getTypeScale, get_result_formatted, generate_geotif_name, area_to_geom, \
-	write_wkt_csv, generate_csv_name,projection_4326_to_3035
-import app
-import json
-from app.model import check_table_existe, prepare_clip_personal_layer
-from app import model
 from ..decorators.timeout import return_on_timeout_endpoint
-
-
-
+from ..models.user import User
 
 log = logging.getLogger(__name__)
 

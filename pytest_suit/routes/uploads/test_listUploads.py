@@ -1,6 +1,7 @@
+from unittest import TestCase
+
 import requests
 
-from unittest import TestCase
 from . import BASE_URL, test_token
 from .test_addUploads import test_upload_name
 

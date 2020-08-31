@@ -38,6 +38,8 @@
 #  DEALINGS IN THE SOFTWARE.
 # ******************************************************************************
 
+import math
+import os
 import sys
 
 try:
@@ -48,8 +50,6 @@ except:
     print 'You are using "old gen" bindings. gdal2tiles needs "new gen" bindings.'
     sys.exit(1)
 
-import os
-import math
 
 try:
     from PIL import Image
@@ -112,7 +112,6 @@ I would like to know where it was used.
 Class is available under the open-source GDAL license (www.gdal.org).
 """
 
-import math
 
 MAXZOOMLEVEL = 32
 

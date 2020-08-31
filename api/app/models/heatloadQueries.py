@@ -1,8 +1,8 @@
 
-from app import constants
-from app import model
-from app import celery
+from app import celery, constants, model
+
 from .. import helper
+
 #logging.basicConfig()
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
@@ -360,4 +360,3 @@ def createQueryDataDCHectares(year, geometry):
 				"order by normalizedCalutation DESC;"
 
 	return sql_query
-

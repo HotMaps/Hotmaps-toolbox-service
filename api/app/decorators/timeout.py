@@ -1,7 +1,8 @@
+import signal
+
+from ..constants import DEFAULT_TIMEOUT
 from .exceptions import TimeOutException
 from .restplus import handle_timeout_reached
-import signal
-from ..constants import DEFAULT_TIMEOUT
 
 
 def timeout_signal_handler(signum, frame):

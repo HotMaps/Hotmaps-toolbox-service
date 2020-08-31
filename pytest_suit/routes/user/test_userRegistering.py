@@ -1,6 +1,8 @@
 from unittest import TestCase
-from .. import BASE_URL
+
 import requests
+
+from .. import BASE_URL
 
 
 class TestUserRegistering(TestCase):

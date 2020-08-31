@@ -1,30 +1,31 @@
+import os
+import sqlite3
+import subprocess
 import uuid
+from datetime import datetime
 
 import app.helper
-from app.decorators.exceptions import ValidationError, HugeRequestException, RequestException, NotEnoughPointsException
+import psycopg2
+import shapely.geometry as shapely_geom
+import sqlalchemy.pool as pool
+from app import celery, constants
+from app import dbGIS as db
+from app import helper, sql_queries
+from app.constants import (
+    CM_DB_NAME, DATABASE_DB, DATASET_DIRECTORY, HOST_DB, LAU_YEAR, NUTS_YEAR,
+    PASSWORD_DB, PORT_DB, UPLOAD_DIRECTORY, USER_DB)
+from app.decorators.exceptions import (HugeRequestException,
+                                       NotEnoughPointsException,
+                                       RequestException, ValidationError)
 
-
-from .helper import area_to_geom, write_wkt_csv, generate_csv_name, projection_4326_to_3035, commands_in_array, \
-    run_command
+from .helper import (area_to_geom, commands_in_array, generate_csv_name,
+                     projection_4326_to_3035, run_command, write_wkt_csv)
+from .models.uploads import Uploads, generate_csv_string
 
 try:
     from shlex import quote
 except ImportError:
     from pipes import quote
-import subprocess
-from app.constants import DATASET_DIRECTORY, USER_DB,HOST_DB,PASSWORD_DB,PORT_DB,DATABASE_DB
-from app.constants import DATASET_DIRECTORY, UPLOAD_DIRECTORY, NUTS_YEAR, LAU_YEAR
-from datetime import datetime
-import psycopg2
-import sqlalchemy.pool as pool
-import sqlite3
-from app import celery, dbGIS as db, constants
-from app.constants import CM_DB_NAME
-from app import helper
-from app import sql_queries
-from .models.uploads import Uploads, generate_csv_string
-import os
-import shapely.geometry as shapely_geom
 try:
     import ogr
 except ImportError:

@@ -1,6 +1,8 @@
+from decimal import *
+
 from app.models import db
 from geoalchemy2 import Raster
-from decimal import *
+
 #import logging
 #logging.basicConfig()
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)

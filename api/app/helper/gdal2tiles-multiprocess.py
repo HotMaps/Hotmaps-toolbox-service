@@ -40,7 +40,12 @@
 
 # Hacked to make changes to the stacking order.. spruceboy@gmail.com
 
+import math
+import multiprocessing
+import os
 import sys
+import tempfile
+from optparse import OptionGroup, OptionParser
 
 try:
     from osgeo import gdal
@@ -50,8 +55,6 @@ except:
     print 'You are using "old gen" bindings. gdal2tiles needs "new gen" bindings.'
     sys.exit(1)
 
-import os
-import math
 
 try:
     from PIL import Image
@@ -63,9 +66,6 @@ except:
 
     pass
 
-import multiprocessing
-import tempfile
-from optparse import OptionParser, OptionGroup
 
 __version__ = '$Id: gdal2tiles.py 27349 2014-05-16 18:58:51Z rouault $'
 
@@ -119,7 +119,6 @@ I would like to know where it was used.
 Class is available under the open-source GDAL license (www.gdal.org).
 """
 
-import math
 
 MAXZOOMLEVEL = 32
 

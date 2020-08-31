@@ -1,14 +1,16 @@
+import logging
+import socket
+from pathlib import Path
+
+import pika
+import requests
+from app import constants
 from dotenv import load_dotenv
-from pathlib import Path  
+from run import application
+
 env_path = Path('../.env')
 load_dotenv(dotenv_path=env_path)
 
-import logging
-import pika
-from app import constants
-from run import application
-import socket
-import requests
 
 
 LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '

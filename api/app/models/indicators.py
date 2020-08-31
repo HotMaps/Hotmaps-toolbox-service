@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from app.constants import nuts0, nuts1, nuts2, nuts3, lau2, hectare_name
+from app.constants import hectare_name, lau2, nuts0, nuts1, nuts2, nuts3
 
 # LAYERS
 

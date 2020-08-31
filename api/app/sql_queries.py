@@ -125,4 +125,3 @@ def nuts2_within_the_selection_lau(area_selected,toCRS):
            "where ST_Intersects( geo.nuts.geom, selected_zone.geom ) AND geo.nuts.STAT_LEVL_ = 2 " \
            "AND geo.nuts.year = to_date('2013', 'YYYY') ) select subAreas.nuts_id from subAreas"
     return query
-

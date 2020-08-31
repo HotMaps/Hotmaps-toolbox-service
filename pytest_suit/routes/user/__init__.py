@@ -1,4 +1,5 @@
 import requests
+
 from .. import BASE_URL
 
 url = BASE_URL + "/users/login"

@@ -1,37 +1,33 @@
-from celery.task.control import revoke
-
+import json
+import os
 import signal
-from flask import request, current_app,jsonify,redirect, \
-    url_for,Response
+
+import requests
+from app import CalculationModuleRpcClient, celery, helper, model
+from app.constants import DATASET_DIRECTORY, UPLOAD_DIRECTORY
+from app.decorators.exceptions import ComputationalModuleError, ValidationError
 from app.decorators.restplus import api
-from app.decorators.serializers import compution_module_class, \
-    input_computation_module, test_communication_cm, \
-    compution_module_list, uploadfile, cm_id_input
+from app.decorators.serializers import (cm_id_input, compution_module_class,
+                                        compution_module_list,
+                                        input_computation_module,
+                                        test_communication_cm, uploadfile)
+from app.model import getCMList, getUI, register_calulation_module
+from celery.task.control import revoke
+from flask import (Response, current_app, jsonify, redirect, request,
+                   send_file, send_from_directory, url_for)
+from flask_restplus import Resource
 
-from app.model import register_calulation_module,getUI,getCMList
+from ..constants import DEFAULT_TIMEOUT
+from ..decorators.timeout import timeout_signal_handler
 from ..helper import commands_in_array, run_command
-
 from ..models.user import User
-from app import model
 
-from app import helper
 nsCM = api.namespace('cm', description='Operations related to statistisdscs')
 
 ns = nsCM
-from flask_restplus import Resource
-from app import celery
-import requests
 
-from app.decorators.exceptions import ValidationError, ComputationalModuleError
 
-import os
-import json
-from flask import send_from_directory, send_file
-from app.constants import UPLOAD_DIRECTORY, DATASET_DIRECTORY
 
-from app import CalculationModuleRpcClient
-from ..decorators.timeout import timeout_signal_handler
-from ..constants import DEFAULT_TIMEOUT
 
 
 #TODO Add url to find  right computation module

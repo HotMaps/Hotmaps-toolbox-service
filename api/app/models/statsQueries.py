@@ -1,14 +1,15 @@
 import datetime
-from .. import helper
-from app import dbGIS as db
-from app import constants
-from decimal import *
-from app.models.indicators import layersData, ELECRICITY_MIX
-from app import celery
-from . import generalData
-from app import model
-
 import logging
+from decimal import *
+
+from app import celery, constants
+from app import dbGIS as db
+from app import model
+from app.models.indicators import ELECRICITY_MIX, layersData
+
+from .. import helper
+from . import generalData
+
 log = logging.getLogger(__name__)
 
 class LayersStats:
@@ -159,4 +160,3 @@ class ElectricityMix:
 			'datasets':datasets
 		}
 		return result
-
