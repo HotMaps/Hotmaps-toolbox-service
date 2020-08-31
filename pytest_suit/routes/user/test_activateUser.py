@@ -10,10 +10,10 @@ class TestActivateUser(TestCase):
         '''
         this test will fail to activate a user because the parameters are not complete
         '''
-        url = BASE_URL + "/users/register/activate"
+        url = BASE_URL + '/users/register/activate'
 
         payload = {
-            "tokentoto": "did you really expected it to work ?"
+            'tokentoto': 'did you really expected it to work ?'
         }
 
         output = requests.post(url, json=payload)
@@ -28,10 +28,10 @@ class TestActivateUser(TestCase):
         '''
         this test will fail to activate a user because the parameters are not complete
         '''
-        url = BASE_URL + "/users/register/activate"
+        url = BASE_URL + '/users/register/activate'
 
         payload = {
-            "token": "did you really expected it to work ?"
+            'token': 'did you really expected it to work ?'
         }
 
         output = requests.post(url, json=payload)

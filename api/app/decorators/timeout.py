@@ -11,7 +11,7 @@ def timeout_signal_handler(signum, frame):
     :param frame:
     :return:
     """
-    raise TimeOutException("end of time")
+    raise TimeOutException('end of time')
 
 
 def return_on_timeout_endpoint(timeout_value: int = DEFAULT_TIMEOUT):

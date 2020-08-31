@@ -14,7 +14,7 @@ class User(db.Model, UserMixin):
     __tablename__ = 'users'
     __table_args__ = (
         {
-            "schema": 'user',
+            'schema': 'user',
         }
     )
 
@@ -31,8 +31,8 @@ class User(db.Model, UserMixin):
     confirmed_at = db.Column(db.DateTime())
     active_token = db.Column(db.String(255))
     roles = db.relationship('Role', secondary='user.roles_users', backref=db.backref('user_id', lazy='dynamic'))
-    uploads = db.relationship('Uploads', cascade="delete")
-    snapshots = db.relationship('Snapshots', cascade="delete")
+    uploads = db.relationship('Uploads', cascade='delete')
+    snapshots = db.relationship('Snapshots', cascade='delete')
 
     @classmethod
     def get_by_email(cls, email):
@@ -84,7 +84,7 @@ class User(db.Model, UserMixin):
 class RolesUsers(db.Model):
     __tablename__ = 'roles_users'
     __table_args__ = (
-        {"schema": 'user'}
+        {'schema': 'user'}
     )
     id = db.Column(db.Integer(), primary_key=True)
     user_id = db.Column('user_id', db.Integer(), db.ForeignKey('user.users.id'))

@@ -40,7 +40,7 @@ class Uploads(db.Model):
     '''
     __tablename__ = 'uploads'
     __table_args__ = (
-        {"schema": 'user'}
+        {'schema': 'user'}
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -73,15 +73,15 @@ def generate_tiles(upload_folder, grey_tif, layer_type, upload_uuid, user_curren
     try:
         os.mkdir(tile_path, access_rights)
     except OSError:
-        print ("Creation of the directory %s failed" % tile_path)
+        print ('Creation of the directory %s failed' % tile_path)
     else:
-        print ("Successfully created the directory %s" % tile_path)
+        print ('Successfully created the directory %s' % tile_path)
 
     rgb_tif = upload_folder + '/rgba.tif'
     if layer_type != 'custom':
         helper.colorize(layer_type, grey_tif, rgb_tif)
     else:
-        args_gdal = app.helper.commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE ".format(grey_tif, rgb_tif))
+        args_gdal = app.helper.commands_in_array('gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE '.format(grey_tif, rgb_tif))
         app.helper.run_command(args_gdal)
 
     try:
@@ -204,10 +204,10 @@ def find_property_column(style_sheet, headers):
     }
 
     # read rules
-    rules = root.findall(".//se:Rule", ns)
+    rules = root.findall('.//se:Rule', ns)
     # read rules without 'se' prefix if previous did not work
     if len(rules) == 0:
-        rules = root.findall(".//{http://www.opengis.net/sld}Rule")
+        rules = root.findall('.//{http://www.opengis.net/sld}Rule')
     # raise exception if rules is empty
     if len(rules) == 0:
         print("Can't read rules of SLD file.")
@@ -314,10 +314,10 @@ def generate_rule_dictionary(style_sheet):
     ns_xlink = '{http://www.w3.org/1999/xlink}'
 
     # read rules
-    rules = root.findall(".//se:Rule", ns)
+    rules = root.findall('.//se:Rule', ns)
     # read rules without 'se' prefix if previous did not work
     if len(rules) == 0:
-        rules = root.findall(".//{http://www.opengis.net/sld}Rule")
+        rules = root.findall('.//{http://www.opengis.net/sld}Rule')
     # raise exception if rules is empty
     if len(rules) == 0:
         print("Can't read rules of SLD file.")
@@ -484,10 +484,10 @@ def find_rule(literal, rules_dictionary):
 
         # standard rule
         style = {
-            "name": rule_info['mark_name'],
-            "fill": rule_info['fill'],
-            "stroke": rule_info['stroke'],
-            "size": rule_info['size']
+            'name': rule_info['mark_name'],
+            'fill': rule_info['fill'],
+            'stroke': rule_info['stroke'],
+            'size': rule_info['size']
         }
 
         # handle external graphic (charts)
@@ -515,18 +515,18 @@ def csv_to_geojson(url, layer_type):
     sld_file = helper.get_style_from_geoserver(layer_type)
     rule_dictionary = generate_rule_dictionary(sld_file)
     filtered_columns = [
-        "year",
-		"month",
-		"day",
-		"weekday",
-		"season",
-		"hour_of_day",
-		"hour_of_year",
-		"date"
+        'year',
+		'month',
+		'day',
+		'weekday',
+		'season',
+		'hour_of_day',
+		'hour_of_year',
+		'date'
     ]
 
     # parse file
-    with open(url, 'r', encoding="utf-8-sig") as csvfile:
+    with open(url, 'r', encoding='utf-8-sig') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',')
         property_column = find_property_column(sld_file, reader.fieldnames)
 
@@ -650,9 +650,9 @@ def csv_to_geojson(url, layer_type):
             features.append(Feature(geometry=geom, properties=properties, style=style))
 
     crs = {
-        "type": "name",
-        "properties": {
-            "name": "EPSG:{0}".format(output_srid)
+        'type': 'name',
+        'properties': {
+            'name': 'EPSG:{0}'.format(output_srid)
         }
     }
 

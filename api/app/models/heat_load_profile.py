@@ -11,7 +11,7 @@ class HeatLoadProfileNuts(db.Model):
 	__table_args__ = (
 		db.ForeignKeyConstraint(['fk_nuts_gid'], ['geo.nuts.gid'], name='load_profile_nuts_gid_fkey'),
 		db.ForeignKeyConstraint(['fk_time_id'], ['stat.time.id'], name='load_profile_time_id_fkey'),
-		{"schema": 'stat'}
+		{'schema': 'stat'}
 	)
 
 	CRS = 4258
@@ -25,8 +25,8 @@ class HeatLoadProfileNuts(db.Model):
 	fk_nuts_gid = db.Column(db.BigInteger)
 	fk_time_id = db.Column(db.BigInteger)
 
-	nuts = db.relationship("Nuts")
-	time = db.relationship("Time")
+	nuts = db.relationship('Nuts')
+	time = db.relationship('Time')
 
 	def __repr__(self):
 		return "<HeatLoadProfileNuts(nuts_id='%s', time='%s', value='%d', unit='%s')>" % (

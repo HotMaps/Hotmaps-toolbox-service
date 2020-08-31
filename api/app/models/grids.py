@@ -5,7 +5,7 @@ from geoalchemy2 import Geometry
 class Grid1Km(db.Model):
     __tablename__ = 'grid_1km'
     __table_args__ = (
-        {"schema": 'geo'}
+        {'schema': 'geo'}
     )
 
     CRS = 3035

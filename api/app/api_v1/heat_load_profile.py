@@ -76,7 +76,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         output = HeatLoadProfile.duration_curve_nuts_lau(year=year, nuts=nuts, nuts_level=nuts_level)
 
         return {
-            "points": output
+            'points': output
         }
 
 
@@ -159,7 +159,7 @@ class HeatLoadProfileAggregation(HeatLoadProfileResource):
         #    raise IntersectionException()
 
         return {
-            "points": output
+            'points': output
         }
 
 
@@ -241,12 +241,12 @@ class HeatLoadProfileAggregationHectares(HeatLoadProfileResource):
             return
 
         if 'month' in api.payload.keys():
-            month = api.payload["month"]
+            month = api.payload['month']
         else:
             month = 0
 
         if 'day' in api.payload.keys():
-            day = api.payload["day"]
+            day = api.payload['day']
         else:
             day = 0
 
@@ -309,17 +309,17 @@ class HeatLoadProfileAggregationNuts(HeatLoadProfileResource):
         nuts = helper.nuts_array_to_string(nuts)
 
         if 'month' in api.payload.keys():
-          month = api.payload["month"]
+          month = api.payload['month']
         else:
           month = 0
 
         if 'day' in api.payload.keys():
-          day = api.payload["day"]
+          day = api.payload['day']
         else:
           day = 0
 
         output = {}
-        nuts_level = api.payload["scale_level"]
+        nuts_level = api.payload['scale_level']
         """ try: """
         output = HeatLoadProfile.heatloadprofile_nuts_lau(nuts=nuts, year=year, month=month, day=day, nuts_level=nuts_level)
         """ except Exception as e:

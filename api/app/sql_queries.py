@@ -42,12 +42,12 @@ def vector_query_hectares(vector_table_requested, geometry,toCRS):
     :return:
     """
 
-    query= "with subAreas as ( SELECT nuts.nuts_id,nuts.gid FROM geo.nuts " + \
-           "where ST_Intersects( nuts.geom," + \
-           " "+transformGeo(geometry,toCRS)+" ) "  + \
+    query= 'with subAreas as ( SELECT nuts.nuts_id,nuts.gid FROM geo.nuts ' + \
+           'where ST_Intersects( nuts.geom,' + \
+           ' '+transformGeo(geometry,toCRS)+' ) '  + \
            "AND STAT_LEVL_ = 0 AND year = to_date('2013', 'YYYY') ) " + \
-           "select * from stat." + vector_table_requested + ",subAreas " + \
-           "where fk_nuts_gid = subAreas.gid"
+           'select * from stat.' + vector_table_requested + ',subAreas ' + \
+           'where fk_nuts_gid = subAreas.gid'
     print ('query ',query)
 
     return query
@@ -60,11 +60,11 @@ def vector_query_nuts(vector_table_requested, area_selected):
     :return:
     """
     vector_table_requested = str(vector_table_requested)
-    query= "with selected_zone as ( SELECT geom as geom from geo.nuts where nuts_id IN("+ area_selected+") " \
+    query= 'with selected_zone as ( SELECT geom as geom from geo.nuts where nuts_id IN('+ area_selected+') ' \
                                                                                                         "AND year = to_date('2013', 'YYYY') ), subAreas as ( SELECT distinct geo.nuts.nuts_id,geo.nuts.gid " \
-                                                                                                        "FROM selected_zone, geo.nuts where ST_Intersects( geo.nuts.geom, selected_zone.geom ) " \
+                                                                                                        'FROM selected_zone, geo.nuts where ST_Intersects( geo.nuts.geom, selected_zone.geom ) ' \
                                                                                                         "AND geo.nuts.STAT_LEVL_ = 0 AND geo.nuts.year = to_date('2013', 'YYYY') ) " \
-                                                                                                        "select * from stat." + vector_table_requested + ",subAreas where fk_nuts_gid = subAreas.gid"
+                                                                                                        'select * from stat.' + vector_table_requested + ',subAreas where fk_nuts_gid = subAreas.gid'
 
     return query
 
@@ -77,19 +77,19 @@ def vector_query_lau(vector_table_requested, area_selected,toCRS):
     :return
     """
 
-    query= "with selected_zone as ( SELECT geom" \
-                                                       " from public.tbl_lau1_2 where comm_id IN("+ area_selected+")  )," \
-                                                                                                        " subAreas as ( SELECT distinct geo.nuts.nuts_id, geo.nuts.gid FROM selected_zone, geo.nuts " \
-                                                                                                        "where ST_Intersects( geo.nuts.geom, selected_zone.geom ) AND geo.nuts.STAT_LEVL_ = 0 " \
-                                                                                                        "AND geo.nuts.year = to_date('2013', 'YYYY') ) select * from stat." + vector_table_requested + ",subAreas where fk_nuts_gid = subAreas.gid"
+    query= 'with selected_zone as ( SELECT geom' \
+                                                       ' from public.tbl_lau1_2 where comm_id IN('+ area_selected+')  ),' \
+                                                                                                        ' subAreas as ( SELECT distinct geo.nuts.nuts_id, geo.nuts.gid FROM selected_zone, geo.nuts ' \
+                                                                                                        'where ST_Intersects( geo.nuts.geom, selected_zone.geom ) AND geo.nuts.STAT_LEVL_ = 0 ' \
+                                                                                                        "AND geo.nuts.year = to_date('2013', 'YYYY') ) select * from stat." + vector_table_requested + ',subAreas where fk_nuts_gid = subAreas.gid'
 
     return query
 
 
 def nuts_within_the_selection(geometry,toCRS):
-    query= "SELECT nuts.nuts_id FROM geo.nuts " + \
-           "where ST_Intersects( nuts.geom," + \
-           " "+transformGeo(geometry,toCRS)+" ) AND geo.nuts.STAT_LEVL_ = 2 AND year = to_date('2013', 'YYYY')"
+    query= 'SELECT nuts.nuts_id FROM geo.nuts ' + \
+           'where ST_Intersects( nuts.geom,' + \
+           ' '+transformGeo(geometry,toCRS)+" ) AND geo.nuts.STAT_LEVL_ = 2 AND year = to_date('2013', 'YYYY')"
     print ('query ',query)
 
     return query
@@ -112,21 +112,21 @@ def nuts2_within_the_selection_nuts_lau(scalevalue, geometry,toCRS):
     return None
 
 def nuts2_within_the_selection_nuts(area_selected,toCRS):
-    query= "with selected_zone as ( SELECT geom as geom from geo.nuts where nuts_id IN("+ area_selected+") " \
+    query= 'with selected_zone as ( SELECT geom as geom from geo.nuts where nuts_id IN('+ area_selected+') ' \
                                                                                                         "AND year = to_date('2013', 'YYYY') ), subAreas as ( SELECT distinct geo.nuts.nuts_id,geo.nuts.gid " \
-                                                                                                        "FROM selected_zone, geo.nuts where ST_Intersects( geo.nuts.geom, selected_zone.geom ) " \
+                                                                                                        'FROM selected_zone, geo.nuts where ST_Intersects( geo.nuts.geom, selected_zone.geom ) ' \
                                                                                                         "AND geo.nuts.STAT_LEVL_ = 2 AND geo.nuts.year = to_date('2013', 'YYYY') ) " \
-                                                                                                        "select subAreas.nuts_id from subAreas"
+                                                                                                        'select subAreas.nuts_id from subAreas'
     return query
 
 
 
 
 def nuts2_within_the_selection_lau(area_selected,toCRS):
-    query= "with selected_zone as ( SELECT geom" \
-           " from public.tbl_lau1_2 where comm_id IN("+ area_selected+")  )," \
-                                                                      " subAreas as ( SELECT distinct geo.nuts.nuts_id, geo.nuts.gid FROM selected_zone, geo.nuts " \
-                                                                      "where ST_Intersects( geo.nuts.geom, selected_zone.geom ) AND geo.nuts.STAT_LEVL_ = 2 " \
+    query= 'with selected_zone as ( SELECT geom' \
+           ' from public.tbl_lau1_2 where comm_id IN('+ area_selected+')  ),' \
+                                                                      ' subAreas as ( SELECT distinct geo.nuts.nuts_id, geo.nuts.gid FROM selected_zone, geo.nuts ' \
+                                                                      'where ST_Intersects( geo.nuts.geom, selected_zone.geom ) AND geo.nuts.STAT_LEVL_ = 2 ' \
                                                                       "AND geo.nuts.year = to_date('2013', 'YYYY') ) select subAreas.nuts_id from subAreas"
     print ('query', query)
     return query

@@ -10,13 +10,13 @@ class TestUserRegistering(TestCase):
         '''
         this test will fail to register a new user because the user is already created
         '''
-        url = BASE_URL + "/users/register"
+        url = BASE_URL + '/users/register'
 
         payload = {
-            "password": "this",
-            "first_name": "is",
-            "last_name": "a",
-            "email": "hotmapstest@gmail.com"
+            'password': 'this',
+            'first_name': 'is',
+            'last_name': 'a',
+            'email': 'hotmapstest@gmail.com'
         }
 
         output = requests.post(url, json=payload)
@@ -31,13 +31,13 @@ class TestUserRegistering(TestCase):
         '''
         this test will fail to register a new user because the parameters are not complete
         '''
-        url = BASE_URL + "/users/register"
+        url = BASE_URL + '/users/register'
 
         payload = {
-            "passwordfds": "this",
-            "first_gsfdname": "is",
-            "lasfdst_name": "a",
-            "dfsemail": "hotmapstest@gmail.com"
+            'passwordfds': 'this',
+            'first_gsfdname': 'is',
+            'lasfdst_name': 'a',
+            'dfsemail': 'hotmapstest@gmail.com'
         }
 
         output = requests.post(url, json=payload)

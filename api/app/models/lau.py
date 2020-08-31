@@ -10,7 +10,7 @@ from geoalchemy2.shape import to_shape
 class Lau(db.Model):
     __tablename__ = 'lau'
     __table_args__ = (
-        {"schema": 'public'}
+        {'schema': 'public'}
     )
 
     CRS = 3035

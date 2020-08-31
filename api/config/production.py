@@ -1,6 +1,6 @@
 import os, sys, importlib.util
 
-constants_path = os.path.join(os.path.dirname(__file__), "..", "app", "constants.py")
+constants_path = os.path.join(os.path.dirname(__file__), '..', 'app', 'constants.py')
 constants_spec = importlib.util.spec_from_file_location('constants', constants_path)
 constants = importlib.util.module_from_spec(constants_spec)
 constants_spec.loader.exec_module(constants)

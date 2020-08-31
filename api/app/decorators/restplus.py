@@ -28,11 +28,11 @@ def handle_request_exception(error):
     '''
     message = str(error)
     response = {
-       "message": message,
-       "error": {
-          "message": message,
-          "status": "530",
-          "statusText": "REQUEST"
+       'message': message,
+       'error': {
+          'message': message,
+          'status': '530',
+          'statusText': 'REQUEST'
        }
     }
     return response, 530
@@ -47,11 +47,11 @@ def handle_false_parameters(error):
     '''
     message = 'Missing Parameter: ' + str(error)
     response = {
-        "message": message,
-        "error": {
-              "message": message,
-              "status": "531",
-              "statusText": "PARAMETERS"
+        'message': message,
+        'error': {
+              'message': message,
+              'status': '531',
+              'statusText': 'PARAMETERS'
         }
     }
     return response, 531
@@ -66,11 +66,11 @@ def handle_too_big_request(error):
     '''
     message = 'Your request is too big for the server'
     response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "532",
-            "statusText": "HUGE REQUEST"
+        'message': message,
+        'error': {
+            'message': message,
+            'status': '532',
+            'statusText': 'HUGE REQUEST'
         }
     }
     return response, 532
@@ -85,11 +85,11 @@ def handle_intersection_request(error):
     '''
     message = 'Problem with your point selection'
     response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "533",
-            "statusText": "INTERSECTION"
+        'message': message,
+        'error': {
+            'message': message,
+            'status': '533',
+            'statusText': 'INTERSECTION'
         }
     }
     return response, 533
@@ -104,11 +104,11 @@ def handle_not_enough_point(error):
     '''
     message = 'Please specify more than 2 coordinates'
     response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "534",
-            "statusText": "NOT ENOUGH POINTS"
+        'message': message,
+        'error': {
+            'message': message,
+            'status': '534',
+            'statusText': 'NOT ENOUGH POINTS'
         }
     }
     return response, 534
@@ -123,11 +123,11 @@ def handle_mail_existing(error):
     '''
     message = 'the user '+str(error)+' already exists !'
     response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "535",
-            "statusText": "USER EXISTING"
+        'message': message,
+        'error': {
+            'message': message,
+            'status': '535',
+            'statusText': 'USER EXISTING'
         }
     }
     return response, 535
@@ -142,11 +142,11 @@ def handle_activation_failure(error):
     '''
     message = 'Can\'t activate the user'
     response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "536",
-            "statusText": "ACTIVATION"
+        'message': message,
+        'error': {
+            'message': message,
+            'status': '536',
+            'statusText': 'ACTIVATION'
         }
     }
     return response, 536
@@ -161,11 +161,11 @@ def handle_activation_failure(error):
     '''
     message = 'This snapshot does not exists'
     response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "537",
-            "statusText": "SNAPSHOT MISSING"
+        'message': message,
+        'error': {
+            'message': message,
+            'status': '537',
+            'statusText': 'SNAPSHOT MISSING'
         }
     }
     return response, 537
@@ -180,11 +180,11 @@ def handle_wrong_credential(error):
     '''
     message = 'The credentials are wrong'
     response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "538",
-            "statusText": "WRONG CREDENTIAL"
+        'message': message,
+        'error': {
+            'message': message,
+            'status': '538',
+            'statusText': 'WRONG CREDENTIAL'
         }
     }
     return response, 538
@@ -199,11 +199,11 @@ def handle_unidentified_user(error):
     '''
     message = 'There is no authenticated user'
     response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "539",
-            "statusText": "USER UNIDENTIFIED"
+        'message': message,
+        'error': {
+            'message': message,
+            'status': '539',
+            'statusText': 'USER UNIDENTIFIED'
         }
     }
     return response, 539
@@ -218,11 +218,11 @@ def handle_doesnt_own_upload(error):
     '''
     message = 'The current user does not own the upload'
     response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "540",
-            "statusText": "USER NOT OWNER"
+        'message': message,
+        'error': {
+            'message': message,
+            'status': '540',
+            'statusText': 'USER NOT OWNER'
         }
     }
     return response, 540
@@ -235,13 +235,13 @@ def handle_upload_file_not_existing(error):
     :param error -- the called error:
     :return:
     '''
-    message = "The file of this upload does not exist"
+    message = 'The file of this upload does not exist'
     response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "541",
-            "statusText": "NO UPLOAD FILE"
+        'message': message,
+        'error': {
+            'message': message,
+            'status': '541',
+            'statusText': 'NO UPLOAD FILE'
         }
     }
     return response, 541
@@ -255,11 +255,11 @@ def handle_not_enough_space(error):
     '''
     message = 'Not enough space on your data storage'
     response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "542",
-            "statusText": "NOT ENOUGH SPACE"
+        'message': message,
+        'error': {
+            'message': message,
+            'status': '542',
+            'statusText': 'NOT ENOUGH SPACE'
             }
         }
     return response, 542
@@ -274,11 +274,11 @@ def handle_not_enough_space(error):
     '''
     message = 'There is no upload on this URL'
     response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "543",
-            "statusText": "NO UPLOAD FOUND"
+        'message': message,
+        'error': {
+            'message': message,
+            'status': '543',
+            'statusText': 'NO UPLOAD FOUND'
             }
         }
     return response, 543
@@ -293,11 +293,11 @@ def handle_user_not_activated(error):
     '''
     message = 'Please activate your user before connection'
     response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "544",
-            "statusText": "USER NOT ACTIVATED"
+        'message': message,
+        'error': {
+            'message': message,
+            'status': '544',
+            'statusText': 'USER NOT ACTIVATED'
             }
         }
     return response, 544
@@ -311,11 +311,11 @@ def handle_timeout_reached():
     '''
     message = 'The function has unfortunately reached a timeout'
     response = {
-        "message": message,
-        "error": {
-            "message": message,
-            "status": "545",
-            "statusText": "TIMEOUT REACHED"
+        'message': message,
+        'error': {
+            'message': message,
+            'status': '545',
+            'statusText': 'TIMEOUT REACHED'
             }
         }
     return response, 545

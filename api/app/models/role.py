@@ -8,7 +8,7 @@ class Role(db.Model, RoleMixin):
     __tablename__ = 'roles'
     __table_args__ = (
         {
-            "schema": 'user',
+            'schema': 'user',
         }
     )
     id = db.Column(db.Integer(), primary_key=True)

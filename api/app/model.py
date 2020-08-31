@@ -59,24 +59,24 @@ def addRegisterCalulationModule(data):
 
 
 
-    wiki_url = ""
+    wiki_url = ''
     try:
         wiki_url = data['wiki_url']
     except:
         pass
     category = data['category']
     type_layer_needed = data['type_layer_needed']
-    authorized_scale = "[]"
+    authorized_scale = '[]'
     try:
         authorized_scale = data['authorized_scale']
     except:
         pass
-    description_link = ""
+    description_link = ''
     try:
         description_link = data['description_link']
     except:
         pass
-    vectors_needed = "[]"
+    vectors_needed = '[]'
     try:
         vectors_needed = data['vectors_needed']
     except:
@@ -94,7 +94,7 @@ def addRegisterCalulationModule(data):
     createdAt = datetime.utcnow()
     conn = myCMpool.connect()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt,type_layer_needed,authorized_scale,description_link,vectors_needed,wiki_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ,type_layer_needed,authorized_scale,description_link,vectors_needed,type_vectors_needed,wiki_url))
+    cursor.execute('INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updateAt,type_layer_needed,authorized_scale,description_link,vectors_needed,wiki_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)', ( cm_Id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt ,type_layer_needed,authorized_scale,description_link,vectors_needed,type_vectors_needed,wiki_url))
     cursor.close()
 
 def init_sqlite_caculation_module_database(dbname=DB_NAME):
@@ -105,16 +105,16 @@ def init_sqlite_caculation_module_database(dbname=DB_NAME):
     """
     conn = sqlite3.connect(dbname)
     cursor = conn.cursor()
-    cursor.execute("DROP TABLE IF EXISTS calculation_module")
-    cursor.execute("CREATE TABLE calculation_module (cm_id INTEGER NOT NULL, cm_name VARCHAR(255), wiki_url VARCHAR(255),"
-                   "cm_description VARCHAR(255),cm_url VARCHAR(255),category VARCHAR(255),layers_needed VARCHAR(255),authorized_scale VARCHAR(255),description_link VARCHAR(255),createdAt REAL(255),updatedAt REAL(255),type_layer_needed REAL(255),vectors_needed REAL(255),type_vectors_needed REAL(255),"
-                   " PRIMARY KEY(cm_id))")
+    cursor.execute('DROP TABLE IF EXISTS calculation_module')
+    cursor.execute('CREATE TABLE calculation_module (cm_id INTEGER NOT NULL, cm_name VARCHAR(255), wiki_url VARCHAR(255),'
+                   'cm_description VARCHAR(255),cm_url VARCHAR(255),category VARCHAR(255),layers_needed VARCHAR(255),authorized_scale VARCHAR(255),description_link VARCHAR(255),createdAt REAL(255),updatedAt REAL(255),type_layer_needed REAL(255),vectors_needed REAL(255),type_vectors_needed REAL(255),'
+                   ' PRIMARY KEY(cm_id))')
     conn.commit()
-    cursor.execute("DROP TABLE IF EXISTS inputs_calculation_module")
-    cursor.execute("CREATE TABLE inputs_calculation_module (input_id INTEGER NOT NULL, input_name VARCHAR(255), "
-                   "input_type VARCHAR(255),input_parameter_name VARCHAR(255),input_value  VARCHAR(255),input_priority INTEGER, input_unit VARCHAR(255),"
-                   "input_min INTEGER,input_max INTEGER,createdAt REAL(255),updatedAt REAL(255),cm_id INTEGER NOT NULL,"
-                   " PRIMARY KEY(input_id),FOREIGN KEY(cm_id) REFERENCES calculation_module(cm_id))")
+    cursor.execute('DROP TABLE IF EXISTS inputs_calculation_module')
+    cursor.execute('CREATE TABLE inputs_calculation_module (input_id INTEGER NOT NULL, input_name VARCHAR(255), '
+                   'input_type VARCHAR(255),input_parameter_name VARCHAR(255),input_value  VARCHAR(255),input_priority INTEGER, input_unit VARCHAR(255),'
+                   'input_min INTEGER,input_max INTEGER,createdAt REAL(255),updatedAt REAL(255),cm_id INTEGER NOT NULL,'
+                   ' PRIMARY KEY(input_id),FOREIGN KEY(cm_id) REFERENCES calculation_module(cm_id))')
     conn.commit()
     return conn
 
@@ -125,7 +125,7 @@ def register_calulation_module(data):
         cm_name = data['cm_name']
 
 
-        wiki_url = ""
+        wiki_url = ''
         try:
             wiki_url = data['wiki_url']
         except:
@@ -137,24 +137,24 @@ def register_calulation_module(data):
         cm_url = data['cm_url']
         cm_id = data['cm_id']
         layers_needed = data['layers_needed']
-        authorized_scale = "[]"
+        authorized_scale = '[]'
         try:
             authorized_scale = data['authorized_scale']
         except:
             pass
 
-        description_link = ""
+        description_link = ''
         try:
             description_link = data['description_link']
         except:
             pass
-        vectors_needed = "[]"
+        vectors_needed = '[]'
         try:
             vectors_needed = data['vectors_needed']
         except:
             pass
 
-        type_vectors_needed = "[]"
+        type_vectors_needed = '[]'
         try:
             type_vectors_needed = data['type_vectors_needed']
         except:
@@ -171,7 +171,7 @@ def register_calulation_module(data):
             description_link = str(description_link)
             vectors_needed = str(vectors_needed)
             type_vectors_needed = str(type_vectors_needed)
-            cursor.execute("INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed,type_vectors_needed,wiki_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt,tn,authorized_scale,description_link,vectors_needed,type_vectors_needed,wiki_url ))
+            cursor.execute('INSERT INTO calculation_module (cm_id, cm_name, cm_description, category, cm_url, layers_needed, createdAt, updatedAt, type_layer_needed,authorized_scale,description_link,vectors_needed,type_vectors_needed,wiki_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', ( cm_id, cm_name, cm_description, category, cm_url, ln, createdAt, updatedAt,tn,authorized_scale,description_link,vectors_needed,type_vectors_needed,wiki_url ))
             conn.commit()
             for value in inputs_calculation_module:
                 input_name = value['input_name']
@@ -189,7 +189,7 @@ def register_calulation_module(data):
                 cm_id = value['cm_id']
                 conn = myCMpool.connect()
                 cursor = conn.cursor()
-                cursor.execute("INSERT INTO inputs_calculation_module (input_name, input_type, input_parameter_name, input_value,input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt) VALUES (?,?,?,?,?,?,?,?,?,?,?)", (input_name, input_type, input_parameter_name, input_value,input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt))
+                cursor.execute('INSERT INTO inputs_calculation_module (input_name, input_type, input_parameter_name, input_value,input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt) VALUES (?,?,?,?,?,?,?,?,?,?,?)', (input_name, input_type, input_parameter_name, input_value,input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt))
 
                 conn.commit()
             conn.close()
@@ -210,9 +210,9 @@ def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, l
 
         type_vectors_needed = str(type_vectors_needed)
 
-        cursor.execute("UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? ,  type_layer_needed = ?, authorized_scale = ?,description_link = ?, vectors_needed = ?, type_vectors_needed=?, wiki_url=? WHERE cm_id = ? ", ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt, tn,auth_s,description_link, vn,type_vectors_needed, wiki_url, cm_id ))
+        cursor.execute('UPDATE calculation_module SET cm_name = ?, cm_description = ?, category= ?,  cm_url= ?,  layers_needed= ?,  createdAt= ?,  updatedAt = ? ,  type_layer_needed = ?, authorized_scale = ?,description_link = ?, vectors_needed = ?, type_vectors_needed=?, wiki_url=? WHERE cm_id = ? ', ( cm_name, cm_description, category, cm_url,ln , createdAt, updatedAt, tn,auth_s,description_link, vn,type_vectors_needed, wiki_url, cm_id ))
         conn.commit()
-        cursor.execute("DELETE FROM inputs_calculation_module WHERE cm_id = ? ", (str(cm_id)))
+        cursor.execute('DELETE FROM inputs_calculation_module WHERE cm_id = ? ', (str(cm_id)))
         conn.commit()
         for value in inputs_calculation_module:
             input_name = value['input_name']
@@ -229,7 +229,7 @@ def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, l
             input_max = value['input_max']
             cm_id = value['cm_id']
 
-            cursor.execute("INSERT INTO inputs_calculation_module (input_name, input_type, input_parameter_name, input_value, input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt) VALUES (?,?,?,?,?,?,?,?,?,?,?)", (input_name, input_type, input_parameter_name, input_value,input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt))
+            cursor.execute('INSERT INTO inputs_calculation_module (input_name, input_type, input_parameter_name, input_value, input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt) VALUES (?,?,?,?,?,?,?,?,?,?,?)', (input_name, input_type, input_parameter_name, input_value,input_priority, input_unit, input_min, input_max, cm_id, createdAt,updatedAt))
             conn.commit()
         conn.close()
 
@@ -303,7 +303,7 @@ def getConnection_db_gis():
     return c
 
 def get_connection_string():
-    con = "host=" + HOST_DB + " user=" + USER_DB + " dbname=" + DATABASE_DB + " port=" + PORT_DB + " password=" + PASSWORD_DB + ""
+    con = 'host=' + HOST_DB + ' user=' + USER_DB + ' dbname=' + DATABASE_DB + ' port=' + PORT_DB + ' password=' + PASSWORD_DB + ''
     return con
 
 def get_shapefile_from_selection(scalevalue, id_selected_list, ouput_directory, EPSG=str(3035)):
@@ -332,17 +332,17 @@ def get_raster_from_csv(wkt_point, layer_needed, output_directory):
         if id == 0:
             dataset_directory = DATASET_DIRECTORY
             directory = layer['workspaceName']
-            root_path = dataset_directory + directory + "/data/"
-            path_to_dataset = root_path + layer['workspaceName'] + ".tif"
+            root_path = dataset_directory + directory + '/data/'
+            path_to_dataset = root_path + layer['workspaceName'] + '.tif'
             if not os.path.abspath(path_to_dataset).startswith(root_path):
-                raise Exception("directory traversal denied")
+                raise Exception('directory traversal denied')
         else:
             upload = Uploads.query.get(layer['id'])
             path_to_dataset = upload.url
 
         # create a file name as output
         filename_tif = helper.generate_geotif_name(output_directory)
-        args = commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(filename_csv, path_to_dataset, filename_tif))
+        args = commands_in_array('gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE'.format(filename_csv, path_to_dataset, filename_tif))
         run_command(args)
         #os.system(com_string)
         inputs_raster_selection[type] = filename_tif
@@ -369,17 +369,17 @@ def clip_raster_from_shapefile(shapefile_path,layer_needed, output_directory):
         if id == 0:
             dataset_directory = DATASET_DIRECTORY
             directory = layer['workspaceName']
-            root_path = dataset_directory + directory + "/data/"
-            path_to_dataset = root_path + layer['workspaceName'] + ".tif"
+            root_path = dataset_directory + directory + '/data/'
+            path_to_dataset = root_path + layer['workspaceName'] + '.tif'
             if not os.path.abspath(path_to_dataset).startswith(root_path):
-                raise Exception("directory traversal denied")
+                raise Exception('directory traversal denied')
         else:
             upload = Uploads.query.filter_by(id=layer['id']).first()
             path_to_dataset = upload.url
         # create a file name as output
         filename_tif = helper.generate_geotif_name(output_directory)
         # The previous option "-tr 100 100" seems to shift the layer
-        args = commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -co COMPRESS=DEFLATE".format(shapefile_path, path_to_dataset, filename_tif))
+        args = commands_in_array('gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -co COMPRESS=DEFLATE'.format(shapefile_path, path_to_dataset, filename_tif))
         run_command(args)
         inputs_raster_selection[type] = filename_tif
 
@@ -419,10 +419,10 @@ def retrieve_vector_data_for_calculation_module(vectors_needed, scalevalue, area
         layer_type = vector_table_requested['layer_type']
         if layer_id == 0:
             if scalevalue == 'hectare':
-                layer_path = ExportCut.cut_hectares(area_selected, layer_type + "_ha", 'public', '2012')
-                print(layer_type + "_ha")
+                layer_path = ExportCut.cut_hectares(area_selected, layer_type + '_ha', 'public', '2012')
+                print(layer_type + '_ha')
             else:
-                layer_path = ExportCut.cut_nuts(layer_type + "_" + scalevalue, area_selected, 'public', '2012')
+                layer_path = ExportCut.cut_nuts(layer_type + '_' + scalevalue, area_selected, 'public', '2012')
         else:
 
             upload = Uploads.query.filter_by(id=layer_id).first()
@@ -547,10 +547,10 @@ class ExportCut:
         app.helper.run_command(args)
         if not os.path.isfile(output_csv):
             return {
-                "message": "not a csv file"
+                'message': 'not a csv file'
             }
         return {
-            "path": output_csv
+            'path': output_csv
         }
 
     @staticmethod
@@ -605,15 +605,15 @@ def get_csv_from_nuts(layers, nuts, schema, year):
     :return:the csv containing the results
     """
     # We must determine if it is a nuts or a lau
-    dateCol = "year"
-    schema2 = "geo"
+    dateCol = 'year'
+    schema2 = 'geo'
     if str(layers).endswith('lau2'):
         layer_type = 'lau'
         layer_name = layers[: -5]
         id_type = 'comm_id'
         layer_date = LAU_YEAR
-        dateCol = "date"
-        schema2 = "public"
+        dateCol = 'date'
+        schema2 = 'public'
 
     else:
         scale = str(layers)[-5:]
@@ -636,7 +636,7 @@ def get_csv_from_nuts(layers, nuts, schema, year):
     try:
         results = db.engine.execute(date_sql)
     except:
-        raise RequestException("Failed retrieving year in database")
+        raise RequestException('Failed retrieving year in database')
     layer_year = year + '-01-01'
     dates = []
     for row in results:
@@ -670,7 +670,7 @@ def get_csv_from_nuts(layers, nuts, schema, year):
     try:
         result = db.engine.execute(sql)
     except:
-        raise RequestException("Problem with your SQL query")
+        raise RequestException('Problem with your SQL query')
 
     # build CSV
     return generate_csv_string(result)
@@ -686,7 +686,7 @@ def get_csv_from_hectare(areas, layers, schema, year):
     :return: the csv containing the results
     """
     if not str(layers).endswith('_ha'):
-        raise RequestException("this is not a correct layer for an hectare selection !")
+        raise RequestException('this is not a correct layer for an hectare selection !')
     # format the layer_name to contain only the name
     layer_name = layers[:-3]
     # build request
@@ -708,7 +708,7 @@ def get_csv_from_hectare(areas, layers, schema, year):
     try:
         results = db.engine.execute(date_sql)
     except:
-        raise RequestException("Failed retrieving year in database")
+        raise RequestException('Failed retrieving year in database')
     layer_year = year + '-01-01'
     dates = []
     for row in results:
@@ -726,7 +726,7 @@ def get_csv_from_hectare(areas, layers, schema, year):
     try:
         result = db.engine.execute(sql)
     except:
-        raise RequestException("Problem with your SQL query")
+        raise RequestException('Problem with your SQL query')
 
 
     return generate_csv_string(result)

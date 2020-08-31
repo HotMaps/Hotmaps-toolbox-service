@@ -9,22 +9,22 @@ url = BASE_URL + '/snapshot/load'
 
 class TestLoadSnapshot(TestCase):
     
-    @unittest.skip("This test keeps failing even though we did not change anything")
+    @unittest.skip('This test keeps failing even though we did not change anything')
     def test_post_working(self):
         """
         this test will pass the snapshot/load method
         """
-        list_url = BASE_URL + "/snapshot/list"
+        list_url = BASE_URL + '/snapshot/list'
         payload = {
-            "token": test_token,
+            'token': test_token,
         }
 
         output = requests.post(list_url, json=payload)
         test_snapshot_id = output.json()['snapshots'][0]['id']
 
         payload = {
-            "token": test_token,
-            "id": test_snapshot_id
+            'token': test_token,
+            'id': test_snapshot_id
         }
 
         output = requests.post(url, json=payload)
@@ -37,8 +37,8 @@ class TestLoadSnapshot(TestCase):
         this test will fail because of missing parameters
         """
         payload = {
-            "tokfadsfasden": test_token,
-            "ifdsad": -5
+            'tokfadsfasden': test_token,
+            'ifdsad': -5
         }
 
         output = requests.post(url, json=payload)
@@ -52,8 +52,8 @@ class TestLoadSnapshot(TestCase):
         this test will fail because the snapshot does not exists
         """
         payload = {
-            "token": test_token,
-            "id": -5
+            'token': test_token,
+            'id': -5
         }
 
         output = requests.post(url, json=payload)
@@ -67,8 +67,8 @@ class TestLoadSnapshot(TestCase):
         this test will fail because the used token is wrong
         """
         payload = {
-            "token": 'toto',
-            "id": -5
+            'token': 'toto',
+            'id': -5
         }
 
         output = requests.post(url, json=payload)
