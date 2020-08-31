@@ -515,13 +515,13 @@ def csv_to_geojson(url, layer_type):
     rule_dictionary = generate_rule_dictionary(sld_file)
     filtered_columns = [
         "year",
-		"month",
-		"day",
-		"weekday",
-		"season",
-		"hour_of_day",
-		"hour_of_year",
-		"date"
+        "month",
+        "day",
+        "weekday",
+        "season",
+        "hour_of_day",
+        "hour_of_year",
+        "date"
     ]
 
     # parse file

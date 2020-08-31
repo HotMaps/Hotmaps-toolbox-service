@@ -59,9 +59,9 @@ class AskingPasswordRecovery(Resource):
     @celery.task(name='ask for password recovery')
     def post(self):
         """
-		Method to ask for a Password recovery
-		:return:
-		"""
+        Method to ask for a Password recovery
+        :return:
+        """
         # Entries
         try:
             email = api.payload['email']
@@ -104,9 +104,9 @@ class RecoverPassword(Resource):
     @celery.task(name='method for recover of password')
     def post(self):
         """
-		Method to recover the password
-		:return:
-		"""
+        Method to recover the password
+        :return:
+        """
         # Entries
         wrong_parameter = []
         try:
@@ -159,9 +159,9 @@ class UserRegistering(Resource):
     @celery.task(name='user registration')
     def post(self):
         """
-		Returns the statistics for specific layers, area and year
-		:return:
-		"""
+        Returns the statistics for specific layers, area and year
+        :return:
+        """
         # Entries
         wrong_parameter = []
         try:
@@ -236,9 +236,9 @@ class ActivateUser(Resource):
     @celery.task(name='user activation')
     def post(self):
         '''
-		The method called to activate a user with a token given by email
-		:return:
-		'''
+        The method called to activate a user with a token given by email
+        :return:
+        '''
         # Entries
         try:
             token = api.payload['token']
@@ -274,9 +274,9 @@ class DeleteUser(Resource):
     @celery.task(name='user deletion')
     def delete(self):
         '''
-		The method called to delete a user with a token given by email
-		:return:
-		'''
+        The method called to delete a user with a token given by email
+        :return:
+        '''
         # Entries
         try:
             token = api.payload['token']
@@ -313,9 +313,9 @@ class LoginUser(Resource):
     @celery.task(name='user login')
     def post(self):
         '''
-		The method called to login a user
-		:return:
-		'''
+        The method called to login a user
+        :return:
+        '''
         # Entries
         wrong_parameter = []
         try:
@@ -368,9 +368,9 @@ class LogoutUser(Resource):
     @celery.task(name='user logout')
     def post(self):
         '''
-		The method called to logout a user
-		:return:
-		'''
+        The method called to logout a user
+        :return:
+        '''
         try:
             token = api.payload['token']
         except:
@@ -523,9 +523,9 @@ class SpaceUsedUploads(Resource):
 
 def generate_confirmation_token(email):
     """
-	this method will generate a confirmation token
-	:return: the confirmation token
-	"""
+    this method will generate a confirmation token
+    :return: the confirmation token
+    """
     s = URLSafeTimedSerializer(constants.FLASK_SECRET_KEY, salt=constants.FLASK_SALT)
     token = s.dumps(
         {
@@ -540,11 +540,11 @@ def generate_confirmation_token(email):
 
 def confirm_token(token, expiration=3600):
     '''
-	This method will confirm that the given token is correct
-	:param token:
-	:param expiration:
-	:return:
-	'''
+    This method will confirm that the given token is correct
+    :param token:
+    :param expiration:
+    :return:
+    '''
     s = URLSafeTimedSerializer(constants.FLASK_SECRET_KEY, salt=constants.FLASK_SALT)
     try:
         data = s.loads(token)
@@ -561,10 +561,10 @@ def confirm_token(token, expiration=3600):
 @login_manager.user_loader
 def load_user(user_id):
     '''
-	this method will return the current user
-	:param user_id:
-	:return:
-	'''
+    this method will return the current user
+    :param user_id:
+    :return:
+    '''
     return User.query.filter_by(id=user_id).first()
 
 
@@ -594,7 +594,7 @@ class FeedbackUser(Resource):
             <strong>Feedback type :</strong> {} <br /> \
             <strong>Feedback priority :</strong> {} <br /> \
             <strong>Description :</strong><p>{}</p>".format(title, datetime.date.today(), name,company,feedback_type,feedback_priority, description)
-        
+
 
         if 'file' in args and args['file'] is not None:
             file=args['file']
@@ -608,7 +608,7 @@ class FeedbackUser(Resource):
             self.send_async_mail(msg)
         except Exception as e:
             raise RequestException(str(e))
-        
+
         return { 'message':'Your feedback has been sent successfully. It will be examined and processed as soon as possible' }
 
     @celery.task(name='send mail feedback')
