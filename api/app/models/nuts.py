@@ -10,7 +10,7 @@ from geoalchemy2.shape import to_shape
 class Nuts(db.Model):
     __tablename__ = 'nuts'
     __table_args__ = (
-        {"schema": 'geo'}
+        {'schema': 'geo'}
     )
 
     CRS = 4258
@@ -33,7 +33,7 @@ class NutsRG01M(db.Model):
     __tablename__ = 'nuts_rg_01m'
     __table_args__ = (
         db.UniqueConstraint('nuts_id'),
-        {"schema": 'geo'}
+        {'schema': 'geo'}
     )
 
     CRS = 4258

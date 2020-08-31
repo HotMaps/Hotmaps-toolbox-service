@@ -4,7 +4,7 @@ from app import dbGIS as db
 class Time(db.Model):
     __tablename__ = 'time'
     __table_args__ = (
-        {"schema": 'stat'}
+        {'schema': 'stat'}
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -20,4 +20,4 @@ class Time(db.Model):
     timestamp = db.Column(db.DateTime(timezone=False))
 
     def __repr__(self):
-        return "<Time(%s)>" % (self.timestamp.strftime("%Y-%m-%d %H:%M"))
+        return '<Time(%s)>' % (self.timestamp.strftime('%Y-%m-%d %H:%M'))

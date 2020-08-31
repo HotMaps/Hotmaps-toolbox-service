@@ -10,10 +10,10 @@ class TestGetUserInformation(TestCase):
         """
         this test will pass the user/information method
         """
-        url = BASE_URL + "/users/information"
+        url = BASE_URL + '/users/information'
 
         payload = {
-            "token": test_token
+            'token': test_token
         }
 
         output = requests.post(url, json=payload)
@@ -26,10 +26,10 @@ class TestGetUserInformation(TestCase):
         """
         this test will fail because of missing parameters
         """
-        url = BASE_URL + "/users/information"
+        url = BASE_URL + '/users/information'
 
         payload = {
-            "tokentoto": test_token
+            'tokentoto': test_token
         }
 
         output = requests.post(url, json=payload)
@@ -42,10 +42,10 @@ class TestGetUserInformation(TestCase):
         """
         this test will fail because of wrong user token
         """
-        url = BASE_URL + "/users/information"
+        url = BASE_URL + '/users/information'
 
         payload = {
-            "token": "mybeautifultoken"
+            'token': 'mybeautifultoken'
         }
 
         output = requests.post(url, json=payload)

@@ -58,7 +58,7 @@ class AddSnapshot(Resource):
 
         # output
         return {
-            "message": 'snapshot created successfully'
+            'message': 'snapshot created successfully'
         }
 
 
@@ -111,7 +111,7 @@ class LoadSnapshot(Resource):
 
         # output
         return {
-            "config": snapshot.config
+            'config': snapshot.config
         }
 
 
@@ -167,7 +167,7 @@ class DeleteSnapshot(Resource):
 
         # output
         return {
-            "message": "The snapshot has been deleted"
+            'message': 'The snapshot has been deleted'
         }
 
 
@@ -226,7 +226,7 @@ class UpdateSnapshot(Resource):
 
         # output
         return {
-            "message": "The snapshot has been updated"
+            'message': 'The snapshot has been updated'
         }
 
 
@@ -268,5 +268,5 @@ class ListSnapshot(Resource):
 
         # output
         return {
-            "snapshots": snapshots
+            'snapshots': snapshots
         }

@@ -4,7 +4,7 @@ import requests
 
 from . import BASE_URL
 
-url = BASE_URL + "/upload/export/csv/nuts"
+url = BASE_URL + '/upload/export/csv/nuts'
 
 
 class TestExportCsvNuts(TestCase):
@@ -13,10 +13,10 @@ class TestExportCsvNuts(TestCase):
         this test will pass the upload/export/csv/nuts method with lau input
         """
         payload = {
-            "layers": "wwtp_capacity_nuts3",
-            "year": "2012",
-            "schema": "public",
-            "nuts": ["FR102"]
+            'layers': 'wwtp_capacity_nuts3',
+            'year': '2012',
+            'schema': 'public',
+            'nuts': ['FR102']
         }
 
         expected_status = 200
@@ -30,10 +30,10 @@ class TestExportCsvNuts(TestCase):
         this test will fail because the wrong parameters are given
         """
         payload = {
-            "fdslayers": "wwtp_capacity_nuts3",
-            "ydfsear": "2012",
-            "scfdsahema": "public",
-            "nuts": ["AT127"]
+            'fdslayers': 'wwtp_capacity_nuts3',
+            'ydfsear': '2012',
+            'scfdsahema': 'public',
+            'nuts': ['AT127']
             }
 
         output = requests.post(url, json=payload)

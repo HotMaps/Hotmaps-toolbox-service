@@ -11,23 +11,23 @@ class TestUpdateSnapshot(TestCase):
         """
         this test will pass the snapshot/load method
         """
-        list_url = BASE_URL + "/snapshot/list"
+        list_url = BASE_URL + '/snapshot/list'
         payload = {
-            "token": test_token,
+            'token': test_token,
         }
 
         output = requests.post(list_url, json=payload)
         test_snapshot_id = output.json()['snapshots'][0]['id']
 
         payload = {
-            "token": test_token,
-            "id": test_snapshot_id,
-            "config": "Hey"
+            'token': test_token,
+            'id': test_snapshot_id,
+            'config': 'Hey'
         }
 
         output = requests.post(url, json=payload)
 
-        expected_output = "The snapshot has been updated"
+        expected_output = 'The snapshot has been updated'
         assert output.json()['message'] == expected_output
 
     def test_post_missing_parameter(self):
@@ -35,9 +35,9 @@ class TestUpdateSnapshot(TestCase):
         this test will fail because of missing parameters
         """
         payload = {
-            "tokfadsfasden": test_token,
-            "ifdsad": -5,
-            "configdasf": "Hey"
+            'tokfadsfasden': test_token,
+            'ifdsad': -5,
+            'configdasf': 'Hey'
         }
 
         output = requests.post(url, json=payload)
@@ -51,9 +51,9 @@ class TestUpdateSnapshot(TestCase):
         this test will fail because the snapshot does not exists
         """
         payload = {
-            "token": test_token,
-            "id": -5,
-            "config": "Hey"
+            'token': test_token,
+            'id': -5,
+            'config': 'Hey'
         }
 
         output = requests.post(url, json=payload)
@@ -67,9 +67,9 @@ class TestUpdateSnapshot(TestCase):
         this test will fail because the used token is wrong
         """
         payload = {
-            "token": 'toto',
-            "id": -5,
-            "config": "Hey"
+            'token': 'toto',
+            'id': -5,
+            'config': 'Hey'
         }
 
         output = requests.post(url, json=payload)

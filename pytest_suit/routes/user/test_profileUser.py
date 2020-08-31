@@ -12,12 +12,12 @@ class TestProfileUser(TestCase):
         """
         this test will pass the user/information method
         """
-        url = BASE_URL + "/users/profile/update"
+        url = BASE_URL + '/users/profile/update'
 
         payload = {
-            "token": test_token,
-            "last_name": test_last_name,
-            "first_name": test_first_name
+            'token': test_token,
+            'last_name': test_last_name,
+            'first_name': test_first_name
         }
 
         output = requests.post(url, json=payload)
@@ -30,10 +30,10 @@ class TestProfileUser(TestCase):
         """
         this test will fail because of missing parameters
         """
-        url = BASE_URL + "/users/profile/update"
+        url = BASE_URL + '/users/profile/update'
 
         payload = {
-            "tokentoto": test_token
+            'tokentoto': test_token
         }
 
         output = requests.post(url, json=payload)
@@ -46,12 +46,12 @@ class TestProfileUser(TestCase):
         """
         this test will fail because of wrong user token
         """
-        url = BASE_URL + "/users/profile/update"
+        url = BASE_URL + '/users/profile/update'
 
         payload = {
-            "token": "mybeautifultoken",
-            "last_name": test_last_name,
-            "first_name": test_first_name
+            'token': 'mybeautifultoken',
+            'last_name': test_last_name,
+            'first_name': test_first_name
         }
 
         output = requests.post(url, json=payload)

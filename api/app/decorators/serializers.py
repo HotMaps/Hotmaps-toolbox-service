@@ -510,40 +510,40 @@ upload_space_used_input = api.model('input for uploads space used function', {
 })
 
 upload_space_used_output = api.model('output for uploads space used function', {
-    "used_size": fields.Float(description='used size'),
-    "max_size": fields.Float(description='maximum size'),
+    'used_size': fields.Float(description='used size'),
+    'max_size': fields.Float(description='maximum size'),
 })
 
 upload_delete_input = api.model('input for uploads deleting', {
-    "token": fields.String(description='authentification token'),
-    "id": fields.Integer(description='Upload id'),
-    "force": fields.Boolean(False, description='force deletion')
+    'token': fields.String(description='authentification token'),
+    'id': fields.Integer(description='Upload id'),
+    'force': fields.Boolean(False, description='force deletion')
 })
 
 upload_delete_output = api.model('output for uploads deleting', {
-    "message": fields.String(description='used size'),
+    'message': fields.String(description='used size'),
 })
 upload_export_raster_nuts_input = api.model('input for the nuts upload export to raster', {
-    "layers": fields.String(description='layer'),
-    "year": fields.String(description='year'),
-    "nuts": fields.List(fields.String())
+    'layers': fields.String(description='layer'),
+    'year': fields.String(description='year'),
+    'nuts': fields.List(fields.String())
 })
 upload_export_raster_hectare_input = api.model('input for the hectare upload export to raster', {
-    "layers": fields.String(description='layer'),
-    "year": fields.String(description='year'),
-    "areas": fields.List(fields.Nested(area))
+    'layers': fields.String(description='layer'),
+    'year': fields.String(description='year'),
+    'areas': fields.List(fields.Nested(area))
 })
 upload_export_csv_nuts_input = api.model('input for the nuts upload export to csv', {
-    "layers": fields.String(description='layer'),
-    "year": fields.String(description='year'),
-    "schema": fields.String(description='schema'),
-    "nuts": fields.List(fields.String())
+    'layers': fields.String(description='layer'),
+    'year': fields.String(description='year'),
+    'schema': fields.String(description='schema'),
+    'nuts': fields.List(fields.String())
 })
 upload_export_csv_hectare_input = api.model('input for the hectare upload export to csv', {
-    "layers": fields.String(description='layer'),
-    "year": fields.String(description='year'),
-    "schema": fields.String(description='schema'),
-    "areas": fields.List(fields.Nested(area))
+    'layers': fields.String(description='layer'),
+    'year': fields.String(description='year'),
+    'schema': fields.String(description='schema'),
+    'areas': fields.List(fields.Nested(area))
 })
 
 upload_export_cm_layer_input = api.model('input for the upload export cm layer', {
@@ -553,7 +553,7 @@ upload_export_cm_layer_input = api.model('input for the upload export cm layer',
 
 upload_download_input = api.model('input for the upload download.', {
     'token': fields.String(description='authentification token'),
-    "id": fields.Integer(description='Upload id'),
+    'id': fields.Integer(description='Upload id'),
 })
 
 snapshot_model = api.model('all snapshot fields', {
@@ -563,7 +563,7 @@ snapshot_model = api.model('all snapshot fields', {
 
 snapshot_add_input = api.model('input for the snapshot\'s addition.', {
     'token': fields.String(description='authentification token'),
-    "config": fields.String(description='snapshot content'),
+    'config': fields.String(description='snapshot content'),
 })
 
 snapshot_add_output = api.model('output for the snapshot\'s addition.', {
@@ -572,7 +572,7 @@ snapshot_add_output = api.model('output for the snapshot\'s addition.', {
 
 snapshot_load_input = api.model('input for the snapshot\'s load.', {
     'token': fields.String(description='authentification token'),
-    "id": fields.Integer(description='Snapshot id'),
+    'id': fields.Integer(description='Snapshot id'),
 })
 
 snapshot_load_output = api.model('output for the snapshot\'s load.', {
@@ -581,7 +581,7 @@ snapshot_load_output = api.model('output for the snapshot\'s load.', {
 
 snapshot_delete_input = api.model('input for the snapshot\'s deletion.', {
     'token': fields.String(description='authentification token'),
-    "id": fields.Integer(description='Snapshot id'),
+    'id': fields.Integer(description='Snapshot id'),
 })
 
 snapshot_delete_output = api.model('output for the snapshot\'s deletion.', {
@@ -591,7 +591,7 @@ snapshot_delete_output = api.model('output for the snapshot\'s deletion.', {
 snapshot_update_input = api.model('input for the snapshot\'s update.', {
     'token': fields.String(description='authentification token'),
     'config': fields.String(description='config content'),
-    "id": fields.Integer(description='Snapshot id'),
+    'id': fields.Integer(description='Snapshot id'),
 })
 
 snapshot_update_output = api.model('output for the snapshot\'s update.', {

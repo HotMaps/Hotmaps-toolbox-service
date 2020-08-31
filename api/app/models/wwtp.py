@@ -5,7 +5,7 @@ from geoalchemy2 import Geometry
 class WwtpModel(db.Model):
     __tablename__ = 'wwtp'
     __table_args__ = (
-        {"schema": 'geo'}
+        {'schema': 'geo'}
     )
 
     CRS = 3035
@@ -18,7 +18,7 @@ class WwtpModel(db.Model):
     geom = db.Column(Geometry('GEOMETRY', 4258))
 
     def __repr__(self):
-        str_date = self.date.strftime("%Y-%m-%d")
+        str_date = self.date.strftime('%Y-%m-%d')
         return "<Wwtp(gid= '%d', date='%s', capacity='%d', power='%d', unit='%s', geom='%s')>" % (
             self.gid, str_date, self.capacity, self.power, self.unit, self.geom)
 

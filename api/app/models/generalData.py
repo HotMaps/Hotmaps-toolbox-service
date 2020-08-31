@@ -7,7 +7,7 @@ def constructWithPartEachLayerHectare(geometry, year, layer, scale_level):
 	if len(layersData[layer]['indicators']) == 0 and scale_level not in layersData[layer]['data_lvl']:
 		return ' '
 	query = ''
-	layer_table_name = layersData[layer]['schema_hectare']+"."+layersData[layer]['tablename']
+	layer_table_name = layersData[layer]['schema_hectare']+'.'+layersData[layer]['tablename']
 	query_select = 'SELECT '
 	from_part = 'stat_' + layer
 	scalelvl_column = ''
@@ -20,29 +20,29 @@ def constructWithPartEachLayerHectare(geometry, year, layer, scale_level):
 				
 
 		query_select = query_select[:-1]
-		query += from_part+" as ("
+		query += from_part+' as ('
 		query += query_select
-		query += " FROM "+layer_table_name
+		query += ' FROM '+layer_table_name
 		year_query=''
 		if 'year' in layersData[layer]:
 			year_query="date = '{0}-01-01' and".format(layersData[layer]['year'])
 		if 'level_of_data' in layersData[layer] and NUTS_LAU_LEVELS[layersData[layer]['level_of_data']] < NUTS_LAU_LEVELS[scale_level]:
-			query += " WHERE "+ year_query+" ST_Intersects(st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "),"+layer_table_name+"."+layersData[layer]['geo_column']+")"
+			query += ' WHERE '+ year_query+" ST_Intersects(st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+'),' + layersData[layer]['crs'] + '),'+layer_table_name+'.'+layersData[layer]['geo_column']+')'
 		else:
-			query += " WHERE "+ year_query+" ST_Within("+layer_table_name+"."+layersData[layer]['geo_column']+",st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "))"
-		query += ")"
+			query += ' WHERE '+ year_query+' ST_Within('+layer_table_name+'.'+layersData[layer]['geo_column']+",st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+'),' + layersData[layer]['crs'] + '))'
+		query += ')'
 	else:
 		agg_summary_stat = 'agg_summary_stat'
 		for indic in layersData[layer]['indicators']:
 			if 'table_column' in indic:
 				query_select += agg_summary_stat + '.'+indic['table_column']+' as '+ layer + indic['indicator_id'] + ','
 		query_select = query_select[:-1]
-		query_select += " from (select (((ST_SummaryStatsAgg(ST_Clip("+ layersData[layer]['tablename'] + ".rast, 1, st_transform(st_geomfromtext('" + geometry + "'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + "),false),true,0))).*) as "+layersData[layer]['tablename']
+		query_select += ' from (select (((ST_SummaryStatsAgg(ST_Clip('+ layersData[layer]['tablename'] + ".rast, 1, st_transform(st_geomfromtext('" + geometry + "'::text,"+CRS_USER_GEOMETRY+'),' + layersData[layer]['crs'] + '),false),true,0))).*) as '+layersData[layer]['tablename']
 		query += from_part+' AS ( '
 		query += query_select
-		query +=  " FROM "+ layer_table_name
-		query += "  WHERE ST_Intersects(st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+")," + layersData[layer]['crs'] + ")," + layersData[layer]['tablename'] + ".rast)) "+agg_summary_stat
-		query += ")"
+		query +=  ' FROM '+ layer_table_name
+		query += "  WHERE ST_Intersects(st_transform(st_geomfromtext('"+ geometry +"'::text,"+CRS_USER_GEOMETRY+'),' + layersData[layer]['crs'] + '),' + layersData[layer]['tablename'] + '.rast)) '+agg_summary_stat
+		query += ')'
 
 	return query
 
@@ -54,20 +54,20 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 	query = ''
 	name_type = ''
 	scalelvl_column=''
-	nust_select_name = "nutsSelection_"+ layer
+	nust_select_name = 'nutsSelection_'+ layer
 	nuts_selection = None
 	if scale_level in NUTS_VAlUES:
 		scale_level_crs = CRS_NUTS
 		scale_level_name = 'nuts_id'
 		name_type = 'nuts'
 		fk_column_id = 'fk_nuts_gid'
-		nuts_selection =  nust_select_name +" as (SELECT geom as geom from geo."+name_type+" where "+name_type+".year = date('"+year+"-01-01') and "+scale_level_name+"  in ("+nuts+")), "
+		nuts_selection =  nust_select_name +' as (SELECT geom as geom from geo.'+name_type+' where '+name_type+".year = date('"+year+"-01-01') and "+scale_level_name+'  in ('+nuts+')), '
 	else:
 		scale_level_crs = CRS_LAU
 		scale_level_name = 'comm_id'
 		name_type = 'lau'
 		fk_column_id = 'fk_lau_gid'
-		nuts_selection =  nust_select_name +" as (SELECT st_transform(geom,4326) as geom from public."+LAU_TABLE+" where "+scale_level_name+"  in ("+nuts+")), "
+		nuts_selection =  nust_select_name +' as (SELECT st_transform(geom,4326) as geom from public.'+LAU_TABLE+' where '+scale_level_name+'  in ('+nuts+')), '
 	if 'scalelvl_column' in layersData[layer]:
 		scalelvl_column = layersData[layer]['scalelvl_column']
 
@@ -81,8 +81,8 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 
 
 	from_part = 'stat_' + layer
-	query_from_part = from_part+" as ("
-	layer_table_name = layersData[layer]['schema_scalelvl']+"."+layersData[layer]['tablename']
+	query_from_part = from_part+' as ('
+	layer_table_name = layersData[layer]['schema_scalelvl']+'.'+layersData[layer]['tablename']
 	query_select = 'SELECT '
 
 	
@@ -105,25 +105,25 @@ def constructWithPartEachLayerNutsLau(nuts, year, layer, scale_level):
 		query += query_select
 
 
-		query_from =" from " + nust_select_name + ", "+layer_table_name
+		query_from =' from ' + nust_select_name + ', '+layer_table_name
 		query += query_from
 		year_query=''
 		if 'year' in layersData[layer]:
 			year_query="date = '{0}-01-01' and".format(layersData[layer]['year'])
 		if check_if_agg_or_dis_method(layer, scale_level):
-			query += " where "+year_query+" st_within(st_centroid("+nust_select_name+".geom),st_transform("+layer_table_name+"."+layersData[layer]['geo_column']+","+scale_level_crs+"))) "			
+			query += ' where '+year_query+' st_within(st_centroid('+nust_select_name+'.geom),st_transform('+layer_table_name+'.'+layersData[layer]['geo_column']+','+scale_level_crs+'))) '			
 		else:
 			
-			query += " where "+year_query+" st_within(st_transform("+layer_table_name+"."+layersData[layer]['geo_column']+","+scale_level_crs+"), "+nust_select_name+".geom)) "
+			query += ' where '+year_query+' st_within(st_transform('+layer_table_name+'.'+layersData[layer]['geo_column']+','+scale_level_crs+'), '+nust_select_name+'.geom)) '
 	else:
 		query += query_from_part
 		query += query_select
 		if scale_level in NUTS_VAlUES:
-			query += " FROM "+layer_table_name + ", geo." + name_type
-			query += " WHERE "+layer_table_name+"."+fk_column_id+" = geo."+name_type+".gid and "+name_type+".year = date('"+year+"-01-01') and "+layer_table_name+"."+scale_level_name+"  IN ("+nuts+") ) "
+			query += ' FROM '+layer_table_name + ', geo.' + name_type
+			query += ' WHERE '+layer_table_name+'.'+fk_column_id+' = geo.'+name_type+'.gid and '+name_type+".year = date('"+year+"-01-01') and "+layer_table_name+'.'+scale_level_name+'  IN ('+nuts+') ) '
 		else:
-			query += " FROM "+layer_table_name + ", public." + LAU_TABLE
-			query += " WHERE "+layer_table_name+"."+fk_column_id+" = public."+LAU_TABLE+".gid and "+layer_table_name+"."+scale_level_name+"  IN ("+nuts+") ) "
+			query += ' FROM '+layer_table_name + ', public.' + LAU_TABLE
+			query += ' WHERE '+layer_table_name+'.'+fk_column_id+' = public.'+LAU_TABLE+'.gid and '+layer_table_name+'.'+scale_level_name+'  IN ('+nuts+') ) '
 
 	return query
 

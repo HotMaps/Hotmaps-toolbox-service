@@ -95,7 +95,7 @@ class AddUploads(Resource):
 
         # we check if the file extension is valid
         if not allowed_file(file_name):
-            raise RequestException("Please select a tif or csv file !")
+            raise RequestException('Please select a tif or csv file !')
 
         user_currently_used_space = calculate_total_space(user.uploads)
 
@@ -121,7 +121,7 @@ class AddUploads(Resource):
         # output
         output = 'file ' + name + ' added for the user ' + user.first_name
         return {
-            "message": str(output)
+            'message': str(output)
         }
 
 
@@ -154,7 +154,7 @@ class TilesUploads(Resource):
 
         folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
 
-        tile_filename = folder_url+"/tiles/%d/%d/%d.png" % (z, x, y)
+        tile_filename = folder_url+'/tiles/%d/%d/%d.png' % (z, x, y)
 
         if not os.path.exists(tile_filename):
             return
@@ -192,10 +192,10 @@ class ReadCsv(Resource):
 
         folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
 
-        geoJSON = folder_url+"/data.json"
+        geoJSON = folder_url+'/data.json'
 
         if not os.path.exists(geoJSON):
-            raise RequestException("No csv Existing")
+            raise RequestException('No csv Existing')
         # send the file to the client
         return send_file(geoJSON,
                          mimetype='application/json')
@@ -225,7 +225,7 @@ class ListUploads(Resource):
 
         # output
         return {
-            "uploads": uploads
+            'uploads': uploads
         }
 
     @staticmethod
@@ -294,8 +294,8 @@ class DeleteUploads(Resource):
             # delete the file
             shutil.rmtree(folder_url)
         # Force DB deletion
-        elif not ("force" in api.payload and api.payload["force"]):
-            raise UploadFileNotExistingException("blah")
+        elif not ('force' in api.payload and api.payload['force']):
+            raise UploadFileNotExistingException('blah')
 
         # delete the upload
         db.session.delete(upload_to_delete)
@@ -303,7 +303,7 @@ class DeleteUploads(Resource):
 
         # output
         return {
-            "message": "Upload deleted"
+            'message': 'Upload deleted'
         }
 
 
@@ -387,16 +387,16 @@ class ExportRasterNuts(Resource):
             raise ParameterException(str(exception_message))
         # We must determine if it is a nuts or a lau
 
-        schema = "geo"
-        dateCol = "year"
+        schema = 'geo'
+        dateCol = 'year'
 
         if str(layers).endswith('lau2'):
             layer_type = 'lau'
             layer_name = layers[: -5]
             id_type = 'comm_id'
             layer_date = LAU_YEAR
-            schema = "public"
-            dateCol = "date"
+            schema = 'public'
+            dateCol = 'date'
         else:
             layer_type = 'nuts'
             layer_name = str(layers)[: -6]
@@ -409,21 +409,21 @@ class ExportRasterNuts(Resource):
         if layer_name.endswith('_tif'):
             layer_name = layer_name[:-4]
         # build request
-        sql = "WITH buffer " \
-            "AS " \
-                "( SELECT ST_Buffer(ST_transform(" \
-                    "(SELECT "
+        sql = 'WITH buffer ' \
+            'AS ' \
+                '( SELECT ST_Buffer(ST_transform(' \
+                    '(SELECT '
         # If there is more than one area selected, we need to make a union of the geometries
         if len(nuts) > 1:
-            sql += "ST_UNION(geom) as geom"
+            sql += 'ST_UNION(geom) as geom'
         else:
-            sql += "geom"
+            sql += 'geom'
 
         # We add the first nuts/lau id
-        sql += " FROM " + schema + "." + layer_type + " WHERE " + id_type + " = '" + nuts[0] + "'"
+        sql += ' FROM ' + schema + '.' + layer_type + ' WHERE ' + id_type + " = '" + nuts[0] + "'"
         # we add the rest of the nuts/lau id
         for nut in nuts[1:]:
-            sql += " OR " + id_type + " = '" + nut + "'"
+            sql += ' OR ' + id_type + " = '" + nut + "'"
 
         # TODO Postpone Manage also the date field
         sql += """AND {2} = '{0}-01-01'), 3035 ), 0) AS buffer_geom) SELECT encode(ST_AsTIFF(foo.rast, 'LZW'), 'hex') as tif FROM (SELECT ST_Union(ST_Clip(rast, 1, buffer_geom, TRUE)) as rast FROM (SELECT ST_Union(rast) as rast, ST_Union(buffer_geom) as buffer_geom FROM geo.{1}, buffer WHERE ST_Intersects(rast, buffer_geom)) as rast WHERE ST_Intersects(rast, buffer_geom)) AS foo;""".format(layer_date, layer_name, dateCol)
@@ -434,13 +434,13 @@ class ExportRasterNuts(Resource):
         try:
             result = db.engine.execute(sql)
         except:
-            raise RequestException("Problem with your SQL query")
+            raise RequestException('Problem with your SQL query')
         try:
             # write hex_file
             for row in result:
                 hex_file += row['tif']
         except Exception as e:
-            raise RequestException("There is no result for this selection")
+            raise RequestException('There is no result for this selection')
 
         # decode hex_file
 
@@ -454,7 +454,7 @@ class ExportRasterNuts(Resource):
         # send the file to the client
         return send_file(bt_io,
                          mimetype='image/TIF',
-                         attachment_filename="hotmaps.tif",
+                         attachment_filename='hotmaps.tif',
                          as_attachment=True)
 
 
@@ -508,7 +508,7 @@ class ExportRasterHectare(Resource):
             raise ParameterException(str(exception_message))
 
         if not str(layers).endswith('_ha'):
-            raise RequestException("this is not a correct layer for an hectare selection !")
+            raise RequestException('this is not a correct layer for an hectare selection !')
         # format the layer_name to contain only the name
         layer_name = layers[:-3]
         # build request
@@ -533,7 +533,7 @@ class ExportRasterHectare(Resource):
         try:
             result = db.engine.execute(sql)
         except Exception:
-            raise RequestException("Problem with your SQL query")
+            raise RequestException('Problem with your SQL query')
 
         rowcount = 0
         # write hex_file
@@ -558,7 +558,7 @@ class ExportRasterHectare(Resource):
         # send the file to the client
         return send_file(bt_io,
                          mimetype='image/TIF',
-                         attachment_filename="hotmaps.tif",
+                         attachment_filename='hotmaps.tif',
                          as_attachment=True)
 
 
@@ -607,7 +607,7 @@ class ExportCsvNuts(Resource):
         # send the file to the client
         return send_file(csv_result,
                          mimetype='text/csv',
-                         attachment_filename="hotmaps.csv",
+                         attachment_filename='hotmaps.csv',
                          as_attachment=True)
 
 
@@ -669,7 +669,7 @@ class ExportCsvHectare(Resource):
         # send the file to the client
         return send_file(csv_result,
                          mimetype='text/csv',
-                         attachment_filename="hotmaps.csv",
+                         attachment_filename='hotmaps.csv',
                          as_attachment=True)
 
 

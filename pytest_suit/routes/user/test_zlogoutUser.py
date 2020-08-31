@@ -10,10 +10,10 @@ class TestLogoutUser(TestCase):
         '''
         This test will test that a user is correctly logout
         '''
-        url = BASE_URL + "/users/logout"
+        url = BASE_URL + '/users/logout'
 
         payload = {
-            "token": test_token
+            'token': test_token
         }
 
         output = requests.post(url, json=payload)
@@ -26,10 +26,10 @@ class TestLogoutUser(TestCase):
         '''
         this test will fail to log in a user because the parameters are wrong
         '''
-        url = BASE_URL + "/users/logout"
+        url = BASE_URL + '/users/logout'
 
         payload = {
-            "tokentoto": 'asdgsdgsdgsdaffds'
+            'tokentoto': 'asdgsdgsdgsdaffds'
         }
 
         output = requests.post(url, json=payload)
@@ -42,10 +42,10 @@ class TestLogoutUser(TestCase):
         '''
         this test will fail to log in a user because the user name is wrong
         '''
-        url = BASE_URL + "/users/logout"
+        url = BASE_URL + '/users/logout'
 
         payload = {
-            "token": 'wowoosdifapsdgasd'
+            'token': 'wowoosdifapsdgasd'
         }
 
         output = requests.post(url, json=payload)

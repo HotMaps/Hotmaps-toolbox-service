@@ -48,7 +48,7 @@ DEFAULT_TIMEOUT = 3600  # 1 hour
 
 CM_REGISTER_Q = 'rpc_queue_CM_register'
 
-CM_DB_NAME = "calculation_module.db"
+CM_DB_NAME = 'calculation_module.db'
 
 # disc space available for every users (in MegaOctet)
 USER_DISC_SPACE_AVAILABLE = 500
@@ -134,5 +134,5 @@ UPLOAD_BASE_NAME = 'grey.tif'
 UPLOAD_DIRECTORY = '/var/tmp'
 DATASET_DIRECTORY = '/var/hotmaps/repositories/'
 
-NUTS_YEAR = "2013"
+NUTS_YEAR = '2013'
 LAU_YEAR = NUTS_YEAR

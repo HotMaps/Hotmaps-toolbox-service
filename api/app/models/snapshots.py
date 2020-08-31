@@ -8,7 +8,7 @@ class Snapshots(db.Model):
     '''
     __tablename__ = 'snapshot'
     __table_args__ = (
-        {"schema": 'user'}
+        {'schema': 'user'}
     )
 
     id = db.Column(db.Integer, primary_key=True)

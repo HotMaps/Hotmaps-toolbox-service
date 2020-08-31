@@ -8,11 +8,11 @@ class TestRecoverPassword(TestCase):
         '''
         This test will fail to recover the password because the parameters are wrong
         '''
-        url = BASE_URL + "/users/recovery"
+        url = BASE_URL + '/users/recovery'
 
         payload = {
-            "tokentoto": "thisismynicetoken",
-            "passwordword": "nottoday"
+            'tokentoto': 'thisismynicetoken',
+            'passwordword': 'nottoday'
         }
 
         output = requests.post(url, json=payload)
@@ -27,11 +27,11 @@ class TestRecoverPassword(TestCase):
         '''
         This test will fail to recover the password because the token is wrong
         '''
-        url = BASE_URL + "/users/recovery"
+        url = BASE_URL + '/users/recovery'
 
         payload = {
-            "token": "thisismynicetoken",
-            "password": "nottoday"
+            'token': 'thisismynicetoken',
+            'password': 'nottoday'
         }
 
         output = requests.post(url, json=payload)

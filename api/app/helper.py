@@ -47,7 +47,7 @@ def colorize(layer_type, grey_tif, rgb_tif):
 
     grey2rgb_path = create_grey2rgb_txt(color_map_objects, uuid_temp)
 
-    args_rgba = commands_in_array("gdaldem color-relief {} {} -alpha {} -co COMPRESS=LZW".format(grey_tif, grey2rgb_path, rgb_tif))
+    args_rgba = commands_in_array('gdaldem color-relief {} {} -alpha {} -co COMPRESS=LZW'.format(grey_tif, grey2rgb_path, rgb_tif))
     run_command(args_rgba)
 
     # we delete all temp files
@@ -64,7 +64,7 @@ def get_style_from_geoserver(layer_type):
     '''
     # TODO: change name on geoserver?
     if layer_type == MUNICIPAL_SOLID_WASTE:
-        layer_type = "potential_municipal_solid_waste"
+        layer_type = 'potential_municipal_solid_waste'
 
     url = constants.GEOSERVER_API_URL + 'styles/' + layer_type + '.sld'
     result = requests.get(url)
@@ -92,11 +92,11 @@ def create_grey2rgb_txt(color_map_objects, uuid_upload):
     # complete the file
     for color_map_object in color_map_objects:
         grey2rgb.write(
-            str(color_map_object.quantity) + " " +
-            str(color_map_object.r) + " " +
-            str(color_map_object.g) + " " +
-            str(color_map_object.b) + " " +
-            str(color_map_object.a) + "\r\n"
+            str(color_map_object.quantity) + ' ' +
+            str(color_map_object.r) + ' ' +
+            str(color_map_object.g) + ' ' +
+            str(color_map_object.b) + ' ' +
+            str(color_map_object.a) + '\r\n'
         )
 
     # close the file connection and return the path
@@ -117,7 +117,7 @@ def extract_colormap(xml):
         raise RequestException(str(xml))
     ns = {'sld': 'http://www.opengis.net/sld'}
     # get the list of Color map
-    color_map_list = root.findall(".//sld:ColorMapEntry", ns)
+    color_map_list = root.findall('.//sld:ColorMapEntry', ns)
     color_map_objects = []
     # for each color map get the color, the opacity and the quantity
     for color_map in color_map_list:
@@ -200,19 +200,19 @@ def roundValue(value):
 
 def getGenerationMixColor(value):
     switcher = {
-        "Nuklear": "#909090",
-        "Lignite": "#556B2F",
-        "Hard coal": "#000000",
-        "Natural gas": "#FFD700",
-        "Oil": "#8B0000",
-        "Other fossil fuels": "#A9A9A9",
-        "PV": "#FFFF00",
-        "Wind ": "#D8BFD8",
-        "Biomass": "#228B22",
-        "Hydro": "#1E90FF",
-        "No information on source": "#FFFAFA",
+        'Nuklear': '#909090',
+        'Lignite': '#556B2F',
+        'Hard coal': '#000000',
+        'Natural gas': '#FFD700',
+        'Oil': '#8B0000',
+        'Other fossil fuels': '#A9A9A9',
+        'PV': '#FFFF00',
+        'Wind ': '#D8BFD8',
+        'Biomass': '#228B22',
+        'Hydro': '#1E90FF',
+        'No information on source': '#FFFAFA',
     }
-    return switcher.get(value, "#D8BFD8")
+    return switcher.get(value, '#D8BFD8')
 
 
 def get_result_formatted(name='not_defined', value=0, unit='unit'):
@@ -523,6 +523,6 @@ def run_command(arr):
         arr, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     if process.wait():
-        print(f"Not able to execute: {arr}\n returncode: {process.returncode}")
+        print(f'Not able to execute: {arr}\n returncode: {process.returncode}')
         stdout, stderr = process.communicate()
-        print(f"stdout:\n{stdout}\nstderr:\n{stderr}")
+        print(f'stdout:\n{stdout}\nstderr:\n{stderr}')

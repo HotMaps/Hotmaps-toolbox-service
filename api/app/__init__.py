@@ -3,7 +3,7 @@ from flask import Flask, g
 import logging.config
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 import pika
@@ -126,13 +126,13 @@ def create_app(config_name):
     www_cors = os.environ.get('CLIENT_URL')
 
     CORS(app, resources={
-        r"/api/*": {"origins": {
+        r'/api/*': {'origins': {
             geoserver_cors,
             www_cors,
-            "http://maps.googleapis.com/"
-            "http://maps.googleapis.com/maps/api/geocode/",
-            "http://maps.googleapis.com/maps/api/",
-            "http://maps.googleapis.com/*",
+            'http://maps.googleapis.com/'
+            'http://maps.googleapis.com/maps/api/geocode/',
+            'http://maps.googleapis.com/maps/api/',
+            'http://maps.googleapis.com/*',
         }
         }})
     return app

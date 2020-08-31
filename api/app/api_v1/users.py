@@ -56,11 +56,11 @@ class AskingPasswordRecovery(Resource):
         # if the user is not existing, we return a standard error
         if User.get_by_email(email) is None:
             return {
-                "message": 'request for recovery successful'
+                'message': 'request for recovery successful'
             }
         # mail creation
         user = User.query.filter_by(email=email).first()
-        link = constants.CLIENT_URL + "/recover;token_recover=" + generate_confirmation_token(email)
+        link = constants.CLIENT_URL + '/recover;token_recover=' + generate_confirmation_token(email)
         msg = Message()
         msg.add_recipient(email)
         msg.subject = 'Password recovery for the HotMaps toolbox'
@@ -75,7 +75,7 @@ class AskingPasswordRecovery(Resource):
         output = 'request for recovery successful'
         # output
         return {
-            "message": output
+            'message': output
         }
 
 
@@ -130,7 +130,7 @@ class RecoverPassword(Resource):
                 raise RequestException(str(e))
         # output
         return {
-            "message": output
+            'message': output
         }
 
 
@@ -190,7 +190,7 @@ class UserRegistering(Resource):
 
         # mail creation
         try:
-            link = constants.CLIENT_URL + "/register;token_activation=" + generate_confirmation_token(email)
+            link = constants.CLIENT_URL + '/register;token_activation=' + generate_confirmation_token(email)
             msg = Message()
             msg.add_recipient(email)
             msg.subject = 'Your registration on the HotMaps toolbox'
@@ -201,13 +201,13 @@ class UserRegistering(Resource):
             mail.send(msg)
 
         except Exception as e:
-            raise RequestException("Problem with the mail sending.")
+            raise RequestException('Problem with the mail sending.')
 
         output = 'user registered'
 
         # output
         return {
-            "message": output
+            'message': output
         }
 
 
@@ -246,7 +246,7 @@ class ActivateUser(Resource):
                 raise RequestException(str(e))
         # output
         return {
-            "message": output
+            'message': output
         }
 
 
@@ -283,7 +283,7 @@ class DeleteUser(Resource):
                 raise RequestException(str(e))
         # output
         return {
-            "message": output
+            'message': output
         }
 
 
@@ -338,8 +338,8 @@ class LoginUser(Resource):
         output = 'user connected'
 
         return {
-            "message": output,
-            "token": token
+            'message': output,
+            'token': token
         }
 
 
@@ -373,7 +373,7 @@ class LogoutUser(Resource):
         output = 'user disconnected'
 
         return {
-            "message": output
+            'message': output
         }
 
 
@@ -429,7 +429,7 @@ class ProfileUser(Resource):
         output = 'User ' + last_name + ' ' + first_name + ' updated'
 
         return {
-            "message": output
+            'message': output
         }
 
 
@@ -503,8 +503,8 @@ class SpaceUsedUploads(Resource):
 
         # output
         return {
-            "used_size": used_size,
-            "max_size": constants.USER_DISC_SPACE_AVAILABLE
+            'used_size': used_size,
+            'max_size': constants.USER_DISC_SPACE_AVAILABLE
         }
 
 def generate_confirmation_token(email):
@@ -541,7 +541,7 @@ def confirm_token(token, expiration=3600):
     user = User.query.filter_by(email=data['email']).first()
     if user.active_token != token:
         return None  # the user has been logout
-    user.active_token="None"
+    user.active_token='None'
     return user.email
 
 @login_manager.user_loader
@@ -573,13 +573,13 @@ class FeedbackUser(Resource):
         msg = Message()
         msg.add_recipient(email)
         msg.subject = 'Hotmaps feedback - '+title
-        msg.html = "<h3>{}</h3> \
+        msg.html = '<h3>{}</h3> \
             <strong>Date :</strong> {} <br /> \
             <strong>Firstname / Lastname :</strong> {} <br /> \
             <strong>Company :</strong> {} <br /> \
             <strong>Feedback type :</strong> {} <br /> \
             <strong>Feedback priority :</strong> {} <br /> \
-            <strong>Description :</strong><p>{}</p>".format(title, datetime.date.today(), name,company,feedback_type,feedback_priority, description)
+            <strong>Description :</strong><p>{}</p>'.format(title, datetime.date.today(), name,company,feedback_type,feedback_priority, description)
         
 
         if 'file' in args and args['file'] is not None:
@@ -587,7 +587,7 @@ class FeedbackUser(Resource):
             file_upload_path = os.path.join(constants.USER_UPLOAD_FOLDER, str(uuid.uuid4())+'_'+file.filename)
             file.save(file_upload_path)
             with open(file_upload_path, 'rb') as f:
-                msg.attach(file.filename, "image/*", f.read())
+                msg.attach(file.filename, 'image/*', f.read())
             os.remove(file_upload_path)
         app = current_app._get_current_object()
         try:

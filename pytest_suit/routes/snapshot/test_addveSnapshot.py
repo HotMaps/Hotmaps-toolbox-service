@@ -12,8 +12,8 @@ class TestAddSnapshot(TestCase):
         this test will pass the snapshot/add method
         """
         payload = {
-            "token": test_token,
-            "config": test_config
+            'token': test_token,
+            'config': test_config
         }
 
         output = requests.post(url, json=payload)
@@ -27,8 +27,8 @@ class TestAddSnapshot(TestCase):
         this test will fail because of missing parameters
         """
         payload = {
-            "tokfadsfasden": test_token,
-            "config": test_config
+            'tokfadsfasden': test_token,
+            'config': test_config
         }
 
         output = requests.post(url, json=payload)
@@ -42,8 +42,8 @@ class TestAddSnapshot(TestCase):
         this test will fail because the used token is wrong
         """
         payload = {
-            "token": 'toto',
-            "config": test_config
+            'token': 'toto',
+            'config': test_config
         }
 
         output = requests.post(url, json=payload)

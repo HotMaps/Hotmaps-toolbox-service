@@ -65,13 +65,13 @@ while True :
 
             heart_cm = HeartBeatCalculationModuleProducer()
             cm_id =  value[1]['cm_id']
-            print(" [HTAPI] Requesting cm_id = ",cm_id)
+            print(' [HTAPI] Requesting cm_id = ',cm_id)
             response = heart_cm.call(constants.RPC_CM_ALIVE + str(cm_id))
             if response is not None:
-                print("[HTAPI]  is connected to the Calculation module with id: %s ", str(cm_id))
-                LOGGER.info("[HTAPI]  is connected to the Calculation module with id: %s ", str(cm_id))
+                print('[HTAPI]  is connected to the Calculation module with id: %s ', str(cm_id))
+                LOGGER.info('[HTAPI]  is connected to the Calculation module with id: %s ', str(cm_id))
             else:
-                LOGGER.info("[HTAPI]  is going to  delete: %s ",str(cm_id))
+                LOGGER.info('[HTAPI]  is going to  delete: %s ',str(cm_id))
                 delete_cm(str(cm_id))
 
 

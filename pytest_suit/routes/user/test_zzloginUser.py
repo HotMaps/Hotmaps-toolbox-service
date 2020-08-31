@@ -10,11 +10,11 @@ class TestLoginUser(TestCase):
         '''
         this test will log in the user
         '''
-        url = BASE_URL + "/users/login"
+        url = BASE_URL + '/users/login'
 
         payload = {
-            "email": "hotmapstest@gmail.com",
-            "password": "weqriogvyx"
+            'email': 'hotmapstest@gmail.com',
+            'password': 'weqriogvyx'
         }
 
         output = requests.post(url, json=payload)
@@ -27,11 +27,11 @@ class TestLoginUser(TestCase):
         '''
         this test will fail to log in a user because the parameters are wrong
         '''
-        url = BASE_URL + "/users/login"
+        url = BASE_URL + '/users/login'
 
         payload = {
-            "emailsdaf": "hotmapstest@gmail.com",
-            "passworgsadfdsad": "weqriogvyx"
+            'emailsdaf': 'hotmapstest@gmail.com',
+            'passworgsadfdsad': 'weqriogvyx'
         }
 
         output = requests.post(url, json=payload)
@@ -44,11 +44,11 @@ class TestLoginUser(TestCase):
         '''
         this test will fail to log in a user because the user name is wrong
         '''
-        url = BASE_URL + "/users/login"
+        url = BASE_URL + '/users/login'
 
         payload = {
-            "email": "notme@gmail.com",
-            "password": "batman1234"
+            'email': 'notme@gmail.com',
+            'password': 'batman1234'
         }
 
         output = requests.post(url, json=payload)
@@ -61,11 +61,11 @@ class TestLoginUser(TestCase):
         '''
         this test will fail to log in a user because the user password is wrong
         '''
-        url = BASE_URL + "/users/login"
+        url = BASE_URL + '/users/login'
 
         payload = {
-            "email": "hotmapstest@gmail.com",
-            "password": "batman1234"
+            'email': 'hotmapstest@gmail.com',
+            'password': 'batman1234'
         }
 
         output = requests.post(url, json=payload)

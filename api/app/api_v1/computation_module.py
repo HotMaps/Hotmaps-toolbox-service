@@ -37,7 +37,7 @@ from ..constants import DEFAULT_TIMEOUT
 #TODO Add url to find  right computation module
 
 try:
-    args = commands_in_array("chmod +x app/helper/gdal2tiles-multiprocess.py")
+    args = commands_in_array('chmod +x app/helper/gdal2tiles-multiprocess.py')
     run_command(args)
 except WindowsError:
     pass
@@ -71,7 +71,7 @@ class ComputationModuleClass(Resource):
        :return:
        """
         input = request.get_json()
-        cm_id = input["cm_id"]
+        cm_id = input['cm_id']
         return getUI(cm_id)
 
 @ns.route('/register/', methods=['POST'])
@@ -105,7 +105,7 @@ class getRasterTile(Resource):
 
 
 
-        tile_filename = UPLOAD_DIRECTORY +'/'+directory+"/%d/%d/%d.png" % (z,x,y)
+        tile_filename = UPLOAD_DIRECTORY +'/'+directory+'/%d/%d/%d.png' % (z,x,y)
         if not os.path.exists(tile_filename):
             if not os.path.exists(os.path.dirname(tile_filename)):
                 os.makedirs(os.path.dirname(tile_filename))
@@ -180,7 +180,7 @@ def computeTask(data, payload, cm_id):
         #****************** WILL SEND PAYLOAD TO CM WITH ID {} ***************************************************'.format(cm_id))
         calculation_module_rpc = CalculationModuleRpcClient()
         response = calculation_module_rpc.call(cm_id,data.encode('utf-8'))
-        response = response.decode("utf-8")
+        response = response.decode('utf-8')
 
         data_output = json.loads(response)
         #'****************** RETRIVED RESULT FROM CM WITH ID {} ***************************************************'.format(cm_id))
@@ -230,13 +230,13 @@ def generateTiles(raster_layers):
 
         except OSError:
             pass
-            print ("Creation of the directory %s failed" % tile_path)
+            print ('Creation of the directory %s failed' % tile_path)
         else:
             pass
 
         if layer_type == 'custom':
             #convert tif file into geotif file
-            args_gdal = commands_in_array("gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE ".format(file_path_input, file_path_output))
+            args_gdal = commands_in_array('gdal_translate -of GTiff -expand rgba {} {} -co COMPRESS=DEFLATE '.format(file_path_input, file_path_output))
             run_command(args_gdal)
         else:
             helper.colorize(layer_type, file_path_input, file_path_output)
@@ -257,7 +257,7 @@ def generate_shape(vector_layers):
     return file_path_input, file_path_input
 
 def generate_payload_for_compute(data,inputs_raster_selection,inputs_vector_selection,nuts):
-    inputs = data["inputs"]
+    inputs = data['inputs']
     inputs_parameter_selection = {}
     data_output = {}
     for parameters in inputs:
@@ -284,7 +284,7 @@ class ComputationModuleClass(Resource):
         app = current_app._get_current_object()
         data = request.get_json()
         payload = api.payload['payload']
-        cm_id = data["cm_id"]
+        cm_id = data['cm_id']
         #2 inputs layers from the CM
         with app.app_context():
             task = computeTask.delay(data,payload,cm_id)

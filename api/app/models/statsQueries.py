@@ -94,7 +94,7 @@ class LayersStats:
 
 			# Storing the results only if there is data
 			count_indic = 0
-			areas = selection_areas.split(",")
+			areas = selection_areas.split(',')
 			for layer in layers:
 				values = []
 				for indicator in layersData[layer]['indicators']:
@@ -104,7 +104,7 @@ class LayersStats:
 					currentValue = query_geographic_database_first[count_indic] or 0
 					count_indic += 1
 
-					if "agg_method" in indicator and indicator["agg_method"] == "mean":
+					if 'agg_method' in indicator and indicator['agg_method'] == 'mean':
 						currentValue /= len(areas)
 
 					if 'factor' in indicator:  # Decimal * float => rise error
@@ -132,8 +132,8 @@ class ElectricityMix:
 
 	def getEnergyMixNutsLau(nuts):
 
-		sql_query = "WITH energy_total as (SELECT sum(electricity_generation) as value FROM " + ELECRICITY_MIX + " WHERE nuts0_code IN ("+nuts+") )" + \
-					"SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM " + ELECRICITY_MIX + " ,energy_total WHERE nuts0_code IN ("+nuts+")  GROUP BY energy_carrier ORDER BY energy_carrier ASC" ;
+		sql_query = 'WITH energy_total as (SELECT sum(electricity_generation) as value FROM ' + ELECRICITY_MIX + ' WHERE nuts0_code IN ('+nuts+') )' + \
+					'SELECT DISTINCT energy_carrier, SUM(electricity_generation * 100 /energy_total.value)  FROM ' + ELECRICITY_MIX + ' ,energy_total WHERE nuts0_code IN ('+nuts+')  GROUP BY energy_carrier ORDER BY energy_carrier ASC' ;
 
 
 

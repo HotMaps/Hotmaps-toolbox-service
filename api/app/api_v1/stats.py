@@ -90,9 +90,9 @@ class StatsLayersNutsInArea(Resource):
 		output, noDataLayers = LayersStats.run_stat(api.payload)
 		# output
 		return {
-			"layers": output,
-			"no_data_layers": noDataLayers,
-			"no_table_layers": noDataLayers
+			'layers': output,
+			'no_data_layers': noDataLayers,
+			'no_table_layers': noDataLayers
 		}
 
 
@@ -159,9 +159,9 @@ class StatsLayersHectareMulti(Resource):
 
 		#output
 		return {
-			"layers": output,
-			"no_data_layers": noDataLayers,
-			"no_table_layers": noDataLayers
+			'layers': output,
+			'no_data_layers': noDataLayers,
+			'no_table_layers': noDataLayers
 		}
 
 
@@ -223,7 +223,7 @@ class StatsPersonalLayers(Resource):
 		# 	cutline_input = model.get_shapefile_from_selection(api.payload['scale_level'], areas, constants.UPLOAD_DIRECTORY, '4326')
 		for pay in api.payload['layers']:
 			values=[]
-			data_file_name=""
+			data_file_name=''
 			token = pay['user_token']
 			layer_id = pay['id']
 			layer_type = pay['layer_id']
@@ -235,7 +235,7 @@ class StatsPersonalLayers(Resource):
 			if layer_name.endswith('.tif'):
 				cutline_input = model.get_cutline_input(areas, api.payload['scale_level'], 'raster')
 				filename_tif = generate_geotif_name(constants.UPLOAD_DIRECTORY)
-				args = app.helper.commands_in_array("gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE".format(cutline_input, upload_url, filename_tif))
+				args = app.helper.commands_in_array('gdalwarp -dstnodata 0 -cutline {} -crop_to_cutline -of GTiff {} {} -tr 100 100 -co COMPRESS=DEFLATE'.format(cutline_input, upload_url, filename_tif))
 				app.helper.run_command(args)
 				if os.path.isfile(filename_tif):
 					ds = gdal.Open(filename_tif)
@@ -248,7 +248,7 @@ class StatsPersonalLayers(Resource):
 			elif layer_name.endswith('.csv'):
 				cutline_input = model.get_cutline_input(areas, api.payload['scale_level'], 'vector')
 
-				geojson = str(upload_url[:-3]) + "json"
+				geojson = str(upload_url[:-3]) + 'json'
 				if os.path.isfile(geojson):
 					# take geojson file instead (csv can not be clip), TODO: this on "prepare_clip_personal_layer" function?
 					upload_url = geojson
@@ -257,20 +257,20 @@ class StatsPersonalLayers(Resource):
 				app.helper.run_command(app.helper.commands_in_array(cmd_cutline))
 				if os.path.isfile(output_csv):
 					df = pd.read_csv(output_csv)
-					if api.payload['scale_level'] != constants.hectare_name.lower() and "code" in df:
+					if api.payload['scale_level'] != constants.hectare_name.lower() and 'code' in df:
 						# Cannot clip with multipoliygons, TODO: no need to cut the csv with a shapefile for this
-						df = df[df["code"].isin(areas)]
+						df = df[df['code'].isin(areas)]
 
 					for ind in indicators.layersData[layer_type]['indicators']:
 						try:
 							value = df[ind['table_column']].sum()
-							if "agg_method" in ind and ind["agg_method"] == "mean":
+							if 'agg_method' in ind and ind['agg_method'] == 'mean':
 								value /= len(areas)
 
 							if 'factor' in ind:  # Decimal * float => rise error
 								value = float(value) * float(ind['factor'])
 
-							values.append(get_result_formatted(layer_type+"_"+ind['table_column'], str(value), ind['unit']))
+							values.append(get_result_formatted(layer_type+'_'+ind['table_column'], str(value), ind['unit']))
 						except:
 							noDataLayer.append(layer_name)
 				else:
@@ -286,9 +286,9 @@ class StatsPersonalLayers(Resource):
 			})
 
 		return {
-				"layers": result,
-				"no_data_layers": noDataLayer,
-				"no_table_layers": noDataLayer
+				'layers': result,
+				'no_data_layers': noDataLayer,
+				'no_table_layers': noDataLayer
 			}
 
 	@staticmethod

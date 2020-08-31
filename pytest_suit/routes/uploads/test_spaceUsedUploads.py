@@ -3,17 +3,17 @@ import requests
 from unittest import TestCase
 from . import BASE_URL, test_token
 
-url = BASE_URL + "/users/space_used"
+url = BASE_URL + '/users/space_used'
 
 
 class TestSpaceUsedUploads(TestCase):
-    "The class has to be here in order to be run before the deletion of the upload"
+    'The class has to be here in order to be run before the deletion of the upload'
     def test_post(self):
         """
         this test will pass the uploads/space_used method
         """
         payload = {
-            "token": test_token,
+            'token': test_token,
         }
 
         expected_status = 200
@@ -27,7 +27,7 @@ class TestSpaceUsedUploads(TestCase):
         this test will fail because of missing parameters
         """
         payload = {
-            "tokfdsen": test_token,
+            'tokfdsen': test_token,
         }
 
         output = requests.post(url, json=payload)
@@ -41,7 +41,7 @@ class TestSpaceUsedUploads(TestCase):
         this test will fail because the used token is wrong
         """
         payload = {
-            "token": 'hey there',
+            'token': 'hey there',
         }
 
         output = requests.post(url, json=payload)
