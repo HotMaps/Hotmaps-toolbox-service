@@ -10,18 +10,36 @@ services:
           - "5672:5672"
       networks:
             - cm-net
+      healthcheck:
+        test: [ "CMD", "nc", "-z", "localhost", "5672" ]
+        interval: 10s
+        timeout: 10s
+        retries: 5
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   api:
     build:
       context: ./api
       dockerfile: dockerfiles/api/Dockerfile
     restart: always
     ports:
-     - "5000:5000"
+      - "127.0.0.1:8080:80"
     links:
          - rabbit
          - redis
     depends_on:
       - redis
+      - db
+      - rabbit
     networks:
       - cm-net
     volumes:
