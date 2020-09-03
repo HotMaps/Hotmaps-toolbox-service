@@ -27,9 +27,8 @@ services:
     volumes:
       - /var/tmp:/var/tmp
       - /var/hotmaps/repositories:/var/hotmaps/repositories
-    environment:
-      - ENVIRONMENT=development
-
+    env_file:
+      - ./.env.dev
 
   redis:
     image: redis
