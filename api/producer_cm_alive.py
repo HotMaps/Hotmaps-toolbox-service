@@ -13,7 +13,6 @@ LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
               '-35s %(lineno) -5d: %(message)s')
 LOGGER = logging.getLogger(__name__)
 
-
 class HeartBeatCalculationModuleProducer(object):
     def __init__(self):
         parameters = pika.URLParameters(constants.CELERY_BROKER_URL)
@@ -48,30 +47,28 @@ class HeartBeatCalculationModuleProducer(object):
                 break
         return self.response
 
+if __name__ == "__main__":
+    while True:
+        listofCM = getCMList()
+        start = time.time()
+        if listofCM:
+            for value in enumerate(listofCM):
+                time.sleep(constants.TIMEOUT_ALIVE_CM)
+                end = time. time()
+                print(end - start)
 
 
-
-
-
-while True :
-    listofCM = getCMList()
-    start = time.time()
-    if len(listofCM)>0:
-        for value in enumerate(listofCM):
-            time.sleep(constants.TIMEOUT_ALIVE_CM)
-            end = time. time()
-            print(end - start)
-
-
-            heart_cm = HeartBeatCalculationModuleProducer()
-            cm_id =  value[1]['cm_id']
-            print(" [HTAPI] Requesting cm_id = ",cm_id)
-            response = heart_cm.call(constants.RPC_CM_ALIVE + str(cm_id))
-            if response is not None:
-                print("[HTAPI]  is connected to the Calculation module with id: %s ", str(cm_id))
-                LOGGER.info("[HTAPI]  is connected to the Calculation module with id: %s ", str(cm_id))
-            else:
-                LOGGER.info("[HTAPI]  is going to  delete: %s ",str(cm_id))
-                delete_cm(str(cm_id))
+                heart_cm = HeartBeatCalculationModuleProducer()
+                cm_id = value[1]['cm_id']
+                print(" [HTAPI] Requesting cm_id = ", cm_id)
+                response = heart_cm.call(constants.RPC_CM_ALIVE + str(cm_id))
+                if response is not None:
+                    print("[HTAPI]  is connected to the Calculation module with id: %s ", str(cm_id))
+                    LOGGER.info("[HTAPI]  is connected to the Calculation module with id: %s ", str(cm_id))
+                else:
+                    LOGGER.info("[HTAPI]  is going to  delete: %s ",str(cm_id))
+                    delete_cm(str(cm_id))
+        #sleep a bit between two alive checks
+        time.sleep(30)
 
 
