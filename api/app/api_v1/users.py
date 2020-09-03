@@ -2,6 +2,7 @@ import datetime
 import os
 import uuid
 
+import flask
 from flask_mail import Message
 from flask_restplus import Resource
 from flask_security import SQLAlchemySessionUserDatastore
@@ -584,7 +585,8 @@ class FeedbackUser(Resource):
 
         if 'file' in args and args['file'] is not None:
             file=args['file']
-            file_upload_path = os.path.join(constants.USER_UPLOAD_FOLDER, str(uuid.uuid4())+'_'+file.filename)
+            filename = str(uuid.uuid4())+'_'+file.filename
+            file_upload_path = flask.safe_join(constants.USER_UPLOAD_FOLDER, filename)
             file.save(file_upload_path)
             with open(file_upload_path, 'rb') as f:
                 msg.attach(file.filename, "image/*", f.read())

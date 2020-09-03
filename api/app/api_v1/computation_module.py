@@ -26,6 +26,7 @@ from app.decorators.exceptions import ValidationError, ComputationalModuleError
 
 import os
 import json
+import flask
 from flask import send_from_directory, send_file
 from app.constants import UPLOAD_DIRECTORY, DATASET_DIRECTORY
 
@@ -97,7 +98,7 @@ class getRasterfile(Resource):
 
 @ns.route('/tiles/<string:directory>/<int:z>/<int:x>/<int:y>/', methods=['GET'])
 class getRasterTile(Resource):
-    def get(self,directory,z,x,y):
+    def get(self,directory, z, x, y):
         """
          download a file from the main web service
          :return:
@@ -122,7 +123,7 @@ def registerCM(input):
 def savefile(filename,url):
     r = requests.get(url, stream=True)
     if r.status_code == 200:
-        path = os.path.join(UPLOAD_DIRECTORY, filename)
+        path = (UPLOAD_DIRECTORY, filename)
         with open(path, 'wb') as f:
             for chunk in r.iter_content(1024):
                 f.write(chunk)
