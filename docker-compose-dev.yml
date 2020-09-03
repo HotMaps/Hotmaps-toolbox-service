@@ -6,8 +6,6 @@ services:
       environment:
           - RABBITMQ_DEFAULT_USER=admin
           - RABBITMQ_DEFAULT_PASS=mypass
-      ports:
-          - "5672:5672"
       networks:
             - cm-net
       healthcheck:
@@ -21,6 +19,8 @@ services:
       - POSTGRES_DB=toolboxdb
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=password
+    networks:
+      - cm-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
