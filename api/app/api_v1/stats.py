@@ -34,7 +34,7 @@ from app.model import check_table_existe, prepare_clip_personal_layer
 from app import model
 from ..decorators.timeout import return_on_timeout_endpoint
 
-
+from ..models import indicators
 
 
 log = logging.getLogger(__name__)
@@ -270,7 +270,12 @@ class StatsPersonalLayers(Resource):
 							if 'factor' in ind:  # Decimal * float => rise error
 								value = float(value) * float(ind['factor'])
 
-							values.append(get_result_formatted(layer_type+"_"+ind['table_column'], str(value), ind['unit']))
+							indicator_key = "table_column"
+							if layer_type == indicators.INDUSTRIAL_SITES_EMISSIONS or layer_type == indicators.INDUSTRIAL_SITES_EXCESS_HEAT:
+								# TODO: only for these two, else need to test all others layers
+								indicator_key = "indicator_id"
+
+							values.append(get_result_formatted(layer_type + "_" + ind[indicator_key], str(value), ind['unit']))
 						except:
 							noDataLayer.append(layer_name)
 				else:
@@ -306,13 +311,25 @@ class StatsPersonalLayers(Resource):
 			min_tif = df.min().min()
 			max_tif = df.max().max()
 			density_tif = sum_tif/counted_cells
-		#print(max_tif,counted_cells,min_tif,max_tif)
+
 		# Assign indicator to results
-		values.append(get_indicators_from_result('sum', layer_name, sum_tif))
-		values.append(get_indicators_from_result('count', layer_name, counted_cells))
-		values.append(get_indicators_from_result('min', layer_name, min_tif))
-		values.append(get_indicators_from_result('max', layer_name, max_tif))
-		values.append(get_indicators_from_result('mean', layer_name, density_tif))
+		for column in (_["table_column"] for _ in indicators.layersData[layer_name]["indicators"] if "table_column" in _):
+			val = None
+			# return only values that appears on indicators (there's no switch in python)
+			if column == "sum":
+				val = sum_tif
+			elif column == "count":
+				val = counted_cells
+			elif column == "min":
+				val = min_tif
+			elif column == "max":
+				val = max_tif
+			elif column == "mean":
+				val = density_tif
+
+			if val is not None:
+				values.append(get_indicators_from_result(column, layer_name, val))
+
 		return values
 
 
