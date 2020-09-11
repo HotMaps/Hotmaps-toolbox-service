@@ -12,6 +12,7 @@ try:
 except ImportError:
     from pipes import quote
 import subprocess
+import flask
 from app.constants import DATASET_DIRECTORY, USER_DB,HOST_DB,PASSWORD_DB,PORT_DB,DATABASE_DB
 from app.constants import DATASET_DIRECTORY, UPLOAD_DIRECTORY, NUTS_YEAR, LAU_YEAR
 from datetime import datetime
@@ -330,12 +331,9 @@ def get_raster_from_csv(wkt_point, layer_needed, output_directory):
             type = layer['name']
             id = 0
         if id == 0:
-            dataset_directory = DATASET_DIRECTORY
             directory = layer['workspaceName']
-            root_path = dataset_directory + directory + "/data/"
-            path_to_dataset = root_path + layer['workspaceName'] + ".tif"
-            if not os.path.abspath(path_to_dataset).startswith(root_path):
-                raise Exception("directory traversal denied")
+            filename = layer['workspaceName'] + ".tif"
+            path_to_dataset = flask.safe_join(DATASET_DIRECTORY, directory, 'data', filename)
         else:
             upload = Uploads.query.get(layer['id'])
             path_to_dataset = upload.url
@@ -367,12 +365,9 @@ def clip_raster_from_shapefile(shapefile_path,layer_needed, output_directory):
             type = layer['name']
             id = 0
         if id == 0:
-            dataset_directory = DATASET_DIRECTORY
             directory = layer['workspaceName']
-            root_path = dataset_directory + directory + "/data/"
-            path_to_dataset = root_path + layer['workspaceName'] + ".tif"
-            if not os.path.abspath(path_to_dataset).startswith(root_path):
-                raise Exception("directory traversal denied")
+            filename = layer['workspaceName'] + ".tif"
+            path_to_dataset = flask.safe_join(DATASET_DIRECTORY, directory, 'data', filename)
         else:
             upload = Uploads.query.filter_by(id=layer['id']).first()
             path_to_dataset = upload.url
