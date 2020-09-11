@@ -59,33 +59,14 @@ def addRegisterCalulationModule(data):
 
 
 
-    wiki_url = ""
-    try:
-        wiki_url = data['wiki_url']
-    except:
-        pass
+    wiki_url = data.get('wiki_url', "")
     category = data['category']
     type_layer_needed = data['type_layer_needed']
-    authorized_scale = "[]"
-    try:
-        authorized_scale = data['authorized_scale']
-    except:
-        pass
-    description_link = ""
-    try:
-        description_link = data['description_link']
-    except:
-        pass
-    vectors_needed = "[]"
-    try:
-        vectors_needed = data['vectors_needed']
-    except:
-        pass
+    authorized_scale = data.get('authorized_scale', "[]")
+    description_link = data.get('description_link', "")
+    vectors_needed = data.get('vectors_needed', "[]")
 
-    try:
-        type_vectors_needed = data['type_vectors_needed']
-    except:
-        pass
+    type_vectors_needed = data('type_vectors_needed', "[]")
     cm_description = data['cm_description']
     cm_url = data['cm_url']
     cm_Id = data['id']
@@ -125,11 +106,7 @@ def register_calulation_module(data):
         cm_name = data['cm_name']
 
 
-        wiki_url = ""
-        try:
-            wiki_url = data['wiki_url']
-        except:
-            pass
+        wiki_url = data.get('wiki_url', '')
         category = data['category']
         type_layer_needed = data['type_layer_needed']
 
@@ -137,28 +114,12 @@ def register_calulation_module(data):
         cm_url = data['cm_url']
         cm_id = data['cm_id']
         layers_needed = data['layers_needed']
-        authorized_scale = "[]"
-        try:
-            authorized_scale = data['authorized_scale']
-        except:
-            pass
+        authorized_scale = data.get('authorized_scale', "[]")
 
-        description_link = ""
-        try:
-            description_link = data['description_link']
-        except:
-            pass
-        vectors_needed = "[]"
-        try:
-            vectors_needed = data['vectors_needed']
-        except:
-            pass
+        description_link = data.get('description_link', "")
+        vectors_needed = data.get('vectors_needed', "[]")
 
-        type_vectors_needed = "[]"
-        try:
-            type_vectors_needed = data['type_vectors_needed']
-        except:
-            pass
+        type_vectors_needed = data.get('type_vectors_needed', "[]")
 
         updatedAt = datetime.utcnow()
         createdAt = datetime.utcnow()
@@ -178,11 +139,7 @@ def register_calulation_module(data):
                 input_type = value['input_type']
                 input_parameter_name = value['input_parameter_name']
                 input_value = str(value['input_value'])
-                input_priority = 0
-                try:
-                    input_priority = value['input_priority']
-                except:
-                    pass
+                input_priority = value.get('input_priority', 0)
                 input_unit = value['input_unit']
                 input_min = value['input_min']
                 input_max = value['input_max']
@@ -220,10 +177,7 @@ def update_calulation_module(cm_id, cm_name, cm_description, category, cm_url, l
             input_parameter_name = value['input_parameter_name']
             input_value = str(value['input_value'])
             input_priority = 0
-            try:
-                input_priority = value['input_priority']
-            except:
-                pass
+            input_priority = value.get('input_priority', 0)
             input_unit = value['input_unit']
             input_min = value['input_min']
             input_max = value['input_max']
