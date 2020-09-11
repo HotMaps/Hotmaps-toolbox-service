@@ -270,12 +270,7 @@ class StatsPersonalLayers(Resource):
 							if 'factor' in ind:  # Decimal * float => rise error
 								value = float(value) * float(ind['factor'])
 
-							indicator_key = "table_column"
-							if layer_type == indicators.INDUSTRIAL_SITES_EMISSIONS or layer_type == indicators.INDUSTRIAL_SITES_EXCESS_HEAT:
-								# TODO: only for these two, else need to test all others layers
-								indicator_key = "indicator_id"
-
-							values.append(get_result_formatted(layer_type + "_" + ind[indicator_key], str(value), ind['unit']))
+							values.append(get_result_formatted(layer_type + "_" + ind["indicator_id"], str(value), ind['unit']))
 						except:
 							noDataLayer.append(layer_name)
 				else:
@@ -329,6 +324,16 @@ class StatsPersonalLayers(Resource):
 
 			if val is not None:
 				values.append(get_indicators_from_result(column, layer_name, val))
+
+		if layer_name == indicators.POPULATION_TOT:
+			# add density for Population layer
+			indicator = next((_ for _ in indicators.layersData[indicators.POPULATION_TOT]["indicators"] if _["indicator_id"] == "density"), None)
+			if indicator is not None:
+				values.append({
+					"name": indicators.POPULATION_TOT + "_" + "density",
+					"value": density_tif,
+					"unit": indicator["unit"]
+				})
 
 		return values
 
