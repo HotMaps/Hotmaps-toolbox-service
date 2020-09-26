@@ -741,6 +741,7 @@ def prepare_clip_personal_layer(cutline_input, upload_url):
     """
     #upload_url += "data.csv"
     output_csv = generate_csv_name(constants.UPLOAD_DIRECTORY)
-    cmd_cutline = "ogr2ogr -f 'CSV' -clipsrc {} {} {} -oo GEOM_POSSIBLE_NAMES=geometry_wkt -oo KEEP_GEOM_COLUMNS=NO".format(
+    # "-oo KEEP_GEOM_COLUMNS=NO" removed: CMs need it
+    cmd_cutline = "ogr2ogr -f 'CSV' -clipsrc {} {} {} -oo GEOM_POSSIBLE_NAMES=geometry_wkt".format(
         cutline_input, output_csv, upload_url)
     return cmd_cutline, output_csv
