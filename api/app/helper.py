@@ -62,6 +62,11 @@ def get_style_from_geoserver(layer_type):
     :param layer_type: the layer type to select
     :return xml: the sld style file
     '''
+
+    # TODO: change name on geoserver?
+    if layer_type == MUNICIPAL_SOLID_WASTE:
+        layer_type = "potential_municipal_solid_waste"
+
     url = constants.GEOSERVER_API_URL + 'styles/' + layer_type + '.sld'
     result = requests.get(url)
     xml = result.content
