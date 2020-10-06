@@ -334,7 +334,7 @@ class ExportCMLayer(Resource):
             exception_message = ', '.join(wrong_parameter)
             raise ParameterException(str(exception_message))
 
-        if type == 'vector':
+        if type == 'vector' or type == 'raster':
             path_to_file = UPLOAD_DIRECTORY + '/' + uuid
             mimetype = 'application/zip'
         else:
