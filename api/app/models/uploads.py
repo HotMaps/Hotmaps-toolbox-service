@@ -374,11 +374,25 @@ def generate_rule_dictionary(style_sheet):
         graphic = rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:WellKnownName', ns)
         external_graphic = None
 
+        fill = stroke = mark_name = size = None
         if graphic is not None:
             mark_name = graphic.text
             fill = rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:Fill/se:SvgParameter', ns).text
             stroke = rule.find('se:PointSymbolizer/se:Graphic/se:Mark/se:Stroke/se:SvgParameter', ns).text
             size = rule.find('se:PointSymbolizer/se:Graphic/se:Size', ns).text
+        elif rule.find('se:PolygonSymbolizer', ns) is not None:
+            mark_name = "polygon"
+            # polygons
+            fill = rule.find('se:PolygonSymbolizer/se:Fill/se:SvgParameter', ns)
+            if fill is not None:
+                fill = fill.text
+            stroke = rule.find('se:PolygonSymbolizer/se:Stroke/se:SvgParameter[@name="stroke"]', ns)
+            if stroke is not None:
+                stroke = stroke.text
+
+            size = rule.find('se:PolygonSymbolizer/se:Stroke/se:SvgParameter[@name="stroke-width"]', ns)
+            if size is not None:
+                size = int(size.text)
         else:
             # TODO: handle points as charts if found
             # otherwise return default style
