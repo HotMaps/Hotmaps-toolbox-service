@@ -30,7 +30,8 @@ SQLALCHEMY_DATABASE_URI = 'postgresql://{user}:{password}@{host}:{port}/{db}'.fo
 )
 
 SQLALCHEMY_BINDS = {
-    'cm_db': 'sqlite:///' + db_path
+    'cm_db':      os.environ.get('DATABASE_URL') or \
+                  'sqlite:///' + db_path
 }
 
 SECRET_KEY = FLASK_SECRET_KEY
