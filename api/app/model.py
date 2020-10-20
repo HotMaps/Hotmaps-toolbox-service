@@ -535,6 +535,7 @@ class ExportCut:
         :param upload_url: the URL of the selected personal layer
         :param areas: the selection on the map
         :return:
+        Author CREM Albain Dufils and HESSO Daniel Hunacek
         """
         if scale_level == 'hectare':
             areas = area_to_geom(areas)
@@ -738,6 +739,7 @@ def prepare_clip_personal_layer(cutline_input, upload_url):
     :param cutline_input:
     :param upload_url: the url of the upload
     :return: a tuple containing the command to use later ant the output csv path
+    Author CREM Albain Dufils and HESSO Daniel Hunacek
     """
     #upload_url += "data.csv"
     output_csv = generate_csv_name(constants.UPLOAD_DIRECTORY)

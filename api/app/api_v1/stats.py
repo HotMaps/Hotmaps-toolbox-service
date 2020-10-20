@@ -150,10 +150,6 @@ class StatsLayersHectareMulti(Resource):
 					exception_message += ', '
 			raise ParameterException(str(exception_message))
 
-
-
-
-
 		output, noDataLayers = LayersStats.run_stat(api.payload)
 		#print ("output hectare ",output)
 
@@ -163,12 +159,6 @@ class StatsLayersHectareMulti(Resource):
 			"no_data_layers": noDataLayers,
 			"no_table_layers": noDataLayers
 		}
-
-
-
-
-
-
 
 @ns.route('/energy-mix/nuts-lau')
 @api.response(0, 'Request too big')
@@ -203,9 +193,7 @@ class StatsLayersNutsInArea(Resource):
 		res = ElectricityMix.getEnergyMixNutsLau(adapt_nuts_list(nuts))
 		return res
 
-
-		# Remove scale for each layer
-
+# @Author CREM Albain Dufils and HESSO Daniel Hunacek and Lucien Zuber
 @ns.route('/personnal-layers')
 class StatsPersonalLayers(Resource):
 	@return_on_timeout_endpoint()
