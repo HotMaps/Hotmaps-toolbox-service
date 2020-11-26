@@ -47,6 +47,7 @@ class Uploads(db.Model):
     uuid = db.Column(db.String(255))
     name = db.Column(db.String(255))
     layer = db.Column(db.String(255))
+    shared = db.Column(db.String(16))
     layer_type = db.Column(db.String(255))
     size = db.Column(db.Numeric)
     url = db.Column(db.String(255))

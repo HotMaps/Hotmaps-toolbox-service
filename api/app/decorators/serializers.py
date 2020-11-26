@@ -492,6 +492,7 @@ upload_model = api.model('all upload fields', {
     'id': fields.Integer(description='Upload id'),
     'name': fields.String(description='Upload name'),
     'size': fields.Float(description='size'),
+    'shared': fields.String(description='Shared'),
     'layer': fields.String(description='layer'),
     'layer_type': fields.String(description='layer type'),
     'is_generated': fields.Integer(description='Stat of the tiles generation')

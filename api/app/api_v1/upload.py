@@ -57,6 +57,10 @@ class AddUploads(Resource):
         except:
             wrong_parameter.append('name')
         try:
+            shared = args['shared']
+        except:
+            wrong_parameter.append('shared')
+        try:
             layer_type = args['layer_type']
         except:
             wrong_parameter.append('layer_type')
@@ -104,7 +108,7 @@ class AddUploads(Resource):
         else:
             url = upload_folder + '/data.csv'
 
-        upload = Uploads(name=name, url=url, layer=layer, layer_type=layer_type, size=0.0, user_id=user.id,
+        upload = Uploads(name=name, url=url, layer=layer, layer_type=layer_type, shared=shared, size=0.0, user_id=user.id,
                          uuid=upload_uuid, is_generated=1)
         db.session.add(upload)
         db.session.commit()
@@ -237,6 +241,44 @@ class ListUploads(Resource):
 
         # get the user uploads
         return user.uploads
+
+
+@ns.route('/listshare')
+@api.response(530, 'Request error')
+@api.response(531, 'Missing parameter')
+@api.response(539, 'User Unidentified')
+class ListShare(Resource):
+    @return_on_timeout_endpoint()
+    @api.marshal_with(upload_list_output)
+    @api.expect(upload_list_input)
+    @celery.task(name='share listing')
+    def post(self):
+        """
+        The method called to list the uploads shared
+        :return:
+        """
+        # Entries
+        try:
+            token = api.payload['token']
+        except:
+            raise ParameterException('token')
+
+        uploads = self.get_uploads(token)
+
+        # output
+        return {
+            "uploads": uploads
+        }
+
+    @staticmethod
+    def get_uploads(token=None):
+        # check token
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise UserUnidentifiedException
+
+        # get the user uploads 
+        return Uploads.query.filter_by(shared='true').all()
 
 
 @ns.route('/delete')
