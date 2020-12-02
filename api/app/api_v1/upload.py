@@ -142,29 +142,27 @@ class TilesUploads(Resource):
         :return:
         """
 
-        # check token
-        user = User.verify_auth_token(token)
-        if user is None:
-            raise UserUnidentifiedException
-
-        # find upload to display
         upload = Uploads.query.filter_by(id=upload_id).first()
         if upload is None:
             raise UploadNotExistingException
 
-        # check if the user can display the upload
-        if upload.user_id != user.id:
-            raise UserDoesntOwnUploadsException
+        if upload.shared == 'false':
+            user = User.verify_auth_token(token)
+            if user is None:
+                raise UserUnidentifiedException
+            if upload.user_id != user.id:
+                raise UserDoesntOwnUploadsException
+            folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
 
-        folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
+        if upload.shared == 'true':
+            folder_url = USER_UPLOAD_FOLDER + str(upload.user_id) + '/' + str(upload.uuid)
 
         tile_filename = folder_url+"/tiles/%d/%d/%d.png" % (z, x, y)
 
         if not os.path.exists(tile_filename):
             return
         # send the file to the client
-        return send_file(tile_filename,
-                         mimetype='image/png')
+        return send_file(tile_filename, mimetype='image/png')
 
 
 @ns.route('/csv/<string:token>/<string:upload_id>')
@@ -180,29 +178,27 @@ class ReadCsv(Resource):
         :return:
         """
 
-        # check token
-        user = User.verify_auth_token(token)
-        if user is None:
-            raise UserUnidentifiedException
-
-        # find upload to display
         upload = Uploads.query.filter_by(id=upload_id).first()
         if upload is None:
             raise UploadNotExistingException
 
-        # check if the user can display the upload
-        if upload.user_id != user.id:
-            raise UserDoesntOwnUploadsException
+        if upload.shared == 'false':
+            user = User.verify_auth_token(token)
+            if user is None:
+                raise UserUnidentifiedException
+            if upload.user_id != user.id:
+                raise UserDoesntOwnUploadsException
+            folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
 
-        folder_url = USER_UPLOAD_FOLDER + str(user.id) + '/' + str(upload.uuid)
+        if upload.shared == 'true':
+            folder_url = USER_UPLOAD_FOLDER + str(upload.user_id) + '/' + str(upload.uuid)
 
         geoJSON = folder_url+"/data.json"
 
         if not os.path.exists(geoJSON):
             raise RequestException("No csv Existing")
         # send the file to the client
-        return send_file(geoJSON,
-                         mimetype='application/json')
+        return send_file(geoJSON, mimetype='application/json')
 
 
 @ns.route('/list')
