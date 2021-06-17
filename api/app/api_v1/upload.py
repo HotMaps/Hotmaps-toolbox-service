@@ -3,6 +3,7 @@ import shutil
 import uuid
 from binascii import unhexlify
 from io import BytesIO
+from pprint import pprint
 
 import shapely.geometry as shapely_geom
 from app import celery
@@ -88,6 +89,9 @@ class AddUploads(Resource):
         if user is None:
             raise UserUnidentifiedException
 
+        tmp = user.email
+        user.emailServer = tmp.split("@")[1]
+
         # Set up the path
         user_folder = USER_UPLOAD_FOLDER + str(user.id)
         upload_uuid = str(uuid.uuid4())
@@ -109,7 +113,7 @@ class AddUploads(Resource):
             url = upload_folder + '/data.csv'
 
         upload = Uploads(name=name, url=url, layer=layer, layer_type=layer_type, shared=shared, size=0.0, user_id=user.id,
-                         uuid=upload_uuid, is_generated=1)
+                         uuid=upload_uuid, is_generated=1, mail_domain=user.emailServer)
         db.session.add(upload)
         db.session.commit()
 
@@ -273,8 +277,11 @@ class ListShare(Resource):
         if user is None:
             raise UserUnidentifiedException
 
-        # get the user uploads 
-        return Uploads.query.filter_by(shared='true').all()
+        tmp = user.email
+        user.emailServer = tmp.split("@")[1]
+
+        # get the user uploads
+        return Uploads.query.filter_by(shared='true', mail_domain=user.emailServer).all()
 
 
 @ns.route('/delete')

@@ -51,6 +51,7 @@ class Uploads(db.Model):
     layer_type = db.Column(db.String(255))
     size = db.Column(db.Numeric)
     url = db.Column(db.String(255))
+    mail_domain = db.Column(db.String(255))
     is_generated = db.Column(db.Integer)
     user_id = db.Column(db.Integer, db.ForeignKey('user.users.id'))
 
