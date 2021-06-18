@@ -3,7 +3,6 @@ import shutil
 import uuid
 from binascii import unhexlify
 from io import BytesIO
-from pprint import pprint
 
 import shapely.geometry as shapely_geom
 from app import celery
@@ -89,6 +88,7 @@ class AddUploads(Resource):
         if user is None:
             raise UserUnidentifiedException
 
+        # Isolate the mail domain from the email of the connected user
         tmp = user.email
         user.emailServer = tmp.split("@")[1]
 
@@ -277,10 +277,11 @@ class ListShare(Resource):
         if user is None:
             raise UserUnidentifiedException
 
+        # Isolate the mail domain from the email of the connected user
         tmp = user.email
         user.emailServer = tmp.split("@")[1]
 
-        # get the user uploads
+        # get the shared uploads from the same company (mail domain)
         return Uploads.query.filter_by(shared='true', mail_domain=user.emailServer).all()
 
 
