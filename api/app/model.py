@@ -304,6 +304,8 @@ def getConnection_db_gis():
 
 def get_connection_string():
     con = "host=" + HOST_DB + " user=" + USER_DB + " dbname=" + DATABASE_DB + " port=" + PORT_DB + " password=" + PASSWORD_DB + ""
+    #add keepalives parameters for long querries
+    con = con + " keepalives=1 keepalives_idle=30 keepalives_interval=10 keepalives_count=5"
     return con
 
 def get_shapefile_from_selection(scalevalue, id_selected_list, ouput_directory, EPSG=str(3035)):
