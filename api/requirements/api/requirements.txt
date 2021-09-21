@@ -21,7 +21,7 @@ Flask-Mail==0.9.1
 Flask-Principal==0.4.0
 flask-restplus==0.10.1
 Flask-Security==3.0.0
-Flask-SQLAlchemy==2.2
+Flask-SQLAlchemy==2.5.1
 Flask-WTF==0.15.1
 GDAL==2.4.1
 GeoAlchemy2==0.4.0
