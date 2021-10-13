@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from osgeo import gdal
 
-from flask_restplus import Resource
+from flask_restx import Resource
 from app.decorators.serializers import  stats_layers_hectares_output,\
 	stats_layers_nuts_input, stats_layers_nuts_output,\
 	stats_layers_hectares_input, stats_list_nuts_input, stats_list_label_dataset,stats_layer_personnal_layer_input

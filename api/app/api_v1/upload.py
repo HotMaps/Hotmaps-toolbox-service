@@ -8,7 +8,7 @@ import shapely.geometry as shapely_geom
 from app import celery
 from app.constants import USER_UPLOAD_FOLDER, UPLOAD_BASE_NAME, UPLOAD_DIRECTORY, NUTS_YEAR, LAU_YEAR
 from flask import send_file
-from flask_restplus import Resource
+from flask_restx import Resource
 
 from .. import dbGIS as db
 from ..decorators.parsers import file_upload

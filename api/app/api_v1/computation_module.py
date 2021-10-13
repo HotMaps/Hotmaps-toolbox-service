@@ -18,7 +18,7 @@ from app import helper
 nsCM = api.namespace('cm', description='Operations related to statistisdscs')
 
 ns = nsCM
-from flask_restplus import Resource
+from flask_restx import Resource
 from app import celery
 import requests
 

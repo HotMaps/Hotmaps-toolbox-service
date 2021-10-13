@@ -1,4 +1,4 @@
-from flask_restplus import fields
+from flask_restx import fields
 from app.decorators.restplus import api
 from geoalchemy2.shape import to_shape
 from geojson import Feature, FeatureCollection, dumps

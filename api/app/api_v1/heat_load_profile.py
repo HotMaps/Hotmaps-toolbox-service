@@ -1,6 +1,6 @@
 from app import celery
 import logging
-from flask_restplus import Resource
+from flask_restx import Resource
 from app.decorators.serializers import  load_profile_aggregation_day_input, \
     load_profile_aggregation_curve_output, load_profile_aggregation_curve, load_profile_aggregation_hectares, \
     load_profile_aggregation_curve_hectares

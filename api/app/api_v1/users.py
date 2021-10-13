@@ -3,7 +3,7 @@ import os
 import uuid
 
 from flask_mail import Message
-from flask_restplus import Resource
+from flask_restx import Resource
 from flask_security import SQLAlchemySessionUserDatastore
 from itsdangerous import (URLSafeTimedSerializer, BadSignature, SignatureExpired)
 from flask import request, current_app

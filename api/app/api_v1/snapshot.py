@@ -8,7 +8,7 @@ from ..decorators.serializers import snapshot_load_input, snapshot_load_output, 
     snapshot_add_output, snapshot_delete_input, snapshot_delete_output, snapshot_list_input, snapshot_list_output, \
     snapshot_update_input, snapshot_update_output
 from app import celery
-from flask_restplus import Resource
+from flask_restx import Resource
 from ..decorators.timeout import return_on_timeout_endpoint
 
 nsSnapshot = api.namespace('snapshot', description='Operations related to snapshots')

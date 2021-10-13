@@ -22,11 +22,11 @@ CELERY_BROKER_URL_DOCKER= 'amqp://admin:mypass@rabbit:5672/'
 CELERY_BROKER_URL_LOCAL  = 'amqp://localhost/'
 
 # Flask-Restplus settings
-RESTPLUS_SWAGGER_UI_DOC_EXPANSION = 'list'
-RESTPLUS_VALIDATE = True
-RESTPLUS_MASK_SWAGGER = False
-RESTPLUS_ERROR_404_HELP = False
-RESTPLUS_JSON = {
+SWAGGER_UI_DOC_EXPANSION = 'list'
+RESTX_VALIDATE = True
+RESTX_MASK_SWAGGER = False
+ERROR_404_HELP = False
+RESTX_JSON = {
     'separators': (',', ':')
 }
 

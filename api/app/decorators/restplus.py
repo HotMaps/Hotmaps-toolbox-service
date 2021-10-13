@@ -1,7 +1,7 @@
 import traceback
 import logging
 
-from flask_restplus import Api
+from flask_restx import Api
 from .. import constants
 from sqlalchemy.orm.exc import NoResultFound
 from ..decorators.exceptions import HugeRequestException, IntersectionException, NotEnoughPointsException, \
